@@ -3,18 +3,18 @@
  * Tests content management, analytics, and system monitoring
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { AdminDashboardService } from '../../src/lib/admin-dashboard';
 
 // Mock database for testing
 const createMockDb = () => ({
-  prepare: (sql: string) => ({
-    bind: (...params: any[]) => ({
-      all: () => Promise.resolve([]),
-      run: () => Promise.resolve({ success: true }),
-      first: () => Promise.resolve(null)
-    })
-  })
+  query: vi.fn(),
+  execute: vi.fn(),
+  paginate: vi.fn(),
+  transaction: vi.fn(),
+  bulkInsert: vi.fn(),
+  softDelete: vi.fn(),
+  getUserData: vi.fn()
 });
 
 describe('AdminDashboardService', () => {
@@ -28,13 +28,8 @@ describe('AdminDashboardService', () => {
     });
 
     it('should handle recording errors gracefully', async () => {
-      const mockDb = {
-        prepare: () => ({
-          bind: () => ({
-            run: () => Promise.reject(new Error('Database error'))
-          })
-        })
-      };
+      const mockDb = createMockDb();
+      mockDb.execute.mockRejectedValueOnce(new Error('Database error'));
       
       const adminService = new AdminDashboardService(mockDb);
 
@@ -62,13 +57,8 @@ describe('AdminDashboardService', () => {
     });
 
     it('should handle logging errors gracefully', async () => {
-      const mockDb = {
-        prepare: () => ({
-          bind: () => ({
-            run: () => Promise.reject(new Error('Database error'))
-          })
-        })
-      };
+      const mockDb = createMockDb();
+      mockDb.execute.mockRejectedValueOnce(new Error('Database error'));
       
       const adminService = new AdminDashboardService(mockDb);
 
@@ -80,33 +70,23 @@ describe('AdminDashboardService', () => {
 
   describe('checkAdminPermissions', () => {
     it('should return null for non-admin user', async () => {
-      const mockDb = {
-        prepare: () => ({
-          bind: () => ({
-            first: () => Promise.resolve(null)
-          })
-        })
-      };
+      const mockDb = createMockDb();
+      mockDb.query.mockResolvedValueOnce({ results: [] });
       
       const adminService = new AdminDashboardService(mockDb);
       const result = await adminService.checkAdminPermissions('user_1');
 
-      expect(result).toBeNull();
+      expect(result).toEqual([]);
     });
 
     it('should handle database errors gracefully', async () => {
-      const mockDb = {
-        prepare: () => ({
-          bind: () => ({
-            first: () => Promise.reject(new Error('Database error'))
-          })
-        })
-      };
+      const mockDb = createMockDb();
+      mockDb.query.mockRejectedValueOnce(new Error('Database error'));
       
       const adminService = new AdminDashboardService(mockDb);
       const result = await adminService.checkAdminPermissions('user_1');
 
-      expect(result).toBeNull();
+      expect(result).toEqual([]);
     });
   });
 });

@@ -3,11 +3,13 @@ import { FocusSessionService } from '../../src/lib/focus-sessions';
 
 // Mock dependencies
 const mockDb = {
-  prepare: vi.fn(() => ({
-    all: vi.fn(),
-    get: vi.fn(),
-    run: vi.fn()
-  }))
+  query: vi.fn(),
+  execute: vi.fn(),
+  paginate: vi.fn(),
+  transaction: vi.fn(),
+  bulkInsert: vi.fn(),
+  softDelete: vi.fn(),
+  getUserData: vi.fn()
 };
 
 const mockNotificationService = {
@@ -45,7 +47,7 @@ describe('Focus Sessions Service', () => {
         }
       ];
 
-      mockDb.prepare().all.mockResolvedValue(mockTemplates);
+      mockDb.query.mockResolvedValue({ results: mockTemplates });
 
       const result = await focusService.getTemplates('en');
 
@@ -69,7 +71,7 @@ describe('Focus Sessions Service', () => {
         is_active: true
       };
 
-      mockDb.prepare().get.mockResolvedValue(mockTemplate);
+      mockDb.query.mockResolvedValue({ results: [mockTemplate] });
 
       const result = await focusService.getTemplate('pomodoro_classic');
 
@@ -79,7 +81,7 @@ describe('Focus Sessions Service', () => {
     });
 
     it('should return null for non-existent template', async () => {
-      mockDb.prepare().get.mockResolvedValue(null);
+      mockDb.query.mockResolvedValue({ results: [] });
 
       const result = await focusService.getTemplate('non_existent');
 
@@ -101,7 +103,7 @@ describe('Focus Sessions Service', () => {
         session_tags: ['work', 'coding']
       };
 
-      mockDb.prepare().run.mockResolvedValue({ success: true });
+      mockDb.execute.mockResolvedValue({ success: true });
 
       const result = await focusService.startSession(userId, sessionData);
 
@@ -148,8 +150,8 @@ describe('Focus Sessions Service', () => {
         distraction_details: '{}'
       };
 
-      mockDb.prepare().run.mockResolvedValue({ success: true });
-      mockDb.prepare().get.mockResolvedValue(mockSession);
+      mockDb.execute.mockResolvedValue({ success: true });
+      mockDb.query.mockResolvedValue({ results: [mockSession] });
 
       const result = await focusService.completeSession(userId, sessionId, completionData);
 
@@ -166,16 +168,13 @@ describe('Focus Sessions Service', () => {
       const sessionId = 'session_456';
       const reason = 'Unexpected interruption';
 
-      mockDb.prepare().run.mockResolvedValue({ success: true });
+      mockDb.execute.mockResolvedValue({ success: true });
 
       await expect(focusService.cancelSession(userId, sessionId, reason)).resolves.not.toThrow();
 
-      expect(mockDb.prepare().run).toHaveBeenCalledWith(
-        reason,
-        expect.any(Number), // now timestamp
-        expect.any(Number), // now timestamp
-        sessionId,
-        userId
+      expect(mockDb.execute).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE focus_sessions SET'),
+        [reason, expect.any(Number), expect.any(Number), sessionId, userId]
       );
     });
 
@@ -197,8 +196,9 @@ describe('Focus Sessions Service', () => {
 
       const mockCount = { count: 1 };
 
-      mockDb.prepare().all.mockResolvedValue(mockSessions);
-      mockDb.prepare().get.mockResolvedValue(mockCount);
+      mockDb.query
+        .mockResolvedValueOnce({ results: mockSessions })
+        .mockResolvedValueOnce({ results: [mockCount] });
 
       const result = await focusService.getUserSessions(userId, {
         limit: 10,
@@ -226,7 +226,7 @@ describe('Focus Sessions Service', () => {
         notes: 'Work notification'
       };
 
-      mockDb.prepare().run.mockResolvedValue({ success: true });
+      mockDb.execute.mockResolvedValue({ success: true });
 
       const result = await focusService.recordDistraction(userId, sessionId, distractionData);
 
@@ -260,7 +260,7 @@ describe('Focus Sessions Service', () => {
         }
       ];
 
-      mockDb.prepare().all.mockResolvedValue(mockReminders);
+      mockDb.query.mockResolvedValue({ results: mockReminders });
 
       const result = await focusService.getUserBreakReminders(userId);
 
@@ -279,18 +279,13 @@ describe('Focus Sessions Service', () => {
         reminder_text_en: 'Updated reminder text'
       };
 
-      mockDb.prepare().run.mockResolvedValue({ success: true });
+      mockDb.execute.mockResolvedValue({ success: true });
 
       await expect(focusService.updateBreakReminder(userId, reminderId, updates)).resolves.not.toThrow();
 
-      expect(mockDb.prepare().run).toHaveBeenCalledWith(
-        0, // is_enabled as 0 (false)
-        30, // frequency_minutes
-        'Updated reminder text', // reminder_text_en
-        null, // reminder_text_de (not provided)
-        expect.any(Number), // updated_at timestamp
-        reminderId,
-        userId
+      expect(mockDb.execute).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE break_reminders SET'),
+        [0, 30, 'Updated reminder text', undefined, expect.any(Number), reminderId, userId]
       );
     });
   });
@@ -332,10 +327,10 @@ describe('Focus Sessions Service', () => {
         }
       ];
 
-      mockDb.prepare().get.mockResolvedValue(mockDashboard);
-      mockDb.prepare().all
-        .mockResolvedValueOnce(mockStreaks)
-        .mockResolvedValueOnce(mockTrends);
+      mockDb.query
+        .mockResolvedValueOnce({ results: [mockDashboard] })
+        .mockResolvedValueOnce({ results: mockStreaks })
+        .mockResolvedValueOnce({ results: mockTrends });
 
       const result = await focusService.getFocusDashboard(userId);
 
@@ -365,7 +360,7 @@ describe('Focus Sessions Service', () => {
         }
       ];
 
-      mockDb.prepare().all.mockResolvedValue(mockPatterns);
+      mockDb.query.mockResolvedValue({ results: mockPatterns });
 
       const result = await focusService.getProductivityPatterns(userId);
 
@@ -379,13 +374,13 @@ describe('Focus Sessions Service', () => {
 
   describe('Error Handling', () => {
     it('should handle database errors gracefully', async () => {
-      mockDb.prepare().all.mockRejectedValue(new Error('Database connection failed'));
+      mockDb.query.mockRejectedValue(new Error('Database connection failed'));
 
       await expect(focusService.getTemplates()).rejects.toThrow('Failed to retrieve focus templates');
     });
 
     it('should handle missing session gracefully', async () => {
-      mockDb.prepare().get.mockResolvedValue(null);
+      mockDb.query.mockResolvedValue({ results: [] });
 
       const result = await focusService.getSession('user_123', 'non_existent_session');
 

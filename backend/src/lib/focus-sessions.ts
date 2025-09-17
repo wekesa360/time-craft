@@ -4,7 +4,7 @@
 import { DatabaseService } from './db';
 import { generateId } from '../utils/id';
 import { logger } from './logger';
-import { NotificationService } from './notifications';
+import { PushNotificationService } from './notifications';
 
 export interface FocusSessionTemplate {
   id: string;
@@ -149,7 +149,7 @@ export interface FocusEnvironment {
 export class FocusSessionService {
   constructor(
     private db: DatabaseService,
-    private notificationService: NotificationService
+    private notificationService: PushNotificationService
   ) {}
 
   // Template Management
@@ -176,19 +176,20 @@ export class FocusSessionService {
 
   async getTemplate(templateKey: string): Promise<FocusSessionTemplate | null> {
     try {
-      const result = await this.db.prepare(`
+      const result = await this.db.query(`
         SELECT * FROM focus_templates 
         WHERE template_key = ? AND is_active = 1
-      `).get(templateKey);
+      `, [templateKey]);
 
-      if (!result) return null;
+      const template = (result.results || [])[0];
+      if (!template) return null;
 
       return {
-        ...result,
-        suggested_tasks: JSON.parse(result.suggested_tasks || '[]'),
-        productivity_tips_en: JSON.parse(result.productivity_tips_en || '[]'),
-        productivity_tips_de: JSON.parse(result.productivity_tips_de || '[]'),
-        environment_suggestions: JSON.parse(result.environment_suggestions || '{}')
+        ...template,
+        suggested_tasks: JSON.parse(template.suggested_tasks || '[]'),
+        productivity_tips_en: JSON.parse(template.productivity_tips_en || '[]'),
+        productivity_tips_de: JSON.parse(template.productivity_tips_de || '[]'),
+        environment_suggestions: JSON.parse(template.environment_suggestions || '{}')
       };
     } catch (error) {
       logger.error('Failed to get focus template:', error);
@@ -209,7 +210,7 @@ export class FocusSessionService {
     session_tags?: string[];
   }): Promise<FocusSession> {
     try {
-      const sessionId = generateId();
+      const sessionId = generateId('session');
       const now = Date.now();
 
       const session: FocusSession = {
@@ -234,14 +235,14 @@ export class FocusSessionService {
         updated_at: now
       };
 
-      await this.db.prepare(`
+      await this.db.execute(`
         INSERT INTO focus_sessions (
           id, user_id, session_type, session_name, planned_duration, task_id,
           planned_task_count, completed_task_count, break_duration, interruptions,
           distraction_count, environment_data, mood_before, energy_before,
           session_tags, is_successful, started_at, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
+      `, [
         sessionId, userId, sessionData.session_type, sessionData.session_name,
         sessionData.planned_duration, sessionData.task_id,
         sessionData.planned_task_count || 1, 0, 0, 0, 0,
@@ -249,7 +250,7 @@ export class FocusSessionService {
         sessionData.mood_before, sessionData.energy_before,
         JSON.stringify(sessionData.session_tags || []),
         1, now, now, now
-      );
+      ]);
 
       // Schedule break reminder if it's a pomodoro session
       if (sessionData.session_type === 'pomodoro') {
@@ -278,7 +279,7 @@ export class FocusSessionService {
     try {
       const now = Date.now();
 
-      await this.db.prepare(`
+      await this.db.execute(`
         UPDATE focus_sessions SET
           actual_duration = ?,
           completed_task_count = ?,
@@ -292,7 +293,7 @@ export class FocusSessionService {
           completed_at = ?,
           updated_at = ?
         WHERE id = ? AND user_id = ?
-      `).run(
+      `, [
         completionData.actual_duration,
         completionData.completed_task_count || 0,
         completionData.break_duration || 0,
@@ -306,7 +307,7 @@ export class FocusSessionService {
         now,
         sessionId,
         userId
-      );
+      ]);
 
       // Update streaks and analytics (handled by database triggers)
       
@@ -327,14 +328,14 @@ export class FocusSessionService {
     try {
       const now = Date.now();
 
-      await this.db.prepare(`
+      await this.db.execute(`
         UPDATE focus_sessions SET
           is_successful = 0,
           cancellation_reason = ?,
           completed_at = ?,
           updated_at = ?
         WHERE id = ? AND user_id = ?
-      `).run(reason, now, now, sessionId, userId);
+      `, [reason, now, now, sessionId, userId]);
 
       logger.info(`Focus session cancelled: ${sessionId} for user ${userId}, reason: ${reason}`);
     } catch (error) {
@@ -345,19 +346,20 @@ export class FocusSessionService {
 
   async getSession(userId: string, sessionId: string): Promise<FocusSession | null> {
     try {
-      const result = await this.db.prepare(`
+      const result = await this.db.query(`
         SELECT * FROM focus_sessions 
         WHERE id = ? AND user_id = ?
-      `).get(sessionId, userId);
+      `, [sessionId, userId]);
 
-      if (!result) return null;
+      const session = (result.results || [])[0];
+      if (!session) return null;
 
       return {
-        ...result,
-        environment_data: JSON.parse(result.environment_data || '{}'),
-        session_tags: JSON.parse(result.session_tags || '[]'),
-        distraction_details: JSON.parse(result.distraction_details || '{}'),
-        is_successful: Boolean(result.is_successful)
+        ...session,
+        environment_data: JSON.parse(session.environment_data || '{}'),
+        session_tags: JSON.parse(session.session_tags || '[]'),
+        distraction_details: JSON.parse(session.distraction_details || '{}'),
+        is_successful: Boolean(session.is_successful)
       };
     } catch (error) {
       logger.error('Failed to get focus session:', error);
@@ -393,26 +395,26 @@ export class FocusSessionService {
         params.push(end_date);
       }
 
-      const sessions = await this.db.prepare(`
+      const sessions = await this.db.query(`
         SELECT * FROM focus_sessions 
         ${whereClause}
         ORDER BY started_at DESC 
         LIMIT ? OFFSET ?
-      `).all(...params, limit, offset);
+      `, [...params, limit, offset]);
 
-      const totalResult = await this.db.prepare(`
+      const totalResult = await this.db.query(`
         SELECT COUNT(*) as count FROM focus_sessions ${whereClause}
-      `).get(...params);
+      `, params);
 
       return {
-        sessions: sessions.map(session => ({
+        sessions: (sessions.results || []).map(session => ({
           ...session,
           environment_data: JSON.parse(session.environment_data || '{}'),
           session_tags: JSON.parse(session.session_tags || '[]'),
           distraction_details: JSON.parse(session.distraction_details || '{}'),
           is_successful: Boolean(session.is_successful)
         })),
-        total: totalResult.count
+        total: (totalResult.results || [])[0]?.count || 0
       };
     } catch (error) {
       logger.error('Failed to get user sessions:', error);
@@ -430,7 +432,7 @@ export class FocusSessionService {
     notes?: string;
   }): Promise<FocusDistraction> {
     try {
-      const distractionId = generateId();
+      const distractionId = generateId('distraction');
       const now = Date.now();
 
       const distractionRecord: FocusDistraction = {
@@ -447,25 +449,25 @@ export class FocusSessionService {
         created_at: now
       };
 
-      await this.db.prepare(`
+      await this.db.execute(`
         INSERT INTO focus_distractions (
           id, session_id, user_id, distraction_type, distraction_source,
           duration_seconds, impact_level, occurred_at, user_response, notes, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
+      `, [
         distractionId, sessionId, userId, distraction.distraction_type,
         distraction.distraction_source, distraction.duration_seconds,
         distraction.impact_level, now, distraction.user_response,
         distraction.notes, now
-      );
+      ]);
 
       // Update session distraction count
-      await this.db.prepare(`
+      await this.db.execute(`
         UPDATE focus_sessions SET 
           distraction_count = distraction_count + 1,
           updated_at = ?
         WHERE id = ? AND user_id = ?
-      `).run(now, sessionId, userId);
+      `, [now, sessionId, userId]);
 
       logger.info(`Distraction recorded: ${distractionId} for session ${sessionId}`);
       return distractionRecord;
@@ -478,13 +480,13 @@ export class FocusSessionService {
   // Break Reminders
   async getUserBreakReminders(userId: string): Promise<BreakReminder[]> {
     try {
-      const results = await this.db.prepare(`
+      const results = await this.db.query(`
         SELECT * FROM break_reminders 
         WHERE user_id = ? AND is_enabled = 1
         ORDER BY reminder_type
-      `).all(userId);
+      `, [userId]);
 
-      return results.map(reminder => ({
+      return (results.results || []).map(reminder => ({
         ...reminder,
         trigger_condition: JSON.parse(reminder.trigger_condition || '{}'),
         is_enabled: Boolean(reminder.is_enabled)
@@ -504,7 +506,7 @@ export class FocusSessionService {
     try {
       const now = Date.now();
       
-      await this.db.prepare(`
+      await this.db.execute(`
         UPDATE break_reminders SET
           is_enabled = COALESCE(?, is_enabled),
           frequency_minutes = COALESCE(?, frequency_minutes),
@@ -512,7 +514,7 @@ export class FocusSessionService {
           reminder_text_de = COALESCE(?, reminder_text_de),
           updated_at = ?
         WHERE id = ? AND user_id = ?
-      `).run(
+      `, [
         updates.is_enabled !== undefined ? (updates.is_enabled ? 1 : 0) : null,
         updates.frequency_minutes,
         updates.reminder_text_en,
@@ -520,7 +522,7 @@ export class FocusSessionService {
         now,
         reminderId,
         userId
-      );
+      ]);
 
       logger.info(`Break reminder updated: ${reminderId} for user ${userId}`);
     } catch (error) {
@@ -545,17 +547,17 @@ export class FocusSessionService {
     productivity_trends: any[];
   }> {
     try {
-      const dashboardResult = await this.db.prepare(`
+      const dashboardResult = await this.db.query(`
         SELECT * FROM focus_dashboard_view WHERE user_id = ?
-      `).get(userId);
+      `, [userId]);
 
-      const streaks = await this.db.prepare(`
+      const streaks = await this.db.query(`
         SELECT * FROM focus_streaks 
         WHERE user_id = ? AND is_active = 1
         ORDER BY current_streak DESC
-      `).all(userId);
+      `, [userId]);
 
-      const trends = await this.db.prepare(`
+      const trends = await this.db.query(`
         SELECT 
           DATE(datetime(measurement_date/1000, 'unixepoch')) as date,
           metric_type,
@@ -565,25 +567,27 @@ export class FocusSessionService {
         GROUP BY DATE(datetime(measurement_date/1000, 'unixepoch')), metric_type
         ORDER BY date DESC
         LIMIT 30
-      `).all(userId, Date.now() - (30 * 24 * 60 * 60 * 1000));
+      `, [userId, Date.now() - (30 * 24 * 60 * 60 * 1000)]);
 
+      const dashboard = (dashboardResult.results || [])[0] || {};
+      
       return {
-        total_sessions: dashboardResult?.total_sessions || 0,
-        successful_sessions: dashboardResult?.successful_sessions || 0,
-        total_focus_minutes: dashboardResult?.total_focus_minutes || 0,
-        avg_productivity_rating: dashboardResult?.avg_productivity_rating || 0,
-        avg_session_duration: dashboardResult?.avg_session_duration || 0,
-        total_interruptions: dashboardResult?.total_interruptions || 0,
-        avg_interruptions_per_session: dashboardResult?.avg_interruptions_per_session || 0,
-        last_session_at: dashboardResult?.last_session_at,
-        today_sessions: dashboardResult?.today_sessions || 0,
-        today_minutes: dashboardResult?.today_minutes || 0,
-        current_streaks: streaks.map(streak => ({
+        total_sessions: dashboard.total_sessions || 0,
+        successful_sessions: dashboard.successful_sessions || 0,
+        total_focus_minutes: dashboard.total_focus_minutes || 0,
+        avg_productivity_rating: dashboard.avg_productivity_rating || 0,
+        avg_session_duration: dashboard.avg_session_duration || 0,
+        total_interruptions: dashboard.total_interruptions || 0,
+        avg_interruptions_per_session: dashboard.avg_interruptions_per_session || 0,
+        last_session_at: dashboard.last_session_at,
+        today_sessions: dashboard.today_sessions || 0,
+        today_minutes: dashboard.today_minutes || 0,
+        current_streaks: (streaks.results || []).map(streak => ({
           ...streak,
           streak_data: JSON.parse(streak.streak_data || '{}'),
           is_active: Boolean(streak.is_active)
         })),
-        productivity_trends: trends
+        productivity_trends: trends.results || []
       };
     } catch (error) {
       logger.error('Failed to get focus dashboard:', error);
@@ -593,13 +597,13 @@ export class FocusSessionService {
 
   async getProductivityPatterns(userId: string): Promise<ProductivityPattern[]> {
     try {
-      const results = await this.db.prepare(`
+      const results = await this.db.query(`
         SELECT * FROM productivity_patterns 
         WHERE user_id = ? AND is_active = 1
         ORDER BY confidence_score DESC, effectiveness_score DESC
-      `).all(userId);
+      `, [userId]);
 
-      return results.map(pattern => ({
+      return (results.results || []).map(pattern => ({
         ...pattern,
         pattern_data: JSON.parse(pattern.pattern_data || '{}'),
         is_active: Boolean(pattern.is_active)

@@ -56,15 +56,15 @@ export class LocalizationService {
    */
   async getLocalizedContent(contentKey: string, language: string = 'en'): Promise<string | null> {
     try {
-      const result = await this.db.prepare(`
+      const result = await this.db.query(`
         SELECT content FROM localized_content 
         WHERE content_key = ? AND language = ?
-      `).bind(contentKey, language).first();
+      `, [contentKey, language]);
 
       return result?.content || null;
     } catch (error) {
       console.error('Error getting localized content:', error);
-      return null;
+      return (null.results || []);
     }
   }
 
@@ -74,17 +74,17 @@ export class LocalizationService {
   async getBulkLocalizedContent(contentKeys: string[], language: string = 'en'): Promise<Record<string, string>> {
     try {
       const placeholders = contentKeys.map(() => '?').join(',');
-      const results = await this.db.prepare(`
+      const results = await this.db.query(`
         SELECT content_key, content FROM localized_content 
         WHERE content_key IN (${placeholders}) AND language = ?
-      `).bind(...contentKeys, language).all();
+      `, [...contentKeys, language]);
 
       const contentMap: Record<string, string> = {};
       results.forEach((row: any) => {
         contentMap[row.content_key] = row.content;
       });
 
-      return contentMap;
+      return (contentMap.results || []);
     } catch (error) {
       console.error('Error getting bulk localized content:', error);
       return {};
@@ -355,10 +355,10 @@ export class LocalizationService {
         Date.now()
       ).run();
 
-      return true;
+      return (true.results || []);
     } catch (error) {
       console.error('Error setting localized content:', error);
-      return false;
+      return (false.results || []);
     }
   }
 
@@ -367,9 +367,9 @@ export class LocalizationService {
    */
   async getSupportedLanguages(): Promise<string[]> {
     try {
-      const results = await this.db.prepare(`
+      const results = await this.db.query(`
         SELECT DISTINCT language FROM localized_content ORDER BY language
-      `).all();
+      `);
 
       return results.map((row: any) => row.language);
     } catch (error) {

@@ -1,7 +1,7 @@
 // Social Features Service
 // Handles achievement sharing, social connections, and challenges
 
-import { D1Database } from '@cloudflare/workers-types';
+import { DatabaseService } from './db';
 import { 
   UserConnection, 
   SocialChallenge, 
@@ -38,19 +38,20 @@ export interface SocialFeaturesService {
 }
 
 export class SocialFeaturesServiceImpl implements SocialFeaturesService {
-  constructor(private db: D1Database) {}
+  constructor(private db: DatabaseService) {}
 
   async sendConnectionRequest(requesterId: string, addresseeId: string, type: ConnectionType = 'friend'): Promise<UserConnection> {
     const id = crypto.randomUUID();
     const now = Date.now();
 
     // Check if connection already exists
-    const existing = await this.db.prepare(`
+    const existingResult = await this.db.query(`
       SELECT * FROM user_connections 
       WHERE (requester_id = ? AND addressee_id = ?) 
          OR (requester_id = ? AND addressee_id = ?)
-    `).bind(requesterId, addresseeId, addresseeId, requesterId).first();
+    `, [requesterId, addresseeId, addresseeId, requesterId]);
 
+    const existing = (existingResult.results || [])[0];
     if (existing) {
       throw new Error('Connection already exists between these users');
     }
@@ -65,10 +66,10 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
       updated_at: now
     };
 
-    await this.db.prepare(`
+    await this.db.execute(`
       INSERT INTO user_connections (id, requester_id, addressee_id, status, connection_type, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, requesterId, addresseeId, 'pending', type, now, now).run();
+    `, [id, requesterId, addresseeId, 'pending', type, now, now]);
 
     return connection;
   }
@@ -76,20 +77,20 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
   async acceptConnectionRequest(connectionId: string, userId: string): Promise<boolean> {
     const now = Date.now();
     
-    const result = await this.db.prepare(`
+    const result = await this.db.execute(`
       UPDATE user_connections 
       SET status = 'accepted', updated_at = ?
       WHERE id = ? AND addressee_id = ? AND status = 'pending'
-    `).bind(now, connectionId, userId).run();
+    `, [now, connectionId, userId]);
 
     return result.changes > 0;
   }
 
   async rejectConnectionRequest(connectionId: string, userId: string): Promise<boolean> {
-    const result = await this.db.prepare(`
+    const result = await this.db.execute(`
       DELETE FROM user_connections 
       WHERE id = ? AND addressee_id = ? AND status = 'pending'
-    `).bind(connectionId, userId).run();
+    `, [connectionId, userId]);
 
     return result.changes > 0;
   }
@@ -99,17 +100,17 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
     const now = Date.now();
 
     // Remove any existing connections
-    await this.db.prepare(`
+    await this.db.execute(`
       DELETE FROM user_connections 
       WHERE (requester_id = ? AND addressee_id = ?) 
          OR (requester_id = ? AND addressee_id = ?)
-    `).bind(blockerId, blockedId, blockedId, blockerId).run();
+    `, [blockerId, blockedId, blockedId, blockerId]);
 
     // Create block relationship
-    await this.db.prepare(`
+    await this.db.execute(`
       INSERT INTO user_connections (id, requester_id, addressee_id, status, connection_type, created_at, updated_at)
       VALUES (?, ?, ?, 'blocked', 'friend', ?, ?)
-    `).bind(id, blockerId, blockedId, now, now).run();
+    `, [id, blockerId, blockedId, now, now]);
 
     return true;
   }
@@ -134,17 +135,18 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
     
     query += ` ORDER BY uc.updated_at DESC`;
 
-    const result = await this.db.prepare(query).bind(...params).all();
-    return result.results as UserConnection[];
+    const result = await this.db.query(query, params);
+    return (result.results || []) as UserConnection[];
   }
 
   async shareAchievement(badgeId: string, platform: string, userId: string): Promise<BadgeShare> {
     // Verify user owns this badge
-    const badge = await this.db.prepare(`
+    const badgeResult = await this.db.query(`
       SELECT * FROM user_achievements 
       WHERE id = ? AND user_id = ? AND is_unlocked = true
-    `).bind(badgeId, userId).first();
+    `, [badgeId, userId]);
 
+    const badge = (badgeResult.results || [])[0];
     if (!badge) {
       throw new Error('Badge not found or not unlocked');
     }
@@ -162,28 +164,28 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
       share_url: shareUrl
     };
 
-    await this.db.prepare(`
+    await this.db.execute(`
       INSERT INTO badge_shares (id, badge_id, platform, shared_at, click_count, share_url)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).bind(id, badgeId, platform, now, 0, shareUrl).run();
+    `, [id, badgeId, platform, now, 0, shareUrl]);
 
     // Update share count on the badge
-    await this.db.prepare(`
+    await this.db.execute(`
       UPDATE user_achievements 
       SET share_count = share_count + 1 
       WHERE id = ?
-    `).bind(badgeId).run();
+    `, [badgeId]);
 
     return share;
   }
 
   async getAchievementShareStats(badgeId: string): Promise<{ totalShares: number; platformBreakdown: Record<string, number> }> {
-    const result = await this.db.prepare(`
+    const result = await this.db.query(`
       SELECT platform, COUNT(*) as count, SUM(click_count) as clicks
       FROM badge_shares 
       WHERE badge_id = ?
       GROUP BY platform
-    `).bind(badgeId).all();
+    `, [badgeId]);
 
     const platformBreakdown: Record<string, number> = {};
     let totalShares = 0;
@@ -227,16 +229,16 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
       created_at: now
     };
 
-    await this.db.prepare(`
+    await this.db.execute(`
       INSERT INTO social_challenges (
         id, creator_id, title, description, challenge_type, start_date, end_date,
         max_participants, is_public, reward_type, reward_description, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(
+    `, [
       id, creatorId, challengeData.title, challengeData.description, challengeData.challenge_type,
       challengeData.start_date, challengeData.end_date, challengeData.max_participants,
       challengeData.is_public, challengeData.reward_type, challengeData.reward_description, now
-    ).run();
+    ]);
 
     // Auto-join creator to the challenge
     await this.joinChallenge(id, creatorId);
@@ -246,12 +248,13 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
 
   async joinChallenge(challengeId: string, userId: string): Promise<ChallengeParticipant> {
     // Check if challenge exists and has space
-    const challenge = await this.db.prepare(`
+    const challengeResult = await this.db.query(`
       SELECT *, (SELECT COUNT(*) FROM challenge_participants WHERE challenge_id = ?) as participant_count
       FROM social_challenges 
       WHERE id = ?
-    `).bind(challengeId, challengeId).first() as any;
+    `, [challengeId, challengeId]);
 
+    const challenge = (challengeResult.results || [])[0] as any;
     if (!challenge) {
       throw new Error('Challenge not found');
     }
@@ -261,11 +264,12 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
     }
 
     // Check if user already joined
-    const existing = await this.db.prepare(`
+    const existingResult = await this.db.query(`
       SELECT * FROM challenge_participants 
       WHERE challenge_id = ? AND user_id = ?
-    `).bind(challengeId, userId).first();
+    `, [challengeId, userId]);
 
+    const existing = (existingResult.results || [])[0];
     if (existing) {
       throw new Error('User already joined this challenge');
     }
@@ -283,48 +287,48 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
       final_score: null
     };
 
-    await this.db.prepare(`
+    await this.db.execute(`
       INSERT INTO challenge_participants (id, challenge_id, user_id, joined_at, progress_data, completion_status, final_score)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, challengeId, userId, now, null, 'active', null).run();
+    `, [id, challengeId, userId, now, null, 'active', null]);
 
     return participant;
   }
 
   async leaveChallenge(challengeId: string, userId: string): Promise<boolean> {
-    const result = await this.db.prepare(`
+    const result = await this.db.execute(`
       UPDATE challenge_participants 
       SET completion_status = 'dropped'
       WHERE challenge_id = ? AND user_id = ? AND completion_status = 'active'
-    `).bind(challengeId, userId).run();
+    `, [challengeId, userId]);
 
     return result.changes > 0;
   }
 
   async updateChallengeProgress(challengeId: string, userId: string, progressData: any): Promise<boolean> {
-    const result = await this.db.prepare(`
+    const result = await this.db.execute(`
       UPDATE challenge_participants 
       SET progress_data = ?
       WHERE challenge_id = ? AND user_id = ? AND completion_status = 'active'
-    `).bind(JSON.stringify(progressData), challengeId, userId).run();
+    `, [JSON.stringify(progressData), challengeId, userId]);
 
     return result.changes > 0;
   }
 
   async getChallengeLeaderboard(challengeId: string): Promise<ChallengeParticipant[]> {
-    const result = await this.db.prepare(`
+    const result = await this.db.query(`
       SELECT cp.*, u.first_name, u.last_name
       FROM challenge_participants cp
       JOIN users u ON cp.user_id = u.id
       WHERE cp.challenge_id = ?
       ORDER BY cp.final_score DESC NULLS LAST, cp.joined_at ASC
-    `).bind(challengeId).all();
+    `, [challengeId]);
 
-    return result.results as ChallengeParticipant[];
+    return (result.results || []) as ChallengeParticipant[];
   }
 
   async getPublicChallenges(limit: number = 20): Promise<SocialChallenge[]> {
-    const result = await this.db.prepare(`
+    const result = await this.db.query(`
       SELECT sc.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
              (SELECT COUNT(*) FROM challenge_participants WHERE challenge_id = sc.id) as participant_count
       FROM social_challenges sc
@@ -332,13 +336,13 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
       WHERE sc.is_public = true AND sc.end_date > ?
       ORDER BY sc.created_at DESC
       LIMIT ?
-    `).bind(Date.now(), limit).all();
+    `, [Date.now(), limit]);
 
-    return result.results as SocialChallenge[];
+    return (result.results || []) as SocialChallenge[];
   }
 
   async getUserChallenges(userId: string): Promise<SocialChallenge[]> {
-    const result = await this.db.prepare(`
+    const result = await this.db.query(`
       SELECT DISTINCT sc.*, u.first_name as creator_first_name, u.last_name as creator_last_name,
              cp.completion_status, cp.progress_data, cp.final_score
       FROM social_challenges sc
@@ -346,8 +350,8 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
       JOIN challenge_participants cp ON sc.id = cp.challenge_id
       WHERE cp.user_id = ?
       ORDER BY sc.created_at DESC
-    `).bind(userId).all();
+    `, [userId]);
 
-    return result.results as SocialChallenge[];
+    return (result.results || []) as SocialChallenge[];
   }
 }

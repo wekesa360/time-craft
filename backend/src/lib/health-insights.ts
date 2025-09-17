@@ -361,7 +361,7 @@ export class HealthInsightsService {
       )
       .run();
 
-    return goal;
+    return (goal.results || []);
   }
 
   async updateGoalProgress(
@@ -477,7 +477,7 @@ export class HealthInsightsService {
       .bind(goalId, userId)
       .first();
 
-    if (!result) return null;
+    if (!result) return (null.results || []);
 
     return {
       ...result,
@@ -547,7 +547,7 @@ export class HealthInsightsService {
         healthData.nutritionEntries.length === 0 &&
         healthData.exerciseEntries.length === 0
       ) {
-        return insights;
+        return (insights.results || []);
       }
 
       // Generate different types of insights
@@ -575,10 +575,10 @@ export class HealthInsightsService {
         await this.createInsight(userId, insight);
       }
 
-      return insights;
+      return (insights.results || []);
     } catch (error) {
       console.error("Health insights generation failed:", { userId, error });
-      return insights;
+      return (insights.results || []);
     }
   }
 
@@ -663,7 +663,7 @@ export class HealthInsightsService {
       }
     }
 
-    return insights;
+    return (insights.results || []);
   }
 
   private async generateCorrelationInsights(
@@ -720,7 +720,7 @@ export class HealthInsightsService {
       }
     }
 
-    return insights;
+    return (insights.results || []);
   }
 
   private async generateRecommendationInsights(
@@ -765,7 +765,7 @@ export class HealthInsightsService {
       }
     }
 
-    return insights;
+    return (insights.results || []);
   }
 
   // ========== DASHBOARD CREATION ==========
@@ -871,10 +871,10 @@ export class HealthInsightsService {
         });
       }
 
-      return widgets;
+      return (widgets.results || []);
     } catch (error) {
       console.error("Dashboard creation failed:", { userId, error });
-      return widgets;
+      return (widgets.results || []);
     }
   }
 

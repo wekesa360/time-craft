@@ -72,7 +72,7 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
     const expiresAt = now + (15 * 60 * 1000); // 15 minutes
 
     // Store OTP in database (we'll create a temporary table for this)
-    await this.db.prepare(`
+    await this.db.execute(`
       CREATE TABLE IF NOT EXISTS email_otps (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
@@ -83,18 +83,18 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
         verified BOOLEAN DEFAULT false,
         created_at INTEGER NOT NULL
       )
-    `).run();
+    `);
 
     // Clean up expired OTPs
-    await this.db.prepare(`
+    await this.db.execute(`
       DELETE FROM email_otps WHERE expires_at < ?
-    `).bind(now).run();
+    `, [now]);
 
     // Insert new OTP
-    await this.db.prepare(`
+    await this.db.execute(`
       INSERT INTO email_otps (id, user_id, email, otp_code, expires_at, attempts, verified, created_at)
       VALUES (?, ?, ?, ?, ?, 0, false, ?)
-    `).bind(otpId, userId, email, otpCode, expiresAt, now).run();
+    `, [otpId, userId, email, otpCode, expiresAt, now]);
 
     // TODO: Send email with OTP using Resend
     // For now, we'll log it (in production, this would be sent via email)
@@ -107,10 +107,10 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
     const now = Date.now();
 
     // Get OTP record
-    const otpRecord = await this.db.prepare(`
+    const otpRecord = await this.db.query(`
       SELECT * FROM email_otps 
       WHERE id = ? AND user_id = ? AND expires_at > ? AND verified = false
-    `).bind(otpId, userId, now).first() as OTPRecord | null;
+    `, [otpId, userId, now]) as OTPRecord | null;
 
     if (!otpRecord) {
       throw new Error('Invalid or expired OTP');
@@ -122,19 +122,19 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
     }
 
     // Increment attempts
-    await this.db.prepare(`
+    await this.db.execute(`
       UPDATE email_otps SET attempts = attempts + 1 WHERE id = ?
-    `).bind(otpId).run();
+    `, [otpId]);
 
     // Verify OTP code
     if (otpRecord.otp_code !== otpCode) {
-      return false;
+      return (false.results || []);
     }
 
     // Mark as verified
-    await this.db.prepare(`
+    await this.db.execute(`
       UPDATE email_otps SET verified = true WHERE id = ?
-    `).bind(otpId).run();
+    `, [otpId]);
 
     // Create student verification record
     const verificationId = crypto.randomUUID();
@@ -155,7 +155,7 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
     // Update user status
     await this.updateUserStudentStatus(userId, true, 'approved');
 
-    return true;
+    return (true.results || []);
   }
 
   async submitDocumentVerification(userId: string, documents: any[]): Promise<StudentVerification> {
@@ -187,18 +187,18 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
     // Update user status to pending
     await this.updateUserStudentStatus(userId, false, 'pending');
 
-    return verification;
+    return (verification.results || []);
   }
 
   async getPendingVerifications(limit: number = 50): Promise<StudentVerification[]> {
-    const result = await this.db.prepare(`
+    const result = await this.db.query(`
       SELECT sv.*, u.email, u.first_name, u.last_name
       FROM student_verifications sv
       JOIN users u ON sv.user_id = u.id
       WHERE sv.status = 'pending'
       ORDER BY sv.created_at ASC
       LIMIT ?
-    `).bind(limit).all();
+    `, [limit]);
 
     return result.results as StudentVerification[];
   }
@@ -207,17 +207,17 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
     const now = Date.now();
     const expiresAt = now + (365 * 24 * 60 * 60 * 1000); // 1 year
 
-    const result = await this.db.prepare(`
+    const result = await this.db.execute(`
       UPDATE student_verifications 
       SET status = 'approved', admin_notes = ?, verified_at = ?, expires_at = ?
       WHERE id = ? AND status = 'pending'
-    `).bind(adminNotes || 'Approved by admin', now, expiresAt, verificationId).run();
+    `, [adminNotes || 'Approved by admin', now, expiresAt, verificationId]);
 
     if (result.changes > 0) {
       // Get user ID and update their status
-      const verification = await this.db.prepare(`
+      const verification = await this.db.query(`
         SELECT user_id FROM student_verifications WHERE id = ?
-      `).bind(verificationId).first() as { user_id: string } | null;
+      `, [verificationId]) as { user_id: string } | null;
 
       if (verification) {
         await this.updateUserStudentStatus(verification.user_id, true, 'approved');
@@ -228,17 +228,17 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
   }
 
   async rejectVerification(verificationId: string, adminNotes: string): Promise<boolean> {
-    const result = await this.db.prepare(`
+    const result = await this.db.execute(`
       UPDATE student_verifications 
       SET status = 'rejected', admin_notes = ?
       WHERE id = ? AND status = 'pending'
-    `).bind(adminNotes, verificationId).run();
+    `, [adminNotes, verificationId]);
 
     if (result.changes > 0) {
       // Get user ID and update their status
-      const verification = await this.db.prepare(`
+      const verification = await this.db.query(`
         SELECT user_id FROM student_verifications WHERE id = ?
-      `).bind(verificationId).first() as { user_id: string } | null;
+      `, [verificationId]) as { user_id: string } | null;
 
       if (verification) {
         await this.updateUserStudentStatus(verification.user_id, false, 'rejected');
@@ -249,12 +249,12 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
   }
 
   async getUserVerificationStatus(userId: string): Promise<StudentVerification | null> {
-    const result = await this.db.prepare(`
+    const result = await this.db.query(`
       SELECT * FROM student_verifications 
       WHERE user_id = ? 
       ORDER BY created_at DESC 
       LIMIT 1
-    `).bind(userId).first();
+    `, [userId]);
 
     return result as StudentVerification | null;
   }
@@ -262,11 +262,11 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
   async updateUserStudentStatus(userId: string, isStudent: boolean, status: StudentVerificationStatus): Promise<boolean> {
     const subscriptionType = isStudent && status === 'approved' ? 'student' : 'free';
     
-    const result = await this.db.prepare(`
+    const result = await this.db.execute(`
       UPDATE users 
       SET is_student = ?, student_verification_status = ?, subscription_type = ?
       WHERE id = ?
-    `).bind(isStudent, status, subscriptionType, userId).run();
+    `, [isStudent, status, subscriptionType, userId]);
 
     return result.changes > 0;
   }
@@ -285,22 +285,22 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
   }
 
   async validateStudentDiscount(userId: string): Promise<boolean> {
-    const user = await this.db.prepare(`
+    const user = await this.db.query(`
       SELECT is_student, student_verification_status FROM users WHERE id = ?
-    `).bind(userId).first() as { is_student: boolean; student_verification_status: StudentVerificationStatus } | null;
+    `, [userId]) as { is_student: boolean; student_verification_status: StudentVerificationStatus } | null;
 
     if (!user) {
-      return false;
+      return (false.results || []);
     }
 
     // Check if student status is approved and not expired
     if (user.is_student && user.student_verification_status === 'approved') {
       const verification = await this.getUserVerificationStatus(userId);
       if (verification && verification.expires_at && verification.expires_at > Date.now()) {
-        return true;
+        return (true.results || []);
       }
     }
 
-    return false;
+    return (false.results || []);
   }
 }

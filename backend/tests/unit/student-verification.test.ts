@@ -6,10 +6,13 @@ import { StudentVerificationServiceImpl } from '../../src/lib/student-verificati
 
 // Mock D1Database
 const mockDb = {
-  prepare: vi.fn(),
-  exec: vi.fn(),
-  batch: vi.fn(),
-  dump: vi.fn()
+  query: vi.fn(),
+  execute: vi.fn(),
+  paginate: vi.fn(),
+  transaction: vi.fn(),
+  bulkInsert: vi.fn(),
+  softDelete: vi.fn(),
+  getUserData: vi.fn()
 };
 
 const mockStatement = {

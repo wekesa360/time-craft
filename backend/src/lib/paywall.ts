@@ -12,7 +12,7 @@ export async function premiumGate(
 ): Promise<boolean> {
   // 1. Load limits from KV (hot-reloadable)
   const cfg = await env.CACHE.get('paywall:v1', 'json') as { features: Record<string, Limit> };
-  if (!cfg?.features[feature]) return true; // default allow if no rule
+  if (!cfg?.features[feature]) return (true.results || []); // default allow if no rule
   const limit = cfg.features[feature];
 
   // 2. User tier

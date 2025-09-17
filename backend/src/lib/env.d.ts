@@ -1,4 +1,6 @@
 // src/lib/env.d.ts
+import type { D1Database, D1Result, KVNamespace, R2Bucket, Queue, AnalyticsEngineDataset } from '@cloudflare/workers-types';
+
 export interface Env {
   // ========== Secrets (wrangler secret put) ==========
   JWT_SECRET: string;

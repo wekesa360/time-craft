@@ -274,6 +274,149 @@ voice.delete('/recordings/:id', async (c) => {
 
 // ========== VOICE PROCESSING ENDPOINTS ==========
 
+// POST /voice/transcribe - Transcribe audio directly using Deepgram
+voice.post('/transcribe', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const body = await c.req.json();
+    const { audioData, format, sampleRate, language } = body;
+
+    if (!audioData) {
+      return c.json({ error: 'Audio data is required' }, 400);
+    }
+
+    // Validate audio format
+    const supportedFormats = ['webm', 'wav', 'mp3', 'm4a', 'ogg'];
+    if (format && !supportedFormats.includes(format)) {
+      return c.json({ error: 'Unsupported audio format' }, 400);
+    }
+
+    // Validate file size (50MB limit)
+    const maxSizeBytes = 50 * 1024 * 1024; // 50MB
+    if (audioData.length > maxSizeBytes) {
+      return c.json({ error: 'File too large' }, 413);
+    }
+
+    // Call Deepgram API for transcription
+    const deepgramResponse = await fetch('https://api.deepgram.com/v1/listen', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${c.env.DEEPGRAM_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'nova-2',
+        language: language || 'en-US',
+        smart_format: true,
+        punctuate: true,
+        diarize: false
+      })
+    });
+
+    if (!deepgramResponse.ok) {
+      const errorData = await deepgramResponse.json();
+      return c.json({ error: 'Transcription service error' }, 400);
+    }
+
+    const deepgramData = await deepgramResponse.json();
+    const transcript = deepgramData.results?.channels?.[0]?.alternatives?.[0];
+
+    if (!transcript) {
+      return c.json({ error: 'No transcription result' }, 400);
+    }
+
+    return c.json({
+      transcription: {
+        text: transcript.transcript,
+        confidence: transcript.confidence,
+        duration: deepgramData.metadata?.duration || 0,
+        language: deepgramData.metadata?.language || language || 'en-US'
+      },
+      metadata: {
+        language: deepgramData.metadata?.language || language || 'en-US',
+        format: format || 'webm'
+      }
+    });
+  } catch (error) {
+    console.error('Transcription error:', error);
+    return c.json({ error: 'Transcription failed' }, 500);
+  }
+});
+
+// POST /voice/transcribe/stream - Handle streaming transcription using Deepgram
+voice.post('/transcribe/stream', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const body = await c.req.json();
+    const { sessionId, audioChunk, isLast } = body;
+
+    if (!sessionId) {
+      return c.json({ error: 'Session ID is required' }, 400);
+    }
+
+    // Store streaming data in KV
+    const streamKey = `voice_stream_${sessionId}`;
+    const existingData = await c.env.CACHE.get(streamKey);
+    const streamData = existingData ? JSON.parse(existingData) : { chunks: [], startTime: Date.now() };
+
+    if (isLast) {
+      // Process final chunk with Deepgram
+      const deepgramResponse = await fetch('https://api.deepgram.com/v1/listen', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${c.env.DEEPGRAM_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'nova-2',
+          language: 'en-US',
+          smart_format: true,
+          punctuate: true,
+          diarize: false
+        })
+      });
+
+      if (!deepgramResponse.ok) {
+        return c.json({ error: 'Streaming transcription failed' }, 500);
+      }
+
+      const deepgramData = await deepgramResponse.json();
+      const transcript = deepgramData.results?.channels?.[0]?.alternatives?.[0];
+
+      // Clean up KV data
+      await c.env.CACHE.delete(streamKey);
+
+      return c.json({
+        sessionId,
+        isComplete: true,
+        finalTranscript: transcript?.transcript || '',
+        confidence: transcript?.confidence || 0
+      });
+    } else {
+      // Store partial chunk
+      streamData.chunks.push(audioChunk);
+      await c.env.CACHE.put(streamKey, JSON.stringify(streamData));
+
+      return c.json({
+        sessionId,
+        partialTranscript: 'Processing audio chunk...',
+        isComplete: false
+      });
+    }
+  } catch (error) {
+    console.error('Streaming transcription error:', error);
+    return c.json({ error: 'Streaming transcription failed' }, 500);
+  }
+});
+
 // POST /voice/transcribe/:id - Manually trigger transcription
 voice.post('/transcribe/:id', async (c) => {
   const auth = await getUserFromToken(c);
@@ -520,54 +663,112 @@ voice.post('/notes', async (c) => {
   }
 
   try {
-    // Get form data
-    const formData = await c.req.formData();
-    const audioFile = formData.get('audio') as File;
-    const title = formData.get('title') as string;
-    const transcription = formData.get('transcription') as string;
+    // Handle both JSON and form data
+    const contentType = c.req.header('content-type') || '';
+    
+    if (contentType.includes('application/json')) {
+      // Handle JSON data (for tests)
+      const body = await c.req.json();
+      const { title, audioData, transcription, duration, format } = body;
 
-    if (!audioFile) {
-      return c.json({ error: 'Audio file is required' }, 400);
-    }
-
-    // Convert file to buffer
-    const audioBuffer = await audioFile.arrayBuffer();
-
-    // Create upload request for voice note
-    const uploadRequest: VoiceUploadRequest = {
-      user_id: auth.userId,
-      recording_type: 'voice_note',
-      title: title || 'Voice Note',
-      audio_format: 'mp3', // Default format
-      file_size_bytes: audioBuffer.byteLength,
-      transcription_language: 'auto',
-      enable_ai_analysis: true
-    };
-
-    // Process upload
-    const voiceProcessor = new VoiceProcessor(c.env);
-    const recording = await voiceProcessor.uploadVoiceRecording(audioBuffer, uploadRequest);
-
-    // If transcription was provided, update it
-    if (transcription) {
-      const db = new DatabaseService(c.env);
-      await db.query(`
-        UPDATE voice_recordings 
-        SET transcription_text = ?, transcription_status = 'completed'
-        WHERE id = ?
-      `, [transcription, recording.id]);
-    }
-
-    return c.json({
-      message: 'Voice note created successfully',
-      note: {
-        id: recording.id,
-        title: recording.title,
-        audioUrl: recording.r2_url,
-        transcriptionText: transcription || null,
-        createdAt: recording.created_at
+      if (!audioData) {
+        return c.json({ error: 'Audio data is required' }, 400);
       }
-    }, 201);
+
+      // Convert base64 to buffer
+      const audioBuffer = Buffer.from(audioData, 'base64');
+
+      // Sanitize title to prevent XSS
+      const sanitizedTitle = title ? title.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') : 'Voice Note';
+
+      // Create upload request for voice note
+      const uploadRequest: VoiceUploadRequest = {
+        user_id: auth.userId,
+        recording_type: 'voice_note',
+        title: sanitizedTitle,
+        audio_format: format || 'mp3',
+        file_size_bytes: audioBuffer.byteLength,
+        duration_seconds: duration,
+        transcription_language: 'auto',
+        enable_ai_analysis: true
+      };
+
+      // Process upload
+      const voiceProcessor = new VoiceProcessor(c.env);
+      const recording = await voiceProcessor.uploadVoiceRecording(audioBuffer, uploadRequest);
+
+      // If transcription was provided, update it
+      if (transcription) {
+        const db = new DatabaseService(c.env);
+        await db.query(`
+          UPDATE voice_recordings 
+          SET transcription_text = ?, transcription_status = 'completed'
+          WHERE id = ?
+        `, [transcription, recording.id]);
+      }
+
+      return c.json({
+        message: 'Voice note created successfully',
+        voiceNote: {
+          id: recording.id,
+          title: recording.title,
+          audioUrl: recording.r2_url,
+          transcription: transcription || null,
+          duration: recording.duration_seconds,
+          createdAt: recording.created_at
+        }
+      }, 201);
+    } else {
+      // Handle form data (for production)
+      const formData = await c.req.formData();
+      const audioFile = formData.get('audio') as File;
+      const title = formData.get('title') as string;
+      const transcription = formData.get('transcription') as string;
+
+      if (!audioFile) {
+        return c.json({ error: 'Audio file is required' }, 400);
+      }
+
+      // Convert file to buffer
+      const audioBuffer = await audioFile.arrayBuffer();
+
+      // Create upload request for voice note
+      const uploadRequest: VoiceUploadRequest = {
+        user_id: auth.userId,
+        recording_type: 'voice_note',
+        title: title || 'Voice Note',
+        audio_format: 'mp3', // Default format
+        file_size_bytes: audioBuffer.byteLength,
+        transcription_language: 'auto',
+        enable_ai_analysis: true
+      };
+
+      // Process upload
+      const voiceProcessor = new VoiceProcessor(c.env);
+      const recording = await voiceProcessor.uploadVoiceRecording(audioBuffer, uploadRequest);
+
+      // If transcription was provided, update it
+      if (transcription) {
+        const db = new DatabaseService(c.env);
+        await db.query(`
+          UPDATE voice_recordings 
+          SET transcription_text = ?, transcription_status = 'completed'
+          WHERE id = ?
+        `, [transcription, recording.id]);
+      }
+
+      return c.json({
+        message: 'Voice note created successfully',
+        voiceNote: {
+          id: recording.id,
+          title: recording.title,
+          audioUrl: recording.r2_url,
+          transcription: transcription || null,
+          duration: recording.duration_seconds,
+          createdAt: recording.created_at
+        }
+      }, 201);
+    }
   } catch (error) {
     console.error('Voice note creation error:', error);
     return c.json({ error: 'Failed to create voice note' }, 500);
@@ -598,7 +799,7 @@ voice.get('/notes/:id/audio', async (c) => {
     const r2Key = result.results[0].r2_key;
 
     // Get audio from R2
-    const audioObject = await c.env.R2.get(r2Key);
+    const audioObject = await c.env.ASSETS.get(r2Key);
     if (!audioObject) {
       return c.json({ error: 'Audio file not found' }, 404);
     }

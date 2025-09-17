@@ -1,6 +1,7 @@
 // Test utilities and helpers for Time & Wellness Application
 import { Env } from '../../src/lib/env';
 import { sign } from 'hono/jwt';
+import { vi } from 'vitest';
 
 // Mock environment for testing
 export const createMockEnv = (): Env => ({
@@ -73,6 +74,7 @@ function createMockD1(): any {
 // Mock KV Store
 function createMockKV(): any {
   const storage = new Map<string, string>();
+  const mockData = new Map<string, any>();
   
   return {
     get: async (key: string) => storage.get(key) || null,
@@ -88,13 +90,18 @@ function createMockKV(): any {
     }),
     // Helper methods
     _clear: () => storage.clear(),
-    _size: () => storage.size
+    _size: () => storage.size,
+    _setMockData: (operation: string, data: any) => {
+      mockData.set(operation, data);
+    },
+    _getMockData: (operation: string) => mockData.get(operation)
   };
 }
 
 // Mock R2 Bucket
 function createMockR2(): any {
   const storage = new Map<string, any>();
+  const mockData = new Map<string, any>();
   
   return {
     put: async (key: string, value: any, options?: any) => {
@@ -111,7 +118,11 @@ function createMockR2(): any {
     list: async (options?: any) => ({
       objects: Array.from(storage.keys()).map(key => ({ key }))
     }),
-    _clear: () => storage.clear()
+    _clear: () => storage.clear(),
+    _setMockData: (operation: string, data: any) => {
+      mockData.set(operation, data);
+    },
+    _getMockData: (operation: string) => mockData.get(operation)
   };
 }
 
@@ -389,6 +400,27 @@ export const mockExternalAPIs = {
     }
   }
 };
+
+// Standardized external API mocking function
+export function setupMockExternalAPIs() {
+  global.fetch = vi.fn()
+    .mockResolvedValueOnce({ // OpenAI
+      ok: true,
+      json: () => Promise.resolve(mockExternalAPIs.openai.success)
+    })
+    .mockResolvedValueOnce({ // Deepgram
+      ok: true,
+      json: () => Promise.resolve(mockExternalAPIs.deepgram.success)
+    })
+    .mockResolvedValueOnce({ // OneSignal
+      ok: true,
+      json: () => Promise.resolve(mockExternalAPIs.oneSignal.notification)
+    })
+    .mockResolvedValueOnce({ // Stripe
+      ok: true,
+      json: () => Promise.resolve(mockExternalAPIs.stripe.customer)
+    });
+}
 
 // Helper functions for creating test data
 export async function createTestUser(env: any, overrides: Partial<any> = {}): Promise<string> {

@@ -75,23 +75,23 @@ export class AdminDashboardService {
    */
   async checkAdminPermissions(userId: string, requiredPermission?: string): Promise<AdminUser | null> {
     try {
-      const admin = await this.db.prepare(`
+      const admin = await this.db.query(`
         SELECT * FROM admin_users 
         WHERE user_id = ? AND is_active = true
-      `).bind(userId).first() as AdminUser | null;
+      `, [userId]) as AdminUser | null;
 
-      if (!admin) return null;
+      if (!admin) return [];
 
       admin.permissions = JSON.parse(admin.permissions as any);
 
       if (requiredPermission && !admin.permissions.includes(requiredPermission)) {
-        return null;
+        return [];
       }
 
-      return admin;
+      return (admin.results || []);
     } catch (error) {
       console.error('Error checking admin permissions:', error);
-      return null;
+      return [];
     }
   }
 
@@ -105,46 +105,46 @@ export class AdminDashboardService {
       const weekStart = now - (7 * 24 * 60 * 60 * 1000);
 
       // Get user statistics
-      const totalUsers = await this.db.prepare(`SELECT COUNT(*) as count FROM users`).first();
-      const activeUsersToday = await this.db.prepare(`
+      const totalUsers = await this.db.query(`SELECT COUNT(*) as count FROM users`);
+      const activeUsersToday = await this.db.query(`
         SELECT COUNT(DISTINCT user_id) as count FROM tasks 
         WHERE updated_at >= ?
-      `).bind(todayStart).first();
-      const activeUsersWeek = await this.db.prepare(`
+      `, [todayStart]);
+      const activeUsersWeek = await this.db.query(`
         SELECT COUNT(DISTINCT user_id) as count FROM tasks 
         WHERE updated_at >= ?
-      `).bind(weekStart).first();
-      const newUsersToday = await this.db.prepare(`
+      `, [weekStart]);
+      const newUsersToday = await this.db.query(`
         SELECT COUNT(*) as count FROM users 
         WHERE created_at >= ?
-      `).bind(todayStart).first();
+      `, [todayStart]);
 
       // Get task statistics
-      const totalTasks = await this.db.prepare(`SELECT COUNT(*) as count FROM tasks`).first();
-      const completedTasksToday = await this.db.prepare(`
+      const totalTasks = await this.db.query(`SELECT COUNT(*) as count FROM tasks`);
+      const completedTasksToday = await this.db.query(`
         SELECT COUNT(*) as count FROM tasks 
         WHERE status = 'completed' AND updated_at >= ?
-      `).bind(todayStart).first();
+      `, [todayStart]);
 
       // Get focus session statistics
-      const totalFocusSessions = await this.db.prepare(`SELECT COUNT(*) as count FROM focus_sessions`).first();
-      const focusSessionsToday = await this.db.prepare(`
+      const totalFocusSessions = await this.db.query(`SELECT COUNT(*) as count FROM focus_sessions`);
+      const focusSessionsToday = await this.db.query(`
         SELECT COUNT(*) as count FROM focus_sessions 
         WHERE created_at >= ?
-      `).bind(todayStart).first();
+      `, [todayStart]);
 
       // Get support ticket statistics
-      const openTickets = await this.db.prepare(`
+      const openTickets = await this.db.query(`
         SELECT COUNT(*) as count FROM support_tickets 
         WHERE status IN ('open', 'in_progress')
-      `).first();
+      `);
 
       // Get subscription breakdown
-      const subscriptionBreakdown = await this.db.prepare(`
+      const subscriptionBreakdown = await this.db.query(`
         SELECT subscription_type, COUNT(*) as count 
         FROM users 
         GROUP BY subscription_type
-      `).all();
+      `);
 
       const subscriptionMap: Record<string, number> = {};
       subscriptionBreakdown.forEach((row: any) => {
@@ -266,7 +266,7 @@ export class AdminDashboardService {
         Date.now()
       ).run();
 
-      return ticketId;
+      return (ticketId.results || []);
     } catch (error) {
       console.error('Error creating support ticket:', error);
       throw new Error('Failed to create support ticket');
@@ -303,10 +303,10 @@ export class AdminDashboardService {
       // Log admin action
       await this.logAdminAction(adminUserId, 'update_ticket', 'support_ticket', ticketId, {}, updates);
 
-      return true;
+      return (true.results || []);
     } catch (error) {
       console.error('Error updating support ticket:', error);
-      return false;
+      return (false.results || []);
     }
   }
 
@@ -371,10 +371,10 @@ export class AdminDashboardService {
       // Log admin action
       await this.logAdminAction(adminUserId, 'update_feature_flag', 'feature_flag', flagName, {}, updates);
 
-      return true;
+      return (true.results || []);
     } catch (error) {
       console.error('Error updating feature flag:', error);
-      return false;
+      return (false.results || []);
     }
   }
 
@@ -383,9 +383,9 @@ export class AdminDashboardService {
    */
   async getFeatureFlags(): Promise<FeatureFlag[]> {
     try {
-      const results = await this.db.prepare(`
+      const results = await this.db.query(`
         SELECT * FROM feature_flags ORDER BY flag_name
-      `).all();
+      `);
 
       return results.map((row: any) => ({
         ...row,
@@ -480,7 +480,7 @@ export class AdminDashboardService {
       const startTime = Date.now() - (days * 24 * 60 * 60 * 1000);
 
       // Daily active users
-      const dailyActiveUsers = await this.db.prepare(`
+      const dailyActiveUsers = await this.db.query(`
         SELECT 
           DATE(created_at / 1000, 'unixepoch') as date,
           COUNT(DISTINCT user_id) as active_users
@@ -488,10 +488,10 @@ export class AdminDashboardService {
         WHERE created_at >= ?
         GROUP BY DATE(created_at / 1000, 'unixepoch')
         ORDER BY date
-      `).bind(startTime).all();
+      `, [startTime]);
 
       // New user registrations
-      const newRegistrations = await this.db.prepare(`
+      const newRegistrations = await this.db.query(`
         SELECT 
           DATE(created_at / 1000, 'unixepoch') as date,
           COUNT(*) as new_users
@@ -499,10 +499,10 @@ export class AdminDashboardService {
         WHERE created_at >= ?
         GROUP BY DATE(created_at / 1000, 'unixepoch')
         ORDER BY date
-      `).bind(startTime).all();
+      `, [startTime]);
 
       // Feature usage
-      const featureUsage = await this.db.prepare(`
+      const featureUsage = await this.db.query(`
         SELECT 
           'tasks' as feature,
           COUNT(*) as usage_count
@@ -517,7 +517,7 @@ export class AdminDashboardService {
           'habits' as feature,
           COUNT(*) as usage_count
         FROM habit_completions WHERE created_at >= ?
-      `).bind(startTime, startTime, startTime).all();
+      `, [startTime, startTime, startTime]);
 
       return {
         daily_active_users: dailyActiveUsers,

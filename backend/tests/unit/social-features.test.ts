@@ -4,20 +4,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SocialFeaturesServiceImpl } from '../../src/lib/social-features';
 
-// Mock D1Database
+// Mock DatabaseService
 const mockDb = {
-  prepare: vi.fn(),
-  exec: vi.fn(),
-  batch: vi.fn(),
-  dump: vi.fn()
-};
-
-const mockStatement = {
-  bind: vi.fn().mockReturnThis(),
-  first: vi.fn(),
-  all: vi.fn(),
-  run: vi.fn(),
-  raw: vi.fn()
+  query: vi.fn(),
+  execute: vi.fn(),
+  paginate: vi.fn(),
+  transaction: vi.fn(),
+  bulkInsert: vi.fn(),
+  softDelete: vi.fn(),
+  getUserData: vi.fn()
 };
 
 describe('SocialFeaturesService', () => {
@@ -25,7 +20,6 @@ describe('SocialFeaturesService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockDb.prepare.mockReturnValue(mockStatement);
     socialService = new SocialFeaturesServiceImpl(mockDb as any);
   });
 
@@ -36,8 +30,8 @@ describe('SocialFeaturesService', () => {
       const type = 'friend';
 
       // Mock no existing connection
-      mockStatement.first.mockResolvedValueOnce(null);
-      mockStatement.run.mockResolvedValueOnce({ changes: 1 });
+      mockDb.query.mockResolvedValueOnce({ results: [] });
+      mockDb.execute.mockResolvedValueOnce({ changes: 1 });
 
       const result = await socialService.sendConnectionRequest(requesterId, addresseeId, type);
 
@@ -47,7 +41,7 @@ describe('SocialFeaturesService', () => {
         status: 'pending',
         connection_type: type
       });
-      expect(mockDb.prepare).toHaveBeenCalledTimes(2);
+      expect(mockDb.execute).toHaveBeenCalledTimes(1);
     });
 
     it('should throw error if connection already exists', async () => {
@@ -55,7 +49,7 @@ describe('SocialFeaturesService', () => {
       const addresseeId = 'user2';
 
       // Mock existing connection
-      mockStatement.first.mockResolvedValueOnce({ id: 'existing' });
+      mockDb.query.mockResolvedValueOnce({ results: [{ id: 'existing' }] });
 
       await expect(
         socialService.sendConnectionRequest(requesterId, addresseeId)
@@ -66,19 +60,22 @@ describe('SocialFeaturesService', () => {
       const connectionId = 'conn1';
       const userId = 'user2';
 
-      mockStatement.run.mockResolvedValueOnce({ changes: 1 });
+      mockDb.execute.mockResolvedValueOnce({ changes: 1 });
 
       const result = await socialService.acceptConnectionRequest(connectionId, userId);
 
       expect(result).toBe(true);
-      expect(mockStatement.bind).toHaveBeenCalledWith(expect.any(Number), connectionId, userId);
+      expect(mockDb.execute).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE user_connections'),
+        expect.arrayContaining([expect.any(Number), connectionId, userId])
+      );
     });
 
     it('should reject connection request successfully', async () => {
       const connectionId = 'conn1';
       const userId = 'user2';
 
-      mockStatement.run.mockResolvedValueOnce({ changes: 1 });
+      mockDb.execute.mockResolvedValueOnce({ changes: 1 });
 
       const result = await socialService.rejectConnectionRequest(connectionId, userId);
 
@@ -89,12 +86,12 @@ describe('SocialFeaturesService', () => {
       const blockerId = 'user1';
       const blockedId = 'user2';
 
-      mockStatement.run.mockResolvedValue({ changes: 1 });
+      mockDb.execute.mockResolvedValue({ changes: 1 });
 
       const result = await socialService.blockUser(blockerId, blockedId);
 
       expect(result).toBe(true);
-      expect(mockDb.prepare).toHaveBeenCalledTimes(2); // DELETE + INSERT
+      expect(mockDb.execute).toHaveBeenCalledTimes(2); // DELETE + INSERT
     });
 
     it('should get user connections with filters', async () => {
@@ -104,12 +101,15 @@ describe('SocialFeaturesService', () => {
         { id: 'conn1', requester_id: userId, status: 'accepted' }
       ];
 
-      mockStatement.all.mockResolvedValueOnce({ results: mockConnections });
+      mockDb.query.mockResolvedValueOnce({ results: mockConnections });
 
       const result = await socialService.getUserConnections(userId, status);
 
       expect(result).toEqual(mockConnections);
-      expect(mockStatement.bind).toHaveBeenCalledWith(userId, userId, status);
+      expect(mockDb.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT uc.*'),
+        expect.arrayContaining([userId, userId, status])
+      );
     });
   });
 
@@ -120,8 +120,8 @@ describe('SocialFeaturesService', () => {
       const userId = 'user1';
 
       // Mock badge exists and is unlocked
-      mockStatement.first.mockResolvedValueOnce({ id: badgeId, user_id: userId, is_unlocked: true });
-      mockStatement.run.mockResolvedValue({ changes: 1 });
+      mockDb.query.mockResolvedValueOnce({ results: [{ id: badgeId, user_id: userId, is_unlocked: true }] });
+      mockDb.execute.mockResolvedValue({ changes: 1 });
 
       const result = await socialService.shareAchievement(badgeId, platform, userId);
 
@@ -138,7 +138,7 @@ describe('SocialFeaturesService', () => {
       const platform = 'twitter';
       const userId = 'user1';
 
-      mockStatement.first.mockResolvedValueOnce(null);
+      mockDb.query.mockResolvedValueOnce({ results: [null] });
 
       await expect(
         socialService.shareAchievement(badgeId, platform, userId)
@@ -152,7 +152,7 @@ describe('SocialFeaturesService', () => {
         { platform: 'facebook', count: 3, clicks: 7 }
       ];
 
-      mockStatement.all.mockResolvedValueOnce({ results: mockStats });
+      mockDb.query.mockResolvedValueOnce({ results: mockStats });
 
       const result = await socialService.getAchievementShareStats(badgeId);
 
@@ -193,13 +193,15 @@ describe('SocialFeaturesService', () => {
         reward_description: 'Test badge'
       };
 
-      mockStatement.run.mockResolvedValue({ changes: 1 });
-      // Mock auto-join
-      mockStatement.first.mockResolvedValueOnce({ 
+      mockDb.execute.mockResolvedValue({ changes: 1 });
+      // Mock auto-join - challenge exists check
+      mockDb.query.mockResolvedValueOnce({ results: [{ 
         ...challengeData, 
         id: 'challenge1',
         participant_count: 0 
-      });
+      }] });
+      // Mock auto-join - user not already joined check
+      mockDb.query.mockResolvedValueOnce({ results: [] });
 
       const result = await socialService.createChallenge(creatorId, challengeData);
 
@@ -214,14 +216,14 @@ describe('SocialFeaturesService', () => {
       const userId = 'user1';
 
       // Mock challenge exists with space
-      mockStatement.first.mockResolvedValueOnce({
+      mockDb.query.mockResolvedValueOnce({ results: [{
         id: challengeId,
         max_participants: 10,
         participant_count: 5
-      });
+      }] });
       // Mock user not already joined
-      mockStatement.first.mockResolvedValueOnce(null);
-      mockStatement.run.mockResolvedValueOnce({ changes: 1 });
+      mockDb.query.mockResolvedValueOnce({ results: [null] });
+      mockDb.execute.mockResolvedValueOnce({ changes: 1 });
 
       const result = await socialService.joinChallenge(challengeId, userId);
 
@@ -237,11 +239,11 @@ describe('SocialFeaturesService', () => {
       const userId = 'user1';
 
       // Mock challenge is full
-      mockStatement.first.mockResolvedValueOnce({
+      mockDb.query.mockResolvedValueOnce({ results: [{
         id: challengeId,
         max_participants: 10,
         participant_count: 10
-      });
+      }] });
 
       await expect(
         socialService.joinChallenge(challengeId, userId)
@@ -253,13 +255,13 @@ describe('SocialFeaturesService', () => {
       const userId = 'user1';
 
       // Mock challenge exists with space
-      mockStatement.first.mockResolvedValueOnce({
+      mockDb.query.mockResolvedValueOnce({ results: [{
         id: challengeId,
         max_participants: 10,
         participant_count: 5
-      });
+      }] });
       // Mock user already joined
-      mockStatement.first.mockResolvedValueOnce({ id: 'existing' });
+      mockDb.query.mockResolvedValueOnce({ results: [{ id: 'existing' }] });
 
       await expect(
         socialService.joinChallenge(challengeId, userId)
@@ -270,7 +272,7 @@ describe('SocialFeaturesService', () => {
       const challengeId = 'challenge1';
       const userId = 'user1';
 
-      mockStatement.run.mockResolvedValueOnce({ changes: 1 });
+      mockDb.execute.mockResolvedValueOnce({ changes: 1 });
 
       const result = await socialService.leaveChallenge(challengeId, userId);
 
@@ -282,15 +284,14 @@ describe('SocialFeaturesService', () => {
       const userId = 'user1';
       const progressData = { completed_days: 5, current_streak: 3 };
 
-      mockStatement.run.mockResolvedValueOnce({ changes: 1 });
+      mockDb.execute.mockResolvedValueOnce({ changes: 1 });
 
       const result = await socialService.updateChallengeProgress(challengeId, userId, progressData);
 
       expect(result).toBe(true);
-      expect(mockStatement.bind).toHaveBeenCalledWith(
-        JSON.stringify(progressData),
-        challengeId,
-        userId
+      expect(mockDb.execute).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE challenge_participants'),
+        expect.arrayContaining([JSON.stringify(progressData), challengeId, userId])
       );
     });
 
@@ -301,7 +302,7 @@ describe('SocialFeaturesService', () => {
         { id: 'p2', user_id: 'user2', final_score: 90, first_name: 'Jane' }
       ];
 
-      mockStatement.all.mockResolvedValueOnce({ results: mockLeaderboard });
+      mockDb.query.mockResolvedValueOnce({ results: mockLeaderboard });
 
       const result = await socialService.getChallengeLeaderboard(challengeId);
 
@@ -315,12 +316,15 @@ describe('SocialFeaturesService', () => {
         { id: 'c2', title: 'Public Challenge 2', is_public: true }
       ];
 
-      mockStatement.all.mockResolvedValueOnce({ results: mockChallenges });
+      mockDb.query.mockResolvedValueOnce({ results: mockChallenges });
 
       const result = await socialService.getPublicChallenges(limit);
 
       expect(result).toEqual(mockChallenges);
-      expect(mockStatement.bind).toHaveBeenCalledWith(expect.any(Number), limit);
+      expect(mockDb.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT sc.*'),
+        expect.arrayContaining([expect.any(Number), limit])
+      );
     });
 
     it('should get user challenges', async () => {
@@ -330,19 +334,22 @@ describe('SocialFeaturesService', () => {
         { id: 'c2', title: 'User Challenge 2', completion_status: 'completed' }
       ];
 
-      mockStatement.all.mockResolvedValueOnce({ results: mockChallenges });
+      mockDb.query.mockResolvedValueOnce({ results: mockChallenges });
 
       const result = await socialService.getUserChallenges(userId);
 
       expect(result).toEqual(mockChallenges);
-      expect(mockStatement.bind).toHaveBeenCalledWith(userId);
+      expect(mockDb.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT DISTINCT sc.*'),
+        expect.arrayContaining([userId])
+      );
     });
   });
 
   describe('Error Handling', () => {
     it('should handle database errors gracefully', async () => {
       const error = new Error('Database connection failed');
-      mockStatement.first.mockRejectedValueOnce(error);
+      mockDb.query.mockRejectedValueOnce(error);
 
       await expect(
         socialService.sendConnectionRequest('user1', 'user2')
@@ -351,12 +358,14 @@ describe('SocialFeaturesService', () => {
 
     it('should handle invalid UUIDs', async () => {
       // This would be handled by the API layer validation, but testing service robustness
-      mockStatement.first.mockResolvedValueOnce(null);
-      mockStatement.run.mockResolvedValueOnce({ changes: 1 });
+      mockDb.query.mockResolvedValueOnce({ results: [null] });
+      mockDb.execute.mockResolvedValueOnce({ changes: 1 });
 
       const result = await socialService.sendConnectionRequest('invalid-uuid', 'user2');
       
       expect(result.requester_id).toBe('invalid-uuid');
+      expect(result.addressee_id).toBe('user2');
+      expect(result.status).toBe('pending');
     });
   });
 });

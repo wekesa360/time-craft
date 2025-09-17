@@ -375,6 +375,8 @@ export class VoiceProcessor {
     confidence: number;
     suggestedAction: any;
     alternatives?: any[];
+    clarificationNeeded?: boolean;
+    suggestedClarifications?: string[];
   }> {
     try {
       const systemPrompt = `You are a voice command interpreter for a productivity app. Analyze the user's voice command and extract:
@@ -414,14 +416,28 @@ Extract the intent and entities from this voice command.`;
       const data = await response.json();
       const interpretation = JSON.parse(data.choices[0].message.content);
 
-      // Add default values if missing
-      return {
+      // Add default values if missing, including clarification properties
+      const result = {
         intent: interpretation.intent || 'unknown',
         entities: interpretation.entities || {},
         confidence: interpretation.confidence || 0.5,
         suggestedAction: interpretation.suggestedAction || { type: 'none', parameters: {} },
-        alternatives: interpretation.alternatives || []
+        alternatives: interpretation.alternatives || [],
+        clarificationNeeded: interpretation.clarificationNeeded,
+        suggestedClarifications: interpretation.suggestedClarifications
       };
+
+      // Add clarification properties for unclear commands if not already provided
+      if ((result.intent === 'unclear' || result.confidence <= 0.3) && !result.clarificationNeeded) {
+        result.clarificationNeeded = true;
+        result.suggestedClarifications = [
+          'What would you like to do?',
+          'Please be more specific about your request',
+          'Try saying "create a task" or "log my workout"'
+        ];
+      }
+
+      return result;
     } catch (error) {
       console.error('Voice command interpretation error:', error);
       // Return fallback interpretation
