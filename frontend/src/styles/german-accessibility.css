@@ -1,0 +1,426 @@
+/* German Accessibility Styles */
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Screen reader only content that becomes visible on focus */
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Skip links for German interface */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000000;
+  color: #ffffff;
+  padding: 8px 12px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+  font-size: 14px;
+  font-weight: 500;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 6px;
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* German accessible buttons */
+.german-accessible-button {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.german-accessible-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.german-accessible-button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* German accessible inputs */
+.german-accessible-input {
+  transition: all 0.2s ease;
+}
+
+.german-accessible-input:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* German accessible navigation */
+.german-accessible-nav {
+  position: relative;
+}
+
+.german-accessible-nav a:focus,
+.german-accessible-nav button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 4px;
+}
+
+/* German accessible main content */
+.german-accessible-main {
+  position: relative;
+}
+
+.german-accessible-main:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* German accessible modal */
+.german-accessible-modal {
+  position: relative;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.modal-close:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* High contrast mode for German accessibility */
+@media (prefers-contrast: high) {
+  [lang="de"] .german-accessible-button,
+  [lang="de"] .german-accessible-input,
+  [lang="de"] .german-accessible-nav a,
+  [lang="de"] .german-accessible-nav button {
+    border: 2px solid #000000;
+    background-color: #ffffff;
+    color: #000000;
+  }
+  
+  [lang="de"] .german-accessible-button:hover,
+  [lang="de"] .german-accessible-button:focus,
+  [lang="de"] .german-accessible-nav a:hover,
+  [lang="de"] .german-accessible-nav a:focus,
+  [lang="de"] .german-accessible-nav button:hover,
+  [lang="de"] .german-accessible-nav button:focus {
+    background-color: #000000;
+    color: #ffffff;
+    border-color: #000000;
+  }
+  
+  [lang="de"] .german-accessible-input:focus {
+    border-color: #000000;
+    background-color: #ffffff;
+    color: #000000;
+  }
+  
+  [lang="de"] .modal-content {
+    background-color: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+  
+  [lang="de"] .modal-title {
+    color: #000000;
+  }
+  
+  [lang="de"] .modal-close {
+    color: #000000;
+    border: 1px solid #000000;
+  }
+  
+  [lang="de"] .modal-close:hover,
+  [lang="de"] .modal-close:focus {
+    background-color: #000000;
+    color: #ffffff;
+  }
+}
+
+/* Forced colors mode support */
+@media (forced-colors: active) {
+  [lang="de"] .german-accessible-button {
+    border: 1px solid ButtonText;
+    background-color: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
+  }
+  
+  [lang="de"] .german-accessible-button:hover,
+  [lang="de"] .german-accessible-button:focus {
+    border: 1px solid Highlight;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+  
+  [lang="de"] .german-accessible-input {
+    border: 1px solid ButtonText;
+    background-color: Field;
+    color: FieldText;
+    forced-color-adjust: none;
+  }
+  
+  [lang="de"] .german-accessible-input:focus {
+    border: 1px solid Highlight;
+    background-color: Field;
+    color: FieldText;
+  }
+  
+  [lang="de"] .modal-content {
+    background-color: Canvas;
+    color: CanvasText;
+    border: 1px solid ButtonText;
+    forced-color-adjust: none;
+  }
+  
+  [lang="de"] .skip-link {
+    background-color: ButtonFace;
+    color: ButtonText;
+    border: 1px solid ButtonText;
+  }
+  
+  [lang="de"] .skip-link:focus {
+    background-color: Highlight;
+    color: HighlightText;
+    border: 1px solid Highlight;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  [lang="de"] .german-accessible-button,
+  [lang="de"] .german-accessible-input,
+  [lang="de"] .german-accessible-nav a,
+  [lang="de"] .german-accessible-nav button,
+  [lang="de"] .modal-content,
+  [lang="de"] .skip-link {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Focus indicators for keyboard navigation */
+[lang="de"] *:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Enhanced focus for interactive elements */
+[lang="de"] button:focus-visible,
+[lang="de"] input:focus-visible,
+[lang="de"] select:focus-visible,
+[lang="de"] textarea:focus-visible,
+[lang="de"] a:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Language announcements */
+.language-announcement {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* German compound word accessibility */
+[lang="de"] .compound-word {
+  position: relative;
+}
+
+[lang="de"] .compound-word::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+[lang="de"] .compound-word:focus::after {
+  background-color: #3b82f6;
+}
+
+/* Accessibility status indicators */
+.accessibility-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.accessibility-status-indicator.active {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.accessibility-status-indicator.inactive {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .modal-content {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+  
+  .modal-title {
+    color: #f9fafb;
+  }
+  
+  .modal-header {
+    border-bottom-color: #374151;
+  }
+  
+  .modal-close {
+    color: #9ca3af;
+  }
+  
+  .modal-close:hover {
+    background-color: #374151;
+    color: #f3f4f6;
+  }
+  
+  .accessibility-status-indicator.active {
+    background-color: #064e3b;
+    color: #6ee7b7;
+    border-color: #047857;
+  }
+  
+  .accessibility-status-indicator.inactive {
+    background-color: #7f1d1d;
+    color: #fca5a5;
+    border-color: #dc2626;
+  }
+}
+
+/* Print styles for accessibility */
+@media print {
+  .skip-link,
+  .language-announcement,
+  .sr-only {
+    display: none !important;
+  }
+  
+  [lang="de"] .german-accessible-button,
+  [lang="de"] .german-accessible-input,
+  [lang="de"] .german-accessible-nav a {
+    outline: none !important;
+    box-shadow: none !important;
+    border: 1px solid #000000 !important;
+  }
+}
+
+/* Touch device adjustments */
+@media (pointer: coarse) {
+  [lang="de"] .german-accessible-button,
+  [lang="de"] .german-accessible-nav a,
+  [lang="de"] .german-accessible-nav button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+  }
+  
+  .skip-link {
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+  
+  .modal-close {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem;
+  }
+}

@@ -1,0 +1,1000 @@
+{
+  "app": {
+    "name": "Time & Wellness",
+    "tagline": "Ihr persönlicher Begleiter für Produktivität und Wohlbefinden"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "register": "Konto erstellen",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "forgotPassword": "Passwort vergessen?",
+    "resetPassword": "Passwort zurücksetzen",
+    "backToLogin": "Zurück zur Anmeldung",
+    "alreadyHaveAccount": "Haben Sie bereits ein Konto?",
+    "dontHaveAccount": "Haben Sie noch kein Konto?",
+    "signInToContinue": "Melden Sie sich an, um fortzufahren",
+    "createYourAccount": "Erstellen Sie Ihr Konto",
+    "enterEmailToReset": "Geben Sie Ihre E-Mail ein, um das Passwort zurückzusetzen",
+    "checkEmail": "Überprüfen Sie Ihre E-Mail für Zurücksetzungsanweisungen",
+    "passwordResetSuccess": "Passwort erfolgreich zurückgesetzt",
+    "isStudent": "Ich bin Student",
+    "studentDiscount": "Studentenrabatt erhalten"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "tasks": "Aufgaben",
+    "health": "Gesundheit",
+    "calendar": "Kalender",
+    "focus": "Fokus",
+    "badges": "Abzeichen",
+    "social": "Sozial",
+    "voice": "Sprache",
+    "analytics": "Analysen",
+    "settings": "Einstellungen",
+    "profile": "Profil",
+    "student": "Student",
+    "localization": "Lokalisierung",
+    "admin": "Verwaltung",
+    "notifications": "Benachrichtigungen"
+  },
+  "dashboard": {
+    "welcome": "Willkommen zurück",
+    "todaysTasks": "Heutige Aufgaben",
+    "healthSummary": "Gesundheitszusammenfassung",
+    "focusTime": "Fokuszeit",
+    "recentActivity": "Letzte Aktivitäten",
+    "quickActions": "Schnellaktionen",
+    "upcomingEvents": "Anstehende Termine",
+    "noTasksToday": "Keine Aufgaben für heute geplant",
+    "noRecentActivity": "Keine aktuellen Aktivitäten",
+    "noUpcomingEvents": "Keine anstehenden Termine",
+    "recommendations": "Empfehlungen",
+    "overdueTasks": "Überfällige Aufgaben",
+    "increaseFocus": "Fokuszeit erhöhen",
+    "focusGoal": "Versuchen Sie 5+ Stunden pro Woche zu erreichen",
+    "startExercising": "Mit Sport beginnen",
+    "healthBenefit": "Regelmäßiger Sport steigert die Produktivität",
+    "earnFirstBadge": "Erstes Abzeichen verdienen",
+    "badgeMotivation": "Schließen Sie Aufgaben ab, um Erfolge freizuschalten"
+  },
+  "tasks": {
+    "title": "Aufgaben",
+    "createTask": "Aufgabe erstellen",
+    "editTask": "Aufgabe bearbeiten",
+    "deleteTask": "Aufgabe löschen",
+    "taskTitle": "Aufgabentitel",
+    "description": "Beschreibung",
+    "priority": "Priorität",
+    "dueDate": "Fälligkeitsdatum",
+    "estimatedDuration": "Geschätzte Dauer",
+    "contextType": "Kontext",
+    "status": "Status",
+    "completed": "Abgeschlossen",
+    "pending": "Ausstehend",
+    "inProgress": "In Bearbeitung",
+    "cancelled": "Abgebrochen",
+    "priorities": {
+      "1": "Niedrig",
+      "2": "Mittel",
+      "3": "Hoch",
+      "4": "Dringend"
+    },
+    "contexts": {
+      "work": "Arbeit",
+      "personal": "Persönlich",
+      "health": "Gesundheit",
+      "learning": "Lernen",
+      "social": "Soziales"
+    },
+    "filters": {
+      "all": "Alle Aufgaben",
+      "today": "Heute",
+      "overdue": "Überfällig",
+      "completed": "Abgeschlossen"
+    },
+    "stats": {
+      "total": "Gesamt",
+      "completed": "Abgeschlossen",
+      "pending": "Ausstehend",
+      "overdue": "Überfällig"
+    },
+    "noTasks": "Keine Aufgaben gefunden",
+    "createFirstTask": "Erstellen Sie Ihre erste Aufgabe, um loszulegen",
+    "markComplete": "Als abgeschlossen markieren",
+    "markInProgress": "Als in Bearbeitung markieren",
+    "deleteConfirm": "Sind Sie sicher, dass Sie diese Aufgabe löschen möchten?",
+    "noDueDate": "Kein Fälligkeitsdatum",
+    "eisenhowerMatrix": "Eisenhower Matrix"
+  },
+  "matrix": {
+    "do": "Machen",
+    "decide": "Entscheiden", 
+    "delegate": "Delegieren",
+    "delete": "Löschen",
+    "urgentImportant": "Dringend & Wichtig",
+    "notUrgentImportant": "Nicht dringend & Wichtig", 
+    "urgentNotImportant": "Dringend & Nicht wichtig",
+    "notUrgentNotImportant": "Nicht dringend & Nicht wichtig"
+  },
+  "health": {
+    "title": "Gesundheitsverfolgung",
+    "logHealth": "Gesundheitsdaten erfassen",
+    "exercise": "Sport",
+    "nutrition": "Ernährung",
+    "mood": "Stimmung",
+    "hydration": "Flüssigkeitszufuhr",
+    "summary": "Zusammenfassung",
+    "todaysLogs": "Heutige Einträge",
+    "weeklyStats": "Wöchentliche Statistiken",
+    "exerciseForm": {
+      "activity": "Aktivität",
+      "duration": "Dauer (Minuten)",
+      "intensity": "Intensität (1-10)",
+      "caloriesBurned": "Verbrannte Kalorien",
+      "distance": "Entfernung (km)",
+      "notes": "Notizen"
+    },
+    "nutritionForm": {
+      "mealType": "Mahlzeittyp",
+      "description": "Beschreibung",
+      "calories": "Kalorien",
+      "protein": "Protein (g)",
+      "carbs": "Kohlenhydrate (g)",
+      "fat": "Fett (g)"
+    },
+    "moodForm": {
+      "score": "Stimmungswert (1-10)",
+      "energy": "Energielevel (1-10)",
+      "stress": "Stresslevel (1-10)",
+      "sleep": "Schlafqualität (1-10)",
+      "notes": "Notizen",
+      "tags": "Tags"
+    },
+    "hydrationForm": {
+      "amount": "Menge (ml)",
+      "drinkType": "Getränketyp"
+    },
+    "mealTypes": {
+      "breakfast": "Frühstück",
+      "lunch": "Mittagessen",
+      "dinner": "Abendessen",
+      "snack": "Snack"
+    },
+    "drinkTypes": {
+      "water": "Wasser",
+      "coffee": "Kaffee",
+      "tea": "Tee",
+      "juice": "Saft",
+      "sports_drink": "Sportgetränk",
+      "other": "Andere"
+    },
+    "noLogs": "Keine Gesundheitseinträge gefunden",
+    "startTracking": "Beginnen Sie mit der Verfolgung Ihrer Gesundheitsdaten"
+  },
+  "focus": {
+    "title": "Fokussitzungen",
+    "startSession": "Sitzung starten",
+    "sessionTypes": {
+      "pomodoro": "Pomodoro",
+      "deep_work": "Tiefes Arbeiten",
+      "break": "Pause"
+    },
+    "timer": {
+      "minutes": "Minuten",
+      "seconds": "Sekunden",
+      "start": "Start",
+      "pause": "Pause",
+      "resume": "Fortsetzen",
+      "stop": "Stopp",
+      "complete": "Sitzung abschließen"
+    },
+    "sessionComplete": "Sitzung abgeschlossen!",
+    "wasProductive": "War diese Sitzung produktiv?",
+    "distractions": "Anzahl der Ablenkungen",
+    "sessionNotes": "Sitzungsnotizen"
+  },
+  "badges": {
+    "title": "Abzeichen & Erfolge",
+    "myBadges": "Meine Abzeichen",
+    "availableBadges": "Verfügbare Abzeichen",
+    "totalPoints": "Gesamtpunkte",
+    "checkForNewBadges": "Nach neuen Abzeichen suchen",
+    "categories": {
+      "tasks": "Aufgaben",
+      "health": "Gesundheit",
+      "streak": "Serien",
+      "milestone": "Meilensteine",
+      "achievement": "Erfolge"
+    },
+    "tiers": {
+      "bronze": "Bronze",
+      "silver": "Silber",
+      "gold": "Gold",
+      "platinum": "Platin"
+    },
+    "unlocked": "Freigeschaltet",
+    "locked": "Gesperrt",
+    "unlockedAt": "Freigeschaltet am",
+    "progress": "Abzeichen-Fortschritt",
+    "remaining": "verbleibend",
+    "noBadges": "Noch keine Abzeichen freigeschaltet",
+    "startEarning": "Schließen Sie Aufgaben ab und verfolgen Sie Ihre Gesundheit, um Abzeichen zu verdienen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "description": "Verwalten Sie Ihre Kontoeinstellungen und Anwendungsvoreinstellungen",
+    "navigation": "Einstellungsnavigation",
+    "profile": "Profileinstellungen",
+    "preferences": "Voreinstellungen",
+    "theme": "Theme-Einstellungen",
+    "language": "Sprache",
+    "notifications": "Benachrichtigungen",
+    "account": "Konto",
+    "subscription": "Abonnement",
+    "privacy": "Datenschutz",
+    "dataManagement": "Datenverwaltung",
+    "about": "Über",
+    "profileForm": {
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail-Adresse",
+      "timezone": "Zeitzone",
+      "language": "Bevorzugte Sprache"
+    },
+    "themeSettings": {
+      "title": "Theme-Einstellungen",
+      "appearance": "Aussehen",
+      "colorTheme": "Farbthema",
+      "modes": {
+        "light": "Hell",
+        "dark": "Dunkel",
+        "system": "System"
+      },
+      "colors": {
+        "blue": "Ozean Blau",
+        "green": "Wald Grün",
+        "purple": "Königliches Violett",
+        "orange": "Sonnenuntergang Orange",
+        "pink": "Kirsch Rosa",
+        "teal": "Ozean Türkis"
+      }
+    },
+    "preferences": {
+      "compactMode": "Kompakter Modus",
+      "animationsEnabled": "Animationen aktivieren",
+      "sidebarCollapsed": "Seitenleiste eingeklappt",
+      "showWelcomeTour": "Willkommenstour anzeigen"
+    },
+    "languages": {
+      "en": "Englisch",
+      "de": "Deutsch"
+    },
+    "emailPlaceholder": "ihre.email@beispiel.com",
+    "emailChangeNote": "Kontaktieren Sie den Support, um Ihre E-Mail-Adresse zu ändern",
+    "displayName": "Anzeigename",
+    "displayNamePlaceholder": "Ihr Anzeigename",
+    "deleteAccount": "Konto löschen",
+    "taskReminders": "Aufgabenerinnerungen",
+    "taskRemindersDesc": "Benachrichtigungen über anstehende Aufgaben erhalten",
+    "focusAlerts": "Fokussitzungs-Benachrichtigungen",
+    "focusAlertsDesc": "Benachrichtigungen während Fokussitzungen",
+    "healthInsights": "Gesundheitseinblicke",
+    "healthInsightsDesc": "Wöchentliche Gesundheits- und Produktivitätsberichte",
+    "dataCollection": "Datensammlung",
+    "dataCollectionDesc": "Kontrollieren Sie, welche Daten zur Verbesserung Ihrer Erfahrung gesammelt werden",
+    "analyticsData": "Analyse- und Nutzungsdaten",
+    "performanceMonitoring": "Leistungsüberwachung",
+    "crashReports": "Absturzberichte",
+    "downloadData": "Meine Daten herunterladen",
+    "storageUsage": "Speichernutzung",
+    "used": "Verwendet",
+    "storageStats": "2,4 MB von 100 MB",
+    "exportData": "Daten exportieren",
+    "clearAllData": "Alle Daten löschen",
+    "profile": "Profil",
+    "avatar": "Profilbild",
+    "memberSince": "Mitglied seit",
+    "studentAccount": "Student",
+    "profileUpdated": "Profil erfolgreich aktualisiert",
+    "profileUpdateError": "Fehler beim Aktualisieren des Profils",
+    "avatarUpdated": "Profilbild erfolgreich aktualisiert",
+    "avatarTooLarge": "Profilbild-Dateigröße muss unter 5MB liegen",
+    "subscription": "Abonnement",
+    "plan": "Plan",
+    "renewsOn": "Verlängert am",
+    "freeForever": "Kostenlos für immer",
+    "studentDiscount": "Studentenrabatt",
+    "basicFeatures": "Alle Grundfunktionen",
+    "premiumFeatures": "Premium-Analysen",
+    "unlimitedSync": "Unbegrenzte Synchronisierung",
+    "premiumAnalytics": "Erweiterte Analysen",
+    "prioritySupport": "Prioritätssupport",
+    "teamFeatures": "Team-Zusammenarbeit",
+    "apiAccess": "API-Zugang",
+    "upgradeToPremium": "Auf Premium upgraden",
+    "upgradeToEnterprise": "Auf Enterprise upgraden",
+    "billingHistory": "Rechnungshistorie",
+    "paid": "Bezahlt",
+    "manageBilling": "Abrechnung verwalten",
+    "cancelSubscription": "Abonnement kündigen",
+    "security": "Sicherheit",
+    "changePassword": "Passwort ändern",
+    "passwordLastChanged": "Zuletzt vor 30 Tagen geändert",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "confirmNewPassword": "Neues Passwort bestätigen",
+    "enterCurrentPassword": "Geben Sie Ihr aktuelles Passwort ein",
+    "enterNewPassword": "Geben Sie Ihr neues Passwort ein",
+    "passwordChanged": "Passwort erfolgreich geändert",
+    "passwordChangeError": "Fehler beim Ändern des Passworts",
+    "passwordMismatch": "Passwörter stimmen nicht überein",
+    "changingPassword": "Wird geändert...",
+    "updatePassword": "Passwort aktualisieren",
+    "twoFactorAuth": "Zwei-Faktor-Authentifizierung",
+    "twoFactorAuthDesc": "Fügen Sie Ihrem Konto eine zusätzliche Sicherheitsebene hinzu",
+    "disabled": "Deaktiviert",
+    "enable2FA": "2FA aktivieren",
+    "activeSessions": "Aktive Sitzungen",
+    "currentSession": "Aktuelle Sitzung",
+    "thisDevice": "Dieses Gerät",
+    "now": "Jetzt",
+    "active": "Aktiv",
+    "taskNotifications": "Aufgaben-Benachrichtigungen",
+    "deadlineAlerts": "Fristenwarnungen",
+    "deadlineAlertsDesc": "Warnungen für sich nähernde Fristen",
+    "healthNotifications": "Gesundheit & Wohlbefinden",
+    "healthReminders": "Gesundheitserinnerungen",
+    "healthRemindersDesc": "Erinnerungen zum Erfassen von Gesundheitsdaten",
+    "socialNotifications": "Soziales & Erfolge",
+    "badgeUnlocks": "Abzeichen-Freischaltungen",
+    "badgeUnlocksDesc": "Benachrichtigungen wenn Sie neue Abzeichen verdienen",
+    "socialNotificationsDesc": "Updates zu Herausforderungen und Verbindungen",
+    "quietHours": "Ruhezeiten",
+    "enableQuietHours": "Ruhezeiten aktivieren",
+    "quietHoursDesc": "Benachrichtigungen während bestimmter Stunden deaktivieren",
+    "quietHoursStart": "Startzeit",
+    "quietHoursEnd": "Endzeit",
+    "notificationsUpdated": "Benachrichtigungseinstellungen aktualisiert",
+    "analyticsDesc": "Helfen Sie uns die App zu verbessern durch anonyme Nutzungsdaten",
+    "performanceDesc": "App-Leistung und Abstürze überwachen",
+    "marketingEmails": "Marketing-E-Mails",
+    "marketingDesc": "Updates über neue Funktionen und Tipps erhalten",
+    "importData": "Daten importieren",
+    "dangerZone": "Gefahrenzone",
+    "accountDeletionDesc": "Sobald Sie Ihr Konto löschen, gibt es kein Zurück mehr. Seien Sie sich sicher.",
+    "deleteAccountConfirm": "Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "accountDeleted": "Konto zur Löschung vorgemerkt",
+    "deleteAccountError": "Fehler beim Löschen des Kontos",
+    "dataExported": "Daten erfolgreich exportiert",
+    "dataExportError": "Fehler beim Exportieren der Daten",
+    "saving": "Wird gespeichert..."
+  },
+  "social": {
+    "title": "Soziale Funktionen",
+    "connections": "Verbindungen",
+    "challenges": "Herausforderungen",
+    "leaderboard": "Bestenliste",
+    "friends": "Freunde",
+    "sendRequest": "Anfrage senden",
+    "acceptRequest": "Anfrage annehmen",
+    "declineRequest": "Anfrage ablehnen",
+    "connected": "Verbunden",
+    "pending": "Ausstehend",
+    "createChallenge": "Herausforderung erstellen",
+    "joinChallenge": "Herausforderung beitreten",
+    "challengeTitle": "Herausforderungstitel",
+    "challengeDescription": "Beschreibung",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "participants": "Teilnehmer",
+    "progress": "Fortschritt",
+    "completed": "Abgeschlossen",
+    "active": "Aktiv",
+    "upcoming": "Bevorstehend",
+    "noConnections": "Noch keine Verbindungen",
+    "noChallenges": "Keine aktiven Herausforderungen",
+    "inviteFriends": "Freunde einladen",
+    "shareProgress": "Fortschritt teilen"
+  },
+  "voice": {
+    "title": "Sprachverarbeitung",
+    "record": "Aufnehmen",
+    "stop": "Stoppen",
+    "play": "Abspielen",
+    "pause": "Pausieren",
+    "transcribe": "Transkribieren",
+    "analyze": "Analysieren",
+    "transcription": "Transkription",
+    "confidence": "Vertrauen",
+    "analysis": "Analyse",
+    "sentiment": "Stimmung",
+    "actionItems": "Aktionspunkte",
+    "commands": "Befehle",
+    "voiceNotes": "Sprachnotizen",
+    "uploadAudio": "Audio hochladen",
+    "processing": "Verarbeitung läuft...",
+    "noNotes": "Keine Sprachnotizen gefunden",
+    "startRecording": "Beginnen Sie mit der Aufnahme Ihrer ersten Sprachnotiz",
+    "recordingTime": "Aufnahmezeit",
+    "maxDuration": "Maximale Dauer",
+    "settings": {
+      "title": "Spracheinstellungen",
+      "language": "Sprache",
+      "autoTranscribe": "Automatische Transkription",
+      "commandsEnabled": "Sprachbefehle aktiviert",
+      "quality": "Aufnahmequalität"
+    },
+    "analytics": {
+      "title": "Sprachanalysen",
+      "totalNotes": "Gesamte Notizen",
+      "totalDuration": "Gesamtdauer",
+      "averageConfidence": "Durchschnittliches Vertrauen",
+      "commandsExecuted": "Ausgeführte Befehle",
+      "topCommands": "Top-Befehle"
+    }
+  },
+  "student": {
+    "title": "Studentenverifizierung",
+    "verification": "Verifizierung",
+    "discount": "Studentenrabatt",
+    "pricing": "Studentenpreise",
+    "verify": "Verifizieren",
+    "verified": "Verifiziert",
+    "pending": "Ausstehend",
+    "failed": "Fehlgeschlagen",
+    "email": "Studenten-E-Mail",
+    "university": "Universität",
+    "sendOTP": "OTP senden",
+    "enterOTP": "OTP eingeben",
+    "verifyOTP": "OTP verifizieren",
+    "resendOTP": "OTP erneut senden",
+    "otpSent": "OTP gesendet",
+    "otpExpired": "OTP abgelaufen",
+    "invalidOTP": "Ungültiger OTP",
+    "verificationSuccess": "Verifizierung erfolgreich",
+    "verificationFailed": "Verifizierung fehlgeschlagen",
+    "benefits": {
+      "title": "Studentenvorteile",
+      "discount": "50% Rabatt auf alle Pläne",
+      "features": "Zugang zu allen Premium-Funktionen",
+      "support": "Prioritäts-Support",
+      "duration": "Gültig während des Studiums"
+    },
+    "requirements": {
+      "title": "Anforderungen",
+      "validEmail": "Gültige Studenten-E-Mail-Adresse",
+      "enrollment": "Aktuelle Einschreibung bestätigt",
+      "verification": "E-Mail-Verifizierung erforderlich"
+    }
+  },
+  "localization": {
+    "title": "Lokalisierung",
+    "language": "Sprache",
+    "region": "Region",
+    "cultural": "Kulturelle Anpassungen",
+    "dateFormat": "Datumsformat",
+    "timeFormat": "Zeitformat",
+    "currency": "Währung",
+    "numberFormat": "Zahlenformat",
+    "firstDayOfWeek": "Erster Wochentag",
+    "workingHours": "Arbeitszeiten",
+    "holidays": "Feiertage",
+    "country": "Land",
+    "germany": "Deutschland",
+    "austria": "Österreich",
+    "switzerland": "Schweiz",
+    "adaptations": {
+      "title": "Kulturelle Anpassungen",
+      "description": "Regionale Einstellungen für deutschsprachige Länder",
+      "formats": "Format-Einstellungen",
+      "business": "Geschäftseinstellungen",
+      "calendar": "Kalendereinstellungen"
+    },
+    "preview": {
+      "title": "Sprachvorschau",
+      "description": "Sehen Sie, wie die Benutzeroberfläche in verschiedenen Bereichen aussieht",
+      "navigation": "Navigation",
+      "actions": "Aktionen",
+      "status": "Status"
+    }
+  },
+  "calendar": {
+    "title": "Kalender",
+    "events": "Termine",
+    "meetings": "Besprechungen",
+    "appointments": "Termine",
+    "schedule": "Zeitplan",
+    "createEvent": "Termin erstellen",
+    "editEvent": "Termin bearbeiten",
+    "deleteEvent": "Termin löschen",
+    "eventTitle": "Termintitel",
+    "eventDescription": "Terminbeschreibung",
+    "startTime": "Startzeit",
+    "endTime": "Endzeit",
+    "allDay": "Ganztägig",
+    "repeat": "Wiederholen",
+    "reminder": "Erinnerung",
+    "location": "Ort",
+    "attendees": "Teilnehmer",
+    "busy": "Beschäftigt",
+    "free": "Frei",
+    "tentative": "Vorläufig",
+    "outOfOffice": "Nicht im Büro",
+    "views": {
+      "month": "Monat",
+      "week": "Woche",
+      "day": "Tag",
+      "agenda": "Agenda"
+    },
+    "noEvents": "Keine Termine geplant",
+    "createFirstEvent": "Erstellen Sie Ihren ersten Termin"
+  },
+  "analytics": {
+    "title": "Analysen",
+    "overview": "Übersicht",
+    "insights": "Erkenntnisse",
+    "reports": "Berichte",
+    "trends": "Trends",
+    "productivity": "Produktivität",
+    "performance": "Leistung",
+    "goals": "Ziele",
+    "achievements": "Erfolge",
+    "timeSpent": "Verbrachte Zeit",
+    "completionRate": "Abschlussrate",
+    "efficiency": "Effizienz",
+    "streaks": "Serien",
+    "patterns": "Muster",
+    "recommendations": "Empfehlungen",
+    "export": "Exportieren",
+    "dateRange": "Datumsbereich",
+    "lastWeek": "Letzte Woche",
+    "lastMonth": "Letzter Monat",
+    "lastYear": "Letztes Jahr",
+    "custom": "Benutzerdefiniert"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "viewAll": "Alle anzeigen",
+    "completed": "abgeschlossen",
+    "update": "Aktualisieren",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolgreich",
+    "warning": "Warnung",
+    "info": "Info",
+    "confirm": "Bestätigen",
+    "close": "Schließen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Vorherige",
+    "search": "Suchen",
+    "filter": "Filter",
+    "sort": "Sortieren",
+    "clear": "Löschen",
+    "refresh": "Aktualisieren",
+    "export": "Exportieren",
+    "import": "Importieren",
+    "share": "Teilen",
+    "copy": "Kopieren",
+    "print": "Drucken",
+    "more": "Mehr",
+    "less": "Weniger",
+    "show": "Anzeigen",
+    "hide": "Ausblenden",
+    "enable": "Aktivieren",
+    "disable": "Deaktivieren",
+    "on": "An",
+    "off": "Aus",
+    "yes": "Ja",
+    "no": "Nein",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "tomorrow": "Morgen",
+    "thisWeek": "Diese Woche",
+    "lastWeek": "Letzte Woche",
+    "thisMonth": "Diesen Monat",
+    "lastMonth": "Letzten Monat",
+    "minutes": "Minuten",
+    "hours": "Stunden",
+    "days": "Tage",
+    "weeks": "Wochen",
+    "months": "Monate"
+  },
+  "errors": {
+    "generic": "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut.",
+    "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
+    "unauthorized": "Sie sind nicht berechtigt, diese Aktion durchzuführen.",
+    "notFound": "Die angeforderte Ressource wurde nicht gefunden.",
+    "validationFailed": "Bitte überprüfen Sie Ihre Eingabe und versuchen Sie es erneut.",
+    "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+    "passwordTooWeak": "Das Passwort ist zu schwach. Bitte wählen Sie ein stärkeres Passwort.",
+    "emailAlreadyExists": "Ein Konto mit dieser E-Mail existiert bereits.",
+    "invalidCredentials": "Ungültige E-Mail oder Passwort.",
+    "requiredField": "Dieses Feld ist erforderlich."
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "markAllAsRead": "Alle als gelesen markieren",
+    "noNotifications": "Keine Benachrichtigungen",
+    "taskReminder": "Aufgabenerinnerung",
+    "healthReminder": "Gesundheitserinnerung",
+    "achievement": "Erfolg freigeschaltet",
+    "system": "Systembenachrichtigung"
+  },
+  "localization": {
+    "title": "Lokalisierung",
+    "language": "Sprache",
+    "currentLanguage": "Aktuelle Sprache",
+    "languageSettings": "Spracheinstellungen",
+    "languageChangeNote": "Änderungen werden sofort angewendet und in Ihrem Profil gespeichert",
+    "interfacePreview": "Oberflächenvorschau",
+    "coverage": "Abdeckung",
+    "advancedSettings": "Erweiterte Einstellungen",
+    "autoDetect": "Sprache automatisch erkennen",
+    "autoDetectDesc": "Sprache automatisch aus den Browsereinstellungen erkennen",
+    "syncAcrossDevices": "Geräteübergreifend synchronisieren",
+    "syncAcrossDevicesDesc": "Spracheinstellung auf allen Ihren Geräten synchron halten",
+    "showTranslationKeys": "Übersetzungsschlüssel anzeigen",
+    "showTranslationKeysDesc": "Übersetzungsschlüssel zum Debuggen anzeigen (nur für Entwickler)",
+    "fullSettings": "Vollständige Spracheinstellungen",
+    "reportIssue": "Übersetzungsproblem melden",
+    "requestLanguage": "Neue Sprache anfordern",
+    "features": {
+      "complete": "Vollständige Übersetzung",
+      "completeDesc": "Alle Oberflächenelemente sind übersetzt",
+      "accessibility": "Barrierefreiheits-Unterstützung",
+      "accessibilityDesc": "Unterstützung für Bildschirmleser und Tastaturnavigation",
+      "cultural": "Kulturelle Anpassungen",
+      "culturalDesc": "Datumsformate, Zahlenformate und regionale Einstellungen",
+      "fallback": "Intelligenter Fallback",
+      "fallbackDesc": "Automatischer Fallback auf Englisch bei fehlenden Übersetzungen"
+    },
+    "preview": {
+      "title": "Sprachvorschau",
+      "description": "Sehen Sie, wie die Benutzeroberfläche in verschiedenen Bereichen aussieht",
+      "navigation": "Navigation",
+      "actions": "Aktionen",
+      "status": "Status",
+      "sampleText": "Beispieltext",
+      "dashboard": "Dashboard-Vorschau",
+      "tasks": "Aufgaben-Vorschau",
+      "settings": "Einstellungen-Vorschau"
+    },
+    "status": {
+      "active": "Aktiv",
+      "loading": "Wird geladen...",
+      "error": "Fehler beim Laden",
+      "success": "Erfolgreich geändert"
+    },
+    "messages": {
+      "languageChanged": "Sprache erfolgreich geändert",
+      "languageChangeError": "Fehler beim Ändern der Sprache",
+      "loadingTranslations": "Übersetzungen werden geladen...",
+      "translationsLoaded": "Übersetzungen geladen",
+      "fallbackActive": "Fallback auf Englisch aktiv"
+    }
+  },
+  "legal": {
+    "privacyPolicy": {
+      "title": "Datenschutzrichtlinie",
+      "subtitle": "Ihre Privatsphäre ist uns wichtig. Diese Richtlinie erklärt, wie wir Ihre Informationen sammeln, verwenden und schützen.",
+      "lastUpdated": "Zuletzt aktualisiert",
+      "backToSignIn": "Zurück zur Anmeldung",
+      "overview": {
+        "title": "Überblick",
+        "content": "TimeCraft verpflichtet sich, Ihre Privatsphäre zu schützen und Transparenz über unsere Datenverarbeitungspraktiken zu gewährleisten. Diese Datenschutzrichtlinie erklärt, wie wir Ihre Informationen sammeln, verwenden, offenlegen und schützen, wenn Sie unsere Zeit- und Wellness-Anwendung nutzen.",
+        "agreement": "Durch die Nutzung von TimeCraft stimmen Sie der Sammlung und Verwendung von Informationen gemäß dieser Richtlinie zu."
+      },
+      "informationWeCollect": {
+        "title": "Informationen, die wir sammeln",
+        "personalInfo": {
+          "title": "Persönliche Informationen",
+          "items": [
+            "Kontoinformationen (Name, E-Mail-Adresse, Passwort)",
+            "Profilinformationen (Präferenzen, Ziele, Einstellungen)",
+            "Kontaktinformationen für Support-Anfragen",
+            "Zahlungsinformationen (sicher von Drittanbietern verarbeitet)"
+          ]
+        },
+        "usageData": {
+          "title": "Nutzungsdaten",
+          "items": [
+            "Aufgaben- und Produktivitätsdaten, die Sie erstellen und verwalten",
+            "Gesundheits- und Wellness-Metriken, die Sie verfolgen möchten",
+            "Fokussitzungsdaten und Zeitverfolgungsinformationen",
+            "App-Nutzungsmuster und Feature-Interaktionen",
+            "Geräteinformationen und technische Daten"
+          ]
+        },
+        "autoCollected": {
+          "title": "Automatisch gesammelte Daten",
+          "items": [
+            "Protokolldaten (IP-Adresse, Browser-Typ, Betriebssystem)",
+            "Cookies und ähnliche Tracking-Technologien",
+            "Analysedaten für App-Performance und Verbesserung"
+          ]
+        }
+      },
+      "howWeUseInfo": {
+        "title": "Wie wir Ihre Informationen verwenden",
+        "serviceProvision": {
+          "title": "Servicebereitstellung",
+          "items": [
+            "Bereitstellung und Wartung des TimeCraft-Dienstes",
+            "Verarbeitung Ihrer Aufgaben- und Produktivitätsdaten",
+            "Generierung von Erkenntnissen und Empfehlungen",
+            "Synchronisation von Daten auf Ihren Geräten"
+          ]
+        },
+        "communication": {
+          "title": "Kommunikation",
+          "items": [
+            "Versendung wichtiger Service-Benachrichtigungen",
+            "Antwort auf Ihre Anfragen und Support-Requests",
+            "Bereitstellung von Updates über neue Features",
+            "Versendung von Werbekommunikation (mit Einverständnis)"
+          ]
+        },
+        "improvement": {
+          "title": "Verbesserung",
+          "items": [
+            "Analyse von Nutzungsmustern zur Verbesserung der Features",
+            "Überwachung der Performance und Behebung von Problemen",
+            "Entwicklung neuer Features und Services",
+            "Durchführung von Forschung und Analysen"
+          ]
+        },
+        "legal": {
+          "title": "Rechtliches & Sicherheit",
+          "items": [
+            "Erfüllung rechtlicher Verpflichtungen",
+            "Erkennung und Verhinderung von Betrug oder Missbrauch",
+            "Durchsetzung unserer Nutzungsbedingungen",
+            "Schutz der Nutzer- und Systemsicherheit"
+          ]
+        }
+      },
+      "dataProtection": {
+        "title": "Datenschutz & Sicherheit",
+        "content": "Wir implementieren branchenübliche Sicherheitsmaßnahmen zum Schutz Ihrer persönlichen Informationen:",
+        "measures": [
+          "Ende-zu-Ende-Verschlüsselung für sensible Daten",
+          "Sichere Datenübertragung (HTTPS/TLS)",
+          "Regelmäßige Sicherheitsaudits und Updates",
+          "Zugangskontrollen und Authentifizierung",
+          "Datensicherung und Wiederherstellungsverfahren",
+          "Mitarbeiter-Datenzugriffsbeschränkungen",
+          "Incident-Response-Protokolle",
+          "Einhaltung von Datenschutzbestimmungen"
+        ]
+      },
+      "yourRights": {
+        "title": "Ihre Datenschutzrechte",
+        "access": {
+          "title": "Zugang & Portabilität",
+          "description": "Anfordern des Zugangs zu Ihren persönlichen Daten und Erhalt einer Kopie in strukturiertem Format."
+        },
+        "correction": {
+          "title": "Korrektur & Updates",
+          "description": "Aktualisierung oder Korrektur Ihrer persönlichen Informationen jederzeit über Ihre Kontoeinstellungen."
+        },
+        "deletion": {
+          "title": "Löschung",
+          "description": "Anfordern der Löschung Ihres Kontos und Ihrer persönlichen Daten, vorbehaltlich gesetzlicher Aufbewahrungspflichten."
+        },
+        "optOut": {
+          "title": "Abmeldung",
+          "description": "Abmeldung von Marketing-Kommunikation und Anpassung der Datenverarbeitungspräferenzen."
+        }
+      },
+      "dataRetention": {
+        "title": "Datenspeicherung",
+        "content": "Wir speichern Ihre persönlichen Informationen nur so lange, wie es für die in dieser Richtlinie beschriebenen Zwecke erforderlich ist:",
+        "periods": [
+          "Kontodaten: Gespeichert, solange Ihr Konto aktiv ist",
+          "Nutzungsdaten: Aggregiert und anonymisiert nach 2 Jahren",
+          "Support-Daten: 3 Jahre nach Lösung gespeichert",
+          "Gesetzliche Anforderungen: Gespeichert, wie es nach geltendem Recht erforderlich ist"
+        ]
+      },
+      "contact": {
+        "title": "Kontaktieren Sie uns",
+        "content": "Falls Sie Fragen zu dieser Datenschutzrichtlinie oder unseren Datenverarbeitungspraktiken haben, kontaktieren Sie uns bitte:",
+        "email": "E-Mail",
+        "address": "Adresse",
+        "addressDetails": "TimeCraft Datenschutz-Team\n123 Productivity Lane\nSan Francisco, CA 94102",
+        "responseTime": "Antwortzeit",
+        "responseTimeDetails": "Wir streben an, auf Datenschutzanfragen innerhalb von 30 Tagen zu antworten.",
+        "dataProtectionOfficer": "Datenschutzbeauftragte(r)",
+        "dataProtectionOfficerDetails": "Auf Anfrage für EU-Bewohner verfügbar."
+      },
+      "changes": {
+        "title": "Änderungen an dieser Richtlinie",
+        "content": "Wir können diese Datenschutzrichtlinie von Zeit zu Zeit aktualisieren, um Änderungen in unseren Praktiken oder aus anderen betrieblichen, rechtlichen oder regulatorischen Gründen widerzuspiegeln. Wir werden Sie über wesentliche Änderungen informieren, indem wir die neue Datenschutzrichtlinie auf dieser Seite veröffentlichen und das Datum \"Zuletzt aktualisiert\" aktualisieren. Bei bedeutenden Änderungen können wir Ihnen auch eine direkte Benachrichtigung per E-Mail senden."
+      }
+    },
+    "termsOfService": {
+      "title": "Nutzungsbedingungen",
+      "subtitle": "Bitte lesen Sie diese Bedingungen sorgfältig durch, bevor Sie TimeCraft verwenden. Durch die Nutzung unseres Dienstes stimmen Sie diesen Bedingungen zu.",
+      "lastUpdated": "Zuletzt aktualisiert",
+      "backToSignIn": "Zurück zur Anmeldung",
+      "acceptance": {
+        "title": "Annahme der Bedingungen",
+        "content": "Durch den Zugriff auf und die Nutzung von TimeCraft akzeptieren und stimmen Sie zu, an die Bestimmungen und Bedingungen dieser Vereinbarung gebunden zu sein. Wenn Sie nicht bereit sind, die oben genannten Punkte einzuhalten, verwenden Sie diesen Service bitte nicht.",
+        "governance": "Diese Nutzungsbedingungen (\"Bedingungen\") regeln Ihre Nutzung von TimeCraft, betrieben von TimeCraft Inc. (\"wir\", \"uns\" oder \"unser\")."
+      },
+      "serviceDescription": {
+        "title": "Service-Beschreibung",
+        "intro": "TimeCraft ist eine umfassende Zeit- und Wellness-Management-Anwendung, die Benutzern hilft:",
+        "productivity": {
+          "title": "Produktivitäts-Features",
+          "items": [
+            "Aufgabenverwaltung und -organisation",
+            "Zeiterfassung und Fokussitzungen",
+            "Zielsetzung und Fortschrittsüberwachung",
+            "Analysen und Erkenntnisse"
+          ]
+        },
+        "wellness": {
+          "title": "Wellness-Features",
+          "items": [
+            "Gesundheitsmetriken-Tracking",
+            "Wellness-Empfehlungen",
+            "Abzeichen- und Erfolgs-System",
+            "Soziale Features und Challenges"
+          ]
+        }
+      },
+      "userAccounts": {
+        "title": "Benutzerkonten",
+        "creation": {
+          "title": "Konto-Erstellung",
+          "items": [
+            "Sie müssen genaue, aktuelle und vollständige Informationen bei der Registrierung angeben",
+            "Sie sind verantwortlich für die Wahrung der Vertraulichkeit Ihrer Konto-Credentials",
+            "Sie müssen mindestens 13 Jahre alt sein, um ein Konto zu erstellen",
+            "Eine Person darf nicht mehrere Konten unterhalten"
+          ]
+        },
+        "responsibilities": {
+          "title": "Konto-Verantwortlichkeiten",
+          "items": [
+            "Sie sind verantwortlich für alle Aktivitäten unter Ihrem Konto",
+            "Benachrichtigen Sie uns sofort bei unbefugter Nutzung Ihres Kontos",
+            "Halten Sie Ihre Kontaktinformationen aktuell",
+            "Loggen Sie sich am Ende jeder Sitzung aus Ihrem Konto aus"
+          ]
+        }
+      },
+      "acceptableUse": {
+        "title": "Angemessene Nutzungsrichtlinie",
+        "warning": "Sie stimmen zu, den Service NICHT zu verwenden für:",
+        "prohibited": [
+          "Verletzung geltender Gesetze oder Vorschriften",
+          "Belästigung, Missbrauch oder Schädigung anderer",
+          "Upload von schädlichem Code oder Viren",
+          "Spam oder Versendung unerwünschter Kommunikation",
+          "Identitätsfälschung oder Angabe falscher Informationen",
+          "Beeinträchtigung der Service-Sicherheit oder -Funktionalität",
+          "Zugriff auf nicht für Sie bestimmte Daten",
+          "Nutzung automatisierter Systeme zum Service-Zugriff",
+          "Reverse Engineering oder Kopieren unserer Software",
+          "Nutzung des Services für kommerzielle Zwecke ohne Erlaubnis"
+        ]
+      },
+      "paymentTerms": {
+        "title": "Zahlungs- & Abonnement-Bedingungen",
+        "subscriptionPlans": {
+          "title": "Abonnement-Pläne",
+          "free": {
+            "title": "Kostenlos-Plan",
+            "features": "Basis-Features",
+            "storage": "Begrenzter Speicher"
+          },
+          "pro": {
+            "title": "Pro-Plan",
+            "features": "Alle Features",
+            "storage": "Unbegrenzter Speicher"
+          },
+          "student": {
+            "title": "Studenten-Plan",
+            "features": "Ermäßigter Pro-Plan",
+            "storage": "Verifizierung erforderlich"
+          }
+        },
+        "terms": {
+          "title": "Zahlungsbedingungen",
+          "items": [
+            "Abonnements werden monatlich oder jährlich im Voraus abgerechnet",
+            "Alle Zahlungen werden sicher über Drittanbieter-Zahlungsverarbeiter abgewickelt",
+            "Preise können sich mit 30 Tagen Vorankündigung an aktive Abonnenten ändern",
+            "Rückerstattungen sind innerhalb von 14 Tagen des ersten Abonnements verfügbar (nur neue Abonnenten)",
+            "Sie können Ihr Abonnement jederzeit über Ihre Kontoeinstellungen kündigen",
+            "Bei Kündigung behalten Sie den Zugang bis zum Ende Ihrer aktuellen Abrechnungsperiode"
+          ]
+        }
+      },
+      "dataPrivacy": {
+        "title": "Daten & Datenschutz",
+        "content": "Ihre Privatsphäre ist uns wichtig. Unsere Sammlung und Nutzung Ihrer Informationen unterliegt unserer Datenschutzrichtlinie, die durch Verweis in diese Bedingungen einbezogen wird.",
+        "principles": [
+          "Wir sammeln nur notwendige Informationen zur Bereitstellung unseres Services",
+          "Ihre Daten werden verschlüsselt und sicher gespeichert",
+          "Wir verkaufen Ihre persönlichen Informationen nicht an Dritte",
+          "Sie besitzen Ihren Inhalt und Ihre Daten",
+          "Sie können Ihre Daten jederzeit exportieren",
+          "Datenlöschung ist bei Kontenschließung verfügbar"
+        ]
+      },
+      "intellectualProperty": {
+        "title": "Geistiges Eigentum",
+        "ourRights": {
+          "title": "Unsere Rechte",
+          "content": "Der Service und sein ursprünglicher Inhalt, Features und Funktionalität sind und bleiben das ausschließliche Eigentum von TimeCraft Inc. und seinen Lizenzgebern. Der Service ist durch Urheberrecht, Markenrecht und andere Gesetze geschützt. Unsere Marken und Handelsaufmachung dürfen nicht ohne unsere vorherige schriftliche Zustimmung verwendet werden."
+        },
+        "yourRights": {
+          "title": "Ihre Rechte",
+          "content": "Sie behalten alle Rechte an Inhalten, die Sie über den Service erstellen, hochladen oder teilen. Durch die Nutzung unseres Services gewähren Sie uns eine Lizenz zur Nutzung, Speicherung und Weitergabe Ihrer Inhalte, soweit dies zur Bereitstellung des Services für Sie erforderlich ist. Diese Lizenz endet, wenn Sie Ihre Inhalte löschen oder Ihr Konto schließen."
+        }
+      },
+      "limitationOfLiability": {
+        "title": "Haftungsbeschränkung",
+        "warning": "Wichtige rechtliche Informationen:",
+        "content": [
+          "IN KEINEM FALL SIND TIMECRAFT, SEINE DIREKTOREN, MITARBEITER, PARTNER, VERTRETER, LIEFERANTEN ODER VERBUNDENE UNTERNEHMEN HAFTBAR FÜR INDIREKTE, ZUFÄLLIGE, BESONDERE, FOLGE- ODER STRAFSCHÄDEN, EINSCHLIESSLICH ABER NICHT BESCHRÄNKT AUF VERLUST VON GEWINNEN, DATEN, NUTZUNG, GOODWILL ODER ANDEREN IMMATERIELLEN VERLUSTEN.",
+          "DER SERVICE WIRD \"WIE BESEHEN\" UND \"WIE VERFÜGBAR\" BEREITGESTELLT. WIR GEBEN KEINE GEWÄHRLEISTUNGEN AB, WEDER AUSDRÜCKLICH NOCH STILLSCHWEIGEND, EINSCHLIESSLICH ABER NICHT BESCHRÄNKT AUF GEWÄHRLEISTUNGEN DER MARKTGÄNGIGKEIT, EIGNUNG FÜR EINEN BESTIMMTEN ZWECK ODER NICHT-VERLETZUNG.",
+          "IHR EINZIGER RECHTSBEHELF BEI UNZUFRIEDENHEIT MIT DEM SERVICE IST, DIE NUTZUNG DES SERVICES EINZUSTELLEN UND IHR KONTO ZU KÜNDIGEN."
+        ]
+      },
+      "termination": {
+        "title": "Kündigung",
+        "byYou": {
+          "title": "Durch Sie",
+          "items": [
+            "Sie können Ihr Konto jederzeit kündigen",
+            "Laden Sie Ihre Daten vor der Kündigung herunter",
+            "Abonnement-Abrechnung stoppt am Ende der aktuellen Periode",
+            "Einige Daten können aus rechtlichen Gründen aufbewahrt werden"
+          ]
+        },
+        "byUs": {
+          "title": "Durch uns",
+          "items": [
+            "Wir können Konten bei Verletzung der Bedingungen sperren oder kündigen",
+            "Wir können den Service mit 30 Tagen Vorankündigung einstellen",
+            "Wir werden Datenexport-Möglichkeiten bereitstellen, wenn möglich",
+            "Rückerstattungen können im Einzelfall gewährt werden"
+          ]
+        }
+      },
+      "changes": {
+        "title": "Änderungen der Bedingungen",
+        "content": "Wir behalten uns das Recht vor, diese Bedingungen jederzeit zu ändern oder zu ersetzen. Bei einer wesentlichen Überarbeitung werden wir versuchen, mindestens 30 Tage im Voraus zu benachrichtigen, bevor neue Bedingungen in Kraft treten. Ihre fortgesetzte Nutzung des Services nach dem Inkrafttreten der überarbeiteten Bedingungen stellt die Annahme der überarbeiteten Bedingungen dar. Wenn Sie den neuen Bedingungen nicht zustimmen, müssen Sie die Nutzung des Services einstellen."
+      },
+      "contact": {
+        "title": "Kontaktieren Sie uns",
+        "content": "Falls Sie Fragen zu diesen Nutzungsbedingungen haben, kontaktieren Sie uns bitte:",
+        "email": "E-Mail",
+        "support": "Support",
+        "address": "Adresse",
+        "addressDetails": "TimeCraft Rechts-Team\n123 Productivity Lane\nSan Francisco, CA 94102"
+      },
+      "governingLaw": {
+        "title": "Anwendbares Recht",
+        "content": "Diese Bedingungen werden nach den Gesetzen des Staates Kalifornien, Vereinigte Staaten, ausgelegt und unterliegen diesen, ohne Berücksichtigung seiner Kollisionsrechtbestimmungen. Alle Streitigkeiten, die sich aus diesen Bedingungen oder Ihrer Nutzung des Services ergeben, unterliegen der ausschließlichen Gerichtsbarkeit der staatlichen und bundesstaatlichen Gerichte in San Francisco County, Kalifornien."
+      }
+    },
+    "footer": {
+      "allRightsReserved": "Alle Rechte vorbehalten"
+    }
+  }
+}

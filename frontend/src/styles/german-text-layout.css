@@ -1,0 +1,302 @@
+/* German Text Layout Optimizations */
+
+/* German language specific text handling */
+[lang="de"], .lang-de {
+  /* Improved hyphenation for German compound words */
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -ms-hyphens: auto;
+  
+  /* Better word breaking for long German words */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  
+  /* Slightly increased line height for better readability */
+  line-height: 1.6;
+  
+  /* Optimized letter spacing for German text */
+  letter-spacing: 0.01em;
+}
+
+/* Specific handling for German compound words */
+.german-compound-word {
+  /* Allow breaking at compound word boundaries */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  
+  /* Prevent awkward breaks in short compound words */
+  min-width: fit-content;
+}
+
+/* German text in buttons - prevent overflow */
+.btn[lang="de"], .btn.lang-de {
+  /* Allow text wrapping in buttons for long German words */
+  white-space: normal;
+  word-break: break-word;
+  text-align: center;
+  
+  /* Adjust padding for multi-line button text */
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  line-height: 1.4;
+}
+
+/* German text in navigation items */
+.nav-item[lang="de"], .nav-item.lang-de {
+  /* Better handling of long German navigation labels */
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.4;
+}
+
+/* German text in form labels */
+.form-label[lang="de"], .form-label.lang-de {
+  /* Ensure German labels don't break awkwardly */
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.5;
+}
+
+/* German text in cards and containers */
+.card[lang="de"], .card.lang-de {
+  /* Better text flow in cards with German content */
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.card-title[lang="de"], .card-title.lang-de {
+  /* Prevent title overflow with long German words */
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.3;
+}
+
+/* German text in tables */
+.table[lang="de"] td, .table.lang-de td,
+.table[lang="de"] th, .table.lang-de th {
+  /* Handle long German words in table cells */
+  word-break: break-word;
+  hyphens: auto;
+  max-width: 0; /* Force table to respect word breaks */
+}
+
+/* German text in tooltips and popovers */
+.tooltip[lang="de"], .tooltip.lang-de,
+.popover[lang="de"], .popover.lang-de {
+  /* Better text wrapping in small containers */
+  word-break: break-word;
+  hyphens: auto;
+  max-width: 250px;
+  line-height: 1.4;
+}
+
+/* Responsive German text handling */
+@media (max-width: 640px) {
+  [lang="de"], .lang-de {
+    /* More aggressive word breaking on mobile */
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    
+    /* Slightly smaller font size for better fit */
+    font-size: 0.95em;
+    
+    /* Tighter line height on mobile */
+    line-height: 1.5;
+  }
+  
+  .btn[lang="de"], .btn.lang-de {
+    /* Smaller padding on mobile for German buttons */
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9em;
+    line-height: 1.3;
+  }
+  
+  .card-title[lang="de"], .card-title.lang-de {
+    /* Smaller titles on mobile */
+    font-size: 1.1em;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  [lang="de"], .lang-de {
+    /* Even more compact on very small screens */
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+  
+  .german-compound-word {
+    /* More aggressive breaking on very small screens */
+    word-break: break-all;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* German text in specific UI components */
+
+/* Breadcrumbs with German text */
+.breadcrumb[lang="de"], .breadcrumb.lang-de {
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.breadcrumb-item[lang="de"], .breadcrumb-item.lang-de {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .breadcrumb-item[lang="de"], .breadcrumb-item.lang-de {
+    max-width: 100px;
+  }
+}
+
+/* Dropdown menus with German text */
+.dropdown-menu[lang="de"], .dropdown-menu.lang-de {
+  min-width: 200px; /* Wider dropdowns for German text */
+}
+
+.dropdown-item[lang="de"], .dropdown-item.lang-de {
+  word-break: break-word;
+  hyphens: auto;
+  white-space: normal;
+  line-height: 1.4;
+  padding: 0.5rem 1rem;
+}
+
+/* Alerts and notifications with German text */
+.alert[lang="de"], .alert.lang-de,
+.notification[lang="de"], .notification.lang-de {
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.5;
+}
+
+/* Modal dialogs with German text */
+.modal-title[lang="de"], .modal-title.lang-de {
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.3;
+}
+
+.modal-body[lang="de"], .modal-body.lang-de {
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.6;
+}
+
+/* Tabs with German labels */
+.tab[lang="de"], .tab.lang-de {
+  word-break: break-word;
+  hyphens: auto;
+  text-align: center;
+  line-height: 1.3;
+  min-width: fit-content;
+}
+
+/* Progress indicators with German labels */
+.progress-label[lang="de"], .progress-label.lang-de {
+  word-break: break-word;
+  hyphens: auto;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+/* German text in lists */
+.list-item[lang="de"], .list-item.lang-de {
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.5;
+}
+
+/* German text in badges and tags */
+.badge[lang="de"], .badge.lang-de,
+.tag[lang="de"], .tag.lang-de {
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.2;
+  max-width: 150px;
+}
+
+/* Utility classes for German text */
+.text-german {
+  hyphens: auto;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+.text-german-compact {
+  hyphens: auto;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+  font-size: 0.95em;
+}
+
+.text-german-mobile {
+  hyphens: auto;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  font-size: 0.9em;
+}
+
+/* Prevent hyphenation in specific contexts */
+.no-hyphen {
+  hyphens: none;
+  -webkit-hyphens: none;
+  -ms-hyphens: none;
+}
+
+/* Force hyphenation for very long words */
+.force-hyphen {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -ms-hyphens: auto;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* German text in code blocks (should not be hyphenated) */
+code[lang="de"], code.lang-de,
+pre[lang="de"], pre.lang-de {
+  hyphens: none;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+/* Print styles for German text */
+@media print {
+  [lang="de"], .lang-de {
+    hyphens: auto;
+    word-break: break-word;
+    line-height: 1.4;
+    font-size: 12pt;
+  }
+  
+  .german-compound-word {
+    word-break: break-word;
+    hyphens: auto;
+  }
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  [lang="de"], .lang-de {
+    letter-spacing: 0.02em;
+    line-height: 1.7;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  [lang="de"] *, .lang-de * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

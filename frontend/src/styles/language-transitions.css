@@ -1,0 +1,260 @@
+/* Language transition animations */
+
+/* Global transition state */
+.language-transitioning {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.language-transitioning * {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Smooth fade transition for text content */
+.language-transitioning [data-translate] {
+  animation: fadeInTranslation 0.6s ease-in-out;
+}
+
+@keyframes fadeInTranslation {
+  0% {
+    opacity: 0.7;
+    transform: translateY(-2px);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth transition for navigation elements */
+.language-transitioning nav,
+.language-transitioning .nav-item {
+  animation: slideInFromLeft 0.4s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    opacity: 0.8;
+    transform: translateX(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Smooth transition for buttons and interactive elements */
+.language-transitioning button,
+.language-transitioning .btn {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Smooth transition for form elements */
+.language-transitioning input,
+.language-transitioning textarea,
+.language-transitioning select,
+.language-transitioning label {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0.7;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth transition for cards and containers */
+.language-transitioning .card,
+.language-transitioning .container {
+  animation: fadeInScale 0.5s ease-out;
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Language selector specific animations */
+.language-selector-transitioning {
+  position: relative;
+  overflow: hidden;
+}
+
+.language-selector-transitioning::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  animation: shimmer 1s ease-in-out;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Preserve scroll behavior during transitions */
+.language-transitioning {
+  scroll-behavior: smooth;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .language-transitioning,
+  .language-transitioning * {
+    animation-duration: 0.1s !important;
+    transition-duration: 0.1s !important;
+  }
+  
+  .language-transitioning {
+    scroll-behavior: auto;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .language-transitioning [data-translate] {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Focus management during transitions */
+.language-transitioning *:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  animation: focusPulse 0.3s ease-in-out;
+}
+
+@keyframes focusPulse {
+  0%, 100% {
+    outline-color: #3b82f6;
+  }
+  50% {
+    outline-color: #1d4ed8;
+  }
+}
+
+/* Component-specific transition animations */
+.language-transition-fade {
+  animation: languageFadeTransition 0.3s ease-in-out;
+}
+
+@keyframes languageFadeTransition {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.language-transition-slide-up {
+  animation: languageSlideUpTransition 0.3s ease-in-out;
+}
+
+@keyframes languageSlideUpTransition {
+  0% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(-5px); opacity: 0.7; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.language-transition-slide-left {
+  animation: languageSlideLeftTransition 0.3s ease-in-out;
+}
+
+@keyframes languageSlideLeftTransition {
+  0% { transform: translateX(0); opacity: 1; }
+  50% { transform: translateX(-10px); opacity: 0.7; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.language-transition-scale {
+  animation: languageScaleTransition 0.3s ease-in-out;
+}
+
+@keyframes languageScaleTransition {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.98); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Wrapper for components with language transitions */
+.language-transition-wrapper {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Enhanced transitions for specific UI elements */
+.language-transitioning .nav-item {
+  animation: navItemTransition 0.4s ease-out;
+}
+
+@keyframes navItemTransition {
+  0% {
+    opacity: 0.8;
+    transform: translateX(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.language-transitioning .card-title {
+  animation: titleTransition 0.5s ease-out;
+}
+
+@keyframes titleTransition {
+  0% {
+    opacity: 0.7;
+    transform: translateY(-3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.language-transitioning .form-label {
+  animation: labelTransition 0.3s ease-out;
+}
+
+@keyframes labelTransition {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

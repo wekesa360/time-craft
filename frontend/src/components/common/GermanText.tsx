@@ -1,0 +1,158 @@
+import React, { ReactNode, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { isLikelyGermanCompound } from '../../hooks/useGermanTextLayout';
+
+interface GermanTextProps {
+  children: ReactNode;
+  className?: string;
+  as?: keyof JSX.IntrinsicElements;
+  enableHyphenation?: boolean;
+  enableCompoundWordBreaking?: boolean;
+  responsive?: boolean;
+  maxWidth?: string;
+  style?: React.CSSProperties;
+}
+
+export const GermanText: React.FC<GermanTextProps> = ({
+  children,
+  className = '',
+  as: Component = 'span',
+  enableHyphenation = true,
+  enableCompoundWordBreaking = true,
+  responsive = true,
+  maxWidth,
+  style = {}
+}) => {
+  const { i18n } = useTranslation();
+  const isGerman = i18n.language === 'de';
+
+  // Determine if the text content contains compound words
+  const hasCompoundWords = useMemo(() => {
+    if (!isGerman || !enableCompoundWordBreaking) return false;
+    
+    const textContent = typeof children === 'string' ? children : '';
+    return isLikelyGermanCompound(textContent);
+  }, [children, isGerman, enableCompoundWordBreaking]);
+
+  // Build CSS classes
+  const cssClasses = useMemo(() => {
+    const classes = [className];
+    
+    if (isGerman) {
+      classes.push('lang-de');
+      
+      if (enableHyphenation) {
+        classes.push('text-german');
+      }
+      
+      if (hasCompoundWords) {
+        classes.push('german-compound-word');
+      }
+      
+      if (responsive) {
+        classes.push('sm:text-german-compact', 'md:text-german');
+      }
+    } else {
+      classes.push('lang-en');
+    }
+    
+    return classes.filter(Boolean).join(' ');
+  }, [className, isGerman, enableHyphenation, hasCompoundWords, responsive]);
+
+  // Build inline styles
+  const inlineStyles = useMemo(() => {
+    const styles = { ...style };
+    
+    if (maxWidth) {
+      styles.maxWidth = maxWidth;
+    }
+    
+    return styles;
+  }, [style, maxWidth]);
+
+  // Build props for the component
+  const componentProps = {
+    className: cssClasses,
+    style: inlineStyles,
+    lang: isGerman ? 'de' : 'en',
+    ...(isGerman && { 'data-german-text': 'true' })
+  };
+
+  return React.createElement(Component, componentProps, children);
+};
+
+// Specialized components for common use cases
+export const GermanHeading: React.FC<Omit<GermanTextProps, 'as'> & { level?: 1 | 2 | 3 | 4 | 5 | 6 }> = ({
+  level = 1,
+  ...props
+}) => {
+  const Component = `h${level}` as keyof JSX.IntrinsicElements;
+  return <GermanText as={Component} {...props} />;
+};
+
+export const GermanParagraph: React.FC<Omit<GermanTextProps, 'as'>> = (props) => {
+  return <GermanText as="p" {...props} />;
+};
+
+export const GermanLabel: React.FC<Omit<GermanTextProps, 'as'> & { htmlFor?: string }> = ({
+  htmlFor,
+  ...props
+}) => {
+  return <GermanText as="label" htmlFor={htmlFor} {...props} />;
+};
+
+export const GermanButton: React.FC<Omit<GermanTextProps, 'as'> & {
+  onClick?: () => void;
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+}> = ({ onClick, type = 'button', disabled, ...props }) => {
+  return (
+    <GermanText
+      as="button"
+      onClick={onClick}
+      type={type}
+      disabled={disabled}
+      {...props}
+    />
+  );
+};
+
+// Hook for getting German text classes
+export const useGermanTextClasses = (baseClasses: string = '') => {
+  const { i18n } = useTranslation();
+  const isGerman = i18n.language === 'de';
+  
+  return useMemo(() => {
+    const classes = [baseClasses];
+    
+    if (isGerman) {
+      classes.push('lang-de', 'text-german');
+    } else {
+      classes.push('lang-en');
+    }
+    
+    return classes.filter(Boolean).join(' ');
+  }, [baseClasses, isGerman]);
+};
+
+// Utility function to wrap text with German layout support
+export const wrapWithGermanLayout = (
+  text: string,
+  options: {
+    enableHyphenation?: boolean;
+    enableCompoundWordBreaking?: boolean;
+    className?: string;
+  } = {}
+) => {
+  const { enableHyphenation = true, enableCompoundWordBreaking = true, className = '' } = options;
+  
+  return (
+    <GermanText
+      className={className}
+      enableHyphenation={enableHyphenation}
+      enableCompoundWordBreaking={enableCompoundWordBreaking}
+    >
+      {text}
+    </GermanText>
+  );
+};
