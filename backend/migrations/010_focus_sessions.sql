@@ -1,0 +1,396 @@
+-- Focus Sessions and Pomodoro Timer System
+-- Enables productivity tracking with focus sessions, break reminders, and productivity analytics
+
+-- Enhanced focus sessions table (building on existing structure from migration 002)
+-- Note: focus_sessions table already exists, we'll add missing columns
+ALTER TABLE focus_sessions ADD COLUMN session_name TEXT; -- Custom name for the session
+ALTER TABLE focus_sessions ADD COLUMN planned_task_count INTEGER DEFAULT 1; -- How many tasks planned for session
+ALTER TABLE focus_sessions ADD COLUMN completed_task_count INTEGER DEFAULT 0; -- How many tasks actually completed
+ALTER TABLE focus_sessions ADD COLUMN break_duration INTEGER DEFAULT 0; -- Total break time in minutes
+ALTER TABLE focus_sessions ADD COLUMN distraction_count INTEGER DEFAULT 0; -- Number of distractions/interruptions
+ALTER TABLE focus_sessions ADD COLUMN distraction_details JSON; -- Details about distractions
+ALTER TABLE focus_sessions ADD COLUMN environment_data JSON; -- Noise level, location, etc.
+ALTER TABLE focus_sessions ADD COLUMN mood_before INTEGER CHECK(mood_before BETWEEN 1 AND 10); -- Mood before session
+ALTER TABLE focus_sessions ADD COLUMN mood_after INTEGER CHECK(mood_after BETWEEN 1 AND 10); -- Mood after session
+ALTER TABLE focus_sessions ADD COLUMN energy_before INTEGER CHECK(energy_before BETWEEN 1 AND 10); -- Energy before
+ALTER TABLE focus_sessions ADD COLUMN energy_after INTEGER CHECK(energy_after BETWEEN 1 AND 10); -- Energy after
+ALTER TABLE focus_sessions ADD COLUMN focus_quality INTEGER CHECK(focus_quality BETWEEN 1 AND 10); -- Self-rated focus quality
+ALTER TABLE focus_sessions ADD COLUMN session_tags JSON; -- Tags for categorization
+ALTER TABLE focus_sessions ADD COLUMN is_successful BOOLEAN DEFAULT true; -- Whether session was completed successfully
+ALTER TABLE focus_sessions ADD COLUMN cancellation_reason TEXT; -- Why session was cancelled
+ALTER TABLE focus_sessions ADD COLUMN updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000);
+
+-- Focus session templates for different work types
+CREATE TABLE focus_templates (
+  id TEXT PRIMARY KEY,
+  template_key TEXT UNIQUE NOT NULL,
+  name_en TEXT NOT NULL,
+  name_de TEXT NOT NULL,
+  description_en TEXT,
+  description_de TEXT,
+  session_type TEXT CHECK(session_type IN ('pomodoro','deep_work','custom','sprint','flow')) NOT NULL,
+  default_duration INTEGER NOT NULL, -- in minutes
+  break_duration INTEGER DEFAULT 5, -- break duration in minutes
+  long_break_duration INTEGER DEFAULT 15, -- long break duration
+  cycles_before_long_break INTEGER DEFAULT 4, -- pomodoro cycles before long break
+  suggested_tasks JSON, -- Array of task types that work well with this template
+  productivity_tips_en JSON, -- Tips for maximizing productivity
+  productivity_tips_de JSON,
+  environment_suggestions JSON, -- Suggested environment setup
+  is_active BOOLEAN DEFAULT true,
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+);
+
+-- Break reminders and notifications
+CREATE TABLE break_reminders (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  reminder_type TEXT CHECK(reminder_type IN ('pomodoro_break','long_break','eye_rest','movement','hydration','posture')) NOT NULL,
+  trigger_condition JSON NOT NULL, -- When to trigger (time-based, activity-based, etc.)
+  reminder_text_en TEXT NOT NULL,
+  reminder_text_de TEXT NOT NULL,
+  is_enabled BOOLEAN DEFAULT true,
+  frequency_minutes INTEGER, -- How often to remind (for recurring reminders)
+  last_triggered INTEGER, -- When reminder was last sent
+  trigger_count INTEGER DEFAULT 0, -- How many times triggered
+  user_response_rate REAL DEFAULT 0, -- How often user responds positively
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+);
+
+-- Focus session analytics and insights
+CREATE TABLE focus_analytics (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  session_id TEXT REFERENCES focus_sessions(id),
+  metric_type TEXT CHECK(metric_type IN ('productivity_score','focus_duration','distraction_rate','completion_rate','mood_improvement','energy_change')) NOT NULL,
+  metric_value REAL NOT NULL,
+  metric_unit TEXT, -- 'score', 'minutes', 'percentage', 'count'
+  measurement_date INTEGER NOT NULL,
+  session_type TEXT, -- Type of session this metric relates to
+  additional_data JSON,
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+);
+
+-- Productivity patterns learned from focus sessions
+CREATE TABLE productivity_patterns (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  pattern_type TEXT CHECK(pattern_type IN ('optimal_duration','best_time_of_day','productive_environment','effective_breaks','task_types')) NOT NULL,
+  pattern_data JSON NOT NULL, -- The discovered pattern
+  confidence_score REAL NOT NULL, -- How confident we are in this pattern (0-1)
+  sample_size INTEGER NOT NULL, -- Number of sessions this pattern is based on
+  effectiveness_score REAL, -- How effective this pattern is (0-100)
+  last_validated INTEGER, -- When pattern was last validated
+  is_active BOOLEAN DEFAULT true,
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  UNIQUE(user_id, pattern_type)
+);
+
+-- Screen time and digital wellness tracking (mobile app only)
+CREATE TABLE screen_time_logs (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  device_type TEXT CHECK(device_type IN ('ios','android')) NOT NULL, -- Mobile only
+  app_category TEXT, -- 'productivity', 'social', 'entertainment', etc.
+  app_name TEXT,
+  usage_duration INTEGER NOT NULL, -- in seconds
+  pickup_count INTEGER DEFAULT 0, -- How many times app was opened
+  notification_count INTEGER DEFAULT 0, -- Notifications received
+  focus_interruptions INTEGER DEFAULT 0, -- Times app interrupted focus session
+  recorded_date INTEGER NOT NULL, -- Date of usage (start of day timestamp)
+  sync_source TEXT CHECK(sync_source IN ('ios_screen_time','android_digital_wellbeing')) NOT NULL,
+  raw_data JSON, -- Raw data from device APIs
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+);
+
+-- Create indexes for performance
+CREATE INDEX idx_focus_sessions_user_date ON focus_sessions(user_id, started_at DESC);
+CREATE INDEX idx_focus_sessions_type ON focus_sessions(session_type);
+CREATE INDEX idx_focus_sessions_successful ON focus_sessions(is_successful, productivity_rating);
+CREATE INDEX idx_focus_sessions_task ON focus_sessions(task_id);
+
+CREATE INDEX idx_focus_templates_key ON focus_templates(template_key);
+CREATE INDEX idx_focus_templates_type ON focus_templates(session_type);
+CREATE INDEX idx_focus_templates_active ON focus_templates(is_active);
+
+CREATE INDEX idx_break_reminders_user ON break_reminders(user_id);
+CREATE INDEX idx_break_reminders_enabled ON break_reminders(is_enabled);
+CREATE INDEX idx_break_reminders_type ON break_reminders(reminder_type);
+CREATE INDEX idx_break_reminders_last_triggered ON break_reminders(last_triggered);
+
+CREATE INDEX idx_focus_analytics_user ON focus_analytics(user_id);
+CREATE INDEX idx_focus_analytics_session ON focus_analytics(session_id);
+CREATE INDEX idx_focus_analytics_type ON focus_analytics(metric_type);
+CREATE INDEX idx_focus_analytics_date ON focus_analytics(measurement_date DESC);
+
+CREATE INDEX idx_productivity_patterns_user ON productivity_patterns(user_id);
+CREATE INDEX idx_productivity_patterns_type ON productivity_patterns(pattern_type);
+CREATE INDEX idx_productivity_patterns_confidence ON productivity_patterns(confidence_score DESC);
+CREATE INDEX idx_productivity_patterns_active ON productivity_patterns(is_active);
+
+CREATE INDEX idx_screen_time_logs_user_date ON screen_time_logs(user_id, recorded_date DESC);
+CREATE INDEX idx_screen_time_logs_device ON screen_time_logs(device_type);
+CREATE INDEX idx_screen_time_logs_category ON screen_time_logs(app_category);
+
+-- Insert default focus templates
+INSERT INTO focus_templates (
+  id, template_key, name_en, name_de, description_en, description_de,
+  session_type, default_duration, break_duration, long_break_duration,
+  cycles_before_long_break, suggested_tasks, productivity_tips_en, productivity_tips_de,
+  environment_suggestions
+) VALUES 
+-- Classic Pomodoro
+('tpl_pomodoro_classic', 'pomodoro_classic', 'Classic Pomodoro', 'Klassisches Pomodoro',
+ '25-minute focused work sessions with 5-minute breaks', '25-minütige fokussierte Arbeitssitzungen mit 5-minütigen Pausen',
+ 'pomodoro', 25, 5, 15, 4,
+ '["coding", "writing", "studying", "planning"]',
+ '["Eliminate distractions", "Focus on one task", "Take breaks seriously", "Track your progress"]',
+ '["Ablenkungen eliminieren", "Auf eine Aufgabe fokussieren", "Pausen ernst nehmen", "Fortschritt verfolgen"]',
+ '{"noise_level": "quiet", "lighting": "good", "temperature": "comfortable", "phone": "silent"}'),
+
+-- Extended Pomodoro
+('tpl_pomodoro_extended', 'pomodoro_extended', 'Extended Pomodoro', 'Erweitertes Pomodoro',
+ '45-minute sessions for complex tasks', '45-minütige Sitzungen für komplexe Aufgaben',
+ 'pomodoro', 45, 10, 20, 3,
+ '["complex_coding", "research", "design", "analysis"]',
+ '["Perfect for complex tasks", "Longer focus periods", "Extended breaks for recovery"]',
+ '["Perfekt für komplexe Aufgaben", "Längere Fokusperioden", "Erweiterte Pausen zur Erholung"]',
+ '{"noise_level": "very_quiet", "lighting": "optimal", "tools": "ready"}'),
+
+-- Deep Work Session
+('tpl_deep_work', 'deep_work', 'Deep Work', 'Tiefes Arbeiten',
+ '90-minute uninterrupted deep work sessions', '90-minütige ununterbrochene Tiefarbeits-Sitzungen',
+ 'deep_work', 90, 15, 30, 2,
+ '["creative_work", "strategic_planning", "complex_problem_solving", "learning"]',
+ '["No interruptions allowed", "Single task focus", "Prepare everything beforehand", "Phone in airplane mode"]',
+ '["Keine Unterbrechungen erlaubt", "Einzelaufgaben-Fokus", "Alles vorher vorbereiten", "Handy im Flugmodus"]',
+ '{"noise_level": "silent", "notifications": "off", "door": "closed", "tools": "prepared"}'),
+
+-- Quick Sprint
+('tpl_quick_sprint', 'quick_sprint', 'Quick Sprint', 'Schneller Sprint',
+ '15-minute focused bursts for small tasks', '15-minütige fokussierte Schübe für kleine Aufgaben',
+ 'sprint', 15, 3, 10, 6,
+ '["email_processing", "quick_fixes", "admin_tasks", "cleanup"]',
+ '["Perfect for small tasks", "High energy bursts", "Quick wins", "Momentum building"]',
+ '["Perfekt für kleine Aufgaben", "Hochenergie-Schübe", "Schnelle Erfolge", "Momentum aufbauen"]',
+ '{"energy": "high", "task_size": "small", "complexity": "low"}'),
+
+-- Flow State Session
+('tpl_flow_state', 'flow_state', 'Flow State', 'Flow-Zustand',
+ '2-hour flow state sessions for creative work', '2-stündige Flow-Zustand-Sitzungen für kreative Arbeit',
+ 'flow', 120, 20, 30, 2,
+ '["creative_writing", "design", "art", "music", "innovation"]',
+ '["Eliminate all distractions", "Prepare materials", "Set clear goals", "Trust the process"]',
+ '["Alle Ablenkungen eliminieren", "Materialien vorbereiten", "Klare Ziele setzen", "Dem Prozess vertrauen"]',
+ '{"distractions": "none", "materials": "ready", "mindset": "open", "time": "protected"}');
+
+-- Insert default break reminders
+INSERT INTO break_reminders (
+  id, user_id, reminder_type, trigger_condition, reminder_text_en, reminder_text_de,
+  is_enabled, frequency_minutes
+) VALUES 
+-- Pomodoro break reminder
+('reminder_pomodoro_template', 'template', 'pomodoro_break',
+ '{"trigger": "session_end", "session_type": "pomodoro"}',
+ '🍅 Pomodoro complete! Time for a 5-minute break. Stand up, stretch, or grab some water.',
+ '🍅 Pomodoro abgeschlossen! Zeit für eine 5-minütige Pause. Steh auf, dehne dich oder hol dir Wasser.',
+ true, null),
+
+-- Long break reminder
+('reminder_long_break_template', 'template', 'long_break',
+ '{"trigger": "cycles_complete", "cycle_count": 4}',
+ '🧘 Great work! You''ve completed 4 pomodoros. Take a 15-30 minute break to recharge.',
+ '🧘 Großartige Arbeit! Du hast 4 Pomodoros abgeschlossen. Mach eine 15-30 minütige Pause zum Aufladen.',
+ true, null),
+
+-- Eye rest reminder
+('reminder_eye_rest_template', 'template', 'eye_rest',
+ '{"trigger": "time_based", "interval_minutes": 20}',
+ '👁️ Eye break time! Look at something 20 feet away for 20 seconds (20-20-20 rule).',
+ '👁️ Augenpause! Schaue 20 Sekunden lang auf etwas 20 Fuß entferntes (20-20-20 Regel).',
+ true, 20),
+
+-- Movement reminder
+('reminder_movement_template', 'template', 'movement',
+ '{"trigger": "time_based", "interval_minutes": 60}',
+ '🚶 Movement break! Take a quick walk, do some stretches, or move around for 2-3 minutes.',
+ '🚶 Bewegungspause! Mach einen kurzen Spaziergang, dehne dich oder bewege dich 2-3 Minuten.',
+ true, 60),
+
+-- Hydration reminder
+('reminder_hydration_template', 'template', 'hydration',
+ '{"trigger": "time_based", "interval_minutes": 45}',
+ '💧 Hydration check! Drink some water to stay focused and healthy.',
+ '💧 Hydrations-Check! Trink etwas Wasser, um fokussiert und gesund zu bleiben.',
+ true, 45),
+
+-- Posture reminder
+('reminder_posture_template', 'template', 'posture',
+ '{"trigger": "time_based", "interval_minutes": 30}',
+ '🪑 Posture check! Adjust your sitting position and check your ergonomics.',
+ '🪑 Haltungs-Check! Korrigiere deine Sitzposition und überprüfe deine Ergonomie.',
+ true, 30);
+
+-- Create focus session streaks table
+CREATE TABLE focus_streaks (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  streak_type TEXT CHECK(streak_type IN ('daily_sessions','weekly_hours','monthly_consistency','session_completion')) NOT NULL,
+  current_streak INTEGER DEFAULT 0,
+  longest_streak INTEGER DEFAULT 0,
+  last_session_date INTEGER, -- Last date a session was completed
+  streak_start_date INTEGER, -- When current streak started
+  streak_data JSON, -- Additional streak metadata
+  is_active BOOLEAN DEFAULT true,
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  UNIQUE(user_id, streak_type)
+);
+
+-- Distraction tracking for focus improvement
+CREATE TABLE focus_distractions (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL REFERENCES focus_sessions(id),
+  user_id TEXT NOT NULL REFERENCES users(id),
+  distraction_type TEXT CHECK(distraction_type IN ('notification','phone_call','interruption','internal_thought','external_noise','website','social_media','other')) NOT NULL,
+  distraction_source TEXT, -- Specific app, person, or source
+  duration_seconds INTEGER, -- How long the distraction lasted
+  impact_level INTEGER CHECK(impact_level BETWEEN 1 AND 5), -- How much it affected focus
+  occurred_at INTEGER NOT NULL, -- When during the session it occurred
+  user_response TEXT CHECK(user_response IN ('ignored','addressed','postponed','gave_in')),
+  notes TEXT,
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+);
+
+-- Focus environment tracking
+CREATE TABLE focus_environments (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  environment_name TEXT NOT NULL, -- 'Home Office', 'Coffee Shop', 'Library', etc.
+  location_type TEXT CHECK(location_type IN ('home','office','cafe','library','coworking','outdoor','other')) NOT NULL,
+  noise_level INTEGER CHECK(noise_level BETWEEN 1 AND 5), -- 1 = silent, 5 = very noisy
+  lighting_quality INTEGER CHECK(lighting_quality BETWEEN 1 AND 5), -- 1 = poor, 5 = excellent
+  temperature_comfort INTEGER CHECK(temperature_comfort BETWEEN 1 AND 5),
+  ergonomics_rating INTEGER CHECK(ergonomics_rating BETWEEN 1 AND 5),
+  distraction_level INTEGER CHECK(distraction_level BETWEEN 1 AND 5), -- 1 = no distractions, 5 = many
+  productivity_rating REAL, -- Average productivity in this environment
+  session_count INTEGER DEFAULT 0, -- Number of sessions in this environment
+  total_duration INTEGER DEFAULT 0, -- Total minutes spent in this environment
+  is_favorite BOOLEAN DEFAULT false,
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+);
+
+-- Create comprehensive indexes
+CREATE INDEX idx_focus_sessions_user_type_date ON focus_sessions(user_id, session_type, started_at DESC);
+CREATE INDEX idx_focus_sessions_successful ON focus_sessions(is_successful, productivity_rating DESC);
+CREATE INDEX idx_focus_sessions_duration ON focus_sessions(actual_duration DESC);
+
+CREATE INDEX idx_break_reminders_user_enabled ON break_reminders(user_id, is_enabled);
+CREATE INDEX idx_break_reminders_frequency ON break_reminders(frequency_minutes);
+
+CREATE INDEX idx_focus_streaks_user ON focus_streaks(user_id);
+CREATE INDEX idx_focus_streaks_type ON focus_streaks(streak_type);
+CREATE INDEX idx_focus_streaks_current ON focus_streaks(current_streak DESC);
+
+CREATE INDEX idx_focus_distractions_session ON focus_distractions(session_id);
+CREATE INDEX idx_focus_distractions_user_type ON focus_distractions(user_id, distraction_type);
+CREATE INDEX idx_focus_distractions_impact ON focus_distractions(impact_level DESC);
+
+CREATE INDEX idx_focus_environments_user ON focus_environments(user_id);
+CREATE INDEX idx_focus_environments_productivity ON focus_environments(productivity_rating DESC);
+CREATE INDEX idx_focus_environments_favorite ON focus_environments(is_favorite);
+
+CREATE INDEX idx_screen_time_logs_user_date ON screen_time_logs(user_id, recorded_date DESC);
+CREATE INDEX idx_screen_time_logs_category ON screen_time_logs(app_category);
+CREATE INDEX idx_screen_time_logs_device ON screen_time_logs(device_type);
+
+-- Create triggers for automatic analytics
+CREATE TRIGGER focus_session_analytics
+AFTER UPDATE OF completed_at ON focus_sessions
+WHEN NEW.completed_at IS NOT NULL AND OLD.completed_at IS NULL
+BEGIN
+  -- Calculate productivity score
+  INSERT INTO focus_analytics (
+    id, user_id, session_id, metric_type, metric_value, metric_unit,
+    measurement_date, session_type, additional_data
+  ) VALUES (
+    'analytics_' || NEW.id || '_productivity',
+    NEW.user_id,
+    NEW.id,
+    'productivity_score',
+    CASE 
+      WHEN NEW.is_successful = 1 AND NEW.productivity_rating >= 4 THEN 
+        (NEW.productivity_rating * 20) + 
+        (CASE WHEN NEW.actual_duration >= NEW.planned_duration * 0.8 THEN 10 ELSE 0 END) +
+        (CASE WHEN NEW.interruptions <= 2 THEN 10 ELSE -5 END)
+      ELSE NEW.productivity_rating * 15
+    END,
+    'score',
+    strftime('%s', 'now') * 1000,
+    NEW.session_type,
+    json_object(
+      'planned_duration', NEW.planned_duration,
+      'actual_duration', NEW.actual_duration,
+      'interruptions', NEW.interruptions,
+      'task_completed', NEW.completed_task_count
+    )
+  );
+
+  -- Update focus streaks
+  INSERT OR REPLACE INTO focus_streaks (
+    id, user_id, streak_type, current_streak, last_session_date, updated_at
+  ) 
+  SELECT 
+    'streak_daily_' || NEW.user_id,
+    NEW.user_id,
+    'daily_sessions',
+    CASE 
+      WHEN DATE(datetime(COALESCE(fs.last_session_date, 0)/1000, 'unixepoch')) = DATE(datetime(NEW.completed_at/1000, 'unixepoch'), '-1 day')
+      THEN COALESCE(fs.current_streak, 0) + 1
+      WHEN DATE(datetime(NEW.completed_at/1000, 'unixepoch')) = DATE('now')
+      THEN COALESCE(fs.current_streak, 0) + 1
+      ELSE 1
+    END,
+    NEW.completed_at,
+    strftime('%s', 'now') * 1000
+  FROM (SELECT current_streak, last_session_date FROM focus_streaks WHERE user_id = NEW.user_id AND streak_type = 'daily_sessions') fs;
+END;
+
+-- Create trigger for break reminder scheduling
+CREATE TRIGGER schedule_break_reminders
+AFTER INSERT ON focus_sessions
+WHEN NEW.session_type = 'pomodoro'
+BEGIN
+  -- Schedule break reminder for end of session
+  INSERT INTO notification_schedules (
+    id, user_id, template_key, schedule_type, schedule_data, next_scheduled
+  ) VALUES (
+    'break_' || NEW.id,
+    NEW.user_id,
+    'pomodoro_break',
+    'custom',
+    json_object('session_id', NEW.id, 'break_type', 'short'),
+    NEW.started_at + (NEW.planned_duration * 60 * 1000)
+  );
+END;
+
+-- Create view for focus dashboard
+CREATE VIEW focus_dashboard_view AS
+SELECT 
+  fs.user_id,
+  COUNT(*) as total_sessions,
+  COUNT(CASE WHEN fs.is_successful = 1 THEN 1 END) as successful_sessions,
+  SUM(fs.actual_duration) as total_focus_minutes,
+  AVG(fs.productivity_rating) as avg_productivity_rating,
+  AVG(fs.actual_duration) as avg_session_duration,
+  SUM(fs.interruptions) as total_interruptions,
+  AVG(fs.interruptions) as avg_interruptions_per_session,
+  MAX(fs.started_at) as last_session_at,
+  COUNT(CASE WHEN DATE(datetime(fs.started_at/1000, 'unixepoch')) = DATE('now') THEN 1 END) as today_sessions,
+  SUM(CASE WHEN DATE(datetime(fs.started_at/1000, 'unixepoch')) = DATE('now') THEN fs.actual_duration ELSE 0 END) as today_minutes
+FROM focus_sessions fs
+WHERE fs.started_at > strftime('%s', 'now', '-30 days') * 1000
+GROUP BY fs.user_id;

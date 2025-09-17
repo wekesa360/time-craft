@@ -1,0 +1,52 @@
+{
+  "name": "wellness-backend",
+  "version": "1.0.0",
+  "description": "Time & Wellness – Cloudflare Workers backend",
+  "type": "module",
+  "main": "src/workers/api-gateway.ts",
+  "scripts": {
+    "dev": "wrangler dev src/workers/api-gateway.ts --env local",
+    "deploy": "wrangler deploy --env production",
+    "db:apply": "wrangler d1 migrations apply wellness_prod",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run tests/integration",
+    "test:auth": "vitest run tests/integration/auth.test.ts",
+    "test:core": "vitest run tests/integration/core.test.ts",
+    "test:health": "vitest run tests/integration/health.test.ts",
+    "test:ai": "vitest run tests/integration/ai.test.ts",
+    "test:notifications": "vitest run tests/integration/notifications.test.ts",
+    "test:badges": "vitest run tests/integration/badges.test.ts",
+    "test:payments": "vitest run tests/integration/payments.test.ts",
+    "test:calendar": "vitest run tests/integration/calendar.test.ts",
+    "test:voice": "vitest run tests/integration/voice.test.ts",
+    "test:admin": "vitest run tests/integration/admin.test.ts",
+    "format": "prettier --write src"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240620.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.14.9",
+    "@typescript-eslint/eslint-plugin": "^7.13.1",
+    "@typescript-eslint/parser": "^7.13.1",
+    "eslint": "^8.57.0",
+    "miniflare": "^3.20250718.1",
+    "prettier": "^3.3.2",
+    "typescript": "^5.5.2",
+    "vitest": "^1.6.0",
+    "wrangler": "^3.60.3"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.2.2",
+    "bcryptjs": "^2.4.3",
+    "hono": "^4.4.7",
+    "jose": "^5.4.1",
+    "openai": "^4.52.0",
+    "stripe": "^15.12.0",
+    "zod": "^3.23.8"
+  }
+}
