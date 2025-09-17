@@ -21,6 +21,8 @@ The Time & Wellness API provides comprehensive endpoints for managing productivi
 - **Voice Processing** - Voice note transcription, AI analysis, and command interpretation
 - **Eisenhower Matrix** - Task prioritization using urgency/importance quadrants
 - **Push Notifications** - OneSignal integration with localized templates
+- **Health Monitoring** - System health checks, metrics collection, and performance monitoring
+- **OpenAPI Specification** - Complete API documentation with interactive endpoints
 
 ## Authentication
 
@@ -895,6 +897,29 @@ All error responses follow this format:
 ## Rate Limiting
 
 The API implements rate limiting to prevent abuse:
+
+## New Monitoring & Documentation Endpoints
+
+### Health Monitoring
+- **GET** `/api/health` - Get system health status
+- **GET** `/api/health/detailed` - Get detailed system health with statistics
+- **GET** `/api/health/ready` - Kubernetes readiness probe
+- **GET** `/api/health/live` - Kubernetes liveness probe
+
+### Metrics & Analytics
+- **GET** `/api/metrics` - Get system metrics (JSON format)
+- **POST** `/api/metrics` - Record custom metrics
+- **GET** `/api/metrics/analytics` - Get comprehensive analytics
+- **GET** `/api/metrics/realtime` - Get real-time metrics
+- **GET** `/api/metrics/summary` - Get metrics summary
+- **GET** `/api/metrics/prometheus` - Get Prometheus-compatible metrics
+
+### OpenAPI Documentation
+- **GET** `/api/openapi` - Get OpenAPI specification (JSON)
+- **GET** `/api/openapi/yaml` - Get OpenAPI specification (YAML)
+- **GET** `/api/openapi/json` - Get OpenAPI specification (JSON)
+
+## Rate Limiting
 
 ### Authentication Endpoints
 - **Limit:** 5 requests per 15 minutes

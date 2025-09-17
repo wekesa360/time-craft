@@ -8,6 +8,7 @@ import { Env } from '@/lib/env';
 import { authRateLimit, apiRateLimit } from '@/middleware/rateLimit';
 import { customCors } from '@/middleware/cors';
 import { addRequestId, addSecurityHeaders, validateLanguage } from '@/middleware/validate';
+import { collectMetrics } from '@/middleware/metrics';
 
 // sub-routers
 import authRoutes from './auth';
@@ -25,6 +26,9 @@ import notificationRoutes from './notifications';
 import socialRoutes from './social';
 import studentVerificationRoutes from './student-verification';
 import localizationRoutes from './localization';
+import healthMonitorRoutes from './health-monitor';
+import metricsRoutes from './metrics';
+import openapiRoutes from './openapi';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -34,6 +38,7 @@ app.use('*', addRequestId());
 app.use('*', addSecurityHeaders());
 app.use('*', customCors());
 app.use('*', validateLanguage());
+app.use('*', collectMetrics);
 
 // Rate limiting for auth endpoints
 app.use('/auth/*', authRateLimit());
@@ -68,6 +73,9 @@ app.route('/api/notifications', notificationRoutes);
 app.route('/api/social', socialRoutes);
 app.route('/api/student', studentVerificationRoutes);
 app.route('/api/localization', localizationRoutes);
+app.route('/api/health', healthMonitorRoutes);
+app.route('/api/metrics', metricsRoutes);
+app.route('/api/openapi', openapiRoutes);
 app.route('/api', coreRoutes); // Core routes last to catch remaining /api/* routes
 app.route('/realtime', realtimeRoutes);
 app.route('/admin', adminRoutes);
