@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { motion, MotionProps } from 'framer-motion';
+import { motion, type MotionProps } from 'framer-motion';
 
 interface StaggerProps extends Omit<MotionProps, 'initial' | 'animate' | 'exit'> {
   children: React.ReactNode;
@@ -90,7 +90,7 @@ const Stagger: React.FC<StaggerProps> = ({
     return { container: baseVariants, item: childVariants };
   };
 
-  const variants = getVariants();
+  const variants = getVariants() as any;
 
   return (
     <motion.div

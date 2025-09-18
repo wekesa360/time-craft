@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExerciseData } from '../../../types';
+import type { ExerciseData } from '../../../types';
 import { 
   Activity, 
   Clock, 
@@ -46,7 +46,7 @@ const intensityLevels = [
   { value: 10, label: 'Absolute Maximum', description: 'Peak performance', color: 'bg-red-100 text-red-800' }
 ];
 
-export const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
+const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
   isOpen,
   onClose,
   onSave
@@ -337,3 +337,5 @@ export const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
     </div>
   );
 };
+
+export default ExerciseLogger;

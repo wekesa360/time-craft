@@ -4,9 +4,10 @@
  */
 
 import React from 'react';
+import type { ElementType } from 'react';
 import { cn } from '../../../utils/cn';
 import { useResponsiveValue } from '../../../hooks/useResponsive';
-import { ResponsiveProps } from '../../../utils/responsive';
+import type { ResponsiveProps } from '../../../utils/responsive';
 
 interface StackProps {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ interface StackProps {
   justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
   wrap?: boolean;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
 }
 
 const alignClasses = {

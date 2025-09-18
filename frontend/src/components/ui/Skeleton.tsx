@@ -87,14 +87,15 @@ export const ChartSkeleton: React.FC<{ height?: number; className?: string }> = 
     <div className={cn('p-4', className)}>
       <div className="flex items-end justify-between space-x-2" style={{ height }}>
         {Array.from({ length: 7 }).map((_, index) => (
-          <Skeleton
+          <div
             key={index}
-            className="flex-1"
             style={{
               height: `${Math.random() * 60 + 40}%`,
               minHeight: '20px'
             }}
-          />
+          >
+            <Skeleton className="flex-1 h-full" />
+          </div>
         ))}
       </div>
     </div>

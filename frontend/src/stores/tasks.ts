@@ -84,7 +84,7 @@ export const useTaskStore = create<TaskStore>()(
       set({ isLoading: true });
       const response = await apiClient.getTasks(params);
       set({
-        tasks: response.data || [],
+        tasks: (response as any).tasks || [],
         isLoading: false,
       });
     } catch (error) {
@@ -99,11 +99,23 @@ export const useTaskStore = create<TaskStore>()(
         // Create optimistic task for offline mode
         const optimisticTask: Task = {
           id: `temp-${Date.now()}`,
-          ...data,
+          user_id: 'current-user', // This would come from auth store
+          title: data.title,
+          description: data.description || null,
+          priority: data.priority,
+          urgency: data.urgency || null,
+          importance: data.importance || null,
+          eisenhower_quadrant: data.eisenhower_quadrant || null,
           status: data.status || 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          userId: 'current-user', // This would come from auth store
+          due_date: data.dueDate || null,
+          estimated_duration: data.estimatedDuration || null,
+          context_type: data.contextType || null,
+          matrix_notes: data.matrixNotes || null,
+          is_delegated: data.isDelegated || false,
+          delegated_to: data.delegatedTo || null,
+          delegation_notes: data.delegationNotes || null,
+          created_at: Date.now(),
+          updated_at: Date.now(),
         };
         
         set((state) => ({
@@ -133,10 +145,33 @@ export const useTaskStore = create<TaskStore>()(
         // Optimistic update for offline mode
         set((state) => ({
           tasks: state.tasks.map((task) =>
-            task.id === id ? { ...task, ...data, updatedAt: Date.now() } : task
+            task.id === id ? { 
+              ...task, 
+              ...data, 
+              updated_at: Date.now(),
+              // Map form fields to database fields
+              due_date: data.dueDate || task.due_date,
+              estimated_duration: data.estimatedDuration || task.estimated_duration,
+              context_type: data.contextType || task.context_type,
+              matrix_notes: data.matrixNotes || task.matrix_notes,
+              is_delegated: data.isDelegated !== undefined ? data.isDelegated : task.is_delegated,
+              delegated_to: data.delegatedTo || task.delegated_to,
+              delegation_notes: data.delegationNotes || task.delegation_notes,
+            } : task
           ),
           currentTask: state.currentTask?.id === id 
-            ? { ...state.currentTask, ...data, updatedAt: Date.now() } 
+            ? { 
+                ...state.currentTask, 
+                ...data, 
+                updated_at: Date.now(),
+                due_date: data.dueDate || state.currentTask.due_date,
+                estimated_duration: data.estimatedDuration || state.currentTask.estimated_duration,
+                context_type: data.contextType || state.currentTask.context_type,
+                matrix_notes: data.matrixNotes || state.currentTask.matrix_notes,
+                is_delegated: data.isDelegated !== undefined ? data.isDelegated : state.currentTask.is_delegated,
+                delegated_to: data.delegatedTo || state.currentTask.delegated_to,
+                delegation_notes: data.delegationNotes || state.currentTask.delegation_notes,
+              } 
             : state.currentTask,
         }));
         

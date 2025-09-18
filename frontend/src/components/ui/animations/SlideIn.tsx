@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { motion, MotionProps } from 'framer-motion';
+import { motion, type MotionProps } from 'framer-motion';
 
 interface SlideInProps extends Omit<MotionProps, 'initial' | 'animate' | 'exit'> {
   children: React.ReactNode;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FocusSession, SessionTemplate } from '../../../types';
+import type { FocusSession, SessionTemplate } from '../../../types';
 import { 
   Play, 
   Pause, 
@@ -22,7 +22,7 @@ interface FocusTimerProps {
   onCancelSession: () => void;
 }
 
-export const FocusTimer: React.FC<FocusTimerProps> = ({
+const FocusTimer: React.FC<FocusTimerProps> = ({
   activeSession,
   selectedTemplate,
   templates,
@@ -317,3 +317,5 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
     </div>
   );
 };
+
+export default FocusTimer;

@@ -5,7 +5,7 @@ import { NotificationTester } from '../components/features/notifications/Notific
 
 type ViewMode = 'preferences' | 'history' | 'tester';
 
-export const NotificationsPage: React.FC = () => {
+const NotificationsPage: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewMode>('preferences');
 
   const views = [
@@ -65,3 +65,5 @@ export const NotificationsPage: React.FC = () => {
     </div>
   );
 };
+
+export default NotificationsPage;

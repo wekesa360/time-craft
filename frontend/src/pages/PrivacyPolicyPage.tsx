@@ -59,7 +59,7 @@ export default function PrivacyPolicyPage() {
                 {t('legal.privacyPolicy.informationWeCollect.personalInfo.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                {t('legal.privacyPolicy.informationWeCollect.personalInfo.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.privacyPolicy.informationWeCollect.personalInfo.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -70,7 +70,7 @@ export default function PrivacyPolicyPage() {
                 {t('legal.privacyPolicy.informationWeCollect.usageData.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                {t('legal.privacyPolicy.informationWeCollect.usageData.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.privacyPolicy.informationWeCollect.usageData.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -81,7 +81,7 @@ export default function PrivacyPolicyPage() {
                 {t('legal.privacyPolicy.informationWeCollect.autoCollected.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                {t('legal.privacyPolicy.informationWeCollect.autoCollected.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.privacyPolicy.informationWeCollect.autoCollected.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -104,7 +104,7 @@ export default function PrivacyPolicyPage() {
                 {t('legal.privacyPolicy.howWeUseInfo.serviceProvision.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2 text-sm">
-                {t('legal.privacyPolicy.howWeUseInfo.serviceProvision.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.privacyPolicy.howWeUseInfo.serviceProvision.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -115,7 +115,7 @@ export default function PrivacyPolicyPage() {
                 {t('legal.privacyPolicy.howWeUseInfo.communication.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2 text-sm">
-                {t('legal.privacyPolicy.howWeUseInfo.communication.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.privacyPolicy.howWeUseInfo.communication.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -126,7 +126,7 @@ export default function PrivacyPolicyPage() {
                 {t('legal.privacyPolicy.howWeUseInfo.improvement.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2 text-sm">
-                {t('legal.privacyPolicy.howWeUseInfo.improvement.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.privacyPolicy.howWeUseInfo.improvement.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -137,7 +137,7 @@ export default function PrivacyPolicyPage() {
                 {t('legal.privacyPolicy.howWeUseInfo.legal.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2 text-sm">
-                {t('legal.privacyPolicy.howWeUseInfo.legal.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.privacyPolicy.howWeUseInfo.legal.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -160,12 +160,12 @@ export default function PrivacyPolicyPage() {
             </p>
             <div className="grid md:grid-cols-2 gap-4">
               <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                {t('legal.privacyPolicy.dataProtection.measures', { returnObjects: true }).slice(0, 4).map((measure: string, index: number) => (
+                {(t('legal.privacyPolicy.dataProtection.measures', { returnObjects: true }) as string[]).slice(0, 4).map((measure: string, index: number) => (
                   <li key={index}>• {measure}</li>
                 ))}
               </ul>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                {t('legal.privacyPolicy.dataProtection.measures', { returnObjects: true }).slice(4).map((measure: string, index: number) => (
+                {(t('legal.privacyPolicy.dataProtection.measures', { returnObjects: true }) as string[]).slice(4).map((measure: string, index: number) => (
                   <li key={index + 4}>• {measure}</li>
                 ))}
               </ul>
@@ -247,7 +247,7 @@ export default function PrivacyPolicyPage() {
               {t('legal.privacyPolicy.dataRetention.content')}
             </p>
             <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-              {t('legal.privacyPolicy.dataRetention.periods', { returnObjects: true }).map((period: string, index: number) => (
+              {(t('legal.privacyPolicy.dataRetention.periods', { returnObjects: true }) as string[]).map((period: string, index: number) => (
                 <li key={index}>• <strong>{period.split(':')[0]}:</strong>{period.split(':').slice(1).join(':')}</li>
               ))}
             </ul>

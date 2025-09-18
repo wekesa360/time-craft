@@ -92,7 +92,7 @@ interface UserManagementProps {
   className?: string;
 }
 
-export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }) => {
+const UserManagement: React.FC<UserManagementProps> = ({ className = '' }) => {
   const { t } = useTranslation();
   const [users] = useState<User[]>(mockUsers);
   const [searchTerm, setSearchTerm] = useState('');
@@ -411,3 +411,5 @@ export const UserManagement: React.FC<UserManagementProps> = ({ className = '' }
     </div>
   );
 };
+
+export default UserManagement;

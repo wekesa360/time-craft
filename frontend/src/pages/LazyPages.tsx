@@ -3,105 +3,105 @@
  * Route-based code splitting for better performance
  */
 
-import { createLazyComponent, routeLoadingMessages } from '../utils/lazyLoading';
+import { withLazyLoading as createLazyComponent, routeLoadingMessages } from '../utils/lazyLoading';
 
 // Auth pages
 export const LazyLoginPage = createLazyComponent(
   () => import('./auth/LoginPage'),
-  'Loading login...'
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading login...</div>
 );
 
 export const LazyRegisterPage = createLazyComponent(
   () => import('./auth/RegisterPage'),
-  'Loading registration...'
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading registration...</div>
 );
 
 export const LazyForgotPasswordPage = createLazyComponent(
   () => import('./auth/ForgotPasswordPage'),
-  'Loading password reset...'
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading password reset...</div>
 );
 
 // Public legal pages
 export const LazyTermsOfServicePage = createLazyComponent(
   () => import('./TermsOfServicePage'),
-  'Loading terms of service...'
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading terms of service...</div>
 );
 
 export const LazyPrivacyPolicyPage = createLazyComponent(
   () => import('./PrivacyPolicyPage'),
-  'Loading privacy policy...'
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading privacy policy...</div>
 );
 
 // Main application pages
 export const LazyDashboard = createLazyComponent(
   () => import('./Dashboard'),
-  routeLoadingMessages.dashboard
+  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.dashboard}</div>
 );
 
 export const LazyTasksPage = createLazyComponent(
   () => import('./TasksPage'),
-  routeLoadingMessages.tasks
+  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.tasks}</div>
 );
 
 export const LazyHealthPage = createLazyComponent(
   () => import('./HealthPage'),
-  routeLoadingMessages.health
+  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.health}</div>
 );
 
 export const LazyCalendarPage = createLazyComponent(
   () => import('./CalendarPage'),
-  routeLoadingMessages.calendar
+  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.calendar}</div>
 );
 
 export const LazyFocusPage = createLazyComponent(
   () => import('./FocusPage'),
-  routeLoadingMessages.focus
+  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.focus}</div>
 );
 
 export const LazyBadgesPage = createLazyComponent(
   () => import('./BadgesPage'),
-  routeLoadingMessages.badges
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading badges...</div>
 );
 
 export const LazySocialPage = createLazyComponent(
   () => import('./SocialPage'),
-  routeLoadingMessages.social
+  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.social}</div>
 );
 
 export const LazyVoicePage = createLazyComponent(
-  () => import('./VoicePage').then(module => ({ default: module.VoicePage })),
-  routeLoadingMessages.voice
+  () => import('./VoicePage'),
+  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.voice}</div>
 );
 
 export const LazyNotificationsPage = createLazyComponent(
-  () => import('./NotificationsPage').then(module => ({ default: module.NotificationsPage })),
-  routeLoadingMessages.notifications
+  () => import('./NotificationsPage'),
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading notifications...</div>
 );
 
 export const LazyStudentPage = createLazyComponent(
-  () => import('./StudentPage').then(module => ({ default: module.StudentPage })),
-  routeLoadingMessages.student
+  () => import('./StudentPage'),
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading student page...</div>
 );
 
 export const LazyAnalyticsPage = createLazyComponent(
   () => import('./AnalyticsPage'),
-  routeLoadingMessages.analytics
+  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.analytics}</div>
 );
 
 export const LazySettingsPage = createLazyComponent(
   () => import('./SettingsPage'),
-  routeLoadingMessages.settings
+  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.settings}</div>
 );
 
 export const LazyLocalizationPage = createLazyComponent(
   () => import('../components/localization/LazyLocalizationComponents').then(module => ({ default: module.LocalizationPageWithSuspense })),
-  routeLoadingMessages.localization
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading localization...</div>
 );
 
 // Admin pages (lazy-loaded with admin guard)
 export const LazyAdminDashboard = createLazyComponent(
   () => import('./admin/AdminDashboard'),
-  routeLoadingMessages.admin
+  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.admin}</div>
 );
 
 // Preload functions for route prefetching

@@ -15,13 +15,18 @@ interface UseThemeReturn {
 
 export const useTheme = (): UseThemeReturn => {
   const {
-    mode,
-    colorTheme,
-    isDark,
-    setMode,
+    config,
+    effectiveTheme,
+    setThemeMode,
     setColorTheme,
-    toggleMode,
+    toggleTheme,
   } = useThemeStore();
+  
+  const mode = config.mode;
+  const colorTheme = config.colorTheme;
+  const isDark = effectiveTheme === 'dark';
+  const setMode = setThemeMode;
+  const toggleMode = toggleTheme;
 
   // Helper function to get conditional classes based on theme
   const getThemeClass = (lightClass: string, darkClass: string): string => {

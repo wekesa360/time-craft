@@ -4,15 +4,15 @@
  */
 
 import type { StateCreator } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, type PersistOptions } from 'zustand/middleware';
 
 // Define local persist options type
 interface PersistConfig<T> {
   name: string;
   storage?: {
-    getItem: (key: string) => Promise<string | null>;
-    setItem: (key: string, value: string) => Promise<void>;
-    removeItem: (key: string) => Promise<void>;
+    getItem: (key: string) => string | null | Promise<string | null>;
+    setItem: (key: string, value: string) => void | Promise<void>;
+    removeItem: (key: string) => void | Promise<void>;
   };
   partialize?: (state: T) => Partial<T>;
   onRehydrateStorage?: (state: T) => ((state?: T, error?: Error) => void) | void;
@@ -319,7 +319,7 @@ export const createPersistedStore = <T>(
   storeCreator: StateCreator<T>,
   persistConfig: PersistConfig<T>
 ) => {
-  return persist(storeCreator, persistConfig);
+  return persist(storeCreator, persistConfig as unknown as PersistOptions<T, Partial<T>, unknown>);
 };
 
 // Offline queue management

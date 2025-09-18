@@ -42,7 +42,7 @@ interface HealthDashboardProps {
   }>;
 }
 
-export const HealthDashboard: React.FC<HealthDashboardProps> = ({
+const HealthDashboard: React.FC<HealthDashboardProps> = ({
   summary,
   insights,
   goals
@@ -303,3 +303,5 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
     </div>
   );
 };
+
+export default HealthDashboard;

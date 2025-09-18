@@ -1,13 +1,6 @@
 import React from 'react';
-import { 
-  Filter, 
-  Search, 
-  Calendar, 
-  Flag, 
-  Tag, 
-  CheckSquare,
-  X
-} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Search, Filter, X } from 'lucide-react';
 
 interface TaskFiltersProps {
   filters: {
@@ -27,283 +20,294 @@ interface TaskFiltersProps {
   };
 }
 
-const statusOptions = [
-  { value: '', label: 'All Status' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' }
-];
-
-const priorityOptions = [
-  { value: '', label: 'All Priorities' },
-  { value: '1', label: 'Low (P1)' },
-  { value: '2', label: 'Medium (P2)' },
-  { value: '3', label: 'High (P3)' },
-  { value: '4', label: 'Urgent (P4)' }
-];
-
-const contextOptions = [
-  { value: '', label: 'All Contexts' },
-  { value: 'work', label: 'Work' },
-  { value: 'personal', label: 'Personal' },
-  { value: 'health', label: 'Health' },
-  { value: 'learning', label: 'Learning' },
-  { value: 'social', label: 'Social' }
-];
-
-const quadrantOptions = [
-  { value: '', label: 'All Quadrants' },
-  { value: 'do', label: 'Do First' },
-  { value: 'decide', label: 'Schedule' },
-  { value: 'delegate', label: 'Delegate' },
-  { value: 'delete', label: 'Eliminate' }
-];
-
-const dateRangeOptions = [
-  { value: '', label: 'All Time' },
-  { value: 'today', label: 'Today' },
-  { value: 'tomorrow', label: 'Tomorrow' },
-  { value: 'this_week', label: 'This Week' },
-  { value: 'next_week', label: 'Next Week' },
-  { value: 'overdue', label: 'Overdue' }
-];
-
-export const TaskFilters: React.FC<TaskFiltersProps> = ({
+const TaskFilters: React.FC<TaskFiltersProps> = ({
   filters,
   onFiltersChange,
-  taskCounts
+  taskCounts,
 }) => {
-  const hasActiveFilters = Object.values(filters).some(value => value !== '');
+  const { t } = useTranslation();
+  const [showAdvanced, setShowAdvanced] = React.useState(false);
 
   const handleFilterChange = (key: string, value: string) => {
     onFiltersChange({
       ...filters,
-      [key]: value
+      [key]: value,
     });
   };
 
-  const clearAllFilters = () => {
+  const clearFilters = () => {
     onFiltersChange({
       search: '',
       status: '',
       priority: '',
       contextType: '',
       quadrant: '',
-      dateRange: ''
+      dateRange: '',
     });
   };
 
+  const hasActiveFilters = Object.values(filters).some(filter => filter !== '');
+
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-secondary w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Search tasks by title or description..."
-          value={filters.search}
-          onChange={(e) => handleFilterChange('search', e.target.value)}
-          className="input pl-10 w-full"
-        />
-        {filters.search && (
+      {/* Search and Basic Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        {/* Search */}
+        <div className="flex-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-foreground-secondary" />
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+              className="input pl-10 w-full"
+            />
+          </div>
+        </div>
+
+        {/* Quick Status Filters */}
+        <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => handleFilterChange('search', '')}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-foreground-secondary hover:text-foreground"
+            onClick={() => handleFilterChange('status', filters.status === 'pending' ? '' : 'pending')}
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              filters.status === 'pending'
+                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                : 'bg-background-secondary text-foreground-secondary hover:bg-background-tertiary'
+            }`}
           >
-            <X className="w-4 h-4" />
+            Pending ({taskCounts.pending})
           </button>
-        )}
-      </div>
-
-      {/* Filter Controls */}
-      <div className="flex flex-wrap items-center gap-4">
-        {/* Status Filter */}
-        <div className="flex items-center space-x-2">
-          <CheckSquare className="w-4 h-4 text-foreground-secondary" />
-          <select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="input text-sm min-w-[120px]"
+          <button
+            onClick={() => handleFilterChange('status', filters.status === 'completed' ? '' : 'completed')}
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              filters.status === 'completed'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                : 'bg-background-secondary text-foreground-secondary hover:bg-background-tertiary'
+            }`}
           >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            Completed ({taskCounts.completed})
+          </button>
+          <button
+            onClick={() => handleFilterChange('dateRange', filters.dateRange === 'overdue' ? '' : 'overdue')}
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              filters.dateRange === 'overdue'
+                ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                : 'bg-background-secondary text-foreground-secondary hover:bg-background-tertiary'
+            }`}
+          >
+            Overdue ({taskCounts.overdue})
+          </button>
         </div>
 
-        {/* Priority Filter */}
-        <div className="flex items-center space-x-2">
-          <Flag className="w-4 h-4 text-foreground-secondary" />
-          <select
-            value={filters.priority}
-            onChange={(e) => handleFilterChange('priority', e.target.value)}
-            className="input text-sm min-w-[120px]"
-          >
-            {priorityOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Context Filter */}
-        <div className="flex items-center space-x-2">
-          <Tag className="w-4 h-4 text-foreground-secondary" />
-          <select
-            value={filters.contextType}
-            onChange={(e) => handleFilterChange('contextType', e.target.value)}
-            className="input text-sm min-w-[120px]"
-          >
-            {contextOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Quadrant Filter */}
-        <div className="flex items-center space-x-2">
-          <Filter className="w-4 h-4 text-foreground-secondary" />
-          <select
-            value={filters.quadrant}
-            onChange={(e) => handleFilterChange('quadrant', e.target.value)}
-            className="input text-sm min-w-[120px]"
-          >
-            {quadrantOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Date Range Filter */}
-        <div className="flex items-center space-x-2">
-          <Calendar className="w-4 h-4 text-foreground-secondary" />
-          <select
-            value={filters.dateRange}
-            onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-            className="input text-sm min-w-[120px]"
-          >
-            {dateRangeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Advanced Filters Toggle */}
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="btn-outline flex items-center space-x-2"
+        >
+          <Filter className="w-4 h-4" />
+          <span>Advanced</span>
+        </button>
 
         {/* Clear Filters */}
         {hasActiveFilters && (
           <button
-            onClick={clearAllFilters}
-            className="btn-outline text-sm"
+            onClick={clearFilters}
+            className="btn-ghost flex items-center space-x-2 text-foreground-secondary hover:text-foreground"
           >
-            <X className="w-4 h-4 mr-1" />
-            Clear Filters
+            <X className="w-4 h-4" />
+            <span>Clear</span>
           </button>
         )}
       </div>
 
-      {/* Task Counts Summary */}
-      <div className="flex items-center space-x-6 text-sm text-foreground-secondary">
-        <div className="flex items-center space-x-1">
-          <span className="font-medium text-foreground">{taskCounts.total}</span>
-          <span>Total</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <span className="font-medium text-blue-600">{taskCounts.pending}</span>
-          <span>Pending</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <span className="font-medium text-green-600">{taskCounts.completed}</span>
-          <span>Completed</span>
-        </div>
-        {taskCounts.overdue > 0 && (
-          <div className="flex items-center space-x-1">
-            <span className="font-medium text-red-600">{taskCounts.overdue}</span>
-            <span>Overdue</span>
+      {/* Advanced Filters */}
+      {showAdvanced && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-background-secondary rounded-lg">
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Status
+            </label>
+            <select
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="input w-full"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
-        )}
-      </div>
 
-      {/* Active Filters Display */}
+          {/* Priority Filter */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Priority
+            </label>
+            <select
+              value={filters.priority}
+              onChange={(e) => handleFilterChange('priority', e.target.value)}
+              className="input w-full"
+            >
+              <option value="">All Priorities</option>
+              <option value="1">Low (1)</option>
+              <option value="2">Medium (2)</option>
+              <option value="3">High (3)</option>
+              <option value="4">Urgent (4)</option>
+            </select>
+          </div>
+
+          {/* Context Type Filter */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Context
+            </label>
+            <select
+              value={filters.contextType}
+              onChange={(e) => handleFilterChange('contextType', e.target.value)}
+              className="input w-full"
+            >
+              <option value="">All Contexts</option>
+              <option value="personal">Personal</option>
+              <option value="work">Work</option>
+              <option value="health">Health</option>
+              <option value="learning">Learning</option>
+              <option value="social">Social</option>
+            </select>
+          </div>
+
+          {/* Quadrant Filter */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Quadrant
+            </label>
+            <select
+              value={filters.quadrant}
+              onChange={(e) => handleFilterChange('quadrant', e.target.value)}
+              className="input w-full"
+            >
+              <option value="">All Quadrants</option>
+              <option value="do">Do First</option>
+              <option value="decide">Schedule</option>
+              <option value="delegate">Delegate</option>
+              <option value="delete">Eliminate</option>
+            </select>
+          </div>
+
+          {/* Date Range Filter */}
+          <div className="sm:col-span-2 lg:col-span-4">
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Date Range
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              <button
+                onClick={() => handleFilterChange('dateRange', filters.dateRange === 'today' ? '' : 'today')}
+                className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                  filters.dateRange === 'today'
+                    ? 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200'
+                    : 'bg-background text-foreground-secondary hover:bg-background-tertiary'
+                }`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => handleFilterChange('dateRange', filters.dateRange === 'tomorrow' ? '' : 'tomorrow')}
+                className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                  filters.dateRange === 'tomorrow'
+                    ? 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200'
+                    : 'bg-background text-foreground-secondary hover:bg-background-tertiary'
+                }`}
+              >
+                Tomorrow
+              </button>
+              <button
+                onClick={() => handleFilterChange('dateRange', filters.dateRange === 'this_week' ? '' : 'this_week')}
+                className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                  filters.dateRange === 'this_week'
+                    ? 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200'
+                    : 'bg-background text-foreground-secondary hover:bg-background-tertiary'
+                }`}
+              >
+                This Week
+              </button>
+              <button
+                onClick={() => handleFilterChange('dateRange', filters.dateRange === 'next_week' ? '' : 'next_week')}
+                className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                  filters.dateRange === 'next_week'
+                    ? 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200'
+                    : 'bg-background text-foreground-secondary hover:bg-background-tertiary'
+                }`}
+              >
+                Next Week
+              </button>
+              <button
+                onClick={() => handleFilterChange('dateRange', filters.dateRange === 'overdue' ? '' : 'overdue')}
+                className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                  filters.dateRange === 'overdue'
+                    ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    : 'bg-background text-foreground-secondary hover:bg-background-tertiary'
+                }`}
+              >
+                Overdue
+              </button>
+              <button
+                onClick={() => handleFilterChange('dateRange', '')}
+                className="px-3 py-2 rounded text-sm font-medium bg-background text-foreground-secondary hover:bg-background-tertiary transition-colors"
+              >
+                All Time
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active Filters Summary */}
       {hasActiveFilters && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap gap-2">
           <span className="text-sm text-foreground-secondary">Active filters:</span>
           {filters.search && (
-            <span className="badge-secondary text-xs">
+            <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded text-xs">
               Search: "{filters.search}"
-              <button
-                onClick={() => handleFilterChange('search', '')}
-                className="ml-1 hover:text-foreground"
-              >
-                <X className="w-3 h-3" />
-              </button>
             </span>
           )}
           {filters.status && (
-            <span className="badge-secondary text-xs">
-              Status: {statusOptions.find(o => o.value === filters.status)?.label}
-              <button
-                onClick={() => handleFilterChange('status', '')}
-                className="ml-1 hover:text-foreground"
-              >
-                <X className="w-3 h-3" />
-              </button>
+            <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded text-xs">
+              Status: {filters.status}
             </span>
           )}
           {filters.priority && (
-            <span className="badge-secondary text-xs">
-              Priority: {priorityOptions.find(o => o.value === filters.priority)?.label}
-              <button
-                onClick={() => handleFilterChange('priority', '')}
-                className="ml-1 hover:text-foreground"
-              >
-                <X className="w-3 h-3" />
-              </button>
+            <span className="px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 rounded text-xs">
+              Priority: {filters.priority}
             </span>
           )}
           {filters.contextType && (
-            <span className="badge-secondary text-xs">
-              Context: {contextOptions.find(o => o.value === filters.contextType)?.label}
-              <button
-                onClick={() => handleFilterChange('contextType', '')}
-                className="ml-1 hover:text-foreground"
-              >
-                <X className="w-3 h-3" />
-              </button>
+            <span className="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded text-xs">
+              Context: {filters.contextType}
             </span>
           )}
           {filters.quadrant && (
-            <span className="badge-secondary text-xs">
-              Quadrant: {quadrantOptions.find(o => o.value === filters.quadrant)?.label}
-              <button
-                onClick={() => handleFilterChange('quadrant', '')}
-                className="ml-1 hover:text-foreground"
-              >
-                <X className="w-3 h-3" />
-              </button>
+            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded text-xs">
+              Quadrant: {filters.quadrant}
             </span>
           )}
           {filters.dateRange && (
-            <span className="badge-secondary text-xs">
-              Date: {dateRangeOptions.find(o => o.value === filters.dateRange)?.label}
-              <button
-                onClick={() => handleFilterChange('dateRange', '')}
-                className="ml-1 hover:text-foreground"
-              >
-                <X className="w-3 h-3" />
-              </button>
+            <span className="px-2 py-1 bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200 rounded text-xs">
+              Date: {filters.dateRange.replace('_', ' ')}
             </span>
           )}
         </div>
       )}
+
+      {/* Results Summary */}
+      <div className="text-sm text-foreground-secondary">
+        Showing {taskCounts.total} task{taskCounts.total !== 1 ? 's' : ''}
+        {hasActiveFilters && ' (filtered)'}
+      </div>
     </div>
   );
 };
+
+export default TaskFilters;

@@ -4,16 +4,17 @@
  */
 
 import React, { useRef, useEffect } from 'react';
+import type { ElementType } from 'react';
 import { cn } from '../../../utils/cn';
 import { useResponsiveGrid } from '../../../hooks/useResponsive';
 import { useAccessibilityContext } from '../../accessibility/AccessibilityProvider';
-import { ResponsiveProps } from '../../../utils/responsive';
+import type { ResponsiveProps } from '../../../utils/responsive';
 
 interface ResponsiveGridProps extends ResponsiveProps<number> {
   children: React.ReactNode;
   gap?: ResponsiveProps<string> | string;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
   minItemWidth?: string;
   autoFit?: boolean;
   autoFill?: boolean;

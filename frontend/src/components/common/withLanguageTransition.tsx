@@ -1,4 +1,4 @@
-import React, { ComponentType, useEffect, useRef } from 'react';
+import React, { type ComponentType, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface WithLanguageTransitionOptions {

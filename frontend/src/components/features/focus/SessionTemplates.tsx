@@ -1,5 +1,5 @@
 import React from 'react';
-import { SessionTemplate, FocusSession } from '../../../types';
+import type { SessionTemplate, FocusSession } from '../../../types';
 import { 
   Play, 
   Clock, 

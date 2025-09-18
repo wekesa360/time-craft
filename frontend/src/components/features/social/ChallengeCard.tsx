@@ -1,5 +1,5 @@
 import React from 'react';
-import { Challenge } from '../../../types';
+import type { Challenge } from '../../../types';
 import { 
   Trophy, 
   Users, 
@@ -96,9 +96,13 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
             {statusBadge.text}
           </span>
           {challenge.isPublic ? (
-            <Users className="w-4 h-4 text-foreground-secondary" title="Public challenge" />
+            <span title="Public challenge">
+              <Users className="w-4 h-4 text-foreground-secondary" />
+            </span>
           ) : (
-            <Lock className="w-4 h-4 text-foreground-secondary" title="Private challenge" />
+            <span title="Private challenge">
+              <Lock className="w-4 h-4 text-foreground-secondary" />
+            </span>
           )}
         </div>
       </div>

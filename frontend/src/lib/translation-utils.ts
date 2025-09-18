@@ -202,14 +202,21 @@ export const useTranslationFallback = () => {
 
 // Error boundary for translation errors
 export class TranslationErrorBoundary extends Error {
+  key: string;
+  language: string;
+  context?: string;
+  
   constructor(
     message: string,
-    public key: string,
-    public language: string,
-    public context?: string
+    key: string,
+    language: string,
+    context?: string
   ) {
     super(message);
     this.name = 'TranslationError';
+    this.key = key;
+    this.language = language;
+    this.context = context;
   }
 }
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useCalendarEventsQuery } from '../../../hooks/queries/useCalendarQueries';
 import type { CalendarEvent } from '../../../types';
 
-export const CalendarView: React.FC = () => {
+const CalendarView: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
 
@@ -392,3 +392,5 @@ export const CalendarView: React.FC = () => {
     </div>
   );
 };
+
+export default CalendarView;

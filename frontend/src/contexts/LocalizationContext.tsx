@@ -1,4 +1,5 @@
-import React, { createContext, useContext, ReactNode, memo, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, memo, useMemo, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { useCurrentLanguage } from '../hooks/queries/useLocalizationQueries';
 import { usePreloadLocalization } from '../components/localization/LazyLocalizationComponents';
 

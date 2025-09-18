@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Flag, 
-  Toggle, 
   Search, 
   Filter, 
   Plus,
@@ -14,7 +13,8 @@ import {
   Info,
   AlertTriangle,
   CheckCircle,
-  Clock
+  Clock,
+  Settings
 } from 'lucide-react';
 
 interface FeatureFlag {
@@ -155,7 +155,7 @@ export const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className = '' }) =>
       case 'feature': return <Flag className="w-4 h-4 text-blue-500" />;
       case 'experiment': return <Percent className="w-4 h-4 text-purple-500" />;
       case 'killswitch': return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      case 'config': return <Toggle className="w-4 h-4 text-green-500" />;
+      case 'config': return <Settings className="w-4 h-4 text-green-500" />;
       default: return <Flag className="w-4 h-4 text-gray-500" />;
     }
   };

@@ -18,7 +18,7 @@ import { BadgeLeaderboard } from '../components/features/badges/BadgeLeaderboard
 
 // Hooks and API
 import { useBadgeQueries } from '../hooks/queries/useBadgeQueries';
-import { Badge } from '../types';
+import type { Badge } from '../types';
 
 type ViewMode = 'badges' | 'leaderboard' | 'achievements';
 

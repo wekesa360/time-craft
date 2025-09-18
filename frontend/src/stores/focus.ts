@@ -1,7 +1,7 @@
 // Focus sessions store with Zustand
 import { create } from 'zustand';
 import { apiClient } from '../lib/api';
-import type { FocusSession, SessionTemplate, Distraction, FocusEnvironment } from '../types';
+import type { FocusSession, SessionTemplate, FocusEnvironment } from '../types';
 
 interface FocusState {
   activeSession: FocusSession | null;

@@ -61,6 +61,7 @@ class ApiClient {
 
   constructor() {
     this.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
+    const timeout = parseInt(import.meta.env.VITE_API_TIMEOUT || '10000');
     console.log('API Client initialized with baseURL:', this.baseURL);
     
     this.client = axios.create({
@@ -68,7 +69,7 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 10000,
+      timeout: timeout,
     });
 
     this.setupInterceptors();
@@ -283,7 +284,7 @@ class ApiClient {
       data: config.data,
     });
     
-    toast.info('Request queued for retry when connection is restored');
+    toast.success('Request queued for retry when connection is restored');
   }
 
   private redirectToLogin() {
@@ -386,7 +387,7 @@ class ApiClient {
       return;
     }
 
-    const sseUrl = `${this.baseURL}/realtime/events`;
+    const sseUrl = `${this.baseURL}/api/realtime/sse`;
     this.sseConnection = new EventSource(`${sseUrl}?token=${token}`);
 
     this.sseConnection.onopen = () => {
@@ -409,35 +410,69 @@ class ApiClient {
       this.handleSSEReconnect();
     };
 
-    // Listen for specific event types
-    this.sseConnection.addEventListener('badge_unlocked', (event) => {
-      const data = JSON.parse(event.data);
-      this.handleSSEMessage({ type: 'badge_unlocked', data });
-    });
+    // Listen for all SSE event types
+    const eventTypes = [
+      // Calendar Events
+      'calendar.event.created',
+      'calendar.event.updated', 
+      'calendar.event.deleted',
+      'calendar.sync.started',
+      'calendar.sync.completed',
+      'calendar.conflict.detected',
+      
+      // Task Events
+      'task.created',
+      'task.updated',
+      'task.completed',
+      'task.deleted',
+      'task.reminder',
+      
+      // Focus Session Events
+      'focus.session.started',
+      'focus.session.completed',
+      'focus.session.paused',
+      'focus.session.resumed',
+      'focus.session.cancelled',
+      
+      // Health Events
+      'health.log.created',
+      'health.insight.generated',
+      'health.goal.achieved',
+      'health.goal.updated',
+      
+      // Social Events
+      'social.connection.request',
+      'social.connection.accepted',
+      'social.challenge.created',
+      'social.challenge.completed',
+      'social.achievement.unlocked',
+      
+      // Notification Events
+      'notification.received',
+      'notification.read',
+      'notification.deleted',
+      
+      // Badge Events
+      'badge.unlocked',
+      'badge.progress.updated',
+      
+      // System Events
+      'system.maintenance.scheduled',
+      'system.update.available',
+      'system.alert',
+      
+      // Connection Events
+      'connected',
+      'disconnected',
+      'heartbeat',
+      'error'
+    ];
 
-    this.sseConnection.addEventListener('challenge_update', (event) => {
-      const data = JSON.parse(event.data);
-      this.handleSSEMessage({ type: 'challenge_update', data });
-    });
-
-    this.sseConnection.addEventListener('notification', (event) => {
-      const data = JSON.parse(event.data);
-      this.handleSSEMessage({ type: 'notification', data });
-    });
-
-    this.sseConnection.addEventListener('task_reminder', (event) => {
-      const data = JSON.parse(event.data);
-      this.handleSSEMessage({ type: 'task_reminder', data });
-    });
-
-    this.sseConnection.addEventListener('health_insight', (event) => {
-      const data = JSON.parse(event.data);
-      this.handleSSEMessage({ type: 'health_insight', data });
-    });
-
-    this.sseConnection.addEventListener('focus_session_complete', (event) => {
-      const data = JSON.parse(event.data);
-      this.handleSSEMessage({ type: 'focus_session_complete', data });
+    eventTypes.forEach(eventType => {
+      this.sseConnection.addEventListener(eventType, (event) => {
+        const data = JSON.parse(event.data);
+        this.handleSSEMessage({ type: eventType, data });
+      });
     });
   }
 
@@ -448,23 +483,159 @@ class ApiClient {
 
     // Handle specific message types
     switch (message.type) {
+      // Calendar Events
+      case 'calendar.event.created':
+        toast.success(`📅 Calendar event created: ${message.data.title}`);
+        break;
+      case 'calendar.event.updated':
+        toast.success(`📅 Calendar event updated: ${message.data.title}`);
+        break;
+      case 'calendar.event.deleted':
+        toast.success(`📅 Calendar event deleted: ${message.data.title}`);
+        break;
+      case 'calendar.sync.started':
+        toast.success('📅 Calendar sync started...');
+        break;
+      case 'calendar.sync.completed':
+        toast.success('📅 Calendar sync completed');
+        break;
+      case 'calendar.conflict.detected':
+        toast.error(`⚠️ Calendar conflict detected: ${message.data.message}`);
+        break;
+
+      // Task Events
+      case 'task.created':
+        toast.success(`✅ Task created: ${message.data.title}`);
+        break;
+      case 'task.updated':
+        toast.success(`📝 Task updated: ${message.data.title}`);
+        break;
+      case 'task.completed':
+        toast.success(`🎉 Task completed: ${message.data.title}`);
+        break;
+      case 'task.deleted':
+        toast.success(`🗑️ Task deleted: ${message.data.title}`);
+        break;
+      case 'task.reminder':
+        toast.success(`⏰ Task reminder: ${message.data.title}`);
+        break;
+
+      // Focus Session Events
+      case 'focus.session.started':
+        toast.success(`🎯 Focus session started: ${message.data.duration} minutes`);
+        break;
+      case 'focus.session.completed':
+        toast.success(`🎯 Focus session completed! Rating: ${message.data.rating}/10`);
+        break;
+      case 'focus.session.paused':
+        toast.success('⏸️ Focus session paused');
+        break;
+      case 'focus.session.resumed':
+        toast.success('▶️ Focus session resumed');
+        break;
+      case 'focus.session.cancelled':
+        toast.success('❌ Focus session cancelled');
+        break;
+
+      // Health Events
+      case 'health.log.created':
+        toast.success(`💪 Health log recorded: ${message.data.type}`);
+        break;
+      case 'health.insight.generated':
+        toast.success(`💡 Health insight: ${message.data.message}`);
+        break;
+      case 'health.goal.achieved':
+        toast.success(`🏆 Health goal achieved: ${message.data.goal}`);
+        break;
+      case 'health.goal.updated':
+        toast.success(`📊 Health goal updated: ${message.data.goal}`);
+        break;
+
+      // Social Events
+      case 'social.connection.request':
+        toast.success(`👥 New connection request from ${message.data.from}`);
+        break;
+      case 'social.connection.accepted':
+        toast.success(`👥 Connection accepted: ${message.data.name}`);
+        break;
+      case 'social.challenge.created':
+        toast.success(`🏆 New challenge: ${message.data.title}`);
+        break;
+      case 'social.challenge.completed':
+        toast.success(`🏆 Challenge completed: ${message.data.title}`);
+        break;
+      case 'social.achievement.unlocked':
+        toast.success(`🎉 Achievement unlocked: ${message.data.achievement}`);
+        break;
+
+      // Notification Events
+      case 'notification.received':
+        if (message.data.priority === 'high' || message.data.priority === 'urgent') {
+          toast.error(message.data.message);
+        } else {
+          toast.success(message.data.message);
+        }
+        break;
+      case 'notification.read':
+        // Silent - no toast needed
+        break;
+      case 'notification.deleted':
+        // Silent - no toast needed
+        break;
+
+      // Badge Events
+      case 'badge.unlocked':
+        toast.success(`🎉 Badge unlocked: ${message.data.name}!`, {
+          duration: 5000,
+        });
+        break;
+      case 'badge.progress.updated':
+        toast.success(`🏆 Badge progress: ${message.data.progress}%`);
+        break;
+
+      // System Events
+      case 'system.maintenance.scheduled':
+        toast.error(`🔧 System maintenance scheduled: ${message.data.message}`);
+        break;
+      case 'system.update.available':
+        toast.success(`🔄 System update available: ${message.data.version}`);
+        break;
+      case 'system.alert':
+        toast.error(`⚠️ System alert: ${message.data.message}`);
+        break;
+
+      // Connection Events
+      case 'connected':
+        toast.success('🔗 Real-time connection established');
+        break;
+      case 'disconnected':
+        toast.error('🔌 Real-time connection lost');
+        break;
+      case 'heartbeat':
+        // Silent - no toast needed
+        break;
+      case 'error':
+        toast.error(`❌ Real-time error: ${message.data.message}`);
+        break;
+
+      // Legacy event types (for backward compatibility)
       case 'badge_unlocked':
         toast.success(`🎉 Badge unlocked: ${message.data.name}!`, {
           duration: 5000,
         });
         break;
       case 'challenge_update':
-        toast.info(`Challenge update: ${message.data.title}`);
+        toast.success(`Challenge update: ${message.data.title}`);
         break;
       case 'notification':
         if (message.data.priority === 'high' || message.data.priority === 'urgent') {
           toast.error(message.data.message);
         } else {
-          toast.info(message.data.message);
+          toast.success(message.data.message);
         }
         break;
       case 'task_reminder':
-        toast.info(`⏰ Task reminder: ${message.data.title}`);
+        toast.success(`⏰ Task reminder: ${message.data.title}`);
         break;
       case 'health_insight':
         toast.success(`💡 Health insight: ${message.data.message}`);
@@ -1067,22 +1238,92 @@ class ApiClient {
 
   // Student Verification endpoints
   async getStudentPricing(): Promise<StudentPricing> {
-    const response = await this.client.get<{ pricing: StudentPricing }>('/api/student/pricing');
+    const response = await this.client.get<{ pricing: StudentPricing }>('/api/student-verification/pricing');
     return response.data.pricing;
   }
 
   async sendStudentVerificationOTP(studentEmail: string): Promise<{ expiresAt: number }> {
-    const response = await this.client.post('/api/student/user/send-otp', { studentEmail });
+    const response = await this.client.post('/api/student-verification/user/send-otp', { studentEmail });
     return response.data;
   }
 
   async verifyStudentOTP(otp: string): Promise<void> {
-    await this.client.post('/api/student/user/verify-otp', { otp });
+    await this.client.post('/api/student-verification/user/verify-otp', { otp });
   }
 
   async getStudentVerificationStatus(): Promise<StudentVerification> {
-    const response = await this.client.get<{ verification: StudentVerification }>('/api/student/user/status');
+    const response = await this.client.get<{ verification: StudentVerification }>('/api/student-verification/user/status');
     return response.data.verification;
+  }
+
+  // Student dashboard and analytics
+  async getStudentStats(period: 'week' | 'month' | 'semester'): Promise<any> {
+    const response = await this.client.get(`/api/student/stats?period=${period}`);
+    return response.data;
+  }
+
+  async getStudentGoals(): Promise<any[]> {
+    const response = await this.client.get('/api/student/goals');
+    return response.data;
+  }
+
+  async getStudentSessions(period: 'week' | 'month' | 'semester'): Promise<any[]> {
+    const response = await this.client.get(`/api/student/sessions?period=${period}`);
+    return response.data;
+  }
+
+  async createStudentGoal(goal: any): Promise<any> {
+    const response = await this.client.post('/api/student/goals', goal);
+    return response.data;
+  }
+
+  async updateStudentGoal(goalId: string, updates: any): Promise<any> {
+    const response = await this.client.put(`/api/student/goals/${goalId}`, updates);
+    return response.data;
+  }
+
+  async deleteStudentGoal(goalId: string): Promise<void> {
+    await this.client.delete(`/api/student/goals/${goalId}`);
+  }
+
+  async startStudySession(session: any): Promise<any> {
+    const response = await this.client.post('/api/student/sessions', session);
+    return response.data;
+  }
+
+  async endStudySession(sessionId: string, data: any): Promise<any> {
+    const response = await this.client.put(`/api/student/sessions/${sessionId}/end`, data);
+    return response.data;
+  }
+
+  // Notification methods
+  async markNotificationAsRead(id: string): Promise<void> {
+    await this.client.put(`/api/notifications/${id}/read`);
+  }
+
+  async markAllNotificationsAsRead(): Promise<void> {
+    await this.client.put('/api/notifications/read-all');
+  }
+
+  // Notification management methods
+  async getNotifications(filter?: string): Promise<Notification[]> {
+    const response = await this.client.get<{ notifications: Notification[] }>('/api/notifications', { 
+      params: { filter } 
+    });
+    return response.data.notifications;
+  }
+
+  async deleteNotification(id: string): Promise<void> {
+    await this.client.delete(`/api/notifications/${id}`);
+  }
+
+  async clearAllNotifications(): Promise<void> {
+    await this.client.delete('/api/notifications/clear-all');
+  }
+
+  async create(notification: Omit<Notification, 'id' | 'timestamp' | 'read'>): Promise<Notification> {
+    const response = await this.client.post<{ notification: Notification }>('/api/notifications', notification);
+    return response.data.notification;
   }
 
   // Localization endpoints
@@ -1247,6 +1488,108 @@ class ApiClient {
     deleteFeatureFlag: async (id: string) => {
       const response = await this.client.delete(`/api/admin/feature-flags/${id}`);
       return response.data;
+    },
+
+    // Security endpoints
+    getSecurityEvents: async (timeRange: string, filters?: any) => {
+      const response = await this.client.get(`/api/admin/security/events?timeRange=${timeRange}`, { params: filters });
+      return response.data;
+    },
+
+    getSecurityStats: async (timeRange: string) => {
+      const response = await this.client.get(`/api/admin/security/stats?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    getThreatIntelligence: async (timeRange: string) => {
+      const response = await this.client.get(`/api/admin/security/threats?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    getComplianceReport: async (timeRange: string) => {
+      const response = await this.client.get(`/api/admin/security/compliance?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    getAuditLogs: async (timeRange: string, filters?: any) => {
+      const response = await this.client.get(`/api/admin/security/audit-logs?timeRange=${timeRange}`, { params: filters });
+      return response.data;
+    },
+
+    getSecurityIncidents: async (timeRange: string, status?: string) => {
+      const response = await this.client.get(`/api/admin/security/incidents?timeRange=${timeRange}${status ? `&status=${status}` : ''}`);
+      return response.data;
+    },
+
+    getUserSecurityStatus: async (userId: string) => {
+      const response = await this.client.get(`/api/admin/security/users/${userId}/status`);
+      return response.data;
+    },
+
+    getSecurityPolicies: async () => {
+      const response = await this.client.get('/api/admin/security/policies');
+      return response.data;
+    },
+
+    getSecurityAlerts: async (timeRange: string) => {
+      const response = await this.client.get(`/api/admin/security/alerts?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    getDataAccessLogs: async (timeRange: string, userId?: string) => {
+      const response = await this.client.get(`/api/admin/security/data-access?timeRange=${timeRange}${userId ? `&userId=${userId}` : ''}`);
+      return response.data;
+    },
+
+    getApiAccessLogs: async (timeRange: string, endpoint?: string) => {
+      const response = await this.client.get(`/api/admin/security/api-access?timeRange=${timeRange}${endpoint ? `&endpoint=${endpoint}` : ''}`);
+      return response.data;
+    },
+
+    getSecurityMetrics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/admin/security/metrics?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    getRiskAssessment: async (timeRange: string) => {
+      const response = await this.client.get(`/api/admin/security/risk-assessment?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    getSecurityRecommendations: async () => {
+      const response = await this.client.get('/api/admin/security/recommendations');
+      return response.data;
+    },
+
+    // Security actions
+    blockUser: async (userId: string, reason: string) => {
+      const response = await this.client.post(`/api/admin/security/users/${userId}/block`, { reason });
+      return response.data;
+    },
+
+    unblockUser: async (userId: string) => {
+      const response = await this.client.post(`/api/admin/security/users/${userId}/unblock`);
+      return response.data;
+    },
+
+    blockIP: async (ipAddress: string, reason: string) => {
+      const response = await this.client.post('/api/admin/security/block-ip', { ipAddress, reason });
+      return response.data;
+    },
+
+    unblockIP: async (ipAddress: string) => {
+      const response = await this.client.post('/api/admin/security/unblock-ip', { ipAddress });
+      return response.data;
+    },
+
+    createSecurityAlert: async (data: any) => {
+      const response = await this.client.post('/api/admin/security/alerts', data);
+      return response.data;
+    },
+
+    updateSecurityPolicy: async (policyId: string, data: any) => {
+      const response = await this.client.put(`/api/admin/security/policies/${policyId}`, data);
+      return response.data;
     }
   };
 
@@ -1265,6 +1608,304 @@ class ApiClient {
   }> {
     const response = await this.client.get(`/api/analytics/overview?period=${period}`);
     return response.data.overview;
+  }
+
+  // Comprehensive Analytics API
+  analytics = {
+    // Dashboard data
+    getDashboard: async (timeRange: string, category: string) => {
+      const response = await this.client.get(`/api/analytics/dashboard?timeRange=${timeRange}&category=${category}`);
+      return response.data;
+    },
+
+    // Task analytics
+    getTaskAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/tasks?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Health analytics
+    getHealthAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/health?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Focus analytics
+    getFocusAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/focus?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Social analytics
+    getSocialAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/social?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Productivity reports
+    getProductivityReport: async (timeRange: string, reportType: string) => {
+      const response = await this.client.get(`/api/analytics/productivity?timeRange=${timeRange}&type=${reportType}`);
+      return response.data;
+    },
+
+    // User behavior analytics
+    getUserBehaviorAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/behavior?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Performance metrics
+    getPerformanceMetrics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/performance?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Goal tracking analytics
+    getGoalAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/goals?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Time tracking analytics
+    getTimeTrackingAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/time?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Habit analytics
+    getHabitAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/habits?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Mood analytics
+    getMoodAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/mood?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Energy level analytics
+    getEnergyAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/energy?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Stress level analytics
+    getStressAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/stress?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Sleep analytics
+    getSleepAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/sleep?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Exercise analytics
+    getExerciseAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/exercise?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Nutrition analytics
+    getNutritionAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/nutrition?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Hydration analytics
+    getHydrationAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/hydration?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Badge analytics
+    getBadgeAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/badges?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Challenge analytics
+    getChallengeAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/challenges?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Voice analytics
+    getVoiceAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/voice?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Calendar analytics
+    getCalendarAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/calendar?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Notification analytics
+    getNotificationAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/notifications?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // System analytics (admin only)
+    getSystemAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/system?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // User engagement analytics
+    getEngagementAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/engagement?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Retention analytics
+    getRetentionAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/retention?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Feature usage analytics
+    getFeatureUsageAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/features?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Error analytics
+    getErrorAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/errors?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Performance analytics
+    getPerformanceAnalytics: async (timeRange: string) => {
+      const response = await this.client.get(`/api/analytics/performance?timeRange=${timeRange}`);
+      return response.data;
+    },
+
+    // Custom analytics query
+    getCustomAnalytics: async (endpoint: string, params: Record<string, any>) => {
+      const response = await this.client.get(`/api/analytics/${endpoint}`, { params });
+      return response.data;
+    }
+  };
+
+  // Convenience methods for analytics
+  async getAnalyticsDashboard(timeRange: string, category: string) {
+    return this.analytics.getDashboard(timeRange, category);
+  }
+
+  async getTaskAnalytics(timeRange: string) {
+    return this.analytics.getTaskAnalytics(timeRange);
+  }
+
+  async getHealthAnalytics(timeRange: string) {
+    return this.analytics.getHealthAnalytics(timeRange);
+  }
+
+
+  async getSocialAnalytics(timeRange: string) {
+    return this.analytics.getSocialAnalytics(timeRange);
+  }
+
+  async getProductivityReport(timeRange: string, reportType: string) {
+    return this.analytics.getProductivityReport(timeRange, reportType);
+  }
+
+  async getUserBehaviorAnalytics(timeRange: string) {
+    return this.analytics.getUserBehaviorAnalytics(timeRange);
+  }
+
+  async getPerformanceMetrics(timeRange: string) {
+    return this.analytics.getPerformanceMetrics(timeRange);
+  }
+
+  async getGoalAnalytics(timeRange: string) {
+    return this.analytics.getGoalAnalytics(timeRange);
+  }
+
+  async getTimeTrackingAnalytics(timeRange: string) {
+    return this.analytics.getTimeTrackingAnalytics(timeRange);
+  }
+
+  async getHabitAnalytics(timeRange: string) {
+    return this.analytics.getHabitAnalytics(timeRange);
+  }
+
+  async getMoodAnalytics(timeRange: string) {
+    return this.analytics.getMoodAnalytics(timeRange);
+  }
+
+  async getEnergyAnalytics(timeRange: string) {
+    return this.analytics.getEnergyAnalytics(timeRange);
+  }
+
+  async getStressAnalytics(timeRange: string) {
+    return this.analytics.getStressAnalytics(timeRange);
+  }
+
+  async getSleepAnalytics(timeRange: string) {
+    return this.analytics.getSleepAnalytics(timeRange);
+  }
+
+  async getExerciseAnalytics(timeRange: string) {
+    return this.analytics.getExerciseAnalytics(timeRange);
+  }
+
+  async getNutritionAnalytics(timeRange: string) {
+    return this.analytics.getNutritionAnalytics(timeRange);
+  }
+
+  async getHydrationAnalytics(timeRange: string) {
+    return this.analytics.getHydrationAnalytics(timeRange);
+  }
+
+  async getBadgeAnalytics(timeRange: string) {
+    return this.analytics.getBadgeAnalytics(timeRange);
+  }
+
+  async getChallengeAnalytics(timeRange: string) {
+    return this.analytics.getChallengeAnalytics(timeRange);
+  }
+
+
+  async getCalendarAnalytics(timeRange: string) {
+    return this.analytics.getCalendarAnalytics(timeRange);
+  }
+
+  async getNotificationAnalytics(timeRange: string) {
+    return this.analytics.getNotificationAnalytics(timeRange);
+  }
+
+  async getSystemAnalytics(timeRange: string) {
+    return this.analytics.getSystemAnalytics(timeRange);
+  }
+
+  async getEngagementAnalytics(timeRange: string) {
+    return this.analytics.getEngagementAnalytics(timeRange);
+  }
+
+  async getRetentionAnalytics(timeRange: string) {
+    return this.analytics.getRetentionAnalytics(timeRange);
+  }
+
+  async getFeatureUsageAnalytics(timeRange: string) {
+    return this.analytics.getFeatureUsageAnalytics(timeRange);
+  }
+
+  async getErrorAnalytics(timeRange: string) {
+    return this.analytics.getErrorAnalytics(timeRange);
+  }
+
+  async getPerformanceAnalytics(timeRange: string) {
+    return this.analytics.getPerformanceAnalytics(timeRange);
+  }
+
+  async getCustomAnalytics(endpoint: string, params: Record<string, any>) {
+    return this.analytics.getCustomAnalytics(endpoint, params);
   }
 
   // Generic HTTP methods for external API modules

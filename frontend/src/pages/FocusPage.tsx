@@ -15,13 +15,13 @@ import {
 } from 'lucide-react';
 
 // Components
-import { FocusTimer } from '../components/features/focus/FocusTimer';
+import FocusTimer from '../components/features/focus/FocusTimer';
 import { SessionTemplates } from '../components/features/focus/SessionTemplates';
-import { FocusAnalytics } from '../components/features/focus/FocusAnalytics';
+import FocusAnalytics from '../components/features/focus/FocusAnalytics';
 
 // Hooks and API
 import { useFocusQueries } from '../hooks/queries/useFocusQueries';
-import { FocusSession, SessionTemplate } from '../types';
+import type { FocusSession, SessionTemplate } from '../types';
 
 type ViewMode = 'timer' | 'templates' | 'analytics';
 
@@ -91,7 +91,7 @@ export default function FocusPage() {
     try {
       const session = await pauseSessionMutation.mutateAsync(activeSession.id);
       setActiveSession(session);
-      toast.info('Session paused');
+      toast.success('Session paused');
     } catch (error) {
       toast.error('Failed to pause session');
     }
@@ -135,7 +135,7 @@ export default function FocusPage() {
       try {
         await cancelSessionMutation.mutateAsync(activeSession.id);
         setActiveSession(null);
-        toast.info('Session cancelled');
+        toast.success('Session cancelled');
       } catch (error) {
         toast.error('Failed to cancel session');
       }

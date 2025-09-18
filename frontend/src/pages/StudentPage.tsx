@@ -5,7 +5,7 @@ import { useAuthStore } from '../stores/auth';
 
 type ViewMode = 'verification' | 'pricing';
 
-export const StudentPage: React.FC = () => {
+const StudentPage: React.FC = () => {
   const { user } = useAuthStore();
   const [activeView, setActiveView] = useState<ViewMode>(
     user?.studentVerificationStatus === 'verified' ? 'pricing' : 'verification'
@@ -150,3 +150,5 @@ export const StudentPage: React.FC = () => {
     </div>
   );
 };
+
+export default StudentPage;

@@ -16,16 +16,16 @@ import {
 } from 'lucide-react';
 
 // Components
-import { HealthDashboard } from '../components/features/health/HealthDashboard';
-import { ExerciseLogger } from '../components/features/health/ExerciseLogger';
+import HealthDashboard from '../components/features/health/HealthDashboard';
+import ExerciseLogger from '../components/features/health/ExerciseLogger';
 import { NutritionTracker } from '../components/features/health/NutritionTracker';
-import { MoodTracker } from '../components/features/health/MoodTracker';
+import MoodTracker from '../components/features/health/MoodTracker';
 import { HydrationLogger } from '../components/features/health/HydrationLogger';
-import { HealthInsights } from '../components/features/health/HealthInsights';
+import HealthInsights from '../components/features/health/HealthInsights';
 
 // Hooks and API
 import { useHealthQueries } from '../hooks/queries/useHealthQueries';
-import { ExerciseData, NutritionData, MoodData, HydrationData } from '../types';
+import type { ExerciseData, NutritionData, MoodData, HydrationData } from '../types';
 
 type ViewMode = 'dashboard' | 'insights' | 'logs' | 'goals';
 type LoggerType = 'exercise' | 'nutrition' | 'mood' | 'hydration' | null;

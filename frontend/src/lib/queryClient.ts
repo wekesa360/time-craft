@@ -71,12 +71,60 @@ const queryConfig: DefaultOptions = {
     refetchOnWindowFocus: false,
     // Refetch on reconnect
     refetchOnReconnect: true,
+  },
+  mutations: {
+    // Retry failed mutations once
+    retry: (failureCount, error: any) => {
+      // Don't retry on 4xx errors (client errors)
+      if (error?.response?.status >= 400 && error?.response?.status < 500) {
+        return false;
+      }
+      // Retry once for other errors
+      return failureCount < 1;
+    },
+    // Retry delay for mutations
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+  },
+};
+
+// Create and configure the query client
+export const queryClient = new QueryClient({
+  defaultOptions: queryConfig,
+});
+
+// Global error handler for mutations
+export const handleMutationError = (error: any, context?: string) => {
+  const status = error?.response?.status;
+  const url = error?.config?.url || error?.response?.config?.url || '';
+  
+  console.error('Mutation error:', { url, status, error, context });
+  
+  // Show user-friendly messages based on status codes
+  if (status === 401) {
+    // Unauthorized - redirect to login
+    window.location.href = '/login';
+  } else if (status === 403) {
+    // Forbidden - show access denied message
+    toast.error('You don\'t have permission to perform this action.');
+  } else if (status === 404) {
+    // Not found - show not found message
+    toast.error('The requested resource was not found.');
+  } else if (status >= 500) {
+    // Server error - show server error message
+    toast.error('Server error. Please try again later.');
+  } else {
+    // Generic error message for other cases
+    const message = getErrorMessage(error, 'Something went wrong. Please try again.');
+    toast.error(message);
+  }
+};
+
     // Global error handler for queries
-    onError: (error: any) => {
+export const handleQueryError = (error: any, context?: string) => {
       const status = error?.response?.status;
       const url = error?.config?.url || error?.response?.config?.url || '';
       
-      console.error('Query error:', { url, status, error });
+  console.error('Query error:', { url, status, error, context });
       
       // Don't show toast errors for non-critical endpoints that commonly fail
       const nonCriticalEndpoints = [
@@ -97,189 +145,206 @@ const queryConfig: DefaultOptions = {
       
       // Show user-friendly messages for critical errors based on status codes
       if (status === 401) {
-        toast.error('Session expired - please log in again');
+    // Unauthorized - redirect to login
+    window.location.href = '/login';
       } else if (status === 403) {
-        toast.error('Access denied');
+    // Forbidden - show access denied message
+    toast.error('You don\'t have permission to access this resource.');
       } else if (status === 404) {
-        // For 404s on critical endpoints, show a user-friendly message
-        const isCriticalEndpoint = !nonCriticalEndpoints.some(endpoint => url.includes(endpoint));
-        if (isCriticalEndpoint) {
-          toast.error('The requested feature is currently unavailable');
-        }
-      } else if (status === 500) {
-        toast.error('Server error - please try again later');
-      } else if (status === 502 || status === 503 || status === 504) {
-        toast.error('Service temporarily unavailable - please try again');
-      } else if (status === 429) {
-        toast.error('Too many requests - please wait a moment');
-      } else if (status >= 400 && status < 500) {
-        const message = getErrorMessage(error, 'Invalid request');
-        toast.error(message);
+    // Not found - show not found message
+    toast.error('The requested resource was not found.');
+  } else if (status >= 500) {
+    // Server error - show server error message
+    toast.error('Server error. Please try again later.');
       } else {
-        const message = getErrorMessage(error, 'Network error - please check your connection');
+    // Generic error message for other cases
+    const message = getErrorMessage(error, 'Something went wrong. Please try again.');
         toast.error(message);
       }
-    },
+};
+
+// Query key factory for consistent key generation
+export const queryKeys = {
+  // Task-related queries
+  tasks: {
+    all: ['tasks'] as const,
+    list: (filters: any) => [...queryKeys.tasks.all, 'list', filters] as const,
+    detail: (id: string) => [...queryKeys.tasks.all, 'detail', id] as const,
+    stats: () => [...queryKeys.tasks.all, 'stats'] as const,
+    matrix: () => [...queryKeys.tasks.all, 'matrix'] as const,
   },
-  mutations: {
-    // Retry failed mutations once
-    retry: 1,
-    // Global error handler for mutations
-    onError: (error: any) => {
-      const status = error?.response?.status;
-      
-      // Provide specific error messages for mutations
-      if (status === 401) {
-        toast.error('Session expired - please log in again');
-      } else if (status === 403) {
-        toast.error('You don\'t have permission to perform this action');
-      } else if (status === 422 || status === 400) {
-        // Handle validation errors with detailed feedback
-        const message = getErrorMessage(error, 'Please check your input and try again');
-        toast.error(message);
-      } else if (status === 500) {
-        toast.error('Server error - please try again');
-      } else {
-        const message = getErrorMessage(error, 'An error occurred');
-        toast.error(message);
-      }
-    },
+  
+  // Health-related queries
+  health: {
+    all: ['health'] as const,
+    dashboard: () => [...queryKeys.health.all, 'dashboard'] as const,
+    insights: () => [...queryKeys.health.all, 'insights'] as const,
+    mood: () => [...queryKeys.health.all, 'mood'] as const,
+    exercise: () => [...queryKeys.health.all, 'exercise'] as const,
+  },
+  
+  // Focus-related queries
+  focus: {
+    all: ['focus'] as const,
+    sessions: () => [...queryKeys.focus.all, 'sessions'] as const,
+    templates: () => [...queryKeys.focus.all, 'templates'] as const,
+    analytics: () => [...queryKeys.focus.all, 'analytics'] as const,
+  },
+  
+  // Calendar-related queries
+  calendar: {
+    all: ['calendar'] as const,
+    events: (filters: any) => [...queryKeys.calendar.all, 'events', filters] as const,
+    meetings: () => [...queryKeys.calendar.all, 'meetings'] as const,
+    availability: () => [...queryKeys.calendar.all, 'availability'] as const,
+  },
+  
+  // Social-related queries
+  social: {
+    all: ['social'] as const,
+    feed: () => [...queryKeys.social.all, 'feed'] as const,
+    connections: () => [...queryKeys.social.all, 'connections'] as const,
+    challenges: () => [...queryKeys.social.all, 'challenges'] as const,
+  },
+  
+  // Voice-related queries
+  voice: {
+    all: ['voice'] as const,
+    notes: () => [...queryKeys.voice.all, 'notes'] as const,
+    analytics: () => [...queryKeys.voice.all, 'analytics'] as const,
+    settings: () => [...queryKeys.voice.all, 'settings'] as const,
+  },
+  
+  // Analytics-related queries
+  analytics: {
+    all: ['analytics'] as const,
+    dashboard: () => [...queryKeys.analytics.all, 'dashboard'] as const,
+    reports: () => [...queryKeys.analytics.all, 'reports'] as const,
+  },
+  
+  // User-related queries
+  user: {
+    all: ['user'] as const,
+    profile: () => [...queryKeys.user.all, 'profile'] as const,
+    settings: () => [...queryKeys.user.all, 'settings'] as const,
+    preferences: () => [...queryKeys.user.all, 'preferences'] as const,
+  },
+  
+  // Auth-related queries
+  auth: {
+    all: ['auth'] as const,
+    user: () => [...queryKeys.auth.all, 'user'] as const,
+    profile: () => [...queryKeys.auth.all, 'profile'] as const,
+    session: () => [...queryKeys.auth.all, 'session'] as const,
+  },
+  
+  // Localization-related queries
+  localization: {
+    all: ['localization'] as const,
+    languages: () => [...queryKeys.localization.all, 'languages'] as const,
+    translations: (lang: string) => [...queryKeys.localization.all, 'translations', lang] as const,
   },
 };
 
-// Create the query client
-export const queryClient = new QueryClient({
-  defaultOptions: queryConfig,
-});
+// Utility functions for query invalidation
+export const invalidateQueries = {
+  // Invalidate all task-related queries
+  tasks: () => queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  
+  // Invalidate all health-related queries
+  health: () => queryClient.invalidateQueries({ queryKey: queryKeys.health.all }),
+  
+  // Invalidate all focus-related queries
+  focus: () => queryClient.invalidateQueries({ queryKey: queryKeys.focus.all }),
+  
+  // Invalidate all calendar-related queries
+  calendar: () => queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all }),
+  
+  // Invalidate all social-related queries
+  social: () => queryClient.invalidateQueries({ queryKey: queryKeys.social.all }),
+  
+  // Invalidate all voice-related queries
+  voice: () => queryClient.invalidateQueries({ queryKey: queryKeys.voice.all }),
+  
+  // Invalidate all analytics-related queries
+  analytics: () => queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all }),
+  
+  // Invalidate all user-related queries
+  user: () => queryClient.invalidateQueries({ queryKey: queryKeys.user.all }),
+  
+  // Invalidate all localization-related queries
+  localization: () => queryClient.invalidateQueries({ queryKey: queryKeys.localization.all }),
+};
 
-// Query keys factory for consistent key management
-export const queryKeys = {
-  // Auth queries
-  auth: {
-    user: () => ['auth', 'user'] as const,
-    profile: () => ['auth', 'profile'] as const,
+// Utility functions for query prefetching
+export const prefetchQueries = {
+  // Prefetch task list
+  tasks: async (filters: any = {}) => {
+    await queryClient.prefetchQuery({
+      queryKey: queryKeys.tasks.list(filters),
+      queryFn: async () => {
+        // This would be replaced with actual API call
+        return [];
+      },
+      staleTime: 5 * 60 * 1000,
+    });
   },
   
-  // Task queries
-  tasks: {
-    all: () => ['tasks'] as const,
-    lists: () => [...queryKeys.tasks.all(), 'list'] as const,
-    list: (filters: Record<string, any>) => [...queryKeys.tasks.lists(), filters] as const,
-    details: () => [...queryKeys.tasks.all(), 'detail'] as const,
-    detail: (id: string) => [...queryKeys.tasks.details(), id] as const,
-    search: (query: string) => [...queryKeys.tasks.all(), 'search', query] as const,
+  // Prefetch health dashboard
+  healthDashboard: async () => {
+    await queryClient.prefetchQuery({
+      queryKey: queryKeys.health.dashboard(),
+      queryFn: async () => {
+        // This would be replaced with actual API call
+        return {};
+      },
+      staleTime: 5 * 60 * 1000,
+    });
   },
   
-  // Health queries
-  health: {
-    all: () => ['health'] as const,
-    metrics: () => [...queryKeys.health.all(), 'metrics'] as const,
-    metric: (type: string) => [...queryKeys.health.metrics(), type] as const,
-    goals: () => [...queryKeys.health.all(), 'goals'] as const,
-    goal: (id: string) => [...queryKeys.health.goals(), id] as const,
-    insights: () => [...queryKeys.health.all(), 'insights'] as const,
+  // Prefetch user profile
+  userProfile: async () => {
+    await queryClient.prefetchQuery({
+      queryKey: queryKeys.user.profile(),
+      queryFn: async () => {
+        // This would be replaced with actual API call
+        return {};
+      },
+      staleTime: 10 * 60 * 1000,
+    });
   },
-  
-  // Focus queries
-  focus: {
-    all: () => ['focus'] as const,
-    sessions: () => [...queryKeys.focus.all(), 'sessions'] as const,
-    session: (id: string) => [...queryKeys.focus.sessions(), id] as const,
-    active: () => [...queryKeys.focus.all(), 'active'] as const,
-    stats: () => [...queryKeys.focus.all(), 'stats'] as const,
-  },
-  
-  // Calendar queries
-  calendar: {
-    all: () => ['calendar'] as const,
-    events: () => [...queryKeys.calendar.all(), 'events'] as const,
-    event: (id: string) => [...queryKeys.calendar.events(), id] as const,
-    range: (start: string, end: string) => [...queryKeys.calendar.events(), 'range', start, end] as const,
-  },
-  
-  // Badge queries
-  badges: {
-    all: () => ['badges'] as const,
-    earned: () => [...queryKeys.badges.all(), 'earned'] as const,
-    available: () => [...queryKeys.badges.all(), 'available'] as const,
-    progress: () => [...queryKeys.badges.all(), 'progress'] as const,
-  },
-  
-  // Analytics queries
-  analytics: {
-    all: () => ['analytics'] as const,
-    dashboard: () => [...queryKeys.analytics.all(), 'dashboard'] as const,
-    reports: () => [...queryKeys.analytics.all(), 'reports'] as const,
-    report: (type: string, period: string) => [...queryKeys.analytics.reports(), type, period] as const,
-  },
-  
-  // Localization queries
-  localization: {
-    all: () => ['localization'] as const,
-    languages: () => [...queryKeys.localization.all(), 'languages'] as const,
-    content: (language: string) => [...queryKeys.localization.all(), 'content', language] as const,
-  },
-  
-  // Settings queries
-  settings: {
-    all: () => ['settings'] as const,
-    user: () => [...queryKeys.settings.all(), 'user'] as const,
-    preferences: () => [...queryKeys.settings.all(), 'preferences'] as const,
-    notifications: () => [...queryKeys.settings.all(), 'notifications'] as const,
-  },
-} as const;
+};
 
-// Utility functions for cache management
+// Cache utilities
 export const cacheUtils = {
-  // Invalidate all queries for a specific domain
-  invalidateQueries: (queryKey: readonly unknown[]) => {
-    return queryClient.invalidateQueries({ queryKey });
-  },
-  
-  // Remove specific query from cache
-  removeQueries: (queryKey: readonly unknown[]) => {
-    return queryClient.removeQueries({ queryKey });
-  },
-  
-  // Set query data manually
-  setQueryData: <T>(queryKey: readonly unknown[], data: T) => {
-    return queryClient.setQueryData(queryKey, data);
-  },
-  
-  // Get query data from cache
-  getQueryData: <T>(queryKey: readonly unknown[]): T | undefined => {
-    return queryClient.getQueryData(queryKey);
-  },
-  
-  // Prefetch query
-  prefetchQuery: (queryKey: readonly unknown[], queryFn: () => Promise<any>) => {
-    return queryClient.prefetchQuery({ queryKey, queryFn });
-  },
-  
   // Clear all cache
-  clear: () => {
-    return queryClient.clear();
+  clearAll: () => queryClient.clear(),
+  
+  // Clear specific query
+  clearQuery: (queryKey: any[]) => queryClient.removeQueries({ queryKey }),
+  
+  // Clear queries by pattern
+  clearQueriesByPattern: (pattern: string) => {
+    queryClient.getQueryCache().findAll().forEach(query => {
+      if (query.queryKey.some(key => typeof key === 'string' && key.includes(pattern))) {
+        queryClient.removeQueries({ queryKey: query.queryKey });
+      }
+    });
   },
   
-  // Get cache stats
-  getStats: () => {
-    const cache = queryClient.getQueryCache();
+  // Get cache size
+  getCacheSize: () => queryClient.getQueryCache().getAll().length,
+  
+  // Get cache info
+  getCacheInfo: () => {
+    const queries = queryClient.getQueryCache().getAll();
     return {
-      queryCount: cache.getAll().length,
-      queries: cache.getAll().map(query => ({
-        queryKey: query.queryKey,
-        state: query.state.status,
-        dataUpdatedAt: query.state.dataUpdatedAt,
-        errorUpdatedAt: query.state.errorUpdatedAt,
-      })),
+      total: queries.length,
+      stale: queries.filter(q => q.isStale()).length,
+      fresh: queries.filter(q => !q.isStale()).length,
+      error: queries.filter(q => q.state.status === 'error').length,
     };
   },
 };
 
-// Development tools
-if (process.env.NODE_ENV === 'development') {
-  // Add query client to window for debugging
-  (window as any).queryClient = queryClient;
-  (window as any).queryKeys = queryKeys;
-  (window as any).cacheUtils = cacheUtils;
-}
+export default queryClient;

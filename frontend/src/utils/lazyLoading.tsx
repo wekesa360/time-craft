@@ -1,186 +1,267 @@
-/**
- * Lazy Loading Utilities
- * Provides route-based code splitting and loading states
- */
+import React, { Suspense, lazy } from 'react';
+import type { ComponentType } from 'react';
+import { ErrorBoundary } from '../components/error/ErrorBoundary';
+import { bundleAnalyzer } from './bundleAnalyzer';
 
-import React, { Suspense, ComponentType } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-
-// Loading spinner component
-const LoadingSpinner: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-      <p className="text-gray-600 dark:text-gray-300 font-medium">{message}</p>
-    </div>
+// Loading component for better UX
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-[200px]">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
   </div>
 );
 
-// Error fallback component
-const ErrorFallback: React.FC<{ error: Error; resetErrorBoundary: () => void }> = ({ 
-  error, 
-  resetErrorBoundary 
-}) => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-    <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-      <div className="w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-        <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+// Error fallback for lazy loaded components
+const LazyErrorFallback = ({ retry }: { error: Error; retry: () => void }) => (
+  <div className="flex flex-col items-center justify-center min-h-[200px] p-4 text-center">
+    <div className="text-red-500 mb-4">
+      <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
       </div>
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Something went wrong</h2>
-      <p className="text-gray-600 dark:text-gray-300 mb-6">
-        {error.message || 'An unexpected error occurred while loading this page.'}
-      </p>
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+      Failed to load component
+    </h3>
+    <p className="text-gray-600 dark:text-gray-400 mb-4">
+      There was an error loading this part of the application.
+    </p>
         <button
-          onClick={resetErrorBoundary}
-          className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+      onClick={retry}
+      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           Try Again
         </button>
-        <button
-          onClick={() => window.location.href = '/dashboard'}
-          className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors"
-        >
-          Go to Dashboard
-        </button>
-      </div>
-    </div>
   </div>
 );
 
 // Higher-order component for lazy loading with error boundary
 export const withLazyLoading = <P extends object>(
-  Component: ComponentType<P>,
-  loadingMessage?: string
+  importFn: () => Promise<{ default: ComponentType<P> }>,
+  fallback?: ComponentType
 ) => {
-  const LazyComponent = React.forwardRef<any, P>((props, ref) => (
+  const LazyComponent = lazy(importFn);
+  
+  return (props: P) => (
     <ErrorBoundary
-      FallbackComponent={ErrorFallback}
-      onReset={() => window.location.reload()}
+      fallback={<LazyErrorFallback error={new Error('Lazy loading failed')} retry={() => window.location.reload()} />}
     >
-      <Suspense fallback={<LoadingSpinner message={loadingMessage} />}>
-        <Component {...props} ref={ref} />
+      <Suspense fallback={fallback ? React.createElement(fallback) : <LoadingSpinner />}>
+        <LazyComponent {...props} />
       </Suspense>
     </ErrorBoundary>
-  ));
+  );
+};
 
-  LazyComponent.displayName = `withLazyLoading(${Component.displayName || Component.name})`;
+// Lazy load pages with preloading
+export const lazyPages = {
+  Dashboard: withLazyLoading(() => import('../pages/Dashboard')),
+  TasksPage: withLazyLoading(() => import('../pages/TasksPage')),
+  HealthPage: withLazyLoading(() => import('../pages/HealthPage')),
+  CalendarPage: withLazyLoading(() => import('../pages/CalendarPage')),
+  FocusPage: withLazyLoading(() => import('../pages/FocusPage')),
+  BadgesPage: withLazyLoading(() => import('../pages/BadgesPage')),
+  SocialPage: withLazyLoading(() => import('../pages/SocialPage')),
+  VoicePage: withLazyLoading(() => import('../pages/VoicePage')),
+  NotificationsPage: withLazyLoading(() => import('../pages/NotificationsPage')),
+  StudentPage: withLazyLoading(() => import('../pages/StudentPage')),
+  AnalyticsPage: withLazyLoading(() => import('../pages/AnalyticsPage')),
+  SettingsPage: withLazyLoading(() => import('../pages/SettingsPage')),
+  LocalizationPage: withLazyLoading(() => import('../pages/LocalizationPage')),
+  AdminPage: withLazyLoading(() => import('../pages/AdminPage')),
+};
+
+// Lazy load feature components
+export const lazyFeatures = {
+  // Analytics components
+  AnalyticsDashboard: withLazyLoading(() => import('../components/features/analytics/AnalyticsDashboard')),
   
-  return LazyComponent;
+  // Admin components
+  UserManagement: withLazyLoading(() => import('../components/features/admin/UserManagement')),
+  SystemMetrics: withLazyLoading(() => import('../components/features/admin/SystemMetrics')),
+  SecurityDashboard: withLazyLoading(() => import('../components/features/admin/SecurityDashboard')),
+  
+  // Health components
+  HealthDashboard: withLazyLoading(() => import('../components/features/health/HealthDashboard')),
+  HealthInsights: withLazyLoading(() => import('../components/features/health/HealthInsights')),
+  MoodTracker: withLazyLoading(() => import('../components/features/health/MoodTracker')),
+  ExerciseLogger: withLazyLoading(() => import('../components/features/health/ExerciseLogger')),
+  
+  // Task components
+  EisenhowerMatrix: withLazyLoading(() => import('../components/features/tasks/EisenhowerMatrix')),
+  TaskForm: withLazyLoading(() => import('../components/features/tasks/TaskForm')),
+  TaskFilters: withLazyLoading(() => import('../components/features/tasks/TaskFilters')),
+  
+  // Focus components
+  FocusTimer: withLazyLoading(() => import('../components/features/focus/FocusTimer')),
+  FocusAnalytics: withLazyLoading(() => import('../components/features/focus/FocusAnalytics')),
+  
+  // Calendar components
+  CalendarView: withLazyLoading(() => import('../components/features/calendar/CalendarView')),
+  MeetingScheduler: withLazyLoading(() => import('../components/features/calendar/MeetingScheduler')),
+  
+  // Social components
+  ActivityFeed: withLazyLoading(() => import('../components/features/social/ActivityFeed')),
+  ConnectionsList: withLazyLoading(() => import('../components/features/social/ConnectionsList')),
+  
+  // Voice components
+  VoiceRecorder: withLazyLoading(() => import('../components/features/voice/VoiceRecorder')),
+  VoiceAnalytics: withLazyLoading(() => import('../components/features/voice/VoiceAnalytics')),
 };
 
-// Utility function to create lazy-loaded components
-export const createLazyComponent = <P extends object>(
-  importFn: () => Promise<{ default: ComponentType<P> }>,
-  loadingMessage?: string
-) => {
-  const LazyComponent = React.lazy(importFn);
-  return withLazyLoading(LazyComponent, loadingMessage);
+// Lazy load UI components
+export const lazyUI = {
+  // Charts
+  BarChart: withLazyLoading(() => import('../components/ui/charts/BarChart')),
+  LineChart: withLazyLoading(() => import('../components/ui/charts/LineChart')),
+  PieChart: withLazyLoading(() => import('../components/ui/charts/PieChart')),
+  ProgressRing: withLazyLoading(() => import('../components/ui/charts/ProgressRing')),
+  
+  // Animations
+  FadeIn: withLazyLoading(() => import('../components/ui/animations/FadeIn')),
+  SlideIn: withLazyLoading(() => import('../components/ui/animations/SlideIn')),
+  ScaleIn: withLazyLoading(() => import('../components/ui/animations/ScaleIn')),
+  
+  // Layout
+  ResponsiveGrid: withLazyLoading(() => import('../components/ui/layout/ResponsiveGrid')),
+  ResponsiveTable: withLazyLoading(() => import('../components/ui/ResponsiveTable')),
 };
 
-// Preload function for route prefetching
-export const preloadRoute = (importFn: () => Promise<any>) => {
-  // Preload the component
-  importFn().catch(() => {
-    // Silently fail if preload fails
-  });
+// Preloading utilities
+export const preloader = {
+  // Preload a component
+  preload: (importFn: () => Promise<any>) => {
+    return importFn();
+  },
+  
+  // Preload multiple components
+  preloadMultiple: (importFns: Array<() => Promise<any>>) => {
+    return Promise.all(importFns.map(fn => fn()));
+  },
+  
+  // Preload on hover
+  preloadOnHover: (element: HTMLElement, importFn: () => Promise<any>) => {
+    let preloaded = false;
+    
+    const preload = () => {
+      if (!preloaded) {
+        preloaded = true;
+        importFn();
+      }
+    };
+    
+    element.addEventListener('mouseenter', preload, { once: true });
+    element.addEventListener('focus', preload, { once: true });
+  },
+  
+  // Preload on intersection
+  preloadOnIntersection: (element: HTMLElement, importFn: () => Promise<any>) => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            importFn();
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: '50px' }
+    );
+    
+    observer.observe(element);
+  },
 };
 
-// Hook for route preloading on hover/focus
-export const useRoutePreloader = () => {
-  const preloadOnHover = (importFn: () => Promise<any>) => ({
-    onMouseEnter: () => preloadRoute(importFn),
-    onFocus: () => preloadRoute(importFn),
-  });
-
-  return { preloadOnHover };
+// Route-based code splitting
+export const routeSplitting = {
+  // Split routes by priority
+  critical: ['Dashboard', 'TasksPage', 'HealthPage'],
+  important: ['CalendarPage', 'FocusPage', 'SettingsPage'],
+  optional: ['AnalyticsPage', 'AdminPage', 'SocialPage'],
+  
+  // Get route priority
+  getPriority: (routeName: string): 'critical' | 'important' | 'optional' => {
+    if (routeSplitting.critical.includes(routeName)) return 'critical';
+    if (routeSplitting.important.includes(routeName)) return 'important';
+    return 'optional';
+  },
+  
+  // Preload routes based on priority
+  preloadByPriority: (currentRoute: string) => {
+    const priority = routeSplitting.getPriority(currentRoute);
+    
+    // Preload critical routes immediately
+    if (priority === 'critical') {
+      routeSplitting.critical.forEach(route => {
+        if (route !== currentRoute) {
+          // Get the import function for the route
+          const routeImport = lazyPages[route as keyof typeof lazyPages];
+          if (routeImport) {
+            preloader.preload(() => Promise.resolve({ default: routeImport }));
+          }
+        }
+      });
+    }
+    
+    // Preload important routes after a delay
+    if (priority === 'critical' || priority === 'important') {
+      setTimeout(() => {
+        routeSplitting.important.forEach(route => {
+          if (route !== currentRoute) {
+            // Get the import function for the route
+            const routeImport = lazyPages[route as keyof typeof lazyPages];
+            if (routeImport) {
+              preloader.preload(() => Promise.resolve({ default: routeImport }));
+            }
+          }
+        });
+      }, 2000);
+    }
+  },
 };
 
-// Component for skeleton loading states
-export const SkeletonLoader: React.FC<{
-  lines?: number;
-  className?: string;
-  showAvatar?: boolean;
-}> = ({ lines = 3, className = '', showAvatar = false }) => (
-  <div className={`animate-pulse ${className}`}>
-    {showAvatar && (
-      <div className="flex items-center space-x-4 mb-4">
-        <div className="rounded-full bg-gray-300 dark:bg-gray-600 h-10 w-10"></div>
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-          <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
-        </div>
-      </div>
-    )}
-    <div className="space-y-3">
-      {Array.from({ length: lines }).map((_, index) => (
-        <div key={index} className="space-y-2">
-          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded"></div>
-          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-5/6"></div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
+// Performance monitoring for lazy loading
+export const lazyLoadingMonitor = {
+  // Track loading times
+  trackLoading: (componentName: string, startTime: number) => {
+    const loadTime = performance.now() - startTime;
+    bundleAnalyzer.trackSize(`lazy-${componentName}`, loadTime);
+    
+    console.log(`Lazy loaded ${componentName} in ${loadTime.toFixed(2)}ms`);
+  },
+  
+  // Track loading errors
+  trackError: (componentName: string, error: Error) => {
+    console.error(`Failed to lazy load ${componentName}:`, error);
+    // Could send to error tracking service
+  },
+  
+  // Get loading statistics
+  getStats: () => {
+    return bundleAnalyzer.getSizeHistory('lazy-*');
+  },
+};
 
-// Page-specific loading components
-export const DashboardLoader = () => (
-  <div className="p-6 space-y-6">
-    <SkeletonLoader lines={2} />
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-4">
-          <SkeletonLoader lines={3} />
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-export const TasksLoader = () => (
-  <div className="p-6 space-y-4">
-    <SkeletonLoader lines={1} />
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {Array.from({ length: 8 }).map((_, index) => (
-        <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-4">
-          <SkeletonLoader lines={2} showAvatar />
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-export const HealthLoader = () => (
-  <div className="p-6 space-y-6">
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-4">
-          <SkeletonLoader lines={2} />
-        </div>
-      ))}
-    </div>
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
-      <SkeletonLoader lines={4} />
-    </div>
-  </div>
-);
-
-// Route-specific loading messages
+// Loading messages for different routes
 export const routeLoadingMessages = {
-  dashboard: 'Loading dashboard...',
-  tasks: 'Loading tasks...',
+  login: 'Signing you in...',
+  register: 'Creating your account...',
+  dashboard: 'Loading your dashboard...',
+  tasks: 'Loading your tasks...',
   health: 'Loading health data...',
   calendar: 'Loading calendar...',
-  focus: 'Loading focus sessions...',
-  badges: 'Loading badges...',
+  focus: 'Preparing focus session...',
   social: 'Loading social features...',
-  voice: 'Loading voice features...',
-  notifications: 'Loading notifications...',
-  student: 'Loading student features...',
-  analytics: 'Loading analytics...',
+  voice: 'Initializing voice features...',
   settings: 'Loading settings...',
-  localization: 'Loading localization...',
-  admin: 'Loading admin dashboard...',
+  analytics: 'Preparing analytics...',
+  admin: 'Loading admin panel...',
+};
+
+export default {
+  withLazyLoading,
+  lazyPages,
+  lazyFeatures,
+  lazyUI,
+  preloader,
+  routeSplitting,
+  lazyLoadingMonitor,
 };

@@ -43,7 +43,7 @@ interface ResponsiveTableProps<T> {
   id?: string;
 }
 
-export function ResponsiveTable<T>({
+function ResponsiveTable<T>({
   data,
   columns,
   className,
@@ -165,7 +165,7 @@ export function ResponsiveTable<T>({
     onSelectionChange?.(newSelection);
     
     const message = language === 'de'
-      ? `${checked ? 'Alle' : 'Keine'} Zeilen ausgewählt`
+      ? `${checked ? 'Alle' : 'Keine'} Zeilen ausgewï¿½hlt`
       : `${checked ? 'All' : 'No'} rows selected`;
     announce(message);
   };
@@ -270,7 +270,7 @@ export function ResponsiveTable<T>({
               tabIndex={onRowClick ? 0 : undefined}
               aria-label={
                 onRowClick 
-                  ? (language === 'de' ? `Zeile ${index + 1} auswählen` : `Select row ${index + 1}`)
+                  ? (language === 'de' ? `Zeile ${index + 1} auswï¿½hlen` : `Select row ${index + 1}`)
                   : undefined
               }
             >
@@ -282,7 +282,7 @@ export function ResponsiveTable<T>({
                     onChange={(e) => handleRowSelection(item, e.target.checked)}
                     aria-label={
                       language === 'de' 
-                        ? `Zeile ${index + 1} auswählen`
+                        ? `Zeile ${index + 1} auswï¿½hlen`
                         : `Select row ${index + 1}`
                     }
                   />
@@ -328,7 +328,7 @@ export function ResponsiveTable<T>({
           {sortedData.length > 0 && (
             <span className="text-sm text-foreground-secondary">
               {language === 'de' 
-                ? `${sortedData.length} von ${data.length} Einträgen`
+                ? `${sortedData.length} von ${data.length} Eintrï¿½gen`
                 : `${sortedData.length} of ${data.length} entries`
               }
             </span>
@@ -373,7 +373,7 @@ export function ResponsiveTable<T>({
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     aria-label={
                       language === 'de'
-                        ? 'Alle Zeilen auswählen/abwählen'
+                        ? 'Alle Zeilen auswï¿½hlen/abwï¿½hlen'
                         : 'Select/deselect all rows'
                     }
                   />
@@ -452,7 +452,7 @@ export function ResponsiveTable<T>({
                       onClick={(e) => e.stopPropagation()}
                       aria-label={
                         language === 'de'
-                          ? `Zeile ${rowIndex + 1} auswählen`
+                          ? `Zeile ${rowIndex + 1} auswï¿½hlen`
                           : `Select row ${rowIndex + 1}`
                       }
                     />
@@ -487,7 +487,7 @@ export function ResponsiveTable<T>({
         <div className="text-center py-8">
           <p className="text-foreground-secondary">
             {emptyMessage || 
-              (language === 'de' ? 'Keine Daten verfügbar' : 'No data available')
+              (language === 'de' ? 'Keine Daten verfï¿½gbar' : 'No data available')
             }
           </p>
         </div>
@@ -497,7 +497,7 @@ export function ResponsiveTable<T>({
         <div className="flex items-center justify-between mt-4">
           <div className="text-sm text-foreground-secondary">
             {language === 'de'
-              ? `${startIndex + 1}-${Math.min(endIndex, sortedData.length)} von ${sortedData.length} Einträgen`
+              ? `${startIndex + 1}-${Math.min(endIndex, sortedData.length)} von ${sortedData.length} Eintrï¿½gen`
               : `${startIndex + 1}-${Math.min(endIndex, sortedData.length)} of ${sortedData.length} entries`
             }
           </div>
@@ -509,7 +509,7 @@ export function ResponsiveTable<T>({
               className="btn-secondary btn-sm"
               aria-label={language === 'de' ? 'Vorherige Seite' : 'Previous page'}
             >
-              {language === 'de' ? 'Zurück' : 'Previous'}
+              {language === 'de' ? 'Zurï¿½ck' : 'Previous'}
             </button>
             
             <span className="text-sm text-foreground">
@@ -523,7 +523,7 @@ export function ResponsiveTable<T>({
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
               className="btn-secondary btn-sm"
-              aria-label={language === 'de' ? 'Nächste Seite' : 'Next page'}
+              aria-label={language === 'de' ? 'Nï¿½chste Seite' : 'Next page'}
             >
               {language === 'de' ? 'Weiter' : 'Next'}
             </button>
@@ -536,7 +536,7 @@ export function ResponsiveTable<T>({
         {language === 'de' ? (
           `Tabelle mit ${displayedData.length} Zeilen und ${visibleColumns.length} Spalten. 
           Verwenden Sie Pfeiltasten zur Navigation. ${sortable ? 'Enter zum Sortieren.' : ''} 
-          ${selectable ? 'Leertaste zum Auswählen.' : ''}`
+          ${selectable ? 'Leertaste zum Auswï¿½hlen.' : ''}`
         ) : (
           `Table with ${displayedData.length} rows and ${visibleColumns.length} columns. 
           Use arrow keys to navigate. ${sortable ? 'Press Enter to sort.' : ''} 
@@ -546,3 +546,5 @@ export function ResponsiveTable<T>({
     </div>
   );
 }
+
+export default ResponsiveTable;

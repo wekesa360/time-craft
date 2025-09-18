@@ -33,6 +33,7 @@ const defaultPreferences: NotificationPreferences = {
   badgeUnlocks: true,
   challengeUpdates: true,
   meetingReminders: true,
+  deadlineAlerts: true,
   quietHours: {
     enabled: false,
     start: '22:00',

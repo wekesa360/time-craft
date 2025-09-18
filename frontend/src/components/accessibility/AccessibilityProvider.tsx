@@ -3,7 +3,7 @@
  * Context provider for application-wide accessibility features
  */
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAccessibility } from '../../hooks/useAccessibility';
 import { useResponsive } from '../../hooks/useResponsive';
@@ -138,7 +138,7 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    let skipLink = document.getElementById('skip-to-content');
+    let skipLink = document.getElementById('skip-to-content') as HTMLAnchorElement | null;
     if (!skipLink) {
       skipLink = document.createElement('a');
       skipLink.id = 'skip-to-content';

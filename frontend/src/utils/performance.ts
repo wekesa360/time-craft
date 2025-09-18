@@ -107,10 +107,10 @@ class PerformanceMonitor {
           for (const entry of list.getEntries()) {
             const navEntry = entry as PerformanceNavigationTiming;
             
-            this.metrics.FCP = navEntry.responseStart - navEntry.navigationStart;
+            this.metrics.FCP = navEntry.responseStart - navEntry.fetchStart;
             this.metrics.TTFB = navEntry.responseStart - navEntry.requestStart;
-            this.metrics.navigationStart = navEntry.navigationStart;
-            this.metrics.loadComplete = navEntry.loadEventEnd - navEntry.navigationStart;
+            this.metrics.navigationStart = navEntry.fetchStart;
+            this.metrics.loadComplete = navEntry.loadEventEnd - navEntry.fetchStart;
             
             this.reportMetric('FCP', this.metrics.FCP);
             this.reportMetric('TTFB', this.metrics.TTFB);

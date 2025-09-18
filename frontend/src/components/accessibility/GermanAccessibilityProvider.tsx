@@ -189,7 +189,7 @@ export const GermanAccessibleButton: React.FC<{
 };
 
 // Accessible German Input Component
-export const GermanAccessibleInput: React.FC<{
+export const GermanAccessibleInput = React.forwardRef<HTMLInputElement, {
   type?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -200,7 +200,7 @@ export const GermanAccessibleInput: React.FC<{
   ariaLabel?: string;
   ariaDescribedBy?: string;
   id?: string;
-}> = ({
+}>(({
   type = 'text',
   value,
   onChange,
@@ -211,7 +211,7 @@ export const GermanAccessibleInput: React.FC<{
   ariaLabel,
   ariaDescribedBy,
   id
-}) => {
+}, ref) => {
   const { isGerman, getAccessibilityAttributes, isHighContrast } = useGermanAccessibilityContext();
   
   const accessibilityAttrs = getAccessibilityAttributes('input');
@@ -226,6 +226,7 @@ export const GermanAccessibleInput: React.FC<{
 
   return (
     <input
+      ref={ref}
       type={type}
       value={value}
       onChange={onChange}
@@ -242,7 +243,7 @@ export const GermanAccessibleInput: React.FC<{
       {...(isGerman && accessibilityAttrs)}
     />
   );
-};
+});
 
 // Accessible German Navigation Component
 export const GermanAccessibleNavigation: React.FC<{

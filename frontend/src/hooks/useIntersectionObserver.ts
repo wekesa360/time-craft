@@ -3,7 +3,7 @@
  * For lazy loading and visibility detection
  */
 
-import { useEffect, useState, RefObject } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
 
 interface UseIntersectionObserverProps {
   threshold?: number | number[];

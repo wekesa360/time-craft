@@ -3,8 +3,9 @@
  * Catches JavaScript errors anywhere in the component tree
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import { errorTracking } from '../../services/errorTracking';
 
 interface Props {
   children: ReactNode;
@@ -49,11 +50,12 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private reportError = (error: Error, errorInfo: ErrorInfo) => {
-    // In production, you would send this to your error monitoring service
-    if (process.env.NODE_ENV === 'production') {
-      // Example: Send to monitoring service
-      // errorMonitoring.captureException(error, { extra: errorInfo });
-    }
+    // Report error to tracking service
+    errorTracking.captureError(error, {
+      category: 'react',
+      componentStack: errorInfo.componentStack,
+      errorBoundary: this.constructor.name,
+    });
   };
 
   private handleRefresh = () => {

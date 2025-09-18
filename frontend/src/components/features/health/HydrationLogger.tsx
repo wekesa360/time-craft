@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HydrationData } from '../../../types';
+import type { HydrationData } from '../../../types';
 import { 
   Droplets, 
   Coffee, 

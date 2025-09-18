@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NutritionData } from '../../../types';
+import type { NutritionData } from '../../../types';
 import { 
   Utensils, 
   Plus, 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoodData } from '../../../types';
+import type { MoodData } from '../../../types';
 import { 
   Smile, 
   Frown, 
@@ -76,7 +76,7 @@ const commonTags = [
   'grateful', 'frustrated', 'confident', 'worried', 'relaxed', 'content'
 ];
 
-export const MoodTracker: React.FC<MoodTrackerProps> = ({
+const MoodTracker: React.FC<MoodTrackerProps> = ({
   isOpen,
   onClose,
   onSave
@@ -91,11 +91,43 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({
   });
 
   const [customTag, setCustomTag] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const selectedMood = moodEmojis.find(mood => mood.value === formData.score);
   const selectedEnergy = energyLevels.find(energy => energy.value === formData.energy);
   const selectedStress = stressLevels.find(stress => stress.value === formData.stress);
   const selectedSleep = sleepQuality.find(sleep => sleep.value === (formData.sleep || 5));
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (formData.score < 1 || formData.score > 10) {
+      newErrors.score = 'Mood score must be between 1 and 10';
+    }
+
+    if (formData.energy < 1 || formData.energy > 10) {
+      newErrors.energy = 'Energy level must be between 1 and 10';
+    }
+
+    if (formData.stress < 1 || formData.stress > 10) {
+      newErrors.stress = 'Stress level must be between 1 and 10';
+    }
+
+    if (formData.sleep && (formData.sleep < 1 || formData.sleep > 10)) {
+      newErrors.sleep = 'Sleep quality must be between 1 and 10';
+    }
+
+    if (formData.notes && formData.notes.length > 500) {
+      newErrors.notes = 'Notes must be less than 500 characters';
+    }
+
+    if (formData.tags && formData.tags.length > 10) {
+      newErrors.tags = 'Maximum 10 tags allowed';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const addTag = (tag: string) => {
     if (tag && !formData.tags?.includes(tag)) {
@@ -122,6 +154,9 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     onSave(formData);
     
     // Reset form
@@ -133,6 +168,9 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({
       notes: '',
       tags: []
     });
+    setCustomTag('');
+    setErrors({});
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -359,3 +397,5 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({
     </div>
   );
 };
+
+export default MoodTracker;

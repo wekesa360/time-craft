@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Challenge } from '../../../types';
+import type { Challenge } from '../../../types';
 import { 
   X, 
   Target, 

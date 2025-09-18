@@ -3,7 +3,8 @@
  * Includes memoization helpers, lazy loading utilities, and performance monitoring
  */
 
-import { ComponentType, memo, lazy, LazyExoticComponent, ReactElement } from 'react';
+import React, { memo, lazy } from 'react';
+import type { ComponentType, LazyExoticComponent, ReactElement } from 'react';
 // Simple debounce and throttle implementations to avoid external dependencies
 const debounce = <T extends (...args: any[]) => any>(
   func: T,
@@ -305,7 +306,7 @@ export const withPerformanceMonitoring = <P extends object>(
     const endTiming = monitor.startTiming(`render-${componentLabel}`);
     
     try {
-      const result = Component(props);
+      const result = React.createElement(Component, props);
       endTiming();
       return result;
     } catch (error) {

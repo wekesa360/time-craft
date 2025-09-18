@@ -10,7 +10,7 @@ import React, {
   useState, 
   useMemo, 
   useCallback,
-  ReactNode 
+  type ReactNode 
 } from 'react';
 
 export interface VirtualScrollProps<T> {

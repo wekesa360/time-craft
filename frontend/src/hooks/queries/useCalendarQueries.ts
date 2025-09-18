@@ -157,7 +157,7 @@ export const useCancelMeetingMutation = () => {
   return useMutation({
     mutationFn: (id: string) => apiClient.cancelMeeting(id),
     onSuccess: () => {
-      toast.info('Meeting cancelled');
+      toast.success('Meeting cancelled');
       queryClient.invalidateQueries({ queryKey: calendarKeys.meetingRequests() });
       queryClient.invalidateQueries({ queryKey: calendarKeys.events() });
     },

@@ -13,20 +13,19 @@ import {
 } from 'lucide-react';
 
 // Components
-import { ConnectionsList } from '../components/features/social/ConnectionsList';
+import ConnectionsList from '../components/features/social/ConnectionsList';
 import { ChallengeCard } from '../components/features/social/ChallengeCard';
-import { ActivityFeed } from '../components/features/social/ActivityFeed';
+import ActivityFeed from '../components/features/social/ActivityFeed';
 import { ChallengeCreator } from '../components/features/social/ChallengeCreator';
 
 // Hooks and API
 import { useSocialQueries } from '../hooks/queries/useSocialQueries';
-import { Challenge } from '../types';
+import type { Challenge } from '../types';
 
 type ViewMode = 'feed' | 'challenges' | 'connections';
 
 export default function SocialPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   
   // State
   const [viewMode, setViewMode] = useState<ViewMode>('feed');

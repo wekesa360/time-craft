@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MeetingScheduler } from '../components/features/calendar/MeetingScheduler';
-import { CalendarView } from '../components/features/calendar/CalendarView';
+import MeetingScheduler from '../components/features/calendar/MeetingScheduler';
+import CalendarView from '../components/features/calendar/CalendarView';
 import { MeetingRequests } from '../components/features/calendar/MeetingRequests';
 import { AvailabilityPicker } from '../components/features/calendar/AvailabilityPicker';
 

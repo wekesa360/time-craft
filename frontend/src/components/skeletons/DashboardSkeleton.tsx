@@ -65,14 +65,14 @@ export const DashboardSkeleton: React.FC = () => {
           </div>
 
           {/* Recent Activity */}
-          <CardSkeleton className="min-h-[300px]">
+          <Skeleton className="min-h-[300px] p-6">
             <div className="space-y-3">
               <Skeleton className="h-6 w-32 mb-4" />
               {Array.from({ length: 5 }).map((_, index) => (
                 <ListItemSkeleton key={index} showAvatar />
               ))}
             </div>
-          </CardSkeleton>
+          </Skeleton>
         </div>
 
         {/* Right Column - Sidebar Content */}

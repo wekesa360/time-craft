@@ -12,9 +12,13 @@ export interface User {
   subscriptionExpiresAt: number | null;
   isStudent: boolean;
   studentVerificationStatus: 'none' | 'pending' | 'verified' | 'rejected';
+  badgePoints: number; // Required field from backend
+  avatar?: string; // User avatar URL
+  mobileSettings?: Record<string, any>;
+  securitySettings?: Record<string, any>;
+  lastOfflineSync?: number;
   createdAt: number;
   updatedAt: number;
-  badgePoints?: number;
 }
 
 export interface AuthTokens {
@@ -30,23 +34,30 @@ export interface AuthResponse {
 
 export interface Task {
   id: string;
-  userId: string;
+  user_id: string;
   title: string;
-  description?: string;
+  description?: string | null;
   priority: 1 | 2 | 3 | 4; // 1 = low, 4 = urgent
-  urgency: 1 | 2 | 3 | 4 | 5; // Eisenhower Matrix urgency
-  importance: 1 | 2 | 3 | 4 | 5; // Eisenhower Matrix importance
-  quadrant: 'do' | 'decide' | 'delegate' | 'delete'; // Eisenhower Matrix quadrant
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  dueDate?: number;
-  estimatedDuration?: number; // in minutes
-  aiPriorityScore?: number;
-  aiPlanningSessionId?: string;
-  energyLevelRequired?: number; // 1-10 scale
-  contextType?: 'work' | 'personal' | 'health' | 'learning' | 'social';
-  createdAt: number;
-  updatedAt: number;
-  completedAt?: number;
+  urgency: number | null; // Eisenhower Matrix urgency (1-4 scale)
+  importance: number | null; // Eisenhower Matrix importance (1-4 scale)
+  eisenhower_quadrant: 'do' | 'decide' | 'delegate' | 'delete' | null; // Eisenhower Matrix quadrant
+  status: 'pending' | 'done' | 'archived'; // Match backend status values
+  due_date?: number | null;
+  estimated_duration?: number | null; // in minutes
+  ai_priority_score?: number | null;
+  ai_planning_session_id?: string | null;
+  energy_level_required?: number | null; // 1-10 scale
+  context_type?: string | null;
+  // Eisenhower Matrix specific fields
+  matrix_notes?: string | null;
+  ai_matrix_confidence?: number | null;
+  matrix_last_reviewed?: number | null;
+  is_delegated?: boolean;
+  delegated_to?: string | null;
+  delegation_notes?: string | null;
+  created_at: number;
+  updated_at: number;
+  completed_at?: number;
 }
 
 export interface HealthLog {
@@ -183,14 +194,19 @@ export interface Notification {
   userId: string;
   title: string;
   message: string;
-  type: 'task_reminder' | 'health_reminder' | 'achievement' | 'system' | 'social';
+  type: 'task_reminder' | 'health_reminder' | 'achievement' | 'system' | 'social' | 'info' | 'success' | 'warning' | 'error';
+  category: 'tasks' | 'health' | 'social' | 'system' | 'security' | 'billing';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  isRead: boolean;
+  read: boolean;
+  isRead: boolean; // Keep both for compatibility
+  timestamp: number; // Add timestamp property
   actionUrl?: string;
   actionLabel?: string;
   scheduledFor?: number;
   createdAt: number;
   readAt?: number;
+  persistent?: boolean;
+  metadata?: Record<string, any>;
 }
 
 export interface Subscription {
@@ -223,6 +239,18 @@ export interface PaginatedResponse<T> extends ApiResponse<T> {
   };
 }
 
+// Backend API Response Types (matching actual backend responses)
+export interface TasksResponse {
+  tasks: Task[];
+  hasMore: boolean;
+  nextCursor?: string;
+  total?: number;
+}
+
+export interface TaskResponse {
+  task: Task;
+}
+
 export interface ValidationError {
   field: string;
   message: string;
@@ -248,11 +276,18 @@ export interface RegisterForm {
 export interface TaskForm {
   title: string;
   description?: string;
-  priority: 1 | 2 | 3 | 4;
-  dueDate?: string;
+  priority: number;
+  urgency?: number;
+  importance?: number;
+  eisenhower_quadrant?: 'do' | 'decide' | 'delegate' | 'delete';
+  dueDate?: number;
   estimatedDuration?: number;
   contextType?: string;
-  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  status?: 'pending' | 'done' | 'archived';
+  matrixNotes?: string;
+  isDelegated?: boolean;
+  delegatedTo?: string;
+  delegationNotes?: string;
 }
 
 export interface ProfileForm {
@@ -506,6 +541,7 @@ export interface NotificationPreferences {
   badgeUnlocks: boolean;
   challengeUpdates: boolean;
   meetingReminders: boolean;
+  deadlineAlerts: boolean;
   quietHours: {
     enabled: boolean;
     start: string;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileText, Scale, Users, AlertTriangle, CreditCard, Shield } from 'lucide-react';
 
@@ -64,7 +63,7 @@ export default function TermsOfServicePage() {
                   {t('legal.termsOfService.serviceDescription.productivity.title')}
                 </h3>
                 <ul className="text-gray-700 dark:text-gray-300 space-y-2 text-sm">
-                  {t('legal.termsOfService.serviceDescription.productivity.items', { returnObjects: true }).map((item: string, index: number) => (
+                  {(t('legal.termsOfService.serviceDescription.productivity.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                     <li key={index}>• {item}</li>
                   ))}
                 </ul>
@@ -75,7 +74,7 @@ export default function TermsOfServicePage() {
                   {t('legal.termsOfService.serviceDescription.wellness.title')}
                 </h3>
                 <ul className="text-gray-700 dark:text-gray-300 space-y-2 text-sm">
-                  {t('legal.termsOfService.serviceDescription.wellness.items', { returnObjects: true }).map((item: string, index: number) => (
+                  {(t('legal.termsOfService.serviceDescription.wellness.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                     <li key={index}>• {item}</li>
                   ))}
                 </ul>
@@ -96,7 +95,7 @@ export default function TermsOfServicePage() {
                 {t('legal.termsOfService.userAccounts.creation.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                {t('legal.termsOfService.userAccounts.creation.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.termsOfService.userAccounts.creation.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -107,7 +106,7 @@ export default function TermsOfServicePage() {
                 {t('legal.termsOfService.userAccounts.responsibilities.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                {t('legal.termsOfService.userAccounts.responsibilities.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.termsOfService.userAccounts.responsibilities.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -130,12 +129,12 @@ export default function TermsOfServicePage() {
             </p>
             <div className="grid md:grid-cols-2 gap-4">
               <ul className="text-amber-700 dark:text-amber-300 space-y-2 text-sm">
-                {t('legal.termsOfService.acceptableUse.prohibited', { returnObjects: true }).slice(0, 5).map((item: string, index: number) => (
+                {(t('legal.termsOfService.acceptableUse.prohibited', { returnObjects: true }) as string[]).slice(0, 5).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
               <ul className="text-amber-700 dark:text-amber-300 space-y-2 text-sm">
-                {t('legal.termsOfService.acceptableUse.prohibited', { returnObjects: true }).slice(5).map((item: string, index: number) => (
+                {(t('legal.termsOfService.acceptableUse.prohibited', { returnObjects: true }) as string[]).slice(5).map((item: string, index: number) => (
                   <li key={index + 5}>• {item}</li>
                 ))}
               </ul>
@@ -199,7 +198,7 @@ export default function TermsOfServicePage() {
                 {t('legal.termsOfService.paymentTerms.terms.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                {t('legal.termsOfService.paymentTerms.terms.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.termsOfService.paymentTerms.terms.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -222,12 +221,12 @@ export default function TermsOfServicePage() {
             </p>
             <div className="grid md:grid-cols-2 gap-4">
               <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                {t('legal.termsOfService.dataPrivacy.principles', { returnObjects: true }).slice(0, 3).map((principle: string, index: number) => (
+                {(t('legal.termsOfService.dataPrivacy.principles', { returnObjects: true }) as string[]).slice(0, 3).map((principle: string, index: number) => (
                   <li key={index}>• {principle}</li>
                 ))}
               </ul>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                {t('legal.termsOfService.dataPrivacy.principles', { returnObjects: true }).slice(3).map((principle: string, index: number) => (
+                {(t('legal.termsOfService.dataPrivacy.principles', { returnObjects: true }) as string[]).slice(3).map((principle: string, index: number) => (
                   <li key={index + 3}>• {principle}</li>
                 ))}
               </ul>
@@ -273,7 +272,7 @@ export default function TermsOfServicePage() {
               {t('legal.termsOfService.limitationOfLiability.warning')}
             </p>
             <div className="text-red-700 dark:text-red-300 space-y-3 text-sm">
-              {t('legal.termsOfService.limitationOfLiability.content', { returnObjects: true }).map((content: string, index: number) => (
+              {(t('legal.termsOfService.limitationOfLiability.content', { returnObjects: true }) as string[]).map((content: string, index: number) => (
                 <p key={index}>{content}</p>
               ))}
             </div>
@@ -292,7 +291,7 @@ export default function TermsOfServicePage() {
                 {t('legal.termsOfService.termination.byYou.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2 text-sm">
-                {t('legal.termsOfService.termination.byYou.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.termsOfService.termination.byYou.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
@@ -303,7 +302,7 @@ export default function TermsOfServicePage() {
                 {t('legal.termsOfService.termination.byUs.title')}
               </h3>
               <ul className="text-gray-700 dark:text-gray-300 space-y-2 text-sm">
-                {t('legal.termsOfService.termination.byUs.items', { returnObjects: true }).map((item: string, index: number) => (
+                {(t('legal.termsOfService.termination.byUs.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>

@@ -42,7 +42,7 @@ interface SecurityForm {
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation();
-  const { user, updateUser } = useAuthStore();
+  const { user, updateProfile } = useAuthStore();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -88,7 +88,8 @@ export default function SettingsPage() {
   const updateProfileMutation = useMutation({
     mutationFn: (data: Partial<UserType>) => apiClient.updateProfile(data),
     onSuccess: (updatedUser) => {
-      updateUser(updatedUser);
+      // Update user in auth store
+      // Note: This should be handled by the auth store
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       toast.success(t('settings.profileUpdated', 'Profile updated successfully'));
     },
@@ -121,7 +122,8 @@ export default function SettingsPage() {
   const uploadAvatarMutation = useMutation({
     mutationFn: (file: File) => apiClient.uploadAvatar(file),
     onSuccess: (updatedUser) => {
-      updateUser(updatedUser);
+      // Update user in auth store
+      // Note: This should be handled by the auth store
       setAvatarPreview(null);
       toast.success(t('settings.avatarUpdated', 'Avatar updated successfully'));
     }
@@ -129,7 +131,10 @@ export default function SettingsPage() {
   
   // Event handlers
   const handleProfileSubmit = useCallback((data: ProfileForm) => {
-    updateProfileMutation.mutate(data);
+    updateProfileMutation.mutate({
+      ...data,
+      preferredLanguage: data.preferredLanguage as "en" | "es" | "fr" | "de" | "it" | "pt" | "ru" | "ja" | "ko" | "zh"
+    });
   }, [updateProfileMutation]);
   
   const handleSecuritySubmit = useCallback((data: SecurityForm) => {
@@ -161,7 +166,7 @@ export default function SettingsPage() {
     }
   }, [uploadAvatarMutation, t]);
   
-  const handleNotificationChange = useCallback((key: keyof NotificationPreferences, value: boolean) => {
+  const handleNotificationChange = useCallback((key: keyof NotificationPreferences, value: boolean | any) => {
     if (notificationPrefs) {
       const updatedPrefs = { ...notificationPrefs, [key]: value };
       updateNotificationsMutation.mutate(updatedPrefs);

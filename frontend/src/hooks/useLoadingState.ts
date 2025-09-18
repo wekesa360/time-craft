@@ -229,11 +229,11 @@ export const useMultipleLoadingStates = <TKeys extends string>(
   }, [updateState]);
 
   // Computed states
-  const isAnyLoading = Object.values(states).some(state => state.isLoading);
-  const hasAnyError = Object.values(states).some(state => state.error);
+  const isAnyLoading = Object.values(states).some(state => (state as LoadingState).isLoading);
+  const hasAnyError = Object.values(states).some(state => (state as LoadingState).error);
   const allErrors = Object.entries(states)
-    .filter(([, state]) => state.error)
-    .map(([key, state]) => ({ key, error: state.error }));
+    .filter(([, state]) => (state as LoadingState).error)
+    .map(([key, state]) => ({ key, error: (state as LoadingState).error }));
 
   return {
     states,

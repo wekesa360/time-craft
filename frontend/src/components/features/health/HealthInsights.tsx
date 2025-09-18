@@ -1,5 +1,5 @@
 import React from 'react';
-import { HealthInsights as HealthInsightsType } from '../../../types';
+import type { HealthInsights as HealthInsightsType } from '../../../types';
 import { 
   Brain, 
   TrendingUp, 
@@ -20,7 +20,7 @@ interface HealthInsightsProps {
   isLoading?: boolean;
 }
 
-export const HealthInsights: React.FC<HealthInsightsProps> = ({
+const HealthInsights: React.FC<HealthInsightsProps> = ({
   insights,
   isLoading = false
 }) => {
@@ -291,3 +291,5 @@ export const HealthInsights: React.FC<HealthInsightsProps> = ({
     </div>
   );
 };
+
+export default HealthInsights;

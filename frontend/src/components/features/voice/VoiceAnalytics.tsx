@@ -1,7 +1,7 @@
 import React from 'react';
 import { useVoiceAnalyticsQuery, useVoiceAccuracyAnalyticsQuery } from '../../../hooks/queries/useVoiceQueries';
 
-export const VoiceAnalytics: React.FC = () => {
+const VoiceAnalytics: React.FC = () => {
   const { data: analytics, isLoading: analyticsLoading } = useVoiceAnalyticsQuery();
   const { data: accuracyData, isLoading: accuracyLoading } = useVoiceAccuracyAnalyticsQuery();
 
@@ -229,3 +229,5 @@ export const VoiceAnalytics: React.FC = () => {
     </div>
   );
 };
+
+export default VoiceAnalytics;

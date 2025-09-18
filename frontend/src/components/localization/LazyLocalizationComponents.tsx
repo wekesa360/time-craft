@@ -3,7 +3,7 @@
  * These components are loaded only when needed to reduce initial bundle size
  */
 
-import { lazy, Suspense, ComponentType } from 'react';
+import { lazy, Suspense, type ComponentType } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 // Lazy load heavy localization components

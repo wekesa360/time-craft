@@ -190,7 +190,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
             <div className="flex items-center space-x-4" role="toolbar" aria-label={i18n.language === 'de' ? 'Benutzer-Werkzeugleiste' : 'User toolbar'}>
               <SSEStatus />
-              <NotificationCenter />
+              <NotificationCenter 
+                isOpen={false} 
+                onClose={() => {}} 
+              />
               <LanguageSelector 
                 variant="compact" 
                 showLabel={false}

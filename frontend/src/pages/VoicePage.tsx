@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { VoiceRecorder } from '../components/features/voice/VoiceRecorder';
+import VoiceRecorder from '../components/features/voice/VoiceRecorder';
 import { VoiceNotesList } from '../components/features/voice/VoiceNotesList';
-import { VoiceAnalytics } from '../components/features/voice/VoiceAnalytics';
+import VoiceAnalytics from '../components/features/voice/VoiceAnalytics';
 import { VoiceSettings } from '../components/features/voice/VoiceSettings';
 import { CommandProcessor } from '../components/features/voice/CommandProcessor';
 
 type ViewMode = 'recorder' | 'notes' | 'analytics' | 'settings' | 'commands';
 
-export const VoicePage: React.FC = () => {
+const VoicePage: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewMode>('recorder');
 
   const views = [
@@ -73,3 +73,5 @@ export const VoicePage: React.FC = () => {
     </div>
   );
 };
+
+export default VoicePage;

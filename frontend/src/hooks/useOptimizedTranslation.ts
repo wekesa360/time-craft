@@ -4,7 +4,8 @@
  */
 
 import { useMemo, useCallback, useRef, useEffect } from 'react';
-import { useTranslation, TFunction } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useCurrentLanguage } from './queries/useLocalizationQueries';
 
 // Cache for translated strings to avoid re-computation
@@ -38,7 +39,7 @@ export const useOptimizedTranslation = (options: OptimizedTranslationOptions = {
   }, [currentLanguage, namespace, enableCache]);
 
   // Memoized translation function with caching
-  const t = useCallback<TFunction>((key: any, options?: any) => {
+  const t = useCallback((key: any, options?: any) => {
     const fullKey = keyPrefix ? `${keyPrefix}.${key}` : key;
     const cacheKey = `${cacheKeyRef.current}_${fullKey}_${JSON.stringify(options || {})}`;
     

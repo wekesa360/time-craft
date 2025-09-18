@@ -506,7 +506,7 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
       transition: {
         duration: prefersReducedMotion ? 0 : 0.6,
         delay: prefersReducedMotion ? 0 : delay,
-        ease: "easeOut",
+        ease: "easeOut" as any,
       },
     },
   };

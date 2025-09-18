@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Badge } from '../../../types';
+import type { Badge } from '../../../types';
 import { 
   X, 
   Share2, 

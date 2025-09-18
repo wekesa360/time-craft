@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Connection } from '../../../types';
+import type { Connection } from '../../../types';
 import { 
   Users, 
   UserPlus, 
@@ -24,7 +24,7 @@ interface ConnectionsListProps {
   isLoading?: boolean;
 }
 
-export const ConnectionsList: React.FC<ConnectionsListProps> = ({
+const ConnectionsList: React.FC<ConnectionsListProps> = ({
   connections,
   pendingRequests,
   onSendRequest,
@@ -331,3 +331,5 @@ export const ConnectionsList: React.FC<ConnectionsListProps> = ({
     </div>
   );
 };
+
+export default ConnectionsList;

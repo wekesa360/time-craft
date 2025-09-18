@@ -76,7 +76,7 @@ export const AccessibleNavigation: React.FC<AccessibleNavigationProps> = ({
     setIsOpen(!isOpen);
     
     const message = language === 'de'
-      ? `Navigation ${!isOpen ? 'geöffnet' : 'geschlossen'}`
+      ? `Navigation ${!isOpen ? 'geï¿½ffnet' : 'geschlossen'}`
       : `Navigation ${!isOpen ? 'opened' : 'closed'}`;
     announce(message);
 
@@ -100,7 +100,7 @@ export const AccessibleNavigation: React.FC<AccessibleNavigationProps> = ({
     const isExpanded = newExpanded.has(itemKey);
     const item = findItemByKey(items, itemKey);
     const message = language === 'de'
-      ? `${item?.label} Menü ${isExpanded ? 'erweitert' : 'eingeklappt'}`
+      ? `${item?.label} Menï¿½ ${isExpanded ? 'erweitert' : 'eingeklappt'}`
       : `${item?.label} menu ${isExpanded ? 'expanded' : 'collapsed'}`;
     announce(message);
   };
@@ -228,7 +228,7 @@ export const AccessibleNavigation: React.FC<AccessibleNavigationProps> = ({
                 'text-foreground-secondary': !isActive,
               }
             )}
-            aria-hidden="true"
+            aria-hidden={true}
           />
         )}
         
@@ -248,9 +248,9 @@ export const AccessibleNavigation: React.FC<AccessibleNavigationProps> = ({
         {hasChildren && (
           <span className="flex-shrink-0 ml-2">
             {isExpanded ? (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
+              <ChevronDown className="w-4 h-4" aria-hidden={true} />
             ) : (
-              <ChevronRight className="w-4 h-4" aria-hidden="true" />
+              <ChevronRight className="w-4 h-4" aria-hidden={true} />
             )}
           </span>
         )}
@@ -336,16 +336,16 @@ export const AccessibleNavigation: React.FC<AccessibleNavigationProps> = ({
           )}
           aria-label={
             language === 'de'
-              ? `Navigation ${isOpen ? 'schließen' : 'öffnen'}`
+              ? `Navigation ${isOpen ? 'schlieï¿½en' : 'ï¿½ffnen'}`
               : `${isOpen ? 'Close' : 'Open'} navigation menu`
           }
           aria-expanded={isOpen}
           aria-controls={id}
         >
           {isOpen ? (
-            <X className="w-5 h-5" aria-hidden="true" />
+            <X className="w-5 h-5" aria-hidden={true} />
           ) : (
-            <Menu className="w-5 h-5" aria-hidden="true" />
+            <Menu className="w-5 h-5" aria-hidden={true} />
           )}
         </button>
       )}
@@ -355,7 +355,7 @@ export const AccessibleNavigation: React.FC<AccessibleNavigationProps> = ({
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setIsOpen(false)}
-          aria-hidden="true"
+          aria-hidden={true}
         />
       )}
 
@@ -395,9 +395,9 @@ export const AccessibleNavigation: React.FC<AccessibleNavigationProps> = ({
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-2 rounded-lg hover:bg-background-secondary"
-                aria-label={language === 'de' ? 'Navigation schließen' : 'Close navigation'}
+                aria-label={language === 'de' ? 'Navigation schlieï¿½en' : 'Close navigation'}
               >
-                <X className="w-5 h-5" aria-hidden="true" />
+                <X className="w-5 h-5" aria-hidden={true} />
               </button>
             )}
           </div>
@@ -442,7 +442,7 @@ export const AccessibleNavigation: React.FC<AccessibleNavigationProps> = ({
       <div className="sr-only" aria-live="polite">
         {language === 'de' ? (
           `Navigation mit ${items.length} Hauptelementen. Verwenden Sie Pfeiltasten zur Navigation. 
-          ${shouldCollapse ? 'Escape zum Schließen.' : ''}`
+          ${shouldCollapse ? 'Escape zum Schlieï¿½en.' : ''}`
         ) : (
           `Navigation with ${items.length} main items. Use arrow keys to navigate. 
           ${shouldCollapse ? 'Press Escape to close.' : ''}`

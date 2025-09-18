@@ -10,7 +10,7 @@ import {
   Zap
 } from 'lucide-react';
 
-export const FocusAnalytics: React.FC = () => {
+const FocusAnalytics: React.FC = () => {
   // Mock data - in real app this would come from API
   const mockStats = {
     totalSessions: 47,
@@ -272,3 +272,5 @@ export const FocusAnalytics: React.FC = () => {
     </div>
   );
 };
+
+export default FocusAnalytics;

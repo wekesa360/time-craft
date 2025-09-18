@@ -17,7 +17,7 @@ export const taskKeys = {
   matrixStats: () => [...taskKeys.all, 'matrix', 'stats'] as const,
 };
 
-// Tasks list query
+// Tasks list query with Zustand store integration
 export const useTasksQuery = (params?: {
   status?: string;
   priority?: number;
@@ -28,14 +28,24 @@ export const useTasksQuery = (params?: {
   page?: number;
   limit?: number;
 }) => {
+  const { tasks, setLoading, fetchTasks } = useTaskStore();
+
   return useQuery({
     queryKey: taskKeys.list(params || {}),
     queryFn: async () => {
-      const response = await apiClient.getTasks(params);
-      return response.data || []; // Extract the tasks array from the paginated response
+      setLoading(true);
+      try {
+        const response = await apiClient.getTasks(params);
+        const tasksData = response.data || [];
+        // Tasks are managed by the store
+        return tasksData;
+      } finally {
+        setLoading(false);
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    initialData: tasks, // Use store data as initial data
   });
 };
 
@@ -76,9 +86,10 @@ export const useMatrixStatsQuery = () => {
   });
 };
 
-// Create task mutation
+// Create task mutation with Zustand store integration
 export const useCreateTaskMutation = () => {
   const queryClient = useQueryClient();
+  const { createTask } = useTaskStore();
 
   return useMutation({
     mutationFn: (data: TaskForm) => apiClient.createTask(data),
@@ -89,44 +100,60 @@ export const useCreateTaskMutation = () => {
       // Snapshot previous value
       const previousTasks = queryClient.getQueryData(taskKeys.lists());
 
-      // Optimistically update
+      // Create optimistic task
+      const optimisticTask: Task = {
+        id: `temp-${Date.now()}`,
+        user_id: 'current-user',
+        title: newTask.title,
+        description: newTask.description,
+        priority: newTask.priority as 1 | 2 | 3 | 4,
+        urgency: newTask.urgency || 3,
+        importance: newTask.importance || 3,
+        eisenhower_quadrant: newTask.eisenhower_quadrant || 'do',
+        status: newTask.status || 'pending',
+        due_date: newTask.dueDate ? new Date(newTask.dueDate).getTime() : undefined,
+        estimated_duration: newTask.estimatedDuration,
+        context_type: newTask.contextType as any,
+        matrix_notes: newTask.matrixNotes,
+        is_delegated: newTask.isDelegated || false,
+        delegated_to: newTask.delegatedTo,
+        delegation_notes: newTask.delegationNotes,
+        created_at: Date.now(),
+        updated_at: Date.now(),
+      };
+
+      // Add to store optimistically
+      createTask(optimisticTask);
+
+      // Update query cache
       queryClient.setQueriesData(
         { queryKey: taskKeys.lists() },
         (old: any) => {
-          if (!old?.data) return old;
-          const optimisticTask: Task = {
-            id: `temp-${Date.now()}`,
-            userId: 'current-user',
-            title: newTask.title,
-            description: newTask.description,
-            priority: newTask.priority,
-            urgency: 3,
-            importance: 3,
-            quadrant: 'do',
-            status: newTask.status || 'pending',
-            dueDate: newTask.dueDate ? new Date(newTask.dueDate).getTime() : undefined,
-            estimatedDuration: newTask.estimatedDuration,
-            contextType: newTask.contextType as any,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          };
-          return {
-            ...old,
-            data: [optimisticTask, ...old.data],
-          };
+          if (!old) return [optimisticTask];
+          return [optimisticTask, ...old];
         }
       );
 
-      return { previousTasks };
+      return { previousTasks, optimisticTask };
     },
     onError: (err, newTask, context) => {
       // Rollback on error
       if (context?.previousTasks) {
         queryClient.setQueriesData({ queryKey: taskKeys.lists() }, context.previousTasks);
       }
+      if (context?.optimisticTask) {
+        // Remove from store
+        const { deleteTask } = useTaskStore.getState();
+        deleteTask(context.optimisticTask.id);
+      }
       toast.error('Failed to create task');
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables, context) => {
+      // Replace optimistic task with real data
+      if (context?.optimisticTask) {
+        const { updateTask } = useTaskStore.getState();
+        updateTask(context.optimisticTask.id, data);
+      }
       toast.success('Task created successfully');
     },
     onSettled: () => {

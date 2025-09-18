@@ -3,10 +3,8 @@
  * System overview and administration features
  */
 
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React from 'react';
 import { usePermissions } from '../../components/auth/RoleGuard';
-import { api } from '../../lib/api';
 
 const AdminDashboard: React.FC = () => {
   const permissions = usePermissions();

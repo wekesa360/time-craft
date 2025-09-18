@@ -262,7 +262,7 @@ export const useAccessibleChart = () => {
     const maxItem = data.find(item => item.value === max);
 
     const description = i18n.language === 'de' 
-      ? `${chartType === 'pie' ? 'Kreisdiagramm' : chartType === 'line' ? 'Liniendiagramm' : 'Balkendiagramm'}: ${title}. ${data.length} Datenpunkte. Höchster Wert: ${maxItem?.label} mit ${max}. Gesamtwert: ${total}.`
+      ? `${chartType === 'pie' ? 'Kreisdiagramm' : chartType === 'line' ? 'Liniendiagramm' : 'Balkendiagramm'}: ${title}. ${data.length} Datenpunkte. Hï¿½chster Wert: ${maxItem?.label} mit ${max}. Gesamtwert: ${total}.`
       : `${chartType} chart: ${title}. ${data.length} data points. Highest value: ${maxItem?.label} at ${max}. Total: ${total}.`;
 
     return description;
@@ -270,7 +270,7 @@ export const useAccessibleChart = () => {
 
   const getChartKeyboardInstructions = useCallback(() => {
     return i18n.language === 'de'
-      ? 'Verwenden Sie die Pfeiltasten, um durch die Datenpunkte zu navigieren. Drücken Sie Enter für Details.'
+      ? 'Verwenden Sie die Pfeiltasten, um durch die Datenpunkte zu navigieren. Drï¿½cken Sie Enter fï¿½r Details.'
       : 'Use arrow keys to navigate through data points. Press Enter for details.';
   }, [i18n.language]);
 
@@ -290,7 +290,7 @@ export const useAccessibleModal = (isOpen: boolean, title: string) => {
     if (isOpen) {
       saveFocus();
       announce(
-        i18n.language === 'de' ? `Dialog geöffnet: ${title}` : `Dialog opened: ${title}`,
+        i18n.language === 'de' ? `Dialog geï¿½ffnet: ${title}` : `Dialog opened: ${title}`,
         'assertive'
       );
       
@@ -347,7 +347,7 @@ export const useAccessibleModal = (isOpen: boolean, title: string) => {
 // Hook for accessible tooltips
 export const useAccessibleTooltip = (content: string, delay: number = 1000) => {
   const [isVisible, setIsVisible] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const showTooltip = useCallback(() => {
     timeoutRef.current = setTimeout(() => {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useCreateMeetingRequestMutation } from '../../../hooks/queries/useCalendarQueries';
 import type { MeetingRequest, TimeSlot } from '../../../types';
 
-export const MeetingScheduler: React.FC = () => {
+const MeetingScheduler: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -335,3 +335,5 @@ export const MeetingScheduler: React.FC = () => {
     </div>
   );
 };
+
+export default MeetingScheduler;

@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import type { ElementType } from 'react';
 import { cn } from '../../../utils/cn';
 import { useResponsive } from '../../../hooks/useResponsive';
 
@@ -13,7 +14,7 @@ interface ContainerProps {
   padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   center?: boolean;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
 }
 
 const sizeClasses = {

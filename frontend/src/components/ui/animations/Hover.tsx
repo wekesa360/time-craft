@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { motion, MotionProps } from 'framer-motion';
+import { motion, type MotionProps } from 'framer-motion';
 
 interface HoverProps extends Omit<MotionProps, 'whileHover' | 'whileTap'> {
   children: React.ReactNode;

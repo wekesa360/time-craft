@@ -1,7 +1,7 @@
 // Social features store with Zustand
 import { create } from 'zustand';
 import { apiClient } from '../lib/api';
-import type { Connection, Challenge, ActivityFeedItem, LeaderboardEntry } from '../types';
+import type { Connection, Challenge, ActivityFeedItem } from '../types';
 
 interface SocialState {
   connections: Connection[];
@@ -61,7 +61,7 @@ export const useSocialStore = create<SocialStore>((set, get) => ({
   sendConnectionRequest: async (targetUserId, message) => {
     try {
       set({ isLoading: true, error: null });
-      await apiClient.sendConnectionRequest({ targetUserId, message });
+      await apiClient.sendConnectionRequest({ email: targetUserId, message });
       set({ isLoading: false });
       // Optionally refetch connections to update UI
       get().fetchConnections();

@@ -81,7 +81,7 @@ const generateMockMetrics = (): Record<string, MetricData> => ({
   }
 });
 
-export const SystemMetrics: React.FC<SystemMetricsProps> = ({ className = '' }) => {
+const SystemMetrics: React.FC<SystemMetricsProps> = ({ className = '' }) => {
   const { t } = useTranslation();
   const [metrics, setMetrics] = useState<Record<string, MetricData>>(generateMockMetrics());
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -300,3 +300,5 @@ export const SystemMetrics: React.FC<SystemMetricsProps> = ({ className = '' }) 
     </div>
   );
 };
+
+export default SystemMetrics;

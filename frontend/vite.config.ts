@@ -200,5 +200,21 @@ export default defineConfig({
         './src/components/**/*'
       ]
     }
+  },
+  // Additional optimizations
+  define: {
+    // Replace process.env with static values for better tree shaking
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+  },
+  // CSS optimizations
+  css: {
+    devSourcemap: process.env.NODE_ENV === 'development',
+    // Enable CSS code splitting
+    modules: {
+      localsConvention: 'camelCase',
+      generateScopedName: process.env.NODE_ENV === 'production' 
+        ? '[hash:base64:8]' 
+        : '[name]__[local]___[hash:base64:5]'
+    }
   }
 })

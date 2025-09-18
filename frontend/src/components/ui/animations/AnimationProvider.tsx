@@ -3,7 +3,7 @@
  * Global animation settings and controls
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { MotionConfig } from 'framer-motion';
 import { useAccessibilityContext } from '../../accessibility/AccessibilityProvider';
 
@@ -102,9 +102,9 @@ export const AnimationProvider: React.FC<AnimationProviderProps> = ({
   const motionConfig = {
     transition: {
       duration: settings.enabled ? settings.duration : 0,
-      ease: settings.easing,
+      ease: settings.easing as any, // Cast to any to avoid type issues
     },
-    reducedMotion: settings.reducedMotion || !settings.enabled ? 'always' : 'never',
+    reducedMotion: (settings.reducedMotion || !settings.enabled ? 'always' : 'never') as any,
   };
 
   return (
@@ -147,7 +147,7 @@ export const useAnimationControls = () => {
     shouldAnimate: context.enabled && !context.reducedMotion,
     getTransition: (override?: Partial<{ duration: number; ease: string; delay: number }>) => ({
       duration: override?.duration ?? context.duration,
-      ease: override?.ease ?? context.easing,
+      ease: (override?.ease ?? context.easing) as any,
       delay: override?.delay ?? 0,
     }),
     getStaggerDelay: (index: number) => index * context.stagger,

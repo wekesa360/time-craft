@@ -1,7 +1,7 @@
 // Authentication store with Zustand
 import { create } from 'zustand';
 import { apiClient } from '../lib/api';
-import { createPersistedStore, persistenceConfigs, offlineQueue } from '../lib/storePersistence';
+import { createPersistedStore, persistenceConfigs } from '../lib/storePersistence';
 import type { User, AuthTokens, LoginForm, RegisterForm, AuthState } from '../types';
 
 interface AuthStore extends AuthState {

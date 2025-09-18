@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { 
   Plus, 
   Grid3X3, 
   List, 
   BarChart3,
-  Settings,
   Download
 } from 'lucide-react';
 
 // Components
-import { EisenhowerMatrix } from '../components/features/tasks/EisenhowerMatrix';
+import EisenhowerMatrix from '../components/features/tasks/EisenhowerMatrix';
 import { TaskCard } from '../components/features/tasks/TaskCard';
-import { TaskForm } from '../components/features/tasks/TaskForm';
-import { TaskFilters } from '../components/features/tasks/TaskFilters';
+import TaskForm from '../components/features/tasks/TaskForm';
+import TaskFilters from '../components/features/tasks/TaskFilters';
+import { TaskListSkeleton } from '../components/skeletons/TaskListSkeleton';
 
 // Hooks and API
 import { useTaskQueries } from '../hooks/queries/useTaskQueries';
-import { Task, TaskForm as TaskFormData } from '../types';
+import type { Task, TaskForm as TaskFormData } from '../types';
 
 type ViewMode = 'matrix' | 'list' | 'stats';
 
@@ -52,7 +52,10 @@ export default function TasksPage() {
     useDeleteTaskMutation
   } = useTaskQueries();
 
-  const { data: tasks = [], isLoading: tasksLoading } = useTasksQuery(filters);
+  const { data: tasks = [], isLoading: tasksLoading } = useTasksQuery({
+    ...filters,
+    priority: filters.priority ? parseInt(filters.priority) : undefined
+  });
   const { data: taskStats } = useTaskStatsQuery();
   const { data: matrixData } = useEisenhowerMatrixQuery();
 
@@ -122,8 +125,8 @@ export default function TasksPage() {
     }
     if (filters.status && task.status !== filters.status) return false;
     if (filters.priority && task.priority.toString() !== filters.priority) return false;
-    if (filters.contextType && task.contextType !== filters.contextType) return false;
-    if (filters.quadrant && task.quadrant !== filters.quadrant) return false;
+    if (filters.contextType && task.context_type !== filters.contextType) return false;
+    if (filters.quadrant && task.eisenhower_quadrant !== filters.quadrant) return false;
     
     // Date range filtering
     if (filters.dateRange) {
@@ -136,19 +139,19 @@ export default function TasksPage() {
 
       switch (filters.dateRange) {
         case 'today':
-          if (!task.dueDate || task.dueDate < today || task.dueDate >= tomorrow) return false;
+          if (!task.due_date || task.due_date < today || task.due_date >= tomorrow) return false;
           break;
         case 'tomorrow':
-          if (!task.dueDate || task.dueDate < tomorrow || task.dueDate >= tomorrow + 24 * 60 * 60 * 1000) return false;
+          if (!task.due_date || task.due_date < tomorrow || task.due_date >= tomorrow + 24 * 60 * 60 * 1000) return false;
           break;
         case 'this_week':
-          if (!task.dueDate || task.dueDate < weekStart || task.dueDate >= weekEnd) return false;
+          if (!task.due_date || task.due_date < weekStart || task.due_date >= weekEnd) return false;
           break;
         case 'next_week':
-          if (!task.dueDate || task.dueDate < weekEnd || task.dueDate >= nextWeekEnd) return false;
+          if (!task.due_date || task.due_date < weekEnd || task.due_date >= nextWeekEnd) return false;
           break;
         case 'overdue':
-          if (!task.dueDate || task.dueDate >= now || task.status === 'completed') return false;
+          if (!task.due_date || task.due_date >= now || task.status === 'done') return false;
           break;
       }
     }
@@ -159,8 +162,8 @@ export default function TasksPage() {
   const taskCounts = {
     total: filteredTasks.length,
     pending: filteredTasks.filter(t => t.status === 'pending').length,
-    completed: filteredTasks.filter(t => t.status === 'completed').length,
-    overdue: filteredTasks.filter(t => t.dueDate && t.dueDate < Date.now() && t.status !== 'completed').length
+    completed: filteredTasks.filter(t => t.status === 'done').length,
+    overdue: filteredTasks.filter(t => t.due_date && t.due_date < Date.now() && t.status !== 'done').length
   };
 
   if (tasksLoading) {
@@ -248,50 +251,56 @@ export default function TasksPage() {
       </div>
 
       {/* Content based on view mode */}
-      {viewMode === 'matrix' && (
-        <EisenhowerMatrix
-          tasks={filteredTasks}
-          onTaskComplete={handleCompleteTask}
-          onTaskEdit={handleEditTask}
-          onTaskDelete={handleDeleteTask}
-          onCreateTask={handleCreateTask}
-        />
-      )}
+      {tasksLoading ? (
+        <TaskListSkeleton />
+      ) : (
+        <>
+          {viewMode === 'matrix' && (
+            <EisenhowerMatrix
+              tasks={filteredTasks}
+              onTaskComplete={handleCompleteTask}
+              onTaskEdit={handleEditTask}
+              onTaskDelete={handleDeleteTask}
+              onCreateTask={handleCreateTask}
+            />
+          )}
 
-      {viewMode === 'list' && (
-        <div className="card p-6">
-          <div className="space-y-4">
-            {filteredTasks.length === 0 ? (
-              <div className="text-center py-12">
-                <List className="w-12 h-12 text-foreground-secondary mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">No tasks found</h3>
-                <p className="text-foreground-secondary mb-4">
-                  {Object.values(filters).some(f => f) 
-                    ? 'Try adjusting your filters or create a new task'
-                    : 'Get started by creating your first task'
-                  }
-                </p>
-                <button 
-                  onClick={() => handleCreateTask()}
-                  className="btn-primary"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Task
-                </button>
+          {viewMode === 'list' && (
+            <div className="card p-6">
+              <div className="space-y-4">
+                {filteredTasks.length === 0 ? (
+                  <div className="text-center py-12">
+                    <List className="w-12 h-12 text-foreground-secondary mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">No tasks found</h3>
+                    <p className="text-foreground-secondary mb-4">
+                      {Object.values(filters).some(f => f) 
+                        ? 'Try adjusting your filters or create a new task'
+                        : 'Get started by creating your first task'
+                      }
+                    </p>
+                    <button 
+                      onClick={() => handleCreateTask()}
+                      className="btn-primary"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Task
+                    </button>
+                  </div>
+                ) : (
+                  filteredTasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onComplete={handleCompleteTask}
+                      onEdit={handleEditTask}
+                      onDelete={handleDeleteTask}
+                    />
+                  ))
+                )}
               </div>
-            ) : (
-              filteredTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onComplete={handleCompleteTask}
-                  onEdit={handleEditTask}
-                  onDelete={handleDeleteTask}
-                />
-              ))
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </>
       )}
 
       {viewMode === 'stats' && (
@@ -377,7 +386,7 @@ export default function TasksPage() {
           setEditingTask(null);
           setDefaultQuadrant('');
         }}
-        onSave={handleSaveTask}
+        onSave={(data) => handleSaveTask(data as TaskFormData)}
         onDelete={handleDeleteTask}
         defaultQuadrant={defaultQuadrant}
       />

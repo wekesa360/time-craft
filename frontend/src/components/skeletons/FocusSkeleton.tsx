@@ -197,13 +197,14 @@ export const FocusStatsSkeleton: React.FC = () => {
           </div>
           <div className="grid grid-cols-7 gap-1">
             {Array.from({ length: 35 }).map((_, index) => (
-              <Skeleton
+              <div
                 key={index}
-                className="h-8 w-full"
                 style={{
                   opacity: Math.random() * 0.7 + 0.3
                 }}
-              />
+              >
+                <Skeleton className="h-8 w-full" />
+              </div>
             ))}
           </div>
         </div>

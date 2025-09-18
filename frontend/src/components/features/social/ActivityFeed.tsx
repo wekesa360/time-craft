@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityFeedItem } from '../../../types';
+import type { ActivityFeedItem } from '../../../types';
 import { 
   Award, 
   Trophy, 
@@ -43,7 +43,7 @@ const filterOptions = [
   { value: 'achievement_share', label: 'Achievement Shares' }
 ];
 
-export const ActivityFeed: React.FC<ActivityFeedProps> = ({
+const ActivityFeed: React.FC<ActivityFeedProps> = ({
   activities,
   onRefresh,
   onLike,
@@ -329,3 +329,5 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
     </div>
   );
 };
+
+export default ActivityFeed;

@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { motion, AnimatePresence, MotionProps } from 'framer-motion';
+import { motion, AnimatePresence, type MotionProps } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { useAnimationControls, pageTransitionVariants } from './AnimationProvider';
 

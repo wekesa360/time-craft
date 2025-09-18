@@ -12,6 +12,11 @@ export const adminKeys = {
   metrics: () => [...adminKeys.all, 'metrics'] as const,
   featureFlags: () => [...adminKeys.all, 'feature-flags'] as const,
   supportTickets: () => [...adminKeys.all, 'support-tickets'] as const,
+  security: () => [...adminKeys.all, 'security'] as const,
+  securityEvents: (timeRange: string, filters?: any) => [...adminKeys.security(), 'events', timeRange, filters] as const,
+  securityStats: (timeRange: string) => [...adminKeys.security(), 'stats', timeRange] as const,
+  threatIntelligence: (timeRange: string) => [...adminKeys.security(), 'threats', timeRange] as const,
+  complianceReport: (timeRange: string) => [...adminKeys.security(), 'compliance', timeRange] as const,
 };
 
 // Admin dashboard query
@@ -104,4 +109,133 @@ export const useUpdateFeatureFlagMutation = () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.featureFlags() });
     },
   });
+};
+
+// Security queries
+export const useAdminQueries = {
+  // Security events query
+  useSecurityEvents: (timeRange: string, filters?: any) => {
+    return useQuery({
+      queryKey: adminKeys.securityEvents(timeRange, filters),
+      queryFn: () => apiClient.admin.getSecurityEvents(timeRange, filters),
+      staleTime: 30 * 1000, // 30 seconds for real-time security data
+    });
+  },
+
+  // Security statistics query
+  useSecurityStats: (timeRange: string) => {
+    return useQuery({
+      queryKey: adminKeys.securityStats(timeRange),
+      queryFn: () => apiClient.admin.getSecurityStats(timeRange),
+      staleTime: 60 * 1000, // 1 minute
+    });
+  },
+
+  // Threat intelligence query
+  useThreatIntelligence: (timeRange: string) => {
+    return useQuery({
+      queryKey: adminKeys.threatIntelligence(timeRange),
+      queryFn: () => apiClient.admin.getThreatIntelligence(timeRange),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+  },
+
+  // Compliance report query
+  useComplianceReport: (timeRange: string) => {
+    return useQuery({
+      queryKey: adminKeys.complianceReport(timeRange),
+      queryFn: () => apiClient.admin.getComplianceReport(timeRange),
+      staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+  },
+
+  // Audit logs query
+  useAuditLogs: (timeRange: string, filters?: any) => {
+    return useQuery({
+      queryKey: [...adminKeys.security(), 'audit-logs', timeRange, filters],
+      queryFn: () => apiClient.admin.getAuditLogs(timeRange, filters),
+      staleTime: 30 * 1000,
+    });
+  },
+
+  // Security incidents query
+  useSecurityIncidents: (timeRange: string, status?: string) => {
+    return useQuery({
+      queryKey: [...adminKeys.security(), 'incidents', timeRange, status],
+      queryFn: () => apiClient.admin.getSecurityIncidents(timeRange, status),
+      staleTime: 60 * 1000,
+    });
+  },
+
+  // User security status query
+  useUserSecurityStatus: (userId: string) => {
+    return useQuery({
+      queryKey: [...adminKeys.security(), 'user-status', userId],
+      queryFn: () => apiClient.admin.getUserSecurityStatus(userId),
+      staleTime: 5 * 60 * 1000,
+    });
+  },
+
+  // Security policies query
+  useSecurityPolicies: () => {
+    return useQuery({
+      queryKey: [...adminKeys.security(), 'policies'],
+      queryFn: () => apiClient.admin.getSecurityPolicies(),
+      staleTime: 30 * 60 * 1000, // 30 minutes
+    });
+  },
+
+  // Security alerts query
+  useSecurityAlerts: (timeRange: string) => {
+    return useQuery({
+      queryKey: [...adminKeys.security(), 'alerts', timeRange],
+      queryFn: () => apiClient.admin.getSecurityAlerts(timeRange),
+      staleTime: 30 * 1000,
+    });
+  },
+
+  // Data access logs query
+  useDataAccessLogs: (timeRange: string, userId?: string) => {
+    return useQuery({
+      queryKey: [...adminKeys.security(), 'data-access', timeRange, userId],
+      queryFn: () => apiClient.admin.getDataAccessLogs(timeRange, userId),
+      staleTime: 60 * 1000,
+    });
+  },
+
+  // API access logs query
+  useApiAccessLogs: (timeRange: string, endpoint?: string) => {
+    return useQuery({
+      queryKey: [...adminKeys.security(), 'api-access', timeRange, endpoint],
+      queryFn: () => apiClient.admin.getApiAccessLogs(timeRange, endpoint),
+      staleTime: 60 * 1000,
+    });
+  },
+
+  // Security metrics query
+  useSecurityMetrics: (timeRange: string) => {
+    return useQuery({
+      queryKey: [...adminKeys.security(), 'metrics', timeRange],
+      queryFn: () => apiClient.admin.getSecurityMetrics(timeRange),
+      staleTime: 2 * 60 * 1000, // 2 minutes
+    });
+  },
+
+  // Risk assessment query
+  useRiskAssessment: (timeRange: string) => {
+    return useQuery({
+      queryKey: [...adminKeys.security(), 'risk-assessment', timeRange],
+      queryFn: () => apiClient.admin.getRiskAssessment(timeRange),
+      staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+  },
+
+  // Security recommendations query
+  useSecurityRecommendations: () => {
+    return useQuery({
+      queryKey: [...adminKeys.security(), 'recommendations'],
+      queryFn: () => apiClient.admin.getSecurityRecommendations(),
+      staleTime: 30 * 60 * 1000, // 30 minutes
+    });
+  }
 };

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useUploadVoiceNoteMutation } from '../../../hooks/queries/useVoiceQueries';
 import { useVoiceStore } from '../../../stores/voice';
 
-export const VoiceRecorder: React.FC = () => {
+const VoiceRecorder: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -252,3 +252,5 @@ export const VoiceRecorder: React.FC = () => {
     </div>
   );
 };
+
+export default VoiceRecorder;
