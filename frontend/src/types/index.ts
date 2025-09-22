@@ -492,7 +492,7 @@ export interface VoiceNote {
 export interface VoiceCommand {
   intent: string;
   confidence: number;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 export interface VoiceSettings {

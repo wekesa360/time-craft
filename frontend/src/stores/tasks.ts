@@ -2,14 +2,14 @@
 import { create } from 'zustand';
 import { apiClient } from '../lib/api';
 import { createPersistedStore, persistenceConfigs, offlineQueue, isOffline } from '../lib/storePersistence';
-import type { Task, TaskForm, TaskState, EisenhowerMatrix, MatrixStats } from '../types';
+import type { Task, TaskForm, TaskState, EisenhowerMatrix, MatrixStats, TasksResponse } from '../types';
 
 interface TaskStore extends TaskState {
   // Offline queue for pending actions
   offlineQueue: Array<{
     id: string;
     type: 'create' | 'update' | 'delete';
-    payload: any;
+    payload: Record<string, unknown>;
     timestamp: number;
   }>;
   
@@ -55,7 +55,7 @@ interface TaskStore extends TaskState {
   completeTask: (id: string) => Promise<void>;
   
   // Offline functionality
-  addToOfflineQueue: (type: 'create' | 'update' | 'delete', payload: any) => void;
+  addToOfflineQueue: (type: 'create' | 'update' | 'delete', payload: Record<string, unknown>) => void;
   processOfflineQueue: () => Promise<void>;
   clearOfflineQueue: () => void;
 }
@@ -84,7 +84,7 @@ export const useTaskStore = create<TaskStore>()(
       set({ isLoading: true });
       const response = await apiClient.getTasks(params);
       set({
-        tasks: (response as any).tasks || [],
+        tasks: (response as unknown as TasksResponse).tasks || [],
         isLoading: false,
       });
     } catch (error) {
@@ -94,108 +94,100 @@ export const useTaskStore = create<TaskStore>()(
   },
 
   createTask: async (data) => {
-    try {
-      if (isOffline()) {
-        // Create optimistic task for offline mode
-        const optimisticTask: Task = {
-          id: `temp-${Date.now()}`,
-          user_id: 'current-user', // This would come from auth store
-          title: data.title,
-          description: data.description || null,
-          priority: data.priority,
-          urgency: data.urgency || null,
-          importance: data.importance || null,
-          eisenhower_quadrant: data.eisenhower_quadrant || null,
-          status: data.status || 'pending',
-          due_date: data.dueDate || null,
-          estimated_duration: data.estimatedDuration || null,
-          context_type: data.contextType || null,
-          matrix_notes: data.matrixNotes || null,
-          is_delegated: data.isDelegated || false,
-          delegated_to: data.delegatedTo || null,
-          delegation_notes: data.delegationNotes || null,
-          created_at: Date.now(),
-          updated_at: Date.now(),
-        };
-        
-        set((state) => ({
-          tasks: [optimisticTask, ...state.tasks],
-        }));
-        
-        get().addToOfflineQueue('create', data);
-        return optimisticTask;
-      }
+    if (isOffline()) {
+      // Create optimistic task for offline mode
+      const optimisticTask: Task = {
+        id: `temp-${Date.now()}`,
+        user_id: 'current-user', // This would come from auth store
+        title: data.title,
+        description: data.description || null,
+        priority: data.priority,
+        urgency: data.urgency || null,
+        importance: data.importance || null,
+        eisenhower_quadrant: data.eisenhower_quadrant || null,
+        status: data.status || 'pending',
+        due_date: data.dueDate || null,
+        estimated_duration: data.estimatedDuration || null,
+        context_type: data.contextType || null,
+        matrix_notes: data.matrixNotes || null,
+        is_delegated: data.isDelegated || false,
+        delegated_to: data.delegatedTo || null,
+        delegation_notes: data.delegationNotes || null,
+        created_at: Date.now(),
+        updated_at: Date.now(),
+      };
       
-      const task = await apiClient.createTask(data);
       set((state) => ({
-        tasks: [task, ...state.tasks],
+        tasks: [optimisticTask, ...state.tasks],
       }));
       
-      // Update stats
-      get().fetchStats();
-      return task;
-    } catch (error) {
-      throw error;
+      get().addToOfflineQueue('create', data);
+      return optimisticTask;
     }
+    
+    const task = await apiClient.createTask(data);
+    set((state) => ({
+      tasks: [task, ...state.tasks],
+    }));
+    
+    // Update stats
+    get().fetchStats();
+    return task;
   },
 
   updateTask: async (id, data) => {
-    try {
-      if (isOffline()) {
-        // Optimistic update for offline mode
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id ? { 
-              ...task, 
-              ...data, 
-              updated_at: Date.now(),
-              // Map form fields to database fields
-              due_date: data.dueDate || task.due_date,
-              estimated_duration: data.estimatedDuration || task.estimated_duration,
-              context_type: data.contextType || task.context_type,
-              matrix_notes: data.matrixNotes || task.matrix_notes,
-              is_delegated: data.isDelegated !== undefined ? data.isDelegated : task.is_delegated,
-              delegated_to: data.delegatedTo || task.delegated_to,
-              delegation_notes: data.delegationNotes || task.delegation_notes,
-            } : task
-          ),
-          currentTask: state.currentTask?.id === id 
-            ? { 
-                ...state.currentTask, 
-                ...data, 
-                updated_at: Date.now(),
-                due_date: data.dueDate || state.currentTask.due_date,
-                estimated_duration: data.estimatedDuration || state.currentTask.estimated_duration,
-                context_type: data.contextType || state.currentTask.context_type,
-                matrix_notes: data.matrixNotes || state.currentTask.matrix_notes,
-                is_delegated: data.isDelegated !== undefined ? data.isDelegated : state.currentTask.is_delegated,
-                delegated_to: data.delegatedTo || state.currentTask.delegated_to,
-                delegation_notes: data.delegationNotes || state.currentTask.delegation_notes,
-              } 
-            : state.currentTask,
-        }));
-        
-        get().addToOfflineQueue('update', { id, data });
-        return get().tasks.find(task => task.id === id)!;
-      }
-      
-      const updatedTask = await apiClient.updateTask(id, data);
+    if (isOffline()) {
+      // Optimistic update for offline mode
       set((state) => ({
         tasks: state.tasks.map((task) =>
-          task.id === id ? updatedTask : task
+          task.id === id ? { 
+            ...task, 
+            ...data, 
+            updated_at: Date.now(),
+            // Map form fields to database fields
+            due_date: data.dueDate || task.due_date,
+            estimated_duration: data.estimatedDuration || task.estimated_duration,
+            context_type: data.contextType || task.context_type,
+            matrix_notes: data.matrixNotes || task.matrix_notes,
+            is_delegated: data.isDelegated !== undefined ? data.isDelegated : task.is_delegated,
+            delegated_to: data.delegatedTo || task.delegated_to,
+            delegation_notes: data.delegationNotes || task.delegation_notes,
+          } : task
         ),
-        currentTask: state.currentTask?.id === id ? updatedTask : state.currentTask,
+        currentTask: state.currentTask?.id === id 
+          ? { 
+              ...state.currentTask, 
+              ...data, 
+              updated_at: Date.now(),
+              due_date: data.dueDate || state.currentTask.due_date,
+              estimated_duration: data.estimatedDuration || state.currentTask.estimated_duration,
+              context_type: data.contextType || state.currentTask.context_type,
+              matrix_notes: data.matrixNotes || state.currentTask.matrix_notes,
+              is_delegated: data.isDelegated !== undefined ? data.isDelegated : state.currentTask.is_delegated,
+              delegated_to: data.delegatedTo || state.currentTask.delegated_to,
+              delegation_notes: data.delegationNotes || state.currentTask.delegation_notes,
+            } 
+          : state.currentTask,
       }));
       
-      // Update stats if status changed
-      if (data.status) {
-        get().fetchStats();
-      }
-      
-      return updatedTask;
-    } catch (error) {
-      throw error;
+      get().addToOfflineQueue('update', { id, data });
+      return get().tasks.find(task => task.id === id)!;
     }
+    
+    const updatedTask = await apiClient.updateTask(id, data);
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === id ? updatedTask : task
+      ),
+      currentTask: state.currentTask?.id === id ? updatedTask : state.currentTask,
+    }));
+    
+    // Update stats if status changed
+    if (data.status) {
+      get().fetchStats();
+    }
+    
+    return updatedTask;
   },
 
   deleteTask: async (id) => {

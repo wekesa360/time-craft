@@ -106,7 +106,7 @@ export const CommandProcessor: React.FC = () => {
     }
   };
 
-  const useExampleCommand = (command: string) => {
+  const handleExampleCommand = (command: string) => {
     setInputText(command);
   };
 
@@ -245,7 +245,7 @@ export const CommandProcessor: React.FC = () => {
             {exampleCommands[selectedContext as keyof typeof exampleCommands]?.map((command, index) => (
               <button
                 key={index}
-                onClick={() => useExampleCommand(command)}
+                onClick={() => handleExampleCommand(command)}
                 className="w-full text-left px-3 py-2 text-sm bg-gray-50 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-500 rounded transition-colors text-gray-700 dark:text-gray-300"
               >
                 "{command}"
