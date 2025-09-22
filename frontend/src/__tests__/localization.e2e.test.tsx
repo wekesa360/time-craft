@@ -5,7 +5,6 @@ import { I18nextProvider } from 'react-i18next';
 import { BrowserRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { LanguageSelector } from '../components/common/LanguageSelector';
-import { LocalizationSection } from '../components/settings/LocalizationSection';
 import { GermanAccessibilityProvider } from '../components/accessibility/GermanAccessibilityProvider';
 import i18n from '../i18n';
 import * as localizationApi from '../api/localization';
@@ -376,7 +375,7 @@ describe('Localization End-to-End Integration Tests', () => {
 
       // Accessibility system should update ARIA labels
       await waitFor(() => {
-        const { germanAccessibility } = require('../utils/germanAccessibility');
+        const { germanAccessibility } = await import('../utils/germanAccessibility');
         expect(germanAccessibility.updateLanguage).toHaveBeenCalledWith('de');
       });
     });

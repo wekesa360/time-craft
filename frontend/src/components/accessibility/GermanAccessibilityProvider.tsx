@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   useGermanAccessibility, 
@@ -39,7 +39,6 @@ export const GermanAccessibilityProvider: React.FC<GermanAccessibilityProviderPr
   enableHighContrastMode = true,
   enableScreenReaderSupport = true
 }) => {
-  const { i18n } = useTranslation();
   
   // Initialize German accessibility
   const { accessibilityStatus, isGerman } = useGermanAccessibility({

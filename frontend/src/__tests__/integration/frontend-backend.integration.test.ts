@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ApiClient } from '../../lib/api';
+import type { TaskForm } from '../../types';
 
 describe('Frontend-Backend Integration Tests', () => {
   let apiClient: ApiClient;
@@ -29,9 +30,9 @@ describe('Frontend-Backend Integration Tests', () => {
         expect(response).toHaveProperty('user');
         expect(response).toHaveProperty('tokens');
         expect(response.user.email).toBe(testUser.email);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // User might already exist, which is expected in test environment
-        if (error.response?.status === 409) {
+        if ((error as any).response?.status === 409) {
           console.log('User already exists, continuing with login test');
         } else {
           throw error;
@@ -183,8 +184,8 @@ describe('Frontend-Backend Integration Tests', () => {
         try {
           await apiClient.getTask(testTaskId);
           throw new Error('Task should have been deleted');
-        } catch (error: any) {
-          expect(error.response?.status).toBe(404);
+        } catch (error: unknown) {
+          expect((error as any).response?.status).toBe(404);
         }
       } catch (error) {
         console.error('Task deletion failed:', error);
@@ -359,8 +360,8 @@ describe('Frontend-Backend Integration Tests', () => {
       try {
         await apiClient.getTask('non-existent-id');
         throw new Error('Should have thrown 404 error');
-      } catch (error: any) {
-        expect(error.response?.status).toBe(404);
+      } catch (error: unknown) {
+        expect((error as any).response?.status).toBe(404);
       }
     });
 
@@ -371,10 +372,10 @@ describe('Frontend-Backend Integration Tests', () => {
       };
 
       try {
-        await apiClient.createTask(invalidTaskData as any);
+        await apiClient.createTask(invalidTaskData as unknown as TaskForm);
         throw new Error('Should have thrown validation error');
-      } catch (error: any) {
-        expect([400, 422]).toContain(error.response?.status);
+      } catch (error: unknown) {
+        expect([400, 422]).toContain((error as any).response?.status);
       }
     });
   });

@@ -140,7 +140,7 @@ describe('German Localization Final Validation', () => {
         expect(translation.length).toBeGreaterThan(0);
         
         // Should contain valid German characters
-        expect(translation).toMatch(/^[a-zA-ZäöüßÄÖÜ\s\-\.]+$/);
+        expect(translation).toMatch(/^[a-zA-ZäöüßÄÖÜ\s\-.]+$/);
         
         // Compound words should be properly formed
         if (key.includes('error')) {
@@ -213,7 +213,7 @@ describe('German Localization Final Validation', () => {
       let result;
       try {
         result = await translationCache.get('de');
-      } catch (error) {
+      } catch {
         result = null;
       }
 

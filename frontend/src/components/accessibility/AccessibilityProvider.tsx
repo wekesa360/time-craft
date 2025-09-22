@@ -3,7 +3,7 @@
  * Context provider for application-wide accessibility features
  */
 
-import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAccessibility } from '../../hooks/useAccessibility';
 import { useResponsive } from '../../hooks/useResponsive';
