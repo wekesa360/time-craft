@@ -20,6 +20,7 @@ import { ThemeProvider } from './components/providers/ThemeProvider';
 import { LocalizationProvider } from './contexts/LocalizationContext';
 import { SSENotificationHandler } from './components/common/SSEStatus';
 import { OfflineQueueHandler } from './components/common/OfflineQueueHandler';
+import { AccessibilityProvider } from './components/accessibility/AccessibilityProvider';
 import { GermanAccessibilityProvider } from './components/accessibility/GermanAccessibilityProvider';
 import { AdminGuard, StudentGuard } from './components/auth/RoleGuard';
 
@@ -172,11 +173,12 @@ function App() {
       <QueryProvider>
         <ThemeProvider>
           <LocalizationProvider>
-            <GermanAccessibilityProvider
-              enableKeyboardShortcuts={true}
-              enableHighContrastMode={true}
-              enableScreenReaderSupport={true}
-            >
+            <AccessibilityProvider>
+              <GermanAccessibilityProvider
+                enableKeyboardShortcuts={true}
+                enableHighContrastMode={true}
+                enableScreenReaderSupport={true}
+              >
               <Toaster position="top-right" />
               <SSENotificationHandler />
               <OfflineQueueHandler />
@@ -422,6 +424,7 @@ function App() {
           </div>
         </Router>
             </GermanAccessibilityProvider>
+            </AccessibilityProvider>
           </LocalizationProvider>
         </ThemeProvider>
       </QueryProvider>
