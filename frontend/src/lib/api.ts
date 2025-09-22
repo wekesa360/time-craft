@@ -58,6 +58,8 @@ class ApiClient {
   private isOnline: boolean = navigator.onLine;
   private sseReconnectAttempts: number = 0;
   private maxSseReconnectAttempts: number = 5;
+  private circuitBreakerOpen: boolean = false;
+  private circuitBreakerResetTime: number = 0;
 
   constructor() {
     this.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
@@ -113,6 +115,12 @@ class ApiClient {
     // Request interceptor to add auth token and request metadata
     this.client.interceptors.request.use(
       (config) => {
+        // Check circuit breaker
+        if (this.isCircuitBreakerOpen()) {
+          console.error('Circuit breaker open - request blocked');
+          return Promise.reject(new Error('Service temporarily unavailable due to rate limiting'));
+        }
+
         // Add auth token
         const token = this.getStoredToken();
         if (token) {
@@ -142,6 +150,12 @@ class ApiClient {
     // Response interceptor for error handling and token refresh
     this.client.interceptors.response.use(
       (response) => {
+        // Reset retry count on successful response
+        if (response.config) {
+          delete (response.config as any)._retryCount;
+          delete (response.config as any)._serverRetry;
+        }
+        
         // Log successful responses in development
         if (import.meta.env.DEV) {
           console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
@@ -179,12 +193,39 @@ class ApiClient {
           }
         }
 
-        // Handle rate limiting with exponential backoff
+        // Handle rate limiting with circuit breaker
         if (error.response?.status === 429) {
-          const retryAfter = parseInt(error.response.headers['retry-after'] || '1');
-          const delay = Math.min(retryAfter * 1000, 30000); // Max 30 seconds
+          // Check circuit breaker
+          if (this.circuitBreakerOpen) {
+            const now = Date.now();
+            if (now < this.circuitBreakerResetTime) {
+              console.error('Circuit breaker open - too many rate limit errors');
+              this.handleApiError(error);
+              return Promise.reject(error);
+            } else {
+              // Reset circuit breaker
+              this.circuitBreakerOpen = false;
+              this.circuitBreakerResetTime = 0;
+            }
+          }
           
-          console.log(`⏳ Rate limited, retrying in ${delay}ms`);
+          // Check if we've already retried this request
+          if (originalRequest._retryCount >= 2) {
+            console.error('Max retry attempts reached for rate limited request');
+            // Open circuit breaker for 5 minutes
+            this.circuitBreakerOpen = true;
+            this.circuitBreakerResetTime = Date.now() + (5 * 60 * 1000);
+            this.handleApiError(error);
+            return Promise.reject(error);
+          }
+          
+          const retryCount = (originalRequest._retryCount || 0) + 1;
+          originalRequest._retryCount = retryCount;
+          
+          const retryAfter = parseInt(error.response.headers['retry-after'] || '2');
+          const delay = Math.min(retryAfter * 1000 * retryCount, 10000); // Max 10 seconds
+          
+          console.log(`⏳ Rate limited, retrying in ${delay}ms (attempt ${retryCount}/2)`);
           
           await new Promise(resolve => setTimeout(resolve, delay));
           return this.client.request(originalRequest);
@@ -470,8 +511,18 @@ class ApiClient {
 
     eventTypes.forEach(eventType => {
       this.sseConnection.addEventListener(eventType, (event) => {
-        const data = JSON.parse(event.data);
-        this.handleSSEMessage({ type: eventType, data });
+        try {
+          // Check if event.data exists and is not undefined
+          if (!event.data || event.data === 'undefined' || event.data.trim() === '') {
+            console.warn(`SSE event ${eventType} received with empty or undefined data`);
+            return;
+          }
+          
+          const data = JSON.parse(event.data);
+          this.handleSSEMessage({ type: eventType, data });
+        } catch (error) {
+          console.error(`Error parsing SSE event ${eventType}:`, error, 'Data:', event.data);
+        }
       });
     });
   }
@@ -1927,6 +1978,25 @@ class ApiClient {
   async delete(url: string, config?: any) {
     const response = await this.client.delete(url, config);
     return response;
+  }
+
+  // Circuit breaker management
+  resetCircuitBreaker() {
+    this.circuitBreakerOpen = false;
+    this.circuitBreakerResetTime = 0;
+    console.log('Circuit breaker reset');
+  }
+
+  isCircuitBreakerOpen(): boolean {
+    if (this.circuitBreakerOpen) {
+      const now = Date.now();
+      if (now >= this.circuitBreakerResetTime) {
+        this.resetCircuitBreaker();
+        return false;
+      }
+      return true;
+    }
+    return false;
   }
 }
 
