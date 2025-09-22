@@ -171,7 +171,7 @@ describe('Localization API Integration Tests', () => {
     });
 
     it('handles null language parameter', async () => {
-      await expect(fetchLocalizationContent(null as any)).rejects.toThrow('Language code is required');
+      await expect(fetchLocalizationContent(null as unknown as string)).rejects.toThrow('Language code is required');
     });
 
     it('includes cache headers for performance', async () => {
@@ -275,7 +275,7 @@ describe('Localization API Integration Tests', () => {
 
     it('validates language parameter', async () => {
       await expect(updateUserLanguage('')).rejects.toThrow('Language code is required');
-      await expect(updateUserLanguage(null as any)).rejects.toThrow('Language code is required');
+      await expect(updateUserLanguage(null as unknown as string)).rejects.toThrow('Language code is required');
     });
 
     it('includes proper request headers', async () => {

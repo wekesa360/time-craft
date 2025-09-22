@@ -2,6 +2,12 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ApiClient } from '../../lib/api';
 import type { TaskForm } from '../../types';
 
+interface ApiError {
+  response?: {
+    status: number;
+  };
+}
+
 describe('Frontend-Backend Integration Tests', () => {
   let apiClient: ApiClient;
 
@@ -32,7 +38,7 @@ describe('Frontend-Backend Integration Tests', () => {
         expect(response.user.email).toBe(testUser.email);
       } catch (error: unknown) {
         // User might already exist, which is expected in test environment
-        if ((error as any).response?.status === 409) {
+        if ((error as ApiError).response?.status === 409) {
           console.log('User already exists, continuing with login test');
         } else {
           throw error;
@@ -185,7 +191,7 @@ describe('Frontend-Backend Integration Tests', () => {
           await apiClient.getTask(testTaskId);
           throw new Error('Task should have been deleted');
         } catch (error: unknown) {
-          expect((error as any).response?.status).toBe(404);
+          expect((error as ApiError).response?.status).toBe(404);
         }
       } catch (error) {
         console.error('Task deletion failed:', error);
@@ -361,7 +367,7 @@ describe('Frontend-Backend Integration Tests', () => {
         await apiClient.getTask('non-existent-id');
         throw new Error('Should have thrown 404 error');
       } catch (error: unknown) {
-        expect((error as any).response?.status).toBe(404);
+        expect((error as ApiError).response?.status).toBe(404);
       }
     });
 
@@ -375,7 +381,7 @@ describe('Frontend-Backend Integration Tests', () => {
         await apiClient.createTask(invalidTaskData as unknown as TaskForm);
         throw new Error('Should have thrown validation error');
       } catch (error: unknown) {
-        expect([400, 422]).toContain((error as any).response?.status);
+        expect([400, 422]).toContain((error as ApiError).response?.status);
       }
     });
   });

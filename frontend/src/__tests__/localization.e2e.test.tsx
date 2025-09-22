@@ -413,7 +413,7 @@ describe('Localization End-to-End Integration Tests', () => {
 
   describe('Performance and Caching', () => {
     it('caches translations to avoid redundant API calls', async () => {
-      const { rerender } = render(
+      render(
         <TestWrapper>
           <LanguageSelector variant="dropdown" />
         </TestWrapper>
