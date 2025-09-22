@@ -84,7 +84,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
             {t('app.name')}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {t('loading')}...
+            {t('common.loading')}...
           </p>
           
           {/* Loading dots */}
