@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, Calendar, Clock, Tag, AlertCircle } from 'lucide-react';
+import { X, Calendar, Clock, Tag } from 'lucide-react';
 import type { Task, TaskForm as TaskFormType } from '../../../types';
 
 interface TaskFormProps {
@@ -40,9 +40,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   onClose,
   onSave,
   onDelete,
-  defaultQuadrant = '',
 }) => {
-  const { t } = useTranslation();
   const [urgency, setUrgency] = useState(3);
   const [importance, setImportance] = useState(3);
 
@@ -52,7 +50,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
     formState: { errors, isSubmitting },
     reset,
     watch,
-    setValue,
   } = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: {

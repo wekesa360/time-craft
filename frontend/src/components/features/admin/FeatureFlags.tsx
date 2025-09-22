@@ -3,17 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { 
   Flag, 
   Search, 
-  Filter, 
   Plus,
   Edit,
   Trash2,
   Users,
   Percent,
   Calendar,
-  Info,
   AlertTriangle,
-  CheckCircle,
-  Clock,
   Settings
 } from 'lucide-react';
 

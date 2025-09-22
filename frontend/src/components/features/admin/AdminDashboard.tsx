@@ -8,7 +8,6 @@ import {
   Shield, 
   BarChart3, 
   Settings, 
-  AlertTriangle,
   TrendingUp,
   Database
 } from 'lucide-react';

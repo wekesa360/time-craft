@@ -218,7 +218,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                               {activity.content.badgeTier}
                             </span>
                             <span className="text-xs text-yellow-700 dark:text-yellow-300">
-                              +{activity.content.badgePoints} points
+                              +{activity.content.badgePoints as number} points
                             </span>
                           </div>
                         </div>
@@ -231,11 +231,11 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                           {activity.content.challengeName}
                         </h4>
                         <p className="text-sm text-green-800 dark:text-green-200">
-                          Final score: {activity.content.finalScore}/{activity.content.targetValue}
+                          Final score: {activity.content.finalScore as number}/{activity.content.targetValue as number}
                         </p>
                         {activity.content.rank && (
                           <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                            Finished #{activity.content.rank} out of {activity.content.totalParticipants} participants
+                            Finished #{activity.content.rank as number} out of {activity.content.totalParticipants as number} participants
                           </p>
                         )}
                       </div>
@@ -243,7 +243,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
 
                     {activity.type === 'achievement_share' && activity.content.message && (
                       <div className="p-3 bg-background-secondary rounded-lg">
-                        <p className="text-foreground italic">"{activity.content.message}"</p>
+                        <p className="text-foreground italic">"{activity.content.message as string}"</p>
                       </div>
                     )}
                   </div>

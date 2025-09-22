@@ -14,8 +14,8 @@ export interface User {
   studentVerificationStatus: 'none' | 'pending' | 'verified' | 'rejected';
   badgePoints: number; // Required field from backend
   avatar?: string; // User avatar URL
-  mobileSettings?: Record<string, any>;
-  securitySettings?: Record<string, any>;
+  mobileSettings?: Record<string, unknown>;
+  securitySettings?: Record<string, unknown>;
   lastOfflineSync?: number;
   createdAt: number;
   updatedAt: number;
@@ -64,7 +64,7 @@ export interface HealthLog {
   id: string;
   userId: string;
   type: 'exercise' | 'nutrition' | 'mood' | 'hydration';
-  payload: any; // JSON data specific to the health type
+  payload: ExerciseData | NutritionData | MoodData | HydrationData; // JSON data specific to the health type
   recordedAt: number;
   source: 'auto' | 'manual' | 'device';
   deviceType?: string;
@@ -206,7 +206,7 @@ export interface Notification {
   createdAt: number;
   readAt?: number;
   persistent?: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface Subscription {
@@ -223,7 +223,7 @@ export interface Subscription {
 }
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -457,7 +457,19 @@ export interface ActivityFeedItem {
   firstName: string;
   lastName: string;
   type: 'badge_unlock' | 'challenge_join' | 'challenge_complete' | 'achievement_share';
-  content: any;
+  content: {
+    badgeIcon?: string;
+    badgeName?: string;
+    badgeDescription?: string;
+    badgeTier?: string;
+    challengeName?: string;
+    challengeDescription?: string;
+    challengeProgress?: number;
+    achievementTitle?: string;
+    achievementDescription?: string;
+    shareUrl?: string;
+    [key: string]: unknown;
+  };
   timestamp: number;
 }
 
@@ -657,7 +669,14 @@ export interface SystemMetrics {
 // Server-Sent Events Types
 export interface SSEMessage {
   type: 'badge_unlocked' | 'challenge_update' | 'notification' | 'task_reminder' | 'health_insight' | 'focus_session_complete' | 'system_alert';
-  data: any;
+  data: {
+    message?: string;
+    userId?: string;
+    taskId?: string;
+    challengeId?: string;
+    badgeId?: string;
+    [key: string]: unknown;
+  };
   timestamp: number;
 }
 
@@ -672,7 +691,9 @@ export interface QueuedRequest {
   id: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   url: string;
-  data?: any;
+  data?: {
+    [key: string]: unknown;
+  };
   timestamp: number;
   retryCount: number;
 }

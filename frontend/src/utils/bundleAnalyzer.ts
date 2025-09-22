@@ -285,7 +285,7 @@ export const codeSplitting = {
   // Split by route
   splitByRoute: (routes: string[]) => {
     return routes.reduce((acc, route) => {
-      acc[route] = () => import(`../pages/${route}`);
+      acc[route] = () => import(`../pages/${route}.tsx`);
       return acc;
     }, {} as Record<string, () => Promise<any>>);
   },
@@ -293,7 +293,7 @@ export const codeSplitting = {
   // Split by feature
   splitByFeature: (features: string[]) => {
     return features.reduce((acc, feature) => {
-      acc[feature] = () => import(`../components/features/${feature}`);
+      acc[feature] = () => import(`../components/features/${feature}/index.tsx`);
       return acc;
     }, {} as Record<string, () => Promise<any>>);
   },

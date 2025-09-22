@@ -115,7 +115,7 @@ export const useSSEMessage = <T = any>(
     const handleMessage = (event: CustomEvent) => {
       const message = event.detail as SSEMessage;
       if (message.type === messageType) {
-        callback(message.data);
+        callback(message.data as T);
       }
     };
 
