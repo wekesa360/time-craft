@@ -424,14 +424,32 @@ payments.post('/webhook', async (c) => {
     }
 
     const body = await c.req.text();
+    const webhookSecret = c.env.STRIPE_WEBHOOK_SECRET;
     
-    // In a real implementation, you would verify the webhook signature
-    // const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    
-    // For now, we'll parse the JSON directly (not secure for production)
-    const event = JSON.parse(body);
+    if (!webhookSecret) {
+      console.error('STRIPE_WEBHOOK_SECRET not configured');
+      return c.json({ error: 'Webhook secret not configured' }, 500);
+    }
 
-    console.log('Received Stripe webhook:', event.type);
+    // Verify webhook signature for security
+    const { createStripeWebhookVerifier, isSupportedWebhookEvent } = await import('../lib/stripe-webhook');
+    const verifier = createStripeWebhookVerifier(webhookSecret);
+    
+    let event;
+    try {
+      event = verifier.verify(body, signature);
+    } catch (error) {
+      console.error('Webhook signature verification failed:', error);
+      return c.json({ error: 'Invalid signature' }, 400);
+    }
+
+    // Check if we support this event type
+    if (!isSupportedWebhookEvent(event.type)) {
+      console.log(`Unsupported webhook event type: ${event.type}`);
+      return c.json({ received: true });
+    }
+
+    console.log('Received verified Stripe webhook:', event.type);
 
     const db = new DatabaseService(c.env);
 

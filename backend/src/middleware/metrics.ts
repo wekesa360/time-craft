@@ -41,22 +41,24 @@ export async function collectMetrics(c: Context<{ Bindings: MetricsEnv }>, next:
     
     // Record API usage metrics
     try {
-      const db = new DatabaseService(c.env);
-      await db.execute(`
-        INSERT INTO api_usage_stats (
-          endpoint, method, status_code, response_time, 
-          user_id, ip_address, user_agent, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        endpoint,
-        method,
-        statusCode,
-        responseTime,
-        userId,
-        ipAddress,
-        userAgent,
-        Date.now()
-      ]);
+      if (c.env?.DB) {
+        const db = new DatabaseService(c.env);
+        await db.execute(`
+          INSERT INTO api_usage_stats (
+            endpoint, method, status_code, response_time, 
+            user_id, ip_address, user_agent, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          endpoint,
+          method,
+          statusCode,
+          responseTime,
+          userId,
+          ipAddress,
+          userAgent,
+          Date.now()
+        ]);
+      }
     } catch (error) {
       console.error('Failed to record API usage metrics:', error);
       // Don't fail the request if metrics collection fails
@@ -64,20 +66,22 @@ export async function collectMetrics(c: Context<{ Bindings: MetricsEnv }>, next:
     
     // Record performance metrics
     try {
-      const db = new DatabaseService(c.env);
-      await db.execute(`
-        INSERT INTO performance_metrics (
-          metric_name, metric_value, unit, category, 
-          tags, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?)
-      `, [
-        'api_response_time',
-        responseTime,
-        'ms',
-        'api',
-        JSON.stringify({ endpoint, method, status_code: statusCode }),
-        Date.now()
-      ]);
+      if (c.env?.DB) {
+        const db = new DatabaseService(c.env);
+        await db.execute(`
+          INSERT INTO performance_metrics (
+            metric_name, metric_value, unit, category, 
+            tags, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?)
+        `, [
+          'api_response_time',
+          responseTime,
+          'ms',
+          'api',
+          JSON.stringify({ endpoint, method, status_code: statusCode }),
+          Date.now()
+        ]);
+      }
     } catch (error) {
       console.error('Failed to record performance metrics:', error);
       // Don't fail the request if metrics collection fails
@@ -86,34 +90,36 @@ export async function collectMetrics(c: Context<{ Bindings: MetricsEnv }>, next:
   } catch (error) {
     // Record error metrics
     try {
-      const db = new DatabaseService(c.env);
-      const method = c.req.method;
-      const url = new URL(c.req.url);
-      const endpoint = url.pathname;
-      const userId = (c as any).user?.userId || null;
-      
-      await db.execute(`
-        INSERT INTO error_logs (
-          error_type, error_message, stack_trace, 
-          user_id, endpoint, method, status_code, 
-          request_id, metadata, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        'api_error',
-        error instanceof Error ? error.message : 'Unknown error',
-        error instanceof Error ? error.stack : null,
-        userId,
-        endpoint,
-        method,
-        500,
-        c.req.header('x-request-id') || null,
-        JSON.stringify({ 
-          url: c.req.url,
-          userAgent: c.req.header('user-agent'),
-          ipAddress: c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for')
-        }),
-        Date.now()
-      ]);
+      if (c.env?.DB) {
+        const db = new DatabaseService(c.env);
+        const method = c.req.method;
+        const url = new URL(c.req.url);
+        const endpoint = url.pathname;
+        const userId = (c as any).user?.userId || null;
+        
+        await db.execute(`
+          INSERT INTO error_logs (
+            error_type, error_message, stack_trace, 
+            user_id, endpoint, method, status_code, 
+            request_id, metadata, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          'api_error',
+          error instanceof Error ? error.message : 'Unknown error',
+          error instanceof Error ? error.stack : null,
+          userId,
+          endpoint,
+          method,
+          500,
+          c.req.header('x-request-id') || null,
+          JSON.stringify({ 
+            url: c.req.url,
+            userAgent: c.req.header('user-agent'),
+            ipAddress: c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for')
+          }),
+          Date.now()
+        ]);
+      }
     } catch (metricsError) {
       console.error('Failed to record error metrics:', metricsError);
     }

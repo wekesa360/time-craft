@@ -13,10 +13,13 @@ export const createMockEnv = (): Env => ({
   STRIPE_SECRET_KEY: 'sk_test_stripe_key',
   STRIPE_WEBHOOK_SECRET: 'whsec_test_webhook',
   RESEND_API_KEY: 're_test_resend_key',
+  FROM_EMAIL: 'test@timecraft.app',
   ONESIGNAL_APP_ID: 'test-onesignal-app-id',
   ONESIGNAL_API_KEY: 'test-onesignal-api-key',
   GOOGLE_CLIENT_ID: 'test-google-client-id',
   GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
+  GOOGLE_REDIRECT_URI: 'http://localhost:3000/api/calendar/google/callback',
+  APP_BASE_URL: 'http://localhost:3000',
   OUTLOOK_CLIENT_ID: 'test-outlook-client-id',
   OUTLOOK_CLIENT_SECRET: 'test-outlook-client-secret',
   
@@ -28,11 +31,37 @@ export const createMockEnv = (): Env => ({
   ANALYTICS: createMockAnalytics()
 });
 
-// Mock D1 Database
+// Mock D1 Database (DatabaseService interface)
 function createMockD1(): any {
   const mockResults = new Map<string, any>();
   
   return {
+    // DatabaseService interface methods
+    query: async (query: string, params: any[] = []) => {
+      const key = `${query}_${JSON.stringify(params)}`;
+      const result = mockResults.get(key);
+      if (result && result.error) {
+        throw result.error;
+      }
+      return {
+        success: true,
+        results: result || [],
+        meta: { changes: 1, last_row_id: 1 }
+      };
+    },
+    execute: async (query: string, params: any[] = []) => {
+      const key = `${query}_${JSON.stringify(params)}`;
+      const result = mockResults.get(key);
+      if (result && result.error) {
+        throw result.error;
+      }
+      return {
+        success: true,
+        results: result || [],
+        meta: { changes: 1, last_row_id: 1 }
+      };
+    },
+    // Legacy D1 interface for backward compatibility
     prepare: (query: string) => ({
       bind: (...params: any[]) => ({
         run: async () => ({
@@ -67,6 +96,10 @@ function createMockD1(): any {
     },
     _clearMockData: () => {
       mockResults.clear();
+    },
+    _setMockError: (query: string, error: Error) => {
+      // Store error to throw when query is executed
+      mockResults.set(query, { error });
     }
   };
 }
@@ -256,8 +289,11 @@ export const testHealthLogs = [
 export async function generateTestToken(userId: string, role: string = 'user'): Promise<string> {
   const payload = {
     userId,
-    role,
+    email: `test-${userId}@example.com`,
+    subscriptionType: role === 'admin' ? 'premium' : 'free',
+    isStudent: false,
     preferredLanguage: 'en',
+    type: 'access',
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour
   };
@@ -305,15 +341,17 @@ export async function makeRequest(
 
 // Database setup helpers
 export function setupTestDatabase(mockDB: any) {
-  // Set up users
-  mockDB._setMockData('SELECT * FROM users WHERE id = ?', [testUsers.regularUser]);
-  mockDB._setMockData('SELECT * FROM users WHERE email = ?', [testUsers.regularUser]);
+  // Set up users - using DatabaseService interface
+  mockDB._setMockData('SELECT * FROM users WHERE id = ?_["user_test_regular"]', [testUsers.regularUser]);
+  mockDB._setMockData('SELECT * FROM users WHERE email = ?_["test@example.com"]', [testUsers.regularUser]);
+  mockDB._setMockData('SELECT * FROM users WHERE id = ?_["user_test_admin"]', [testUsers.adminUser]);
+  mockDB._setMockData('SELECT * FROM users WHERE email = ?_["admin@timecraft.com"]', [testUsers.adminUser]);
   
   // Set up tasks
-  mockDB._setMockData('SELECT * FROM tasks WHERE user_id = ?', testTasks);
+  mockDB._setMockData('SELECT * FROM tasks WHERE user_id = ?_["user_test_regular"]', testTasks);
   
   // Set up health logs  
-  mockDB._setMockData('SELECT * FROM health_logs WHERE user_id = ?', testHealthLogs);
+  mockDB._setMockData('SELECT * FROM health_logs WHERE user_id = ?_["user_test_regular"]', testHealthLogs);
 }
 
 // Assertion helpers
@@ -446,20 +484,20 @@ export async function createTestUser(env: any, overrides: Partial<any> = {}): Pr
     ...overrides
   };
 
-  await env.DB.prepare(`
+  await env.DB.execute(`
     INSERT INTO users (
       id, email, password_hash, first_name, last_name, timezone,
       preferred_language, subscription_type, subscription_expires_at,
       stripe_customer_id, is_student, student_verification_status,
       badge_points, total_badges, badge_tier, created_at, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).bind(
+  `, [
     user.id, user.email, user.password_hash, user.first_name, user.last_name,
     user.timezone, user.preferred_language, user.subscription_type,
     user.subscription_expires_at, user.stripe_customer_id, user.is_student ? 1 : 0,
     user.student_verification_status, user.badge_points, user.total_badges,
     user.badge_tier, user.created_at, user.updated_at
-  ).run();
+  ]);
 
   return userId;
 }
@@ -492,7 +530,7 @@ export async function createTestTask(env: any, userId: string, overrides: Partia
     ...overrides
   };
 
-  await env.DB.prepare(`
+  await env.DB.execute(`
     INSERT INTO tasks (
       id, user_id, title, description, priority, status, due_date,
       estimated_duration, ai_priority_score, ai_planning_session_id,
@@ -500,14 +538,14 @@ export async function createTestTask(env: any, userId: string, overrides: Partia
       matrix_notes, is_delegated, delegated_to, delegation_notes,
       matrix_last_reviewed, created_at, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).bind(
+  `, [
     task.id, task.user_id, task.title, task.description, task.priority,
     task.status, task.due_date, task.estimated_duration, task.ai_priority_score,
     task.ai_planning_session_id, task.energy_level_required, task.context_type,
     task.urgency, task.importance, task.matrix_notes, task.is_delegated ? 1 : 0,
     task.delegated_to, task.delegation_notes, task.matrix_last_reviewed,
     task.created_at, task.updated_at
-  ).run();
+  ]);
 
   return taskId;
 }

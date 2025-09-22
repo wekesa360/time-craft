@@ -15,7 +15,6 @@ import authRoutes from './auth';
 import coreRoutes from './core';
 import healthRoutes from './health';
 import aiRoutes from './ai';
-import realtimeRoutes from './realtime';
 import adminRoutes from './admin';
 import badgeRoutes from './badges';
 import paymentRoutes from './payments';
@@ -29,6 +28,11 @@ import localizationRoutes from './localization';
 import healthMonitorRoutes from './health-monitor';
 import metricsRoutes from './metrics';
 import openapiRoutes from './openapi';
+import realtimeRoutes from './realtime';
+import mobileRoutes from './mobile';
+import migrationsRoutes from './migrations';
+import securityRoutes from './security';
+import initDbRoutes from './init-db';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -61,6 +65,7 @@ app.get('/health', async (c) => {
 });
 
 // mount sub-routers - specific routes first, then general
+app.route('/init-db', initDbRoutes);
 app.route('/auth', authRoutes);
 app.route('/api/health', healthRoutes);
 app.route('/api/ai', aiRoutes);
@@ -76,8 +81,11 @@ app.route('/api/localization', localizationRoutes);
 app.route('/api/health', healthMonitorRoutes);
 app.route('/api/metrics', metricsRoutes);
 app.route('/api/openapi', openapiRoutes);
+app.route('/api/realtime', realtimeRoutes);
+app.route('/api/mobile', mobileRoutes);
+app.route('/api/migrations', migrationsRoutes);
+app.route('/api/security', securityRoutes);
 app.route('/api', coreRoutes); // Core routes last to catch remaining /api/* routes
-app.route('/realtime', realtimeRoutes);
 app.route('/admin', adminRoutes);
 
 export default app;

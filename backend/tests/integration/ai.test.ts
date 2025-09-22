@@ -63,6 +63,8 @@ describe('AI Integration API', () => {
         const response = await makeRequest(app, 'POST', '/api/ai/tasks/analyze-priority', {
           token: userToken,
           body: requestData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -188,6 +190,8 @@ describe('AI Integration API', () => {
         const response = await makeRequest(app, 'POST', '/api/ai/health/insights', {
           token: userToken,
           body: requestData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -270,6 +274,8 @@ describe('AI Integration API', () => {
         const response = await makeRequest(app, 'POST', '/api/ai/calendar/schedule-meeting', {
           token: userToken,
           body: meetingData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -359,6 +365,8 @@ describe('AI Integration API', () => {
         const response = await makeRequest(app, 'POST', '/api/ai/planning/create-plan', {
           token: userToken,
           body: planInput
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -429,8 +437,10 @@ describe('AI Integration API', () => {
         env.CACHE.put(`smart_plan_${planId}`, JSON.stringify(mockPlan));
         env.DB._setMockData('INSERT INTO tasks', [{ id: 'new_task_from_plan' }]);
 
-        const response = await makeRequest(app, 'POST', `/planning/execute-plan/${planId}`, {
+        const response = await makeRequest(app, 'POST', '/planning/execute-plan/${planId}', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -453,6 +463,8 @@ describe('AI Integration API', () => {
       it('should reject non-existent plan', async () => {
         const response = await makeRequest(app, 'POST', '/api/ai/planning/execute-plan/nonexistent', {
           token: userToken
+        ,
+          env: env
         });
 
         expectErrorResponse(response, 404, 'not found');
@@ -484,6 +496,8 @@ describe('AI Integration API', () => {
         const response = await makeRequest(app, 'POST', '/api/ai/voice/analyze', {
           token: userToken,
           body: voiceData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -521,6 +535,8 @@ describe('AI Integration API', () => {
       it('should get AI usage statistics', async () => {
         const response = await makeRequest(app, 'GET', '/api/ai/usage/stats', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);

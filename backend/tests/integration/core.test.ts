@@ -37,6 +37,8 @@ describe('Core API', () => {
       it('should get user profile successfully', async () => {
         const response = await makeRequest(app, 'GET', '/api/users/profile', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -54,7 +56,9 @@ describe('Core API', () => {
       });
 
       it('should reject unauthenticated request', async () => {
-        const response = await makeRequest(app, 'GET', '/api/users/profile');
+        const response = await makeRequest(app, 'GET', '/api/users/profile', {
+          env: env
+        });
 
         expectErrorResponse(response, 401);
       });
@@ -72,6 +76,8 @@ describe('Core API', () => {
         const response = await makeRequest(app, 'PUT', '/api/users/profile', {
           token: userToken,
           body: updateData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -102,6 +108,8 @@ describe('Core API', () => {
       it('should get user tasks successfully', async () => {
         const response = await makeRequest(app, 'GET', '/api/tasks', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -126,6 +134,8 @@ describe('Core API', () => {
       it('should filter tasks by status', async () => {
         const response = await makeRequest(app, 'GET', '/api/tasks?status=pending', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -139,6 +149,8 @@ describe('Core API', () => {
       it('should filter tasks by priority', async () => {
         const response = await makeRequest(app, 'GET', '/api/tasks?priority=4', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -165,6 +177,8 @@ describe('Core API', () => {
         const response = await makeRequest(app, 'POST', '/api/tasks', {
           token: userToken,
           body: newTask
+        ,
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -218,9 +232,11 @@ describe('Core API', () => {
         env.DB._setMockData('SELECT * FROM tasks WHERE id = ? AND user_id = ?', [testTasks[0]]);
         env.DB._setMockData('UPDATE tasks', [{ id: taskId }]);
 
-        const response = await makeRequest(app, 'PUT', `/tasks/${taskId}`, {
+        const response = await makeRequest(app, 'PUT', '/tasks/${taskId}', {
           token: userToken,
           body: updateData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -252,8 +268,10 @@ describe('Core API', () => {
         const taskId = testTasks[0].id;
         env.DB._setMockData('SELECT * FROM tasks WHERE id = ? AND user_id = ?', [testTasks[0]]);
 
-        const response = await makeRequest(app, 'DELETE', `/tasks/${taskId}`, {
+        const response = await makeRequest(app, 'DELETE', '/tasks/${taskId}', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -266,6 +284,8 @@ describe('Core API', () => {
 
         const response = await makeRequest(app, 'DELETE', '/api/tasks/nonexistent', {
           token: userToken
+        ,
+          env: env
         });
 
         expectErrorResponse(response, 404, 'not found');
@@ -287,6 +307,8 @@ describe('Core API', () => {
         const response = await makeRequest(app, 'POST', '/api/focus/start', {
           token: userToken,
           body: sessionData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -350,6 +372,8 @@ describe('Core API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/analytics/overview', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -395,8 +419,10 @@ describe('Core API', () => {
     it('should respond quickly to task list requests', async () => {
       const start = Date.now();
       const response = await makeRequest(app, 'GET', '/api/tasks', {
-        token: userToken
-      });
+          token: userToken
+      ,
+          env: env
+        });
       const duration = Date.now() - start;
 
       expectSuccessResponse(response);

@@ -39,8 +39,11 @@ describe('Authentication API', () => {
       };
 
       const response = await makeRequest(app, 'POST', '/auth/register', {
+          
         body: userData
-      });
+      ,
+          env: env
+        });
 
       expectSuccessResponse(response, 201);
       const body = await response.json();

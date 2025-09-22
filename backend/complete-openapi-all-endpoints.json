@@ -120,6 +120,22 @@
     {
       "name": "Documentation",
       "description": "API documentation and specifications"
+    },
+    {
+      "name": "Real-Time",
+      "description": "Real-time features with Server-Sent Events"
+    },
+    {
+      "name": "Mobile",
+      "description": "Mobile platform features and device management"
+    },
+    {
+      "name": "Migrations",
+      "description": "Database migration management"
+    },
+    {
+      "name": "Security",
+      "description": "Enhanced security features and audit logging"
     }
   ],
   "paths": {
@@ -8359,6 +8375,283 @@
           },
           "500": {
             "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/realtime/sse": {
+      "get": {
+        "tags": ["Real-Time"],
+        "summary": "Establish SSE Connection",
+        "description": "Establishes a real-time Server-Sent Events connection for live updates",
+        "security": [{"bearerAuth": []}],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "SSE connection established",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "example": "data: {\"type\":\"connected\",\"data\":{\"connectionId\":\"sse_123\"}}\n\nevent: task.created\ndata: {\"taskId\":\"task_123\",\"title\":\"New Task\"}"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/realtime/sse/subscribe": {
+      "post": {
+        "tags": ["Real-Time"],
+        "summary": "Subscribe to Event Types",
+        "description": "Subscribe to specific event types for real-time updates",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "connectionId": {"type": "string"},
+                  "eventTypes": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription successful"
+          }
+        }
+      }
+    },
+    "/api/realtime/calendar/sync": {
+      "post": {
+        "tags": ["Real-Time"],
+        "summary": "Start Calendar Sync",
+        "description": "Start real-time calendar synchronization",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "enum": ["google", "outlook", "apple"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync started successfully"
+          }
+        }
+      }
+    },
+    "/api/mobile/device/register": {
+      "post": {
+        "tags": ["Mobile"],
+        "summary": "Register Mobile Device",
+        "description": "Register a mobile device for push notifications",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "deviceToken": {"type": "string"},
+                  "platform": {"type": "string", "enum": ["ios", "android", "web"]},
+                  "appVersion": {"type": "string"},
+                  "osVersion": {"type": "string"},
+                  "capabilities": {
+                    "type": "object",
+                    "properties": {
+                      "pushNotifications": {"type": "boolean"},
+                      "backgroundSync": {"type": "boolean"},
+                      "hapticFeedback": {"type": "boolean"},
+                      "camera": {"type": "boolean"},
+                      "voice": {"type": "boolean"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device registered successfully"
+          }
+        }
+      }
+    },
+    "/api/mobile/notifications/send": {
+      "post": {
+        "tags": ["Mobile"],
+        "summary": "Send Push Notification",
+        "description": "Send a push notification to user's devices",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {"type": "string"},
+                  "title": {"type": "string"},
+                  "body": {"type": "string"},
+                  "type": {"type": "string", "enum": ["task_reminder", "achievement", "focus_session", "health_reminder", "general"]},
+                  "platform": {"type": "string", "enum": ["ios", "android", "web"]},
+                  "data": {"type": "object"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notification sent successfully"
+          }
+        }
+      }
+    },
+    "/api/mobile/sync/upload": {
+      "post": {
+        "tags": ["Mobile"],
+        "summary": "Upload Offline Sync Data",
+        "description": "Upload offline sync data for synchronization",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lastSyncAt": {"type": "number"},
+                  "pendingChanges": {
+                    "type": "object",
+                    "properties": {
+                      "tasks": {"type": "array"},
+                      "events": {"type": "array"},
+                      "healthData": {"type": "array"},
+                      "habits": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync data uploaded successfully"
+          }
+        }
+      }
+    },
+    "/api/migrations/status": {
+      "get": {
+        "tags": ["Migrations"],
+        "summary": "Get Migration Status",
+        "description": "Get current migration status and history",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Migration status retrieved successfully"
+          }
+        }
+      }
+    },
+    "/api/migrations/run": {
+      "post": {
+        "tags": ["Migrations"],
+        "summary": "Run Migrations",
+        "description": "Run all pending migrations",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Migrations completed successfully"
+          }
+        }
+      }
+    },
+    "/api/security/audit/log": {
+      "post": {
+        "tags": ["Security"],
+        "summary": "Log Audit Event",
+        "description": "Log a security audit event",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {"type": "string"},
+                  "resource": {"type": "string"},
+                  "resourceId": {"type": "string"},
+                  "details": {"type": "object"},
+                  "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audit event logged successfully"
+          }
+        }
+      }
+    },
+    "/api/security/audit/logs": {
+      "get": {
+        "tags": ["Security"],
+        "summary": "Get Audit Logs",
+        "description": "Get audit logs with filtering",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "userId", "in": "query", "schema": {"type": "string"}},
+          {"name": "action", "in": "query", "schema": {"type": "string"}},
+          {"name": "severity", "in": "query", "schema": {"type": "string"}},
+          {"name": "startTime", "in": "query", "schema": {"type": "number"}},
+          {"name": "endTime", "in": "query", "schema": {"type": "number"}},
+          {"name": "limit", "in": "query", "schema": {"type": "number", "default": 50}},
+          {"name": "offset", "in": "query", "schema": {"type": "number", "default": 0}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit logs retrieved successfully"
+          }
+        }
+      }
+    },
+    "/api/security/dashboard": {
+      "get": {
+        "tags": ["Security"],
+        "summary": "Get Security Dashboard",
+        "description": "Get security dashboard data",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Security dashboard data retrieved successfully"
           }
         }
       }

@@ -53,6 +53,8 @@ describe('Payments and Subscription API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/payments/subscription', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -72,6 +74,8 @@ describe('Payments and Subscription API', () => {
       it('should handle user with no subscription', async () => {
         const response = await makeRequest(app, 'GET', '/api/payments/subscription', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -106,6 +110,8 @@ describe('Payments and Subscription API', () => {
         const response = await makeRequest(app, 'POST', '/api/payments/subscription/create', {
           token: userToken,
           body: planData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -159,6 +165,8 @@ describe('Payments and Subscription API', () => {
 
         const response = await makeRequest(app, 'POST', '/api/payments/subscription/cancel', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -171,6 +179,8 @@ describe('Payments and Subscription API', () => {
       it('should reject canceling non-existent subscription', async () => {
         const response = await makeRequest(app, 'POST', '/api/payments/subscription/cancel', {
           token: userToken
+        ,
+          env: env
         });
 
         expectErrorResponse(response, 404, 'No active subscription');
@@ -188,6 +198,8 @@ describe('Payments and Subscription API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/payments/payment-methods', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -216,6 +228,8 @@ describe('Payments and Subscription API', () => {
 
         const response = await makeRequest(app, 'POST', '/api/payments/payment-methods', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -237,8 +251,10 @@ describe('Payments and Subscription API', () => {
           json: async () => ({ id: paymentMethodId, object: 'payment_method' })
         });
 
-        const response = await makeRequest(app, 'DELETE', `/payment-methods/${paymentMethodId}`, {
+        const response = await makeRequest(app, 'DELETE', '/payment-methods/${paymentMethodId}', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -258,6 +274,8 @@ describe('Payments and Subscription API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/payments/billing/history', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -289,6 +307,8 @@ describe('Payments and Subscription API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/payments/billing/upcoming', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -388,6 +408,8 @@ describe('Payments and Subscription API', () => {
         
         const response = await makeRequest(app, 'GET', '/api/payments/usage', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -461,8 +483,10 @@ describe('Payments and Subscription API', () => {
     it('should respond quickly to subscription status requests', async () => {
       const start = Date.now();
       const response = await makeRequest(app, 'GET', '/api/payments/subscription', {
-        token: userToken
-      });
+          token: userToken
+      ,
+          env: env
+        });
       const duration = Date.now() - start;
 
       expectSuccessResponse(response);

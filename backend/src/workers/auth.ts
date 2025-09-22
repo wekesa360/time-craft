@@ -310,7 +310,17 @@ auth.post('/forgot-password', zValidator('json', forgotPasswordSchema), async (c
       { expirationTtl: 3600 } // 1 hour
     );
 
-    // TODO: Send email with reset link
+    // Send email with reset link
+    try {
+      const { createEmailService } = await import('../lib/email');
+      const emailService = createEmailService(c.env);
+      
+      const resetLink = `${c.req.url.split('/api')[0]}/reset-password?token=${resetToken}`;
+      await emailService.sendPasswordReset(user.email, resetLink, user.preferred_language || 'en');
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+      // Don't fail the password reset if email fails
+    }
     // For now, we'll just log it (in production, integrate with Resend)
     console.log(`Password reset token for ${email}: ${resetToken}`);
 

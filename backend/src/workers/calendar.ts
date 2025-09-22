@@ -9,6 +9,7 @@ import { DatabaseService, UserRepository } from '../lib/db';
 import type { SupportedLanguage } from '../types/database';
 import { MeetingScheduler, type MeetingRequest } from '../lib/meeting-scheduler';
 import { queueNotification } from '../lib/notifications';
+import { createGoogleCalendarService } from '../lib/google-calendar';
 
 const calendar = new Hono<{ Bindings: Env }>();
 
@@ -518,6 +519,121 @@ class CalendarSyncEngine {
     `, [Date.now(), Date.now(), connectionId]);
   }
 }
+
+// ========== GOOGLE CALENDAR OAUTH ==========
+
+// GET /calendar/google/auth - Start Google Calendar OAuth flow
+calendar.get('/google/auth', async (c) => {
+  try {
+    const auth = await getUserFromToken(c);
+    if (!auth) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const googleService = createGoogleCalendarService(c.env);
+    const state = crypto.randomUUID(); // Generate state for CSRF protection
+    
+    // Store state in cache for verification
+    await c.env.CACHE.put(`google_oauth_state_${state}`, auth.userId, { expirationTtl: 600 }); // 10 minutes
+    
+    const authUrl = googleService.getAuthorizationUrl(state);
+    
+    return c.json({
+      authUrl,
+      state
+    });
+  } catch (error) {
+    console.error('Google OAuth initiation error:', error);
+    return c.json({ error: 'Failed to initiate Google OAuth' }, 500);
+  }
+});
+
+// GET /calendar/google/callback - Handle Google OAuth callback
+calendar.get('/google/callback', async (c) => {
+  try {
+    const code = c.req.query('code');
+    const state = c.req.query('state');
+    const error = c.req.query('error');
+
+    if (error) {
+      return c.json({ error: `OAuth error: ${error}` }, 400);
+    }
+
+    if (!code || !state) {
+      return c.json({ error: 'Missing authorization code or state' }, 400);
+    }
+
+    // Verify state parameter
+    const userId = await c.env.CACHE.get(`google_oauth_state_${state}`);
+    if (!userId) {
+      return c.json({ error: 'Invalid or expired state parameter' }, 400);
+    }
+
+    // Clean up state
+    await c.env.CACHE.delete(`google_oauth_state_${state}`);
+
+    const googleService = createGoogleCalendarService(c.env);
+    const tokens = await googleService.exchangeCodeForTokens(code);
+    
+    // Store tokens in database
+    const db = new DatabaseService(c.env);
+    const connectionId = `google_${Date.now()}_${crypto.randomUUID()}`;
+    
+    await db.execute(`
+      INSERT INTO calendar_connections (
+        id, user_id, provider, provider_id, access_token, refresh_token,
+        token_expires_at, calendar_name, is_active, sync_settings, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      connectionId,
+      userId,
+      'google',
+      'primary', // We'll update this with actual calendar ID after getting calendar list
+      tokens.access_token,
+      tokens.refresh_token,
+      Date.now() + (tokens.expires_in * 1000),
+      'Google Calendar',
+      true,
+      JSON.stringify({
+        syncDirection: 'bidirectional',
+        syncTasks: true,
+        syncHealthReminders: true,
+        syncMeetings: true,
+        autoSync: true,
+        syncFrequency: 15,
+        conflictResolution: 'local_wins'
+      }),
+      Date.now(),
+      Date.now()
+    ]);
+
+    // Get calendar list to update provider_id
+    try {
+      const calendarList = await googleService.getCalendarList(tokens.access_token);
+      const primaryCalendar = calendarList.items.find(cal => cal.primary) || calendarList.items[0];
+      
+      if (primaryCalendar) {
+        await db.execute(`
+          UPDATE calendar_connections 
+          SET provider_id = ?, calendar_name = ?, updated_at = ?
+          WHERE id = ?
+        `, [primaryCalendar.id, primaryCalendar.summary, Date.now(), connectionId]);
+      }
+    } catch (error) {
+      console.error('Failed to get calendar list:', error);
+      // Don't fail the connection if we can't get calendar list
+    }
+
+    return c.json({
+      success: true,
+      message: 'Google Calendar connected successfully',
+      connectionId
+    });
+  } catch (error) {
+    console.error('Google OAuth callback error:', error);
+    return c.json({ error: 'Failed to complete Google OAuth' }, 500);
+  }
+});
 
 // ========== API ENDPOINTS ==========
 

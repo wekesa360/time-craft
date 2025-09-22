@@ -11,10 +11,13 @@ export interface Env {
   STRIPE_SECRET_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   RESEND_API_KEY: string;
+  FROM_EMAIL: string;
   ONESIGNAL_APP_ID: string;
   ONESIGNAL_API_KEY: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  GOOGLE_REDIRECT_URI: string;
+  APP_BASE_URL: string;
   OUTLOOK_CLIENT_ID: string;
   OUTLOOK_CLIENT_SECRET: string;
 

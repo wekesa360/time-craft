@@ -1,3 +1,4 @@
+
 -- AI Meeting Scheduling System
 -- Comprehensive meeting scheduling with AI optimization and external calendar integration
 
@@ -132,8 +133,8 @@ CREATE INDEX idx_availability_patterns_user ON availability_patterns(user_id);
 CREATE INDEX idx_availability_patterns_type ON availability_patterns(pattern_type);
 CREATE INDEX idx_availability_patterns_confidence ON availability_patterns(confidence_score DESC);
 
--- Insert default meeting templates and preferences
-INSERT INTO localized_content (
+-- Insert default meeting templates and preferences (commented out due to foreign key constraints)
+-- INSERT INTO localized_content (
   id, content_key, language, content, created_at
 ) VALUES 
 -- Meeting invitation templates

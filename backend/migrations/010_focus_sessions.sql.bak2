@@ -38,7 +38,7 @@ CREATE TABLE focus_templates (
   productivity_tips_de JSON,
   environment_suggestions JSON, -- Suggested environment setup
   is_active BOOLEAN DEFAULT true,
-  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+  created_at INTEGER NOT NULL DEFAULT 0
 );
 
 -- Break reminders and notifications
@@ -54,7 +54,7 @@ CREATE TABLE break_reminders (
   last_triggered INTEGER, -- When reminder was last sent
   trigger_count INTEGER DEFAULT 0, -- How many times triggered
   user_response_rate REAL DEFAULT 0, -- How often user responds positively
-  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  created_at INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
 );
 
@@ -69,7 +69,7 @@ CREATE TABLE focus_analytics (
   measurement_date INTEGER NOT NULL,
   session_type TEXT, -- Type of session this metric relates to
   additional_data JSON,
-  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+  created_at INTEGER NOT NULL DEFAULT 0
 );
 
 -- Productivity patterns learned from focus sessions
@@ -83,7 +83,7 @@ CREATE TABLE productivity_patterns (
   effectiveness_score REAL, -- How effective this pattern is (0-100)
   last_validated INTEGER, -- When pattern was last validated
   is_active BOOLEAN DEFAULT true,
-  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  created_at INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
   UNIQUE(user_id, pattern_type)
 );
@@ -102,11 +102,11 @@ CREATE TABLE screen_time_logs (
   recorded_date INTEGER NOT NULL, -- Date of usage (start of day timestamp)
   sync_source TEXT CHECK(sync_source IN ('ios_screen_time','android_digital_wellbeing')) NOT NULL,
   raw_data JSON, -- Raw data from device APIs
-  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+  created_at INTEGER NOT NULL DEFAULT 0
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_focus_sessions_user_date ON focus_sessions(user_id, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_focus_sessions_user_date ON focus_sessions(user_id, started_at DESC);
 CREATE INDEX idx_focus_sessions_type ON focus_sessions(session_type);
 CREATE INDEX idx_focus_sessions_successful ON focus_sessions(is_successful, productivity_rating);
 CREATE INDEX idx_focus_sessions_task ON focus_sessions(task_id);
@@ -244,7 +244,7 @@ CREATE TABLE focus_streaks (
   streak_start_date INTEGER, -- When current streak started
   streak_data JSON, -- Additional streak metadata
   is_active BOOLEAN DEFAULT true,
-  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  created_at INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
   UNIQUE(user_id, streak_type)
 );
@@ -261,7 +261,7 @@ CREATE TABLE focus_distractions (
   occurred_at INTEGER NOT NULL, -- When during the session it occurred
   user_response TEXT CHECK(user_response IN ('ignored','addressed','postponed','gave_in')),
   notes TEXT,
-  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+  created_at INTEGER NOT NULL DEFAULT 0
 );
 
 -- Focus environment tracking
@@ -279,7 +279,7 @@ CREATE TABLE focus_environments (
   session_count INTEGER DEFAULT 0, -- Number of sessions in this environment
   total_duration INTEGER DEFAULT 0, -- Total minutes spent in this environment
   is_favorite BOOLEAN DEFAULT false,
-  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  created_at INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
 );
 

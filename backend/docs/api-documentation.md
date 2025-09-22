@@ -23,6 +23,10 @@ The Time & Wellness API provides comprehensive endpoints for managing productivi
 - **Push Notifications** - OneSignal integration with localized templates
 - **Health Monitoring** - System health checks, metrics collection, and performance monitoring
 - **OpenAPI Specification** - Complete API documentation with interactive endpoints
+- **Real-Time Features** - Server-Sent Events (SSE) for live calendar sync and notifications
+- **Mobile Platform** - Complete mobile app support with offline sync and device management
+- **Database Migrations** - Safe migration system with rollback capabilities
+- **Enhanced Security** - Advanced audit logging, encryption, and compliance reporting
 
 ## Authentication
 
@@ -1826,6 +1830,492 @@ Content-Type: application/json
 {
   "message": "Response recorded successfully",
   "meetingStatus": "confirmed"
+}
+```
+
+## Real-Time Features
+
+### Server-Sent Events (SSE) Connection
+**GET** `/api/realtime/sse`
+
+Establishes a real-time connection for live updates.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Accept: text/event-stream
+Cache-Control: no-cache
+```
+
+**Response (200):**
+```
+data: {"type":"connected","data":{"connectionId":"sse_123","timestamp":1641027600000}}
+
+event: task.created
+data: {"taskId":"task_123","title":"New Task","priority":"high"}
+
+event: calendar.event.created
+data: {"eventId":"event_123","title":"Meeting","startTime":1641027600000}
+```
+
+### Subscribe to Event Types
+**POST** `/api/realtime/sse/subscribe`
+
+Subscribe to specific event types.
+
+**Request Body:**
+```json
+{
+  "connectionId": "sse_123",
+  "eventTypes": ["task.created", "calendar.event.updated", "focus.session.started"]
+}
+```
+
+### Real-Time Calendar Synchronization
+**POST** `/api/realtime/calendar/sync`
+
+Start real-time calendar synchronization.
+
+**Request Body:**
+```json
+{
+  "provider": "google"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Calendar sync started for google",
+  "provider": "google"
+}
+```
+
+### Get Calendar Sync Status
+**GET** `/api/realtime/calendar/sync/status`
+
+Get current synchronization status.
+
+**Response (200):**
+```json
+{
+  "statuses": [
+    {
+      "userId": "user_123",
+      "provider": "google",
+      "status": "syncing",
+      "lastSyncAt": 1641027600000,
+      "conflictsCount": 2
+    }
+  ]
+}
+```
+
+### Resolve Calendar Conflict
+**POST** `/api/realtime/calendar/conflicts/resolve`
+
+Resolve calendar synchronization conflicts.
+
+**Request Body:**
+```json
+{
+  "conflictId": "conflict_123",
+  "resolution": "local_wins"
+}
+```
+
+### Create Recurring Event
+**POST** `/api/realtime/calendar/events/recurring`
+
+Create a recurring calendar event.
+
+**Request Body:**
+```json
+{
+  "title": "Weekly Team Meeting",
+  "description": "Our weekly team sync",
+  "startTime": 1641027600000,
+  "endTime": 1641031200000,
+  "recurrence": {
+    "frequency": "weekly",
+    "interval": 1,
+    "endDate": 1648771200000
+  }
+}
+```
+
+## Mobile Platform Features
+
+### Register Mobile Device
+**POST** `/api/mobile/device/register`
+
+Register a mobile device for push notifications.
+
+**Request Body:**
+```json
+{
+  "deviceToken": "device_token_123",
+  "platform": "ios",
+  "appVersion": "1.0.0",
+  "osVersion": "17.0",
+  "capabilities": {
+    "pushNotifications": true,
+    "backgroundSync": true,
+    "hapticFeedback": true,
+    "camera": true,
+    "voice": true
+  }
+}
+```
+
+### Send Push Notification
+**POST** `/api/mobile/notifications/send`
+
+Send a push notification to user's devices.
+
+**Request Body:**
+```json
+{
+  "userId": "user_123",
+  "title": "Task Reminder",
+  "body": "Don't forget: Complete project",
+  "type": "task_reminder",
+  "platform": "ios",
+  "data": {
+    "taskId": "task_123"
+  }
+}
+```
+
+### Schedule Task Reminder
+**POST** `/api/mobile/notifications/task-reminder`
+
+Schedule a task reminder notification.
+
+**Request Body:**
+```json
+{
+  "taskId": "task_123",
+  "taskTitle": "Complete project",
+  "reminderTime": 1641027600000,
+  "platform": "ios"
+}
+```
+
+### Offline Sync Upload
+**POST** `/api/mobile/sync/upload`
+
+Upload offline sync data.
+
+**Request Body:**
+```json
+{
+  "lastSyncAt": 1641027600000,
+  "pendingChanges": {
+    "tasks": [
+      {
+        "id": "task_123",
+        "title": "New Task",
+        "status": "pending",
+        "created_at": 1641027600000
+      }
+    ],
+    "events": [],
+    "healthData": [],
+    "habits": []
+  }
+}
+```
+
+### Offline Sync Download
+**GET** `/api/mobile/sync/download`
+
+Download pending changes for offline sync.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "userId": "user_123",
+    "lastSyncAt": 1641027600000,
+    "pendingChanges": {
+      "tasks": [],
+      "events": [],
+      "healthData": [],
+      "habits": []
+    },
+    "conflicts": []
+  }
+}
+```
+
+### Process Camera Data
+**POST** `/api/mobile/camera/process`
+
+Process camera data for food scanning or document recognition.
+
+**Request Body:**
+```json
+{
+  "type": "food",
+  "imageBase64": "base64_encoded_image_data",
+  "metadata": {
+    "timestamp": 1641027600000,
+    "location": "restaurant"
+  }
+}
+```
+
+### Process Voice Command
+**POST** `/api/mobile/voice/process`
+
+Process voice commands for task creation.
+
+**Request Body:**
+```json
+{
+  "audioBase64": "base64_encoded_audio_data",
+  "language": "en",
+  "context": "task_creation"
+}
+```
+
+## Database Migrations
+
+### Get Migration Status
+**GET** `/api/migrations/status`
+
+Get current migration status and history.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "status": {
+    "totalMigrations": 15,
+    "appliedMigrations": 14,
+    "pendingMigrations": 1,
+    "lastAppliedVersion": 14,
+    "migrations": [
+      {
+        "id": "015_high_priority_features",
+        "version": 15,
+        "name": "High Priority Features",
+        "status": "pending"
+      }
+    ]
+  }
+}
+```
+
+### Run Migrations
+**POST** `/api/migrations/run`
+
+Run all pending migrations.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "appliedMigrations": ["015_high_priority_features"],
+  "failedMigrations": [],
+  "errors": [],
+  "message": "Migrations completed successfully"
+}
+```
+
+### Rollback Last Migration
+**POST** `/api/migrations/rollback`
+
+Rollback the last applied migration.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "appliedMigrations": ["015_high_priority_features"],
+  "message": "Rollback completed successfully"
+}
+```
+
+### Validate Migrations
+**GET** `/api/migrations/validate`
+
+Validate migration integrity.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "valid": true,
+  "errors": [],
+  "message": "All migrations are valid"
+}
+```
+
+## Enhanced Security Features
+
+### Log Audit Event
+**POST** `/api/security/audit/log`
+
+Log a security audit event.
+
+**Request Body:**
+```json
+{
+  "action": "user_login",
+  "resource": "authentication",
+  "resourceId": "user_123",
+  "details": {
+    "ipAddress": "192.168.1.1",
+    "userAgent": "Mozilla/5.0..."
+  },
+  "severity": "medium"
+}
+```
+
+### Get Audit Logs
+**GET** `/api/security/audit/logs`
+
+Get audit logs with filtering.
+
+**Query Parameters:**
+- `userId` - Filter by user ID
+- `action` - Filter by action type
+- `severity` - Filter by severity level
+- `startTime` - Start timestamp
+- `endTime` - End timestamp
+- `limit` - Number of results (default: 50)
+- `offset` - Pagination offset
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "logs": [
+    {
+      "id": "audit_123",
+      "userId": "user_123",
+      "action": "user_login",
+      "resource": "authentication",
+      "timestamp": 1641027600000,
+      "severity": "medium",
+      "success": true
+    }
+  ],
+  "count": 1
+}
+```
+
+### Check Rate Limit
+**POST** `/api/security/rate-limit/check`
+
+Check rate limiting for an action.
+
+**Request Body:**
+```json
+{
+  "identifier": "user_123",
+  "action": "api_call",
+  "limit": 100,
+  "windowMs": 3600000
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "allowed": true,
+  "remaining": 95,
+  "resetTime": 1641031200000
+}
+```
+
+### Encrypt Data
+**POST** `/api/security/encrypt`
+
+Encrypt sensitive data.
+
+**Request Body:**
+```json
+{
+  "data": "sensitive_information"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "encryptedData": "encrypted_data_string",
+  "message": "Data encrypted successfully"
+}
+```
+
+### Generate Compliance Report
+**POST** `/api/security/compliance/report`
+
+Generate compliance report for auditing.
+
+**Request Body:**
+```json
+{
+  "reportType": "gdpr",
+  "period": {
+    "start": 1641027600000,
+    "end": 1643619600000
+  }
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "report": {
+    "reportId": "report_123",
+    "reportType": "gdpr",
+    "generatedAt": 1641027600000,
+    "data": {
+      "totalUsers": 1000,
+      "dataProcessed": 50000,
+      "securityIncidents": 2
+    },
+    "compliance": {
+      "gdpr": true,
+      "ccpa": true
+    }
+  }
+}
+```
+
+### Get Security Dashboard
+**GET** `/api/security/dashboard`
+
+Get security dashboard data.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "dashboard": {
+    "totalAuditLogs": 10000,
+    "securityEvents": 25,
+    "criticalEvents": 2,
+    "recentActivity": [],
+    "topActions": [
+      {"action": "user_login", "count": 5000},
+      {"action": "task_created", "count": 3000}
+    ],
+    "complianceStatus": {
+      "gdpr": true,
+      "ccpa": true,
+      "hipaa": false
+    }
+  }
 }
 ```
 

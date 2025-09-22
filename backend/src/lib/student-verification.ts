@@ -96,7 +96,16 @@ export class StudentVerificationServiceImpl implements StudentVerificationServic
       VALUES (?, ?, ?, ?, ?, 0, false, ?)
     `, [otpId, userId, email, otpCode, expiresAt, now]);
 
-    // TODO: Send email with OTP using Resend
+    // Send email with OTP using Resend
+    try {
+      const { createEmailService } = await import('./email');
+      const emailService = createEmailService(this.env);
+      
+      await emailService.sendVerificationOTP(email, otpCode, 'en');
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      // Don't fail the OTP creation if email fails
+    }
     // For now, we'll log it (in production, this would be sent via email)
     console.log(`OTP for ${email}: ${otpCode} (expires at ${new Date(expiresAt)})`);
 

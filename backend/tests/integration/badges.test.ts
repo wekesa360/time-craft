@@ -36,6 +36,8 @@ describe('Badges and Achievement API', () => {
       it('should get all available badges with status', async () => {
         const response = await makeRequest(app, 'GET', '/api/badges/available', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -82,6 +84,8 @@ describe('Badges and Achievement API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/badges/available', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -123,6 +127,8 @@ describe('Badges and Achievement API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/badges/user', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -161,6 +167,8 @@ describe('Badges and Achievement API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/badges/user', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -178,6 +186,8 @@ describe('Badges and Achievement API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/badges/user', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -216,6 +226,8 @@ describe('Badges and Achievement API', () => {
 
         const response = await makeRequest(app, 'POST', '/api/badges/check', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -254,6 +266,8 @@ describe('Badges and Achievement API', () => {
 
         const response = await makeRequest(app, 'POST', '/api/badges/check', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -272,6 +286,8 @@ describe('Badges and Achievement API', () => {
 
         const response = await makeRequest(app, 'POST', '/api/badges/check', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -311,6 +327,8 @@ describe('Badges and Achievement API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/badges/leaderboard', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -349,6 +367,8 @@ describe('Badges and Achievement API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/badges/leaderboard', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -363,8 +383,10 @@ describe('Badges and Achievement API', () => {
   describe('Badge Types and Categories', () => {
     it('should include all expected badge categories', async () => {
       const response = await makeRequest(app, 'GET', '/api/badges/available', {
-        token: userToken
-      });
+          token: userToken
+      ,
+          env: env
+        });
 
       expectSuccessResponse(response);
       const body = await response.json();
@@ -378,8 +400,10 @@ describe('Badges and Achievement API', () => {
 
     it('should include all badge tiers', async () => {
       const response = await makeRequest(app, 'GET', '/api/badges/available', {
-        token: userToken
-      });
+          token: userToken
+      ,
+          env: env
+        });
 
       expectSuccessResponse(response);
       const body = await response.json();
@@ -393,8 +417,10 @@ describe('Badges and Achievement API', () => {
 
     it('should have appropriate point values for different tiers', async () => {
       const response = await makeRequest(app, 'GET', '/api/badges/available', {
-        token: userToken
-      });
+          token: userToken
+      ,
+          env: env
+        });
 
       expectSuccessResponse(response);
       const body = await response.json();
@@ -446,8 +472,10 @@ describe('Badges and Achievement API', () => {
       env.DB._setMockData('SELECT COUNT(*) + 1 as rank FROM users', [{ rank: 1 }]);
 
       const response = await makeRequest(app, 'GET', '/api/badges/leaderboard', {
-        token: userToken
-      });
+          token: userToken
+      ,
+          env: env
+        });
 
       expectSuccessResponse(response);
       const body = await response.json();
@@ -466,8 +494,10 @@ describe('Badges and Achievement API', () => {
 
       const start = Date.now();
       const response = await makeRequest(app, 'POST', '/api/badges/check', {
-        token: userToken
-      });
+          token: userToken
+      ,
+          env: env
+        });
       const duration = Date.now() - start;
 
       expectSuccessResponse(response);
@@ -488,8 +518,10 @@ describe('Badges and Achievement API', () => {
 
       const start = Date.now();
       const response = await makeRequest(app, 'GET', '/api/badges/leaderboard', {
-        token: userToken
-      });
+          token: userToken
+      ,
+          env: env
+        });
       const duration = Date.now() - start;
 
       expectSuccessResponse(response);

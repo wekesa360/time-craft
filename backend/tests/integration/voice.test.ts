@@ -55,6 +55,8 @@ describe('Voice Recognition and Audio Processing API', () => {
           token: userToken,
           body: audioData,
           env: env
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -167,6 +169,8 @@ describe('Voice Recognition and Audio Processing API', () => {
           token: userToken,
           body: streamData,
           env: env
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -241,6 +245,8 @@ describe('Voice Recognition and Audio Processing API', () => {
         const response = await makeRequest(app, 'POST', '/api/voice/commands/interpret', {
           token: userToken,
           body: commandData,
+          env: env
+        ,
           env: env
         });
 
@@ -409,6 +415,8 @@ describe('Voice Recognition and Audio Processing API', () => {
           token: userToken,
           body: commandExecution,
           env: env
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -475,6 +483,8 @@ describe('Voice Recognition and Audio Processing API', () => {
         const response = await makeRequest(app, 'POST', '/api/voice/notes', {
           token: userToken,
           body: noteData,
+          env: env
+        ,
           env: env
         });
 
@@ -551,6 +561,8 @@ describe('Voice Recognition and Audio Processing API', () => {
         const response = await makeRequest(app, 'GET', '/api/voice/notes', {
           token: userToken,
           env: env
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -587,8 +599,10 @@ describe('Voice Recognition and Audio Processing API', () => {
         };
         env.ASSETS.get = vi.fn().mockResolvedValue(mockR2Response);
 
-        const response = await makeRequest(app, 'GET', `/api/voice/notes/${noteId}/audio`, {
+        const response = await makeRequest(app, 'GET', '/api/voice/notes/${noteId}/audio', {
           token: userToken,
+          env: env
+        ,
           env: env
         });
 
@@ -616,6 +630,8 @@ describe('Voice Recognition and Audio Processing API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/voice/analytics/usage', {
           token: userToken,
+          env: env
+        ,
           env: env
         });
 
@@ -659,6 +675,8 @@ describe('Voice Recognition and Audio Processing API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/voice/analytics/accuracy', {
           token: userToken,
+          env: env
+        ,
           env: env
         });
 
@@ -710,6 +728,8 @@ describe('Voice Recognition and Audio Processing API', () => {
         const response = await makeRequest(app, 'GET', '/api/voice/settings', {
           token: userToken,
           env: env
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -751,6 +771,8 @@ describe('Voice Recognition and Audio Processing API', () => {
           token: userToken,
           body: updateData,
           env: env
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -783,6 +805,8 @@ describe('Voice Recognition and Audio Processing API', () => {
       const response = await makeRequest(app, 'GET', '/api/voice/notes/other_user_note/audio', {
           token: userToken,
           env: env
+        ,
+          env: env
         });
 
       expectErrorResponse(response, 404);
@@ -800,6 +824,8 @@ describe('Voice Recognition and Audio Processing API', () => {
       const response = await makeRequest(app, 'POST', '/api/voice/notes', {
           token: userToken,
           body: noteData,
+          env: env
+        ,
           env: env
         });
 

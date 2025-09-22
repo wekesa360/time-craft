@@ -78,14 +78,19 @@ describe('Admin Panel and Management API', () => {
         ];
 
         for (const endpoint of endpoints) {
-          const response = await makeRequest(app, endpoint.method, endpoint.path);
+          const response = await makeRequest(app, endpoint.method, endpoint.path, {
+            env: env
+          });
           expectErrorResponse(response, 401);
         }
       });
 
       it('should reject non-admin users', async () => {
         const response = await makeRequest(app, 'GET', '/admin/dashboard', {
-          token: userToken // Regular user token
+          token: userToken, // Regular user token
+          env: env
+        ,
+          env: env
         });
 
         expectErrorResponse(response, 403, 'Admin access required');
@@ -96,7 +101,10 @@ describe('Admin Panel and Management API', () => {
         env.DB._setMockData('SELECT COUNT(*) as active FROM users WHERE last_login > ?', [{ active: testSystemStats.users.active_30d }]);
 
         const response = await makeRequest(app, 'GET', '/admin/dashboard', {
-          token: adminToken
+          token: adminToken,
+          env: env
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -118,6 +126,8 @@ describe('Admin Panel and Management API', () => {
 
         const response = await makeRequest(app, 'DELETE', '/admin/users/test_user_id', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectErrorResponse(response, 403, 'Insufficient permissions');
@@ -137,7 +147,10 @@ describe('Admin Panel and Management API', () => {
         env.DB._setMockData('SELECT COUNT(*) as completed_today FROM tasks WHERE status = ? AND completed_at > ?', [{ completed_today: testSystemStats.tasks.completed_today }]);
 
         const response = await makeRequest(app, 'GET', '/admin/dashboard', {
-          token: adminToken
+          token: adminToken,
+          env: env
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -171,7 +184,10 @@ describe('Admin Panel and Management API', () => {
         env.DB._setMockData('SELECT AVG(response_time) as avg_time FROM request_logs WHERE created_at > ?', [{ avg_time: 2500 }]);
 
         const response = await makeRequest(app, 'GET', '/admin/dashboard', {
-          token: adminToken
+          token: adminToken,
+          env: env
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -217,6 +233,8 @@ describe('Admin Panel and Management API', () => {
 
         const response = await makeRequest(app, 'GET', '/admin/users?page=1&limit=50', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -251,6 +269,8 @@ describe('Admin Panel and Management API', () => {
       it('should filter users by status', async () => {
         const response = await makeRequest(app, 'GET', '/admin/users?status=suspended', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -264,6 +284,8 @@ describe('Admin Panel and Management API', () => {
       it('should search users by email', async () => {
         const response = await makeRequest(app, 'GET', '/admin/users?search=john@example.com', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -294,8 +316,10 @@ describe('Admin Panel and Management API', () => {
         env.DB._setMockData('SELECT COUNT(*) as count FROM tasks WHERE user_id = ?', [{ count: mockDetailedUser.task_count }]);
         env.DB._setMockData('SELECT COUNT(*) as count FROM health_logs WHERE user_id = ?', [{ count: mockDetailedUser.health_logs_count }]);
 
-        const response = await makeRequest(app, 'GET', `/users/${userId}`, {
+        const response = await makeRequest(app, 'GET', '/users/${userId}', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -331,9 +355,11 @@ describe('Admin Panel and Management API', () => {
         env.DB._setMockData('SELECT * FROM users WHERE id = ?', [{ id: userId, status: 'active' }]);
         env.DB._setMockData('UPDATE users SET status = ? WHERE id = ?', [{ success: true }]);
 
-        const response = await makeRequest(app, 'PUT', `/users/${userId}/status`, {
+        const response = await makeRequest(app, 'PUT', '/users/${userId}/status', {
           token: adminToken,
           body: statusUpdate
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -353,8 +379,10 @@ describe('Admin Panel and Management API', () => {
         env.DB._setMockData('DELETE FROM tasks WHERE user_id = ?', [{ success: true }]);
         env.DB._setMockData('DELETE FROM health_logs WHERE user_id = ?', [{ success: true }]);
 
-        const response = await makeRequest(app, 'DELETE', `/users/${userId}`, {
+        const response = await makeRequest(app, 'DELETE', '/users/${userId}', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -381,6 +409,8 @@ describe('Admin Panel and Management API', () => {
 
         const response = await makeRequest(app, 'GET', '/admin/system/health', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -415,6 +445,8 @@ describe('Admin Panel and Management API', () => {
 
         const response = await makeRequest(app, 'GET', '/admin/system/health', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -451,6 +483,8 @@ describe('Admin Panel and Management API', () => {
 
         const response = await makeRequest(app, 'GET', '/admin/system/logs?level=info&limit=100', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -482,6 +516,8 @@ describe('Admin Panel and Management API', () => {
         const response = await makeRequest(app, 'POST', '/admin/system/maintenance', {
           token: adminToken,
           body: maintenanceData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -511,6 +547,8 @@ describe('Admin Panel and Management API', () => {
 
         const response = await makeRequest(app, 'GET', '/admin/analytics/overview?period=30d', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -548,8 +586,10 @@ describe('Admin Panel and Management API', () => {
           }
         };
 
-        const response = await makeRequest(app, 'GET', `/analytics/export?type=${exportRequest.type}&format=${exportRequest.format}`, {
+        const response = await makeRequest(app, 'GET', '/analytics/export?type=${exportRequest.type}&format=${exportRequest.format}', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -578,6 +618,8 @@ describe('Admin Panel and Management API', () => {
 
         const response = await makeRequest(app, 'GET', '/admin/security/audit-log', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -601,6 +643,8 @@ describe('Admin Panel and Management API', () => {
       it('should get security threat analysis', async () => {
         const response = await makeRequest(app, 'GET', '/admin/security/threats', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -627,8 +671,10 @@ describe('Admin Panel and Management API', () => {
 
       const start = Date.now();
       const response = await makeRequest(app, 'GET', '/admin/dashboard', {
-        token: adminToken
-      });
+          token: adminToken
+      ,
+          env: env
+        });
       const duration = Date.now() - start;
 
       expectSuccessResponse(response);
@@ -641,9 +687,18 @@ describe('Admin Panel and Management API', () => {
       env.DB._setMockData('SELECT * FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?', []);
 
       const requests = [
-        makeRequest(app, 'GET', '/admin/dashboard', { token: adminToken }),
-        makeRequest(app, 'GET', '/admin/users', { token: adminToken }),
-        makeRequest(app, 'GET', '/admin/system/health', { token: adminToken })
+        makeRequest(app, 'GET', '/admin/dashboard', {
+          token: adminToken ,
+          env: env
+        }),
+        makeRequest(app, 'GET', '/admin/users', {
+          token: adminToken ,
+          env: env
+        }),
+        makeRequest(app, 'GET', '/admin/system/health', {
+          token: adminToken ,
+          env: env
+        })
       ];
 
       const responses = await Promise.all(requests);
@@ -659,8 +714,10 @@ describe('Admin Panel and Management API', () => {
       env.DB._setMockError('SELECT COUNT(*) as total FROM users', new Error('Database unavailable'));
 
       const response = await makeRequest(app, 'GET', '/admin/dashboard', {
-        token: adminToken
-      });
+          token: adminToken
+      ,
+          env: env
+        });
 
       // Should return degraded service rather than complete failure
       expect(response.status).toBeLessThan(500);
@@ -674,8 +731,10 @@ describe('Admin Panel and Management API', () => {
       }]);
 
       const response = await makeRequest(app, 'DELETE', '/admin/users/some_user', {
-        token: adminToken
-      });
+          token: adminToken
+      ,
+          env: env
+        });
 
       expectErrorResponse(response, 403, 'Insufficient permissions');
     });

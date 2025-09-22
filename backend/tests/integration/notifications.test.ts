@@ -62,6 +62,8 @@ describe('Push Notifications API', () => {
         const response = await makeRequest(app, 'POST', '/api/notifications/register-device', {
           token: userToken,
           body: deviceData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -104,6 +106,8 @@ describe('Push Notifications API', () => {
         const response = await makeRequest(app, 'POST', '/api/notifications/register-device', {
           token: userToken,
           body: deviceData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -123,6 +127,8 @@ describe('Push Notifications API', () => {
         const response = await makeRequest(app, 'POST', '/api/notifications/register-device', {
           token: userToken,
           body: deviceData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -164,6 +170,8 @@ describe('Push Notifications API', () => {
       it('should get default preferences for new user', async () => {
         const response = await makeRequest(app, 'GET', '/api/notifications/preferences', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -199,6 +207,8 @@ describe('Push Notifications API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/notifications/preferences', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -228,6 +238,8 @@ describe('Push Notifications API', () => {
         const response = await makeRequest(app, 'PUT', '/api/notifications/preferences', {
           token: userToken,
           body: newPrefs
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -283,6 +295,8 @@ describe('Push Notifications API', () => {
         const response = await makeRequest(app, 'POST', '/api/notifications/send', {
           token: adminToken,
           body: notificationData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -321,6 +335,8 @@ describe('Push Notifications API', () => {
         const response = await makeRequest(app, 'POST', '/api/notifications/send', {
           token: adminToken,
           body: notificationData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -399,6 +415,8 @@ describe('Push Notifications API', () => {
         const response = await makeRequest(app, 'POST', '/api/notifications/template', {
           token: userToken,
           body: templateData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -437,6 +455,8 @@ describe('Push Notifications API', () => {
         const response = await makeRequest(app, 'POST', '/api/notifications/template', {
           token: userToken,
           body: templateData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -496,6 +516,8 @@ describe('Push Notifications API', () => {
       it('should get available templates', async () => {
         const response = await makeRequest(app, 'GET', '/api/notifications/templates', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -554,6 +576,8 @@ describe('Push Notifications API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/notifications/history', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -586,6 +610,8 @@ describe('Push Notifications API', () => {
       it('should support pagination', async () => {
         const response = await makeRequest(app, 'GET', '/api/notifications/history?limit=10&offset=20', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -602,8 +628,10 @@ describe('Push Notifications API', () => {
       it('should mark notification as opened', async () => {
         const notificationId = 'notif_123';
 
-        const response = await makeRequest(app, 'POST', `/${notificationId}/opened`, {
+        const response = await makeRequest(app, 'POST', '/${notificationId}/opened', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -643,6 +671,8 @@ describe('Push Notifications API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/notifications/analytics', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -662,6 +692,8 @@ describe('Push Notifications API', () => {
       it('should reject non-admin users', async () => {
         const response = await makeRequest(app, 'GET', '/api/notifications/analytics', {
           token: userToken
+        ,
+          env: env
         });
 
         expectErrorResponse(response, 403, 'Admin access required');
@@ -675,6 +707,8 @@ describe('Push Notifications API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/notifications/analytics?timeframe=7d', {
           token: adminToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -720,7 +754,9 @@ describe('Push Notifications API', () => {
 
   describe('Security', () => {
     it('should reject requests without authentication', async () => {
-      const response = await makeRequest(app, 'GET', '/api/notifications/preferences');
+      const response = await makeRequest(app, 'GET', '/api/notifications/preferences', {
+          env: env
+        });
 
       expectErrorResponse(response, 401);
     });

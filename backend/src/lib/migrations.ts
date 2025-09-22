@@ -273,6 +273,265 @@ export const MIGRATIONS: Migration[] = [
         created_at INTEGER NOT NULL
       );
     `
+  },
+  {
+    id: '002_metrics_tables',
+    name: 'Add metrics and performance tracking tables',
+    sql: `
+      -- API usage statistics
+      CREATE TABLE IF NOT EXISTS api_usage_stats (
+        id TEXT PRIMARY KEY,
+        endpoint TEXT NOT NULL,
+        method TEXT NOT NULL,
+        user_id TEXT,
+        response_time INTEGER,
+        status_code INTEGER,
+        timestamp INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+
+      -- Performance metrics
+      CREATE TABLE IF NOT EXISTS performance_metrics (
+        id TEXT PRIMARY KEY,
+        metric_name TEXT NOT NULL,
+        metric_value REAL NOT NULL,
+        metric_type TEXT CHECK(metric_type IN ('counter','gauge','histogram','summary')) NOT NULL,
+        labels TEXT, -- JSON stored as TEXT
+        timestamp INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+
+      -- System metrics
+      CREATE TABLE IF NOT EXISTS system_metrics (
+        id TEXT PRIMARY KEY,
+        metric_name TEXT NOT NULL,
+        metric_value REAL NOT NULL,
+        unit TEXT,
+        timestamp INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+
+      -- Audit logs
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id TEXT PRIMARY KEY,
+        user_id TEXT,
+        action TEXT NOT NULL,
+        resource TEXT NOT NULL,
+        resource_id TEXT,
+        details TEXT, -- JSON stored as TEXT
+        ip_address TEXT,
+        user_agent TEXT,
+        timestamp INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+
+      -- Security incidents
+      CREATE TABLE IF NOT EXISTS security_incidents (
+        id TEXT PRIMARY KEY,
+        incident_type TEXT NOT NULL,
+        severity TEXT CHECK(severity IN ('low','medium','high','critical')) NOT NULL,
+        description TEXT NOT NULL,
+        user_id TEXT,
+        ip_address TEXT,
+        details TEXT, -- JSON stored as TEXT
+        resolved BOOLEAN DEFAULT 0,
+        resolved_at INTEGER,
+        created_at INTEGER NOT NULL
+      );
+
+      -- Focus sessions
+      CREATE TABLE IF NOT EXISTS focus_sessions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        title TEXT NOT NULL,
+        duration INTEGER NOT NULL,
+        start_time INTEGER NOT NULL,
+        end_time INTEGER,
+        status TEXT CHECK(status IN ('active','completed','cancelled')) DEFAULT 'active',
+        template_id TEXT,
+        environment TEXT, -- JSON stored as TEXT
+        distractions TEXT, -- JSON stored as TEXT
+        created_at INTEGER NOT NULL
+      );
+
+      -- Focus session templates
+      CREATE TABLE IF NOT EXISTS focus_templates (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        name TEXT NOT NULL,
+        duration INTEGER NOT NULL,
+        environment TEXT, -- JSON stored as TEXT
+        is_public BOOLEAN DEFAULT 0,
+        created_at INTEGER NOT NULL
+      );
+
+      -- Distractions
+      CREATE TABLE IF NOT EXISTS distractions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        session_id TEXT REFERENCES focus_sessions(id),
+        type TEXT NOT NULL,
+        description TEXT,
+        timestamp INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+
+      -- Voice notes
+      CREATE TABLE IF NOT EXISTS voice_notes (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        title TEXT,
+        transcription TEXT,
+        audio_file_key TEXT,
+        duration INTEGER,
+        language TEXT DEFAULT 'en',
+        ai_analysis TEXT, -- JSON stored as TEXT
+        created_at INTEGER NOT NULL
+      );
+
+      -- Voice commands
+      CREATE TABLE IF NOT EXISTS voice_commands (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        command TEXT NOT NULL,
+        action TEXT NOT NULL,
+        parameters TEXT, -- JSON stored as TEXT
+        success BOOLEAN NOT NULL,
+        response TEXT,
+        created_at INTEGER NOT NULL
+      );
+
+      -- Notifications
+      CREATE TABLE IF NOT EXISTS notifications (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        data TEXT, -- JSON stored as TEXT
+        read BOOLEAN DEFAULT 0,
+        sent_at INTEGER,
+        created_at INTEGER NOT NULL
+      );
+
+      -- Notification preferences
+      CREATE TABLE IF NOT EXISTS notification_preferences (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        type TEXT NOT NULL,
+        enabled BOOLEAN DEFAULT 1,
+        channels TEXT, -- JSON stored as TEXT
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+
+      -- Social connections
+      CREATE TABLE IF NOT EXISTS social_connections (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        connected_user_id TEXT NOT NULL REFERENCES users(id),
+        status TEXT CHECK(status IN ('pending','accepted','blocked')) DEFAULT 'pending',
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+
+      -- Challenges
+      CREATE TABLE IF NOT EXISTS challenges (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        type TEXT NOT NULL,
+        criteria TEXT NOT NULL, -- JSON stored as TEXT
+        reward_points INTEGER DEFAULT 0,
+        start_date INTEGER,
+        end_date INTEGER,
+        is_active BOOLEAN DEFAULT 1,
+        created_at INTEGER NOT NULL
+      );
+
+      -- User challenge participation
+      CREATE TABLE IF NOT EXISTS user_challenges (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        challenge_id TEXT NOT NULL REFERENCES challenges(id),
+        status TEXT CHECK(status IN ('active','completed','dropped')) DEFAULT 'active',
+        progress REAL DEFAULT 0,
+        started_at INTEGER NOT NULL,
+        completed_at INTEGER,
+        created_at INTEGER NOT NULL
+      );
+
+      -- Student verification
+      CREATE TABLE IF NOT EXISTS student_verifications (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        email TEXT NOT NULL,
+        institution TEXT NOT NULL,
+        document_url TEXT,
+        status TEXT CHECK(status IN ('pending','verified','rejected')) DEFAULT 'pending',
+        verification_code TEXT,
+        verified_at INTEGER,
+        created_at INTEGER NOT NULL
+      );
+
+      -- Localization content
+      CREATE TABLE IF NOT EXISTS localization_content (
+        id TEXT PRIMARY KEY,
+        key TEXT NOT NULL,
+        language TEXT NOT NULL,
+        content TEXT NOT NULL,
+        context TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+
+      -- Admin users
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        role TEXT CHECK(role IN ('super_admin','admin','moderator')) NOT NULL,
+        permissions TEXT, -- JSON stored as TEXT
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+
+      -- Feature flags
+      CREATE TABLE IF NOT EXISTS feature_flags (
+        id TEXT PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        description TEXT,
+        enabled BOOLEAN DEFAULT 0,
+        rollout_percentage INTEGER DEFAULT 0,
+        target_users TEXT, -- JSON stored as TEXT
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+
+      -- Support tickets
+      CREATE TABLE IF NOT EXISTS support_tickets (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        subject TEXT NOT NULL,
+        description TEXT NOT NULL,
+        status TEXT CHECK(status IN ('open','in_progress','resolved','closed')) DEFAULT 'open',
+        priority TEXT CHECK(priority IN ('low','medium','high','urgent')) DEFAULT 'medium',
+        assigned_to TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+
+      -- Offline queue
+      CREATE TABLE IF NOT EXISTS offline_queue (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        action TEXT NOT NULL,
+        data TEXT NOT NULL, -- JSON stored as TEXT
+        status TEXT CHECK(status IN ('pending','processing','completed','failed')) DEFAULT 'pending',
+        retry_count INTEGER DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        processed_at INTEGER
+      );
+    `
   }
 ];
 

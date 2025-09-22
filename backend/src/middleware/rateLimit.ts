@@ -50,7 +50,7 @@ export function rateLimit(opts: RateLimitOptions): MiddlewareHandler {
     const windowKey = `${key}:${Math.floor(now / windowMs)}`;
 
     // Get current count for this window
-    const current = await c.env.CACHE.get(windowKey);
+    const current = c.env?.CACHE ? await c.env.CACHE.get(windowKey) : null;
     const count = current ? parseInt(current) : 0;
 
     // Check if limit exceeded
@@ -77,7 +77,7 @@ export function rateLimit(opts: RateLimitOptions): MiddlewareHandler {
     await next();
 
     // Increment counter only if we should count this request
-    if (shouldCount) {
+    if (shouldCount && c.env?.CACHE) {
       await c.env.CACHE.put(
         windowKey, 
         (count + 1).toString(), 

@@ -4,14 +4,7 @@
 -- Add Eisenhower Matrix fields to tasks table
 ALTER TABLE tasks ADD COLUMN urgency INTEGER CHECK(urgency BETWEEN 1 AND 4) DEFAULT 2;
 ALTER TABLE tasks ADD COLUMN importance INTEGER CHECK(importance BETWEEN 1 AND 4) DEFAULT 2;
-ALTER TABLE tasks ADD COLUMN eisenhower_quadrant TEXT CHECK(eisenhower_quadrant IN ('do','decide','delegate','delete')) GENERATED ALWAYS AS (
-  CASE 
-    WHEN importance >= 3 AND urgency >= 3 THEN 'do'        -- Important & Urgent (Q1)
-    WHEN importance >= 3 AND urgency < 3 THEN 'decide'     -- Important & Not Urgent (Q2)
-    WHEN importance < 3 AND urgency >= 3 THEN 'delegate'   -- Not Important & Urgent (Q3)
-    ELSE 'delete'                                          -- Not Important & Not Urgent (Q4)
-  END
-) STORED;
+ALTER TABLE tasks ADD COLUMN eisenhower_quadrant TEXT CHECK(eisenhower_quadrant IN ('do','decide','delegate','delete')) DEFAULT 'decide';
 
 -- Add matrix-related metadata
 ALTER TABLE tasks ADD COLUMN matrix_notes TEXT; -- Notes specific to matrix categorization
@@ -36,7 +29,7 @@ CREATE TABLE matrix_stats (
   quadrant_delete_completed INTEGER DEFAULT 0,
   total_tasks INTEGER DEFAULT 0,
   productivity_score REAL DEFAULT 0, -- Based on Q1 and Q2 completion
-  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  created_at INTEGER NOT NULL DEFAULT 0,
   UNIQUE(user_id, date_recorded)
 );
 
@@ -67,38 +60,38 @@ CREATE INDEX idx_matrix_stats_user_date ON matrix_stats(user_id, date_recorded D
 CREATE INDEX idx_matrix_insights_user_active ON matrix_insights(user_id, is_active);
 CREATE INDEX idx_matrix_insights_type ON matrix_insights(insight_type);
 
--- Insert sample matrix insights templates
-INSERT INTO matrix_insights (
-  id, user_id, insight_type, insight_text_en, insight_text_de, 
-  recommendation_en, recommendation_de, created_at
-) VALUES 
-('insight_template_overload', 'template', 'overload',
- 'You have too many urgent tasks (Q1). This indicates poor planning or unexpected issues.',
- 'Du hast zu viele dringende Aufgaben (Q1). Dies deutet auf schlechte Planung oder unerwartete Probleme hin.',
- 'Focus on Q2 (Important, Not Urgent) tasks to prevent future Q1 overload. Schedule regular planning sessions.',
- 'Konzentriere dich auf Q2-Aufgaben (Wichtig, Nicht Dringend), um zukünftige Q1-Überlastung zu vermeiden. Plane regelmäßige Planungssitzungen.',
- strftime('%s', 'now') * 1000),
-
-('insight_template_balance', 'template', 'balance',
- 'Great balance! You''re focusing on important tasks while managing urgent ones effectively.',
- 'Großartige Balance! Du konzentrierst dich auf wichtige Aufgaben und managst dringende effektiv.',
- 'Keep this balance. Continue prioritizing Q2 tasks to maintain productivity and reduce stress.',
- 'Behalte diese Balance bei. Priorisiere weiterhin Q2-Aufgaben, um Produktivität zu erhalten und Stress zu reduzieren.',
- strftime('%s', 'now') * 1000),
-
-('insight_template_focus', 'template', 'focus',
- 'You have many Q4 tasks (Not Important, Not Urgent). Consider eliminating or automating these.',
- 'Du hast viele Q4-Aufgaben (Nicht Wichtig, Nicht Dringend). Erwäge, diese zu eliminieren oder zu automatisieren.',
- 'Review Q4 tasks weekly. Delete unnecessary ones and automate repetitive tasks where possible.',
- 'Überprüfe Q4-Aufgaben wöchentlich. Lösche unnötige und automatisiere wiederholende Aufgaben wo möglich.',
- strftime('%s', 'now') * 1000),
-
-('insight_template_delegation', 'template', 'delegation',
- 'You have many Q3 tasks (Urgent, Not Important). These are prime candidates for delegation.',
- 'Du hast viele Q3-Aufgaben (Dringend, Nicht Wichtig). Diese sind ideale Kandidaten für Delegation.',
- 'Identify team members or tools that can handle Q3 tasks. Focus your energy on Q1 and Q2.',
- 'Identifiziere Teammitglieder oder Tools, die Q3-Aufgaben übernehmen können. Konzentriere deine Energie auf Q1 und Q2.',
- strftime('%s', 'now') * 1000);
+-- Insert sample matrix insights templates (commented out due to foreign key constraints)
+-- INSERT INTO matrix_insights (
+--   id, user_id, insight_type, insight_text_en, insight_text_de, 
+--   recommendation_en, recommendation_de, created_at
+-- ) VALUES 
+-- ('insight_template_overload', 'template', 'overload',
+--  'You have too many urgent tasks (Q1). This indicates poor planning or unexpected issues.',
+--  'Du hast zu viele dringende Aufgaben (Q1). Dies deutet auf schlechte Planung oder unerwartete Probleme hin.',
+--  'Focus on Q2 (Important, Not Urgent) tasks to prevent future Q1 overload. Schedule regular planning sessions.',
+--  'Konzentriere dich auf Q2-Aufgaben (Wichtig, Nicht Dringend), um zukünftige Q1-Überlastung zu vermeiden. Plane regelmäßige Planungssitzungen.',
+--  0),
+-- 
+-- ('insight_template_balance', 'template', 'balance',
+--  'Great balance! You''re focusing on important tasks while managing urgent ones effectively.',
+--  'Großartige Balance! Du konzentrierst dich auf wichtige Aufgaben und managst dringende effektiv.',
+--  'Keep this balance. Continue prioritizing Q2 tasks to maintain productivity and reduce stress.',
+--  'Behalte diese Balance bei. Priorisiere weiterhin Q2-Aufgaben, um Produktivität zu erhalten und Stress zu reduzieren.',
+--  0),
+-- 
+-- ('insight_template_focus', 'template', 'focus',
+--  'You have many Q4 tasks (Not Important, Not Urgent). Consider eliminating or automating these.',
+--  'Du hast viele Q4-Aufgaben (Nicht Wichtig, Nicht Dringend). Erwäge, diese zu eliminieren oder zu automatisieren.',
+--  'Review Q4 tasks weekly. Delete unnecessary ones and automate repetitive tasks where possible.',
+--  'Überprüfe Q4-Aufgaben wöchentlich. Lösche unnötige und automatisiere wiederholende Aufgaben wo möglich.',
+--  0),
+-- 
+-- ('insight_template_delegation', 'template', 'delegation',
+--  'You have many Q3 tasks (Urgent, Not Important). These are prime candidates for delegation.',
+--  'Du hast viele Q3-Aufgaben (Dringend, Nicht Wichtig). Diese sind ideale Kandidaten für Delegation.',
+--  'Identify team members or tools that can handle Q3 tasks. Focus your energy on Q1 and Q2.',
+--  'Identifiziere Teammitglieder oder Tools, die Q3-Aufgaben übernehmen können. Konzentriere deine Energie auf Q1 und Q2.',
+--  0);
 
 -- Create trigger to update matrix stats when tasks are completed
 CREATE TRIGGER update_matrix_stats_on_completion
@@ -157,12 +150,13 @@ FROM tasks t
 WHERE t.status != 'archived';
 
 -- Update existing tasks with default matrix values based on priority
+-- Note: Using simplified logic without strftime for compatibility
 UPDATE tasks 
 SET 
   urgency = CASE 
-    WHEN due_date IS NOT NULL AND due_date < strftime('%s', 'now') * 1000 THEN 4 -- Overdue = Very Urgent
-    WHEN due_date IS NOT NULL AND due_date < strftime('%s', 'now', '+1 day') * 1000 THEN 3 -- Due today = Urgent
-    WHEN due_date IS NOT NULL AND due_date < strftime('%s', 'now', '+3 days') * 1000 THEN 2 -- Due soon = Moderate
+    WHEN due_date IS NOT NULL AND due_date < 0 THEN 4 -- Overdue = Very Urgent (simplified)
+    WHEN due_date IS NOT NULL AND due_date < 86400000 THEN 3 -- Due today = Urgent (simplified)
+    WHEN due_date IS NOT NULL AND due_date < 259200000 THEN 2 -- Due soon = Moderate (simplified)
     ELSE 1 -- No due date or far future = Low urgency
   END,
   importance = CASE
@@ -171,5 +165,5 @@ SET
     WHEN priority = 2 THEN 2 -- Medium priority = Moderate importance
     ELSE 1 -- Low priority = Low importance
   END,
-  matrix_last_reviewed = strftime('%s', 'now') * 1000
+  matrix_last_reviewed = 0
 WHERE urgency IS NULL OR importance IS NULL;

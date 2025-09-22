@@ -48,6 +48,8 @@ describe('Health API', () => {
         const response = await makeRequest(app, 'POST', '/api/health/manual-entry', {
           token: userToken,
           body: exerciseData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -78,6 +80,8 @@ describe('Health API', () => {
         const response = await makeRequest(app, 'POST', '/api/health/manual-entry', {
           token: userToken,
           body: moodData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -132,6 +136,8 @@ describe('Health API', () => {
         const response = await makeRequest(app, 'POST', '/api/health/nutrition', {
           token: userToken,
           body: nutritionData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -172,6 +178,8 @@ describe('Health API', () => {
         const response = await makeRequest(app, 'POST', '/api/health/exercise', {
           token: userToken,
           body: exerciseData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -214,6 +222,8 @@ describe('Health API', () => {
         const response = await makeRequest(app, 'POST', '/api/health/hydration', {
           token: userToken,
           body: hydrationData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -257,6 +267,8 @@ describe('Health API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/health/summary', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -285,8 +297,10 @@ describe('Health API', () => {
         const startDate = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7 days ago
         const endDate = Date.now();
 
-        const response = await makeRequest(app, 'GET', `/summary?start=${startDate}&end=${endDate}`, {
+        const response = await makeRequest(app, 'GET', '/summary?start=${startDate}&end=${endDate}', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -299,6 +313,8 @@ describe('Health API', () => {
       it('should get health logs successfully', async () => {
         const response = await makeRequest(app, 'GET', '/api/health/logs', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -323,6 +339,8 @@ describe('Health API', () => {
       it('should filter logs by type', async () => {
         const response = await makeRequest(app, 'GET', '/api/health/logs?type=exercise', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -364,6 +382,8 @@ describe('Health API', () => {
         const response = await makeRequest(app, 'POST', '/api/health/device-sync', {
           token: userToken,
           body: appleHealthData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -394,6 +414,8 @@ describe('Health API', () => {
         const response = await makeRequest(app, 'POST', '/api/health/device-sync', {
           token: userToken,
           body: googleFitData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -430,6 +452,8 @@ describe('Health API', () => {
         const response = await makeRequest(app, 'POST', '/api/health/wellness/mood', {
           token: userToken,
           body: moodData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -459,6 +483,8 @@ describe('Health API', () => {
         const response = await makeRequest(app, 'POST', '/api/health/wellness/reflection', {
           token: userToken,
           body: reflectionData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -485,6 +511,8 @@ describe('Health API', () => {
         const response = await makeRequest(app, 'POST', '/api/health/wellness/gratitude', {
           token: userToken,
           body: gratitudeData
+        ,
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -504,6 +532,8 @@ describe('Health API', () => {
 
         const response = await makeRequest(app, 'GET', '/api/health/analytics/patterns', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
@@ -534,6 +564,8 @@ describe('Health API', () => {
       it('should find health correlations', async () => {
         const response = await makeRequest(app, 'GET', '/api/health/analytics/correlations', {
           token: userToken
+        ,
+          env: env
         });
 
         expectSuccessResponse(response);
