@@ -484,7 +484,7 @@ export interface MoodPayload {
 
 export interface HydrationPayload {
   amount_ml: number;
-  type: 'water' | 'coffee' | 'tea' | 'other';
+  type: 'water' | 'coffee' | 'tea' | 'juice' | 'sports_drink' | 'other';
   notes?: string;
 }
 

@@ -21,6 +21,11 @@ export const LazyForgotPasswordPage = createLazyComponent(
   () => <div className="flex items-center justify-center min-h-[200px]">Loading password reset...</div>
 );
 
+export const LazyResetPasswordPage = createLazyComponent(
+  () => import('./auth/ResetPasswordPage'),
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading password reset...</div>
+);
+
 // Public legal pages
 export const LazyTermsOfServicePage = createLazyComponent(
   () => import('./TermsOfServicePage'),

@@ -8,7 +8,11 @@ import {
   Lock, 
   Globe,
   Save,
-  Plus
+  Plus,
+  Activity,
+  CheckSquare,
+  Zap,
+  Heart
 } from 'lucide-react';
 
 interface ChallengeCreatorProps {
@@ -22,28 +26,28 @@ const challengeTypes = [
     value: 'exercise_streak',
     label: 'Exercise Streak',
     description: 'Complete exercise activities for consecutive days',
-    icon: '🏃‍♂️',
+    icon: Activity,
     unit: 'days'
   },
   {
     value: 'task_completion',
     label: 'Task Completion',
     description: 'Complete a certain number of tasks',
-    icon: '✅',
+    icon: CheckSquare,
     unit: 'tasks'
   },
   {
     value: 'focus_time',
     label: 'Focus Time',
     description: 'Accumulate total focus session time',
-    icon: '🎯',
+    icon: Zap,
     unit: 'minutes'
   },
   {
     value: 'health_logging',
     label: 'Health Logging',
     description: 'Log health activities consistently',
-    icon: '💪',
+    icon: Heart,
     unit: 'logs'
   }
 ];
@@ -156,17 +160,29 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+      {/* Blurry Background Overlay */}
+      <div 
+        className="absolute inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md"
+        onClick={onClose}
+      />
+      
+      {/* Sheet Content */}
+      <div className="relative bg-white dark:bg-gray-800 rounded-t-xl sm:rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-out">
+        {/* Drag Handle (Mobile) */}
+        <div className="flex justify-center pt-3 pb-2 sm:hidden">
+          <div className="w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+        </div>
+        
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <div className="flex items-center space-x-2">
-            <Target className="w-6 h-6 text-primary-600" />
-            <h2 className="text-xl font-semibold text-foreground">Create Challenge</h2>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Create Challenge</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Set up a new challenge for your community</p>
           </div>
           <button
             onClick={onClose}
-            className="text-foreground-secondary hover:text-foreground p-1"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -175,41 +191,54 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Challenge Type */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Challenge Type
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {challengeTypes.map((type) => (
-                <button
-                  key={type.value}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, type: type.value as any })}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
-                    formData.type === type.value
-                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-950/20'
-                      : 'border-border hover:border-primary-300 hover:bg-background-secondary'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3 mb-2">
-                    <span className="text-2xl">{type.icon}</span>
-                    <h3 className="font-medium text-foreground">{type.label}</h3>
-                  </div>
-                  <p className="text-sm text-foreground-secondary">{type.description}</p>
-                </button>
-              ))}
+              {challengeTypes.map((type) => {
+                const IconComponent = type.icon;
+                return (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, type: type.value as any })}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      formData.type === type.value
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20'
+                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3 mb-2">
+                      <div className={`p-2 rounded-lg ${
+                        formData.type === type.value
+                          ? 'bg-blue-100 dark:bg-blue-900/30'
+                          : 'bg-gray-100 dark:bg-gray-700'
+                      }`}>
+                        <IconComponent className={`w-5 h-5 ${
+                          formData.type === type.value
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-600 dark:text-gray-400'
+                        }`} />
+                      </div>
+                      <h3 className="font-medium text-gray-900 dark:text-white">{type.label}</h3>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{type.description}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Challenge Title *
             </label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className={`input w-full ${errors.title ? 'border-red-500' : ''}`}
+              className={`w-full px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.title ? 'border-red-500' : ''}`}
               placeholder="Enter a catchy challenge title..."
             />
             {errors.title && (
@@ -219,13 +248,13 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description *
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className={`input w-full h-24 resize-none ${errors.description ? 'border-red-500' : ''}`}
+              className={`w-full h-24 px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${errors.description ? 'border-red-500' : ''}`}
               placeholder="Describe your challenge and motivate participants..."
             />
             {errors.description && (
@@ -235,7 +264,7 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
 
           {/* Target Value */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Target Goal *
             </label>
             <div className="flex items-center space-x-3">
@@ -244,16 +273,16 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                 min="1"
                 value={formData.targetValue}
                 onChange={(e) => setFormData({ ...formData, targetValue: Number(e.target.value) || 0 })}
-                className={`input w-32 ${errors.targetValue ? 'border-red-500' : ''}`}
+                className={`w-32 px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.targetValue ? 'border-red-500' : ''}`}
               />
-              <span className="text-foreground-secondary">
+              <span className="text-gray-500 dark:text-gray-400">
                 {selectedType?.unit}
               </span>
             </div>
             {errors.targetValue && (
               <p className="text-red-500 text-sm mt-1">{errors.targetValue}</p>
             )}
-            <p className="text-xs text-foreground-secondary mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Participants need to reach this goal to complete the challenge
             </p>
           </div>
@@ -261,14 +290,14 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
           {/* Date Range */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Start Date *
               </label>
               <input
                 type="date"
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className={`input w-full ${errors.startDate ? 'border-red-500' : ''}`}
+                className={`w-full px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.startDate ? 'border-red-500' : ''}`}
                 min={new Date().toISOString().split('T')[0]}
               />
               {errors.startDate && (
@@ -277,14 +306,14 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 End Date *
               </label>
               <input
                 type="date"
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                className={`input w-full ${errors.endDate ? 'border-red-500' : ''}`}
+                className={`w-full px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.endDate ? 'border-red-500' : ''}`}
                 min={formData.startDate || new Date().toISOString().split('T')[0]}
               />
               {errors.endDate && (
@@ -304,7 +333,7 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
 
           {/* Privacy Setting */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Privacy Setting
             </label>
             <div className="space-y-3">
@@ -316,12 +345,9 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                   onChange={() => setFormData({ ...formData, isPublic: true })}
                   className="text-primary-600"
                 />
-                <div className="flex items-center space-x-2">
-                  <Globe className="w-4 h-4 text-green-600" />
-                  <div>
-                    <span className="font-medium text-foreground">Public Challenge</span>
-                    <p className="text-sm text-foreground-secondary">Anyone can discover and join this challenge</p>
-                  </div>
+                <div>
+                  <span className="font-medium text-gray-900 dark:text-white">Public Challenge</span>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Anyone can discover and join this challenge</p>
                 </div>
               </label>
 
@@ -333,31 +359,32 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
                   onChange={() => setFormData({ ...formData, isPublic: false })}
                   className="text-primary-600"
                 />
-                <div className="flex items-center space-x-2">
-                  <Lock className="w-4 h-4 text-orange-600" />
-                  <div>
-                    <span className="font-medium text-foreground">Private Challenge</span>
-                    <p className="text-sm text-foreground-secondary">Only people you invite can join</p>
-                  </div>
+                <div>
+                  <span className="font-medium text-gray-900 dark:text-white">Private Challenge</span>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Only people you invite can join</p>
                 </div>
               </label>
             </div>
           </div>
 
           {/* Challenge Preview */}
-          <div className="p-4 bg-background-secondary rounded-lg">
-            <h4 className="font-medium text-foreground mb-2">Challenge Preview</h4>
+          <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-2">Challenge Preview</h4>
             <div className="space-y-2 text-sm">
               <div className="flex items-center space-x-2">
-                <span className="text-2xl">{selectedType?.icon}</span>
-                <span className="font-medium text-foreground">
+                {selectedType && (
+                  <div className="p-1 bg-blue-100 dark:bg-blue-900/30 rounded">
+                    <selectedType.icon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                )}
+                <span className="font-medium text-gray-900 dark:text-white">
                   {formData.title || 'Challenge Title'}
                 </span>
               </div>
-              <p className="text-foreground-secondary">
+              <p className="text-gray-500 dark:text-gray-400">
                 {formData.description || 'Challenge description will appear here...'}
               </p>
-              <div className="flex items-center space-x-4 text-foreground-secondary">
+              <div className="flex items-center space-x-4 text-gray-500 dark:text-gray-400">
                 <span>Goal: {formData.targetValue} {selectedType?.unit}</span>
                 {getDurationDays() > 0 && <span>Duration: {getDurationDays()} days</span>}
                 <span>{formData.isPublic ? 'Public' : 'Private'}</span>
@@ -366,17 +393,17 @@ export const ChallengeCreator: React.FC<ChallengeCreatorProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-4 border-t border-border">
+          <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
-              className="btn-secondary"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-primary"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg transition-colors inline-flex items-center"
             >
               <Save className="w-4 h-4 mr-2" />
               Create Challenge

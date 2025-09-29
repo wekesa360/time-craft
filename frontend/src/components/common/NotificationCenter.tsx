@@ -143,7 +143,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     <div className={`fixed inset-0 z-50 overflow-hidden ${className}`}>
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="absolute inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />

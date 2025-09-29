@@ -353,7 +353,7 @@ export const AccessibleNavigation: React.FC<AccessibleNavigationProps> = ({
       {/* Mobile Navigation Overlay */}
       {shouldCollapse && isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md z-40"
           onClick={() => setIsOpen(false)}
           aria-hidden={true}
         />

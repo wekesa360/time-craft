@@ -22,7 +22,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   const ThemeIcon = themeIcons[config.mode];
 
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       {/* Header with theme and language controls */}
       <header className="absolute top-0 right-0 p-4 sm:p-6 z-10">
         <div className="flex items-center gap-2 sm:gap-3">
@@ -62,18 +62,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
 
       {/* Centered Auth Card */}
       <div className="w-full max-w-md">
-        {/* App branding */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('app.name')}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            {t('app.tagline')}
-          </p>
-        </div>
-
         {/* Auth card */}
-        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6 sm:p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
           {children}
         </div>
       </div>

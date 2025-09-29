@@ -20,7 +20,6 @@ interface QuadrantProps {
   onTaskComplete: (id: string) => void;
   onTaskEdit: (task: Task) => void;
   onTaskDelete: (id: string) => void;
-  onCreateTask: (quadrant: string) => void;
 }
 
 const Quadrant: React.FC<QuadrantProps> = ({
@@ -32,39 +31,23 @@ const Quadrant: React.FC<QuadrantProps> = ({
   onTaskComplete,
   onTaskEdit,
   onTaskDelete,
-  onCreateTask,
 }) => {
   const { t } = useTranslation();
 
   return (
     <div className={`p-4 rounded-lg border-2 ${color} bg-opacity-10`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          {icon}
-          <div>
-            <h3 className="font-semibold text-foreground">{title}</h3>
-            <p className="text-sm text-foreground-secondary">{description}</p>
-          </div>
+      <div className="flex items-center space-x-2 mb-4">
+        {icon}
+        <div>
+          <h3 className="font-semibold text-foreground">{title}</h3>
+          <p className="text-sm text-foreground-secondary">{description}</p>
         </div>
-        <button
-          onClick={() => onCreateTask(title.toLowerCase().replace(' ', '_'))}
-          className="btn-ghost p-2 hover:bg-background-secondary rounded-lg"
-          title={`Add task to ${title}`}
-        >
-          <Plus className="w-4 h-4" />
-        </button>
       </div>
 
       <div className="space-y-2 min-h-[200px]">
         {tasks.length === 0 ? (
           <div className="text-center py-8 text-foreground-secondary">
             <p className="text-sm">No tasks in this quadrant</p>
-            <button
-              onClick={() => onCreateTask(title.toLowerCase().replace(' ', '_'))}
-              className="btn-outline mt-2 text-xs"
-            >
-              Add Task
-            </button>
           </div>
         ) : (
           tasks.map((task) => (
@@ -145,12 +128,6 @@ const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-foreground mb-2">Eisenhower Matrix</h2>
-        <p className="text-foreground-secondary">
-          Organize your tasks by urgency and importance
-        </p>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Do First - Urgent & Important */}
@@ -163,7 +140,6 @@ const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           onTaskComplete={onTaskComplete}
           onTaskEdit={onTaskEdit}
           onTaskDelete={onTaskDelete}
-          onCreateTask={onCreateTask}
         />
 
         {/* Schedule - Important but Not Urgent */}
@@ -176,7 +152,6 @@ const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           onTaskComplete={onTaskComplete}
           onTaskEdit={onTaskEdit}
           onTaskDelete={onTaskDelete}
-          onCreateTask={onCreateTask}
         />
 
         {/* Delegate - Urgent but Not Important */}
@@ -189,7 +164,6 @@ const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           onTaskComplete={onTaskComplete}
           onTaskEdit={onTaskEdit}
           onTaskDelete={onTaskDelete}
-          onCreateTask={onCreateTask}
         />
 
         {/* Eliminate - Neither Urgent nor Important */}
@@ -202,34 +176,9 @@ const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           onTaskComplete={onTaskComplete}
           onTaskEdit={onTaskEdit}
           onTaskDelete={onTaskDelete}
-          onCreateTask={onCreateTask}
         />
       </div>
 
-      {/* Matrix Legend */}
-      <div className="bg-background-secondary rounded-lg p-4">
-        <h3 className="font-semibold text-foreground mb-3">Matrix Guide</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <h4 className="font-medium text-foreground mb-2">How to Use:</h4>
-            <ul className="space-y-1 text-foreground-secondary">
-              <li>• <strong>Do First:</strong> Handle immediately</li>
-              <li>• <strong>Schedule:</strong> Plan for later</li>
-              <li>• <strong>Delegate:</strong> Assign to others</li>
-              <li>• <strong>Eliminate:</strong> Remove from list</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-medium text-foreground mb-2">Tips:</h4>
-            <ul className="space-y-1 text-foreground-secondary">
-              <li>• Focus on "Do First" tasks</li>
-              <li>• Schedule time for "Schedule" tasks</li>
-              <li>• Don't let "Delegate" tasks become urgent</li>
-              <li>• Regularly review "Eliminate" tasks</li>
-            </ul>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

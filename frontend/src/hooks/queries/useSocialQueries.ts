@@ -44,7 +44,15 @@ export const usePublicChallengesQuery = () => {
 export const useActivityFeedQuery = () => {
   return useQuery({
     queryKey: socialKeys.activityFeed(),
-    queryFn: () => apiClient.getActivityFeed(),
+    queryFn: async () => {
+      try {
+        const feed = await apiClient.getActivityFeed();
+        return feed || []; // Return empty array if undefined
+      } catch (error) {
+        console.error('Failed to fetch activity feed:', error);
+        return []; // Return empty array on error
+      }
+    },
     staleTime: 1 * 60 * 1000, // 1 minute
   });
 };

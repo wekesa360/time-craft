@@ -4,15 +4,13 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { SocialFeaturesServiceImpl } from '../lib/social-features';
+import { DatabaseService } from '../lib/db';
 import { authenticateUser } from '../middleware/auth';
 import { z } from 'zod';
 
-type Bindings = {
-  DB: D1Database;
-  JWT_SECRET: string;
-};
+import type { Env } from '../lib/env';
 
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new Hono<{ Bindings: Env }>();
 
 // CORS middleware
 app.use('*', cors({
@@ -56,11 +54,12 @@ const updateProgressSchema = z.object({
 // Send connection request
 app.post('/connections/request', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const body = await c.req.json();
     const { addresseeId, type } = connectionRequestSchema.parse(body);
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const connection = await socialService.sendConnectionRequest(userId, addresseeId, type);
 
     return c.json({
@@ -78,10 +77,11 @@ app.post('/connections/request', async (c) => {
 // Accept connection request
 app.post('/connections/:connectionId/accept', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const connectionId = c.req.param('connectionId');
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const success = await socialService.acceptConnectionRequest(connectionId, userId);
 
     if (!success) {
@@ -106,10 +106,11 @@ app.post('/connections/:connectionId/accept', async (c) => {
 // Reject connection request
 app.post('/connections/:connectionId/reject', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const connectionId = c.req.param('connectionId');
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const success = await socialService.rejectConnectionRequest(connectionId, userId);
 
     if (!success) {
@@ -134,11 +135,12 @@ app.post('/connections/:connectionId/reject', async (c) => {
 // Block user
 app.post('/connections/block', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const body = await c.req.json();
     const { addresseeId } = connectionRequestSchema.parse(body);
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     await socialService.blockUser(userId, addresseeId);
 
     return c.json({
@@ -156,10 +158,11 @@ app.post('/connections/block', async (c) => {
 // Get user connections
 app.get('/connections', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const status = c.req.query('status') as 'pending' | 'accepted' | 'blocked' | undefined;
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const connections = await socialService.getUserConnections(userId, status);
 
     return c.json({
@@ -179,11 +182,12 @@ app.get('/connections', async (c) => {
 // Share achievement
 app.post('/achievements/share', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const body = await c.req.json();
     const { badgeId, platform } = shareAchievementSchema.parse(body);
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const share = await socialService.shareAchievement(badgeId, platform, userId);
 
     return c.json({
@@ -203,7 +207,7 @@ app.get('/achievements/:badgeId/stats', async (c) => {
   try {
     const badgeId = c.req.param('badgeId');
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const stats = await socialService.getAchievementShareStats(badgeId);
 
     return c.json({
@@ -223,11 +227,12 @@ app.get('/achievements/:badgeId/stats', async (c) => {
 // Create challenge
 app.post('/challenges', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const body = await c.req.json();
     const challengeData = createChallengeSchema.parse(body);
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const challenge = await socialService.createChallenge(userId, challengeData);
 
     return c.json({
@@ -245,10 +250,11 @@ app.post('/challenges', async (c) => {
 // Join challenge
 app.post('/challenges/:challengeId/join', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const challengeId = c.req.param('challengeId');
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const participant = await socialService.joinChallenge(challengeId, userId);
 
     return c.json({
@@ -266,10 +272,11 @@ app.post('/challenges/:challengeId/join', async (c) => {
 // Leave challenge
 app.post('/challenges/:challengeId/leave', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const challengeId = c.req.param('challengeId');
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const success = await socialService.leaveChallenge(challengeId, userId);
 
     if (!success) {
@@ -294,12 +301,13 @@ app.post('/challenges/:challengeId/leave', async (c) => {
 // Update challenge progress
 app.put('/challenges/:challengeId/progress', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const challengeId = c.req.param('challengeId');
     const body = await c.req.json();
     const { progressData } = updateProgressSchema.parse(body);
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const success = await socialService.updateChallengeProgress(challengeId, userId, progressData);
 
     if (!success) {
@@ -326,7 +334,7 @@ app.get('/challenges/:challengeId/leaderboard', async (c) => {
   try {
     const challengeId = c.req.param('challengeId');
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const leaderboard = await socialService.getChallengeLeaderboard(challengeId);
 
     return c.json({
@@ -346,7 +354,7 @@ app.get('/challenges/public', async (c) => {
   try {
     const limit = parseInt(c.req.query('limit') || '20');
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const challenges = await socialService.getPublicChallenges(limit);
 
     return c.json({
@@ -364,9 +372,10 @@ app.get('/challenges/public', async (c) => {
 // Get user challenges
 app.get('/challenges/my', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
 
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
     const challenges = await socialService.getUserChallenges(userId);
 
     return c.json({
@@ -386,10 +395,11 @@ app.get('/challenges/my', async (c) => {
 // Get social feed
 app.get('/feed', async (c) => {
   try {
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const limit = parseInt(c.req.query('limit') || '20');
     const offset = parseInt(c.req.query('offset') || '0');
-    const socialService = new SocialFeaturesServiceImpl(c.env.DB);
+    const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
 
     // Get user connections for feed filtering
     const connections = await socialService.getUserConnections(userId, 'accepted');
@@ -418,7 +428,7 @@ app.get('/feed', async (c) => {
         FROM achievement_shares s
         JOIN users u ON s.user_id = u.id
         LEFT JOIN user_badges ub ON s.badge_id = ub.id
-        LEFT JOIN badge_definitions b ON ub.badge_key = b.badge_key
+        LEFT JOIN achievement_definitions b ON ub.badge_key = b.achievement_key
         WHERE s.user_id IN (${connectionIds.map(() => '?').join(',')})
         ORDER BY s.shared_at DESC
         LIMIT ? OFFSET ?

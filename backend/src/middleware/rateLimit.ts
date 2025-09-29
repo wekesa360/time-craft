@@ -97,9 +97,9 @@ export function rateLimit(opts: RateLimitOptions): MiddlewareHandler {
 
 // Preset rate limiters for different endpoints
 export const authRateLimit = () => rateLimit({
-  max: 5, // 5 attempts per 15 minutes
-  windowMs: 15 * 60 * 1000,
-  message: 'Too many authentication attempts. Please try again later.',
+  max: 20, // 20 attempts per 5 minutes
+  windowMs: 5 * 60 * 1000, // 5 minutes (reduced from 15)
+  message: 'Too many authentication attempts. Please try again in 5 minutes.',
   skipSuccessfulRequests: true
 });
 

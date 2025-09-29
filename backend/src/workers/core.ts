@@ -400,6 +400,61 @@ core.post('/tasks', zValidator('json', createTaskSchema), async (c) => {
   }
 });
 
+// GET /api/tasks/stats - Get task statistics
+core.get('/tasks/stats', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const taskRepo = new TaskRepository(c.env);
+    const stats = await taskRepo.getTaskStats(auth.userId);
+    
+    return c.json({ stats });
+  } catch (error) {
+    console.error('Get task stats error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// GET /api/tasks/matrix - Alias for /api/matrix
+core.get('/tasks/matrix', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const taskRepo = new TaskRepository(c.env);
+    const tasks = await taskRepo.getTasks(auth.userId, { status: 'pending' });
+
+    // Organize tasks by Eisenhower Matrix quadrants
+    const doTasks = tasks.data.filter((task: any) => (task.urgency || 2) >= 3 && (task.importance || 2) >= 3);
+    const decideTasks = tasks.data.filter((task: any) => (task.urgency || 2) < 3 && (task.importance || 2) >= 3);
+    const delegateTasks = tasks.data.filter((task: any) => (task.urgency || 2) >= 3 && (task.importance || 2) < 3);
+    const deleteTasks = tasks.data.filter((task: any) => (task.urgency || 2) < 3 && (task.importance || 2) < 3);
+
+    const matrix = {
+      do: doTasks,
+      decide: decideTasks,
+      delegate: delegateTasks,
+      delete: deleteTasks,
+      stats: {
+        do: doTasks.length,
+        decide: decideTasks.length,
+        delegate: delegateTasks.length,
+        delete: deleteTasks.length
+      }
+    };
+
+    return c.json({ matrix });
+  } catch (error) {
+    console.error('Get matrix error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
 // GET /api/tasks/:id - Get specific task
 core.get('/tasks/:id', async (c) => {
   const auth = await getUserFromToken(c);
@@ -529,47 +584,8 @@ core.patch('/tasks/:id/complete', async (c) => {
   }
 });
 
-// GET /api/tasks/stats - Get task statistics
-core.get('/tasks/stats', async (c) => {
-  const auth = await getUserFromToken(c);
-  if (!auth) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
-
-  try {
-    const taskRepo = new TaskRepository(c.env);
-    const stats = await taskRepo.getTaskStats(auth.userId);
-    
-    return c.json({ stats });
-  } catch (error) {
-    console.error('Get task stats error:', error);
-    return c.json({ error: 'Internal server error' }, 500);
-  }
-});
-
 // ========== LOCALIZATION ENDPOINTS ==========
-
-// GET /api/localization/:language - Get localized content
-core.get('/localization/:language', async (c) => {
-  try {
-    const language = c.req.param('language') as SupportedLanguage;
-    
-    if (!['en', 'de'].includes(language)) {
-      return c.json({ error: 'Unsupported language' }, 400);
-    }
-
-    const localizationRepo = new LocalizationRepository(c.env);
-    const content = await localizationRepo.getLocalizedContent(language);
-    
-    return c.json({ 
-      language,
-      content 
-    });
-  } catch (error) {
-    console.error('Get localization error:', error);
-    return c.json({ error: 'Internal server error' }, 500);
-  }
-});
+// Note: Localization endpoints are now handled by the dedicated localization worker
 
 // ========== EISENHOWER MATRIX ENDPOINTS ==========
 
@@ -775,32 +791,6 @@ core.post('/matrix/categorize', async (c) => {
 
 // ========== MATRIX ROUTE ALIASES ==========
 // For compatibility with frontend expectations
-
-// GET /api/tasks/matrix - Alias for /api/matrix
-core.get('/tasks/matrix', async (c) => {
-  const auth = await getUserFromToken(c);
-  if (!auth) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
-
-  try {
-    const taskRepo = new TaskRepository(c.env);
-    const tasks = await taskRepo.getTasks(auth.userId, { status: 'pending' });
-
-    // Organize tasks by Eisenhower Matrix quadrants
-    const matrix = {
-      do: tasks.data.filter((task: any) => (task.urgency || 2) >= 3 && (task.importance || 2) >= 3),
-      decide: tasks.data.filter((task: any) => (task.urgency || 2) < 3 && (task.importance || 2) >= 3),
-      delegate: tasks.data.filter((task: any) => (task.urgency || 2) >= 3 && (task.importance || 2) < 3),
-      delete: tasks.data.filter((task: any) => (task.urgency || 2) < 3 && (task.importance || 2) < 3)
-    };
-
-    return c.json({ matrix });
-  } catch (error) {
-    console.error('Get matrix error:', error);
-    return c.json({ error: 'Internal server error' }, 500);
-  }
-});
 
 // GET /api/tasks/matrix/stats - Alias for /api/matrix/stats
 core.get('/tasks/matrix/stats', async (c) => {

@@ -13,6 +13,9 @@ import type {
 } from '../types/database';
 import { generateId } from '../utils/id';
 
+// Import D1 types explicitly
+import type { D1Database, D1Result } from '@cloudflare/workers-types';
+
 /* ---------- Row helpers ---------- */
 export type Row<T = Record<string, unknown>> = T;
 
@@ -232,7 +235,7 @@ export class UserRepository {
       updated_at: now
     };
 
-    await insert(this.env, 'users', user as Record<string, unknown>);
+    await insert(this.env, 'users', user as unknown as Record<string, unknown>);
     return user;
   }
 
@@ -282,7 +285,7 @@ export class TaskRepository {
       updated_at: now
     };
 
-    await insert(this.env, 'tasks', task as Record<string, unknown>);
+    await insert(this.env, 'tasks', task as unknown as Record<string, unknown>);
     return task;
   }
 
@@ -339,7 +342,7 @@ export class TaskRepository {
 
     if (filters.is_delegated !== undefined) {
       sql += ' AND is_delegated = ?';
-      params.push(filters.is_delegated ? 1 : 0);
+      params.push(filters.is_delegated ? '1' : '0');
     }
 
     sql += ' ORDER BY ';
@@ -396,7 +399,7 @@ export class HealthRepository {
       created_at: Date.now()
     };
 
-    await insert(this.env, 'health_logs', healthLog as Record<string, unknown>);
+    await insert(this.env, 'health_logs', healthLog as unknown as Record<string, unknown>);
     return healthLog;
   }
 
@@ -481,7 +484,7 @@ export class FinanceRepository {
       created_at: Date.now()
     };
 
-    await insert(this.env, 'financial_entries', transaction as Record<string, unknown>);
+    await insert(this.env, 'financial_entries', transaction as unknown as Record<string, unknown>);
     return transaction;
   }
 
@@ -570,12 +573,12 @@ export class LocalizationRepository {
 
   async getLocalizedContent(language: SupportedLanguage, keys?: string[]): Promise<Record<string, string>> {
     let sql = 'SELECT content_key, content FROM localized_content WHERE language = ?';
-    const params = [language];
+    const params: (SupportedLanguage | string)[] = [language];
 
     if (keys && keys.length > 0) {
       const placeholders = keys.map(() => '?').join(',');
       sql += ` AND content_key IN (${placeholders})`;
-      params.push(...keys as string[]);
+      params.push(...(keys as string[]));
     }
 
     const results = await select<{ content_key: string; content: string }>(this.env, sql, params);

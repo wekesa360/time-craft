@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -16,13 +16,6 @@ interface ToastProps {
   };
   className?: string;
 }
-
-const toastIcons = {
-  success: CheckCircle,
-  error: XCircle,
-  warning: AlertTriangle,
-  info: Info,
-};
 
 const toastStyles = {
   success: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200',
@@ -41,7 +34,6 @@ export const Toast: React.FC<ToastProps> = ({
   action,
   className = '',
 }) => {
-  const Icon = toastIcons[type];
   const [isVisible, setIsVisible] = React.useState(true);
 
   React.useEffect(() => {
@@ -72,11 +64,7 @@ export const Toast: React.FC<ToastProps> = ({
       role="alert"
       aria-live="polite"
     >
-      <div className="flex-shrink-0">
-        <Icon className="w-5 h-5" aria-hidden="true" />
-      </div>
-      
-      <div className="ml-3 flex-1">
+      <div className="flex-1">
         <h3 className="text-sm font-medium">{title}</h3>
         {message && (
           <p className="mt-1 text-sm opacity-90">{message}</p>

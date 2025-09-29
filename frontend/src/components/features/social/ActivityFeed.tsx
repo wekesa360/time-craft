@@ -159,9 +159,6 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
       <div className="space-y-4">
         {filteredActivities.length === 0 ? (
           <div className="card p-8 text-center">
-            <div className="w-16 h-16 bg-background-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-              <Share2 className="w-8 h-8 text-foreground-secondary" />
-            </div>
             <h3 className="text-lg font-medium text-foreground mb-2">No activities yet</h3>
             <p className="text-foreground-secondary">
               {filter 
@@ -305,7 +302,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                       <button
                         onClick={() => handleCommentSubmit(activity.id)}
                         disabled={!commentInputs[activity.id]?.trim()}
-                        className="btn-primary text-sm px-3 py-1"
+                        className="btn btn-primary text-sm px-3 py-1"
                       >
                         Post
                       </button>
@@ -321,7 +318,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
       {/* Load More */}
       {filteredActivities.length > 0 && (
         <div className="text-center">
-          <button className="btn-outline">
+          <button className="btn btn-secondary">
             Load More Activities
           </button>
         </div>

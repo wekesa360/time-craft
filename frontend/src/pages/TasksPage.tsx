@@ -3,18 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { 
-  Plus, 
   Grid3X3, 
   List, 
-  BarChart3,
-  Download
+  BarChart3
 } from 'lucide-react';
 
 // Components
 import EisenhowerMatrix from '../components/features/tasks/EisenhowerMatrix';
 import { TaskCard } from '../components/features/tasks/TaskCard';
-import TaskForm from '../components/features/tasks/TaskForm';
-import TaskFilters from '../components/features/tasks/TaskFilters';
+import TaskFormSheet from '../components/features/tasks/TaskFormSheet';
 import { TaskListSkeleton } from '../components/skeletons/TaskListSkeleton';
 
 // Hooks and API
@@ -32,15 +29,6 @@ export default function TasksPage() {
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [defaultQuadrant, setDefaultQuadrant] = useState<string>('');
-  const [filters, setFilters] = useState({
-    search: '',
-    status: '',
-    priority: '',
-    contextType: '',
-    quadrant: '',
-    dateRange: ''
-  });
-
   // Queries
   const {
     useTasksQuery,
@@ -52,12 +40,9 @@ export default function TasksPage() {
     useDeleteTaskMutation
   } = useTaskQueries();
 
-  const { data: tasks = [], isLoading: tasksLoading } = useTasksQuery({
-    ...filters,
-    priority: filters.priority ? parseInt(filters.priority) : undefined
-  });
+  const { data: tasks = [], isLoading: tasksLoading } = useTasksQuery({});
   const { data: taskStats } = useTaskStatsQuery();
-  const { data: matrixData } = useEisenhowerMatrixQuery();
+  const { data: matrixData, isLoading: matrixLoading, error: matrixError } = useEisenhowerMatrixQuery();
 
   // Mutations
   const createTaskMutation = useCreateTaskMutation();
@@ -117,53 +102,11 @@ export default function TasksPage() {
     }
   };
 
-  // Filter tasks based on current filters
-  const filteredTasks = tasks.filter(task => {
-    if (filters.search && !task.title.toLowerCase().includes(filters.search.toLowerCase()) && 
-        !task.description?.toLowerCase().includes(filters.search.toLowerCase())) {
-      return false;
-    }
-    if (filters.status && task.status !== filters.status) return false;
-    if (filters.priority && task.priority.toString() !== filters.priority) return false;
-    if (filters.contextType && task.context_type !== filters.contextType) return false;
-    if (filters.quadrant && task.eisenhower_quadrant !== filters.quadrant) return false;
-    
-    // Date range filtering
-    if (filters.dateRange) {
-      const now = Date.now();
-      const today = new Date(now).setHours(0, 0, 0, 0);
-      const tomorrow = today + 24 * 60 * 60 * 1000;
-      const weekStart = today - new Date(today).getDay() * 24 * 60 * 60 * 1000;
-      const weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000;
-      const nextWeekEnd = weekEnd + 7 * 24 * 60 * 60 * 1000;
-
-      switch (filters.dateRange) {
-        case 'today':
-          if (!task.due_date || task.due_date < today || task.due_date >= tomorrow) return false;
-          break;
-        case 'tomorrow':
-          if (!task.due_date || task.due_date < tomorrow || task.due_date >= tomorrow + 24 * 60 * 60 * 1000) return false;
-          break;
-        case 'this_week':
-          if (!task.due_date || task.due_date < weekStart || task.due_date >= weekEnd) return false;
-          break;
-        case 'next_week':
-          if (!task.due_date || task.due_date < weekEnd || task.due_date >= nextWeekEnd) return false;
-          break;
-        case 'overdue':
-          if (!task.due_date || task.due_date >= now || task.status === 'done') return false;
-          break;
-      }
-    }
-    
-    return true;
-  });
-
   const taskCounts = {
-    total: filteredTasks.length,
-    pending: filteredTasks.filter(t => t.status === 'pending').length,
-    completed: filteredTasks.filter(t => t.status === 'done').length,
-    overdue: filteredTasks.filter(t => t.due_date && t.due_date < Date.now() && t.status !== 'done').length
+    total: tasks.length,
+    pending: tasks.filter(t => t.status === 'pending').length,
+    completed: tasks.filter(t => t.status === 'done').length,
+    overdue: tasks.filter(t => t.due_date && t.due_date < Date.now() && t.status !== 'done').length
   };
 
   if (tasksLoading) {
@@ -226,29 +169,16 @@ export default function TasksPage() {
           </div>
 
           {/* Actions */}
-          <button className="btn-outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export
-          </button>
-          
           <button 
             onClick={() => handleCreateTask()}
-            className="btn-primary"
+            className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 active:scale-95"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Task
+            <span>Create Task</span>
           </button>
+          
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="card p-4">
-        <TaskFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          taskCounts={taskCounts}
-        />
-      </div>
 
       {/* Content based on view mode */}
       {tasksLoading ? (
@@ -257,7 +187,7 @@ export default function TasksPage() {
         <>
           {viewMode === 'matrix' && (
             <EisenhowerMatrix
-              tasks={filteredTasks}
+              tasks={tasks}
               onTaskComplete={handleCompleteTask}
               onTaskEdit={handleEditTask}
               onTaskDelete={handleDeleteTask}
@@ -268,26 +198,15 @@ export default function TasksPage() {
           {viewMode === 'list' && (
             <div className="card p-6">
               <div className="space-y-4">
-                {filteredTasks.length === 0 ? (
+                {tasks.length === 0 ? (
                   <div className="text-center py-12">
-                    <List className="w-12 h-12 text-foreground-secondary mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-2">No tasks found</h3>
-                    <p className="text-foreground-secondary mb-4">
-                      {Object.values(filters).some(f => f) 
-                        ? 'Try adjusting your filters or create a new task'
-                        : 'Get started by creating your first task'
-                      }
+                    <p className="text-foreground-secondary">
+                      Get started by creating your first task
                     </p>
-                    <button 
-                      onClick={() => handleCreateTask()}
-                      className="btn-primary"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Task
-                    </button>
                   </div>
                 ) : (
-                  filteredTasks.map((task) => (
+                  tasks.map((task) => (
                     <TaskCard
                       key={task.id}
                       task={task}
@@ -329,29 +248,37 @@ export default function TasksPage() {
           </div>
 
           {/* Matrix Distribution */}
-          {matrixData && (
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Matrix Distribution</h3>
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Matrix Distribution</h3>
+            {matrixLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+              </div>
+            ) : matrixError ? (
+              <div className="text-center py-8 text-red-600">
+                <p>Failed to load matrix data</p>
+              </div>
+            ) : (
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-foreground-secondary">Do First</span>
-                  <span className="font-medium text-red-600">{matrixData.stats.do}</span>
+                  <span className="font-medium text-red-600">{matrixData?.stats?.do || 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-foreground-secondary">Schedule</span>
-                  <span className="font-medium text-yellow-600">{matrixData.stats.decide}</span>
+                  <span className="font-medium text-yellow-600">{matrixData?.stats?.decide || 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-foreground-secondary">Delegate</span>
-                  <span className="font-medium text-blue-600">{matrixData.stats.delegate}</span>
+                  <span className="font-medium text-blue-600">{matrixData?.stats?.delegate || 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-foreground-secondary">Eliminate</span>
-                  <span className="font-medium text-gray-600">{matrixData.stats.delete}</span>
+                  <span className="font-medium text-gray-600">{matrixData?.stats?.delete || 0}</span>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Productivity Insights */}
           <div className="card p-6">
@@ -377,8 +304,8 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Task Form Modal */}
-      <TaskForm
+      {/* Task Form Sheet */}
+      <TaskFormSheet
         task={editingTask}
         isOpen={isTaskFormOpen}
         onClose={() => {

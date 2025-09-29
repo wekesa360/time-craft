@@ -30,12 +30,13 @@ export class RealtimeSSEService {
     const connectionId = `sse_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     let controller: ReadableStreamDefaultController;
+    const self = this; // Capture reference to the service instance
     const stream = new ReadableStream({
       start(ctrl) {
         controller = ctrl;
       },
       cancel() {
-        this.removeConnection(connectionId);
+        self.removeConnection(connectionId);
       }
     });
 
@@ -62,8 +63,8 @@ export class RealtimeSSEService {
       data: { connectionId, timestamp: Date.now() }
     });
 
-    // Start heartbeat
-    this.startHeartbeat(connectionId);
+    // Note: Heartbeat is handled by the client-side reconnection logic
+    // setInterval is not recommended in Cloudflare Workers as it can cause hanging
 
     logger.info('SSE connection created', {
       connectionId,
@@ -272,32 +273,10 @@ export class RealtimeSSEService {
   }
 
   /**
-   * Start heartbeat for connection
+   * Note: Heartbeat functionality removed to prevent worker hanging
+   * Cloudflare Workers don't support setInterval as it can cause the worker to hang
+   * Client-side reconnection logic should handle connection health monitoring
    */
-  private startHeartbeat(connectionId: string): void {
-    const heartbeatInterval = setInterval(() => {
-      const connection = this.connections.get(connectionId);
-      if (!connection) {
-        clearInterval(heartbeatInterval);
-        return;
-      }
-
-      // Check if connection is still alive
-      const now = Date.now();
-      if (now - connection.lastPing > 30000) { // 30 seconds timeout
-        logger.warn('SSE connection timeout', { connectionId });
-        this.removeConnection(connectionId);
-        clearInterval(heartbeatInterval);
-        return;
-      }
-
-      // Send heartbeat
-      this.sendToConnection(connectionId, {
-        type: 'heartbeat',
-        data: { timestamp: now }
-      });
-    }, 10000); // Send heartbeat every 10 seconds
-  }
 }
 
 // Global SSE service instance

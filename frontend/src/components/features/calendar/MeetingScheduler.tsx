@@ -107,12 +107,12 @@ const MeetingScheduler: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+    <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
           AI Meeting Scheduler
         </h2>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
           Create smart meeting requests with AI-powered time slot suggestions
         </p>
       </div>
@@ -121,7 +121,7 @@ const MeetingScheduler: React.FC = () => {
         {/* Meeting Details */}
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            📋 Meeting Details
+            Meeting Details
           </h3>
           
           <div className="grid md:grid-cols-2 gap-4">
@@ -174,11 +174,11 @@ const MeetingScheduler: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Meeting Type
             </label>
-            <div className="flex gap-4">
+            <div className="grid grid-cols-3 gap-4">
               {[
-                { value: 'video_call', label: '📹 Video Call', icon: '📹' },
-                { value: 'phone_call', label: '📞 Phone Call', icon: '📞' },
-                { value: 'in_person', label: '🏢 In Person', icon: '🏢' },
+                { value: 'video_call', label: 'Video Call' },
+                { value: 'phone_call', label: 'Phone Call' },
+                { value: 'in_person', label: 'In Person' },
               ].map(type => (
                 <button
                   key={type.value}
@@ -200,7 +200,7 @@ const MeetingScheduler: React.FC = () => {
         {/* Participants */}
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            👥 Participants
+            Participants
           </h3>
           
           <div className="flex gap-2 mb-4">
@@ -244,7 +244,7 @@ const MeetingScheduler: React.FC = () => {
         {/* Preferred Time Slots */}
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            ⏰ Preferred Time Slots
+            Preferred Time Slots
           </h3>
           
           <div className="grid md:grid-cols-3 gap-4 mb-4">
@@ -315,7 +315,7 @@ const MeetingScheduler: React.FC = () => {
             disabled={createMeetingMutation.isPending || !formData.title || formData.participants.length === 0 || formData.preferredTimeSlots.length === 0}
             className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-semibold"
           >
-            {createMeetingMutation.isPending ? 'Creating...' : '🚀 Create Meeting Request'}
+            {createMeetingMutation.isPending ? 'Creating...' : 'Create Meeting Request'}
           </button>
         </div>
       </form>
@@ -323,7 +323,7 @@ const MeetingScheduler: React.FC = () => {
       {/* AI Tips */}
       <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
         <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">
-          🤖 AI Scheduling Tips
+          AI Scheduling Tips
         </h3>
         <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
           <li>• Provide multiple time slot options for better AI optimization</li>

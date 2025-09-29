@@ -4,7 +4,7 @@
 import { z } from 'zod';
 
 // Session Types
-export const SessionTypeSchema = z.enum(['pomodoro', 'deep_work', 'custom', 'sprint', 'flow']);
+export const SessionTypeSchema = z.enum(['pomodoro', 'deep_work', 'custom', 'sprint', 'flow', 'meditation', 'exercise', 'break']);
 
 export const DistractionTypeSchema = z.enum([
   'notification', 'phone_call', 'interruption', 'internal_thought', 

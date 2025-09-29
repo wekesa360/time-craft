@@ -24,6 +24,18 @@ const HealthInsights: React.FC<HealthInsightsProps> = ({
   insights,
   isLoading = false
 }) => {
+  // Add null checks and fallbacks
+  const safeInsights = {
+    overallScore: insights?.overallScore ?? 5,
+    trends: {
+      exercise: insights?.trends?.exercise ?? 'stable' as const,
+      nutrition: insights?.trends?.nutrition ?? 'stable' as const,
+      mood: insights?.trends?.mood ?? 'stable' as const
+    },
+    recommendations: insights?.recommendations ?? [],
+    correlations: insights?.correlations ?? []
+  };
+
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'improving':
@@ -74,26 +86,11 @@ const HealthInsights: React.FC<HealthInsightsProps> = ({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800';
+        return 'text-red-600 bg-red-50 dark:bg-red-950/20';
       case 'medium':
-        return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800';
+        return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950/20';
       default:
-        return 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800';
-    }
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'exercise':
-        return <Activity className="w-4 h-4" />;
-      case 'nutrition':
-        return <Heart className="w-4 h-4" />;
-      case 'hydration':
-        return <Droplets className="w-4 h-4" />;
-      case 'mood':
-        return <Smile className="w-4 h-4" />;
-      default:
-        return <Lightbulb className="w-4 h-4" />;
+        return 'text-blue-600 bg-blue-50 dark:bg-blue-950/20';
     }
   };
 
@@ -126,168 +123,116 @@ const HealthInsights: React.FC<HealthInsightsProps> = ({
             </div>
           </div>
           <div className="text-center">
-            <div className={`text-3xl font-bold ${getScoreColor(insights.overallScore)}`}>
-              {insights.overallScore.toFixed(1)}/10
+            <div
+              className={`text-4xl font-bold ${getScoreColor(safeInsights.overallScore)}`}
+            >
+              {safeInsights.overallScore.toFixed(1)}
             </div>
-            <p className="text-sm text-foreground-secondary">
-              {getScoreDescription(insights.overallScore)}
-            </p>
+            <div className="text-sm text-foreground-secondary">
+              {getScoreDescription(safeInsights.overallScore)}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Health Trends */}
       <div className="card p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-          <TrendingUp className="w-5 h-5 mr-2 text-foreground-secondary" />
-          Health Trends
-        </h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Health Trends</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Exercise Trend */}
-          <div className={`p-4 rounded-lg border ${getTrendColor(insights.trends.exercise)}`}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <Activity className="w-4 h-4" />
-                <span className="font-medium">Exercise</span>
+          {Object.entries(safeInsights.trends).map(([key, trend]) => (
+            <div
+              key={key}
+              className={`p-4 rounded-lg border ${getTrendColor(trend)}`}
+            >
+              <div className="flex items-center space-x-2 mb-2">
+                {key === 'exercise' && <Activity className="w-5 h-5" />}
+                {key === 'nutrition' && <Heart className="w-5 h-5" />}
+                {key === 'mood' && <Smile className="w-5 h-5" />}
+                <span className="font-medium capitalize">{key}</span>
+                {getTrendIcon(trend)}
               </div>
-              {getTrendIcon(insights.trends.exercise)}
+              <p className="text-sm capitalize">
+                {trend === 'improving' ? 'Trending up' : 
+                 trend === 'declining' ? 'Needs attention' : 'Stable'}
+              </p>
             </div>
-            <p className="text-sm capitalize">{insights.trends.exercise}</p>
-          </div>
-
-          {/* Nutrition Trend */}
-          <div className={`p-4 rounded-lg border ${getTrendColor(insights.trends.nutrition)}`}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <Heart className="w-4 h-4" />
-                <span className="font-medium">Nutrition</span>
-              </div>
-              {getTrendIcon(insights.trends.nutrition)}
-            </div>
-            <p className="text-sm capitalize">{insights.trends.nutrition}</p>
-          </div>
-
-          {/* Mood Trend */}
-          <div className={`p-4 rounded-lg border ${getTrendColor(insights.trends.mood)}`}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <Smile className="w-4 h-4" />
-                <span className="font-medium">Mood</span>
-              </div>
-              {getTrendIcon(insights.trends.mood)}
-            </div>
-            <p className="text-sm capitalize">{insights.trends.mood}</p>
-          </div>
+          ))}
         </div>
       </div>
 
       {/* AI Recommendations */}
       <div className="card p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-          <Lightbulb className="w-5 h-5 mr-2 text-foreground-secondary" />
-          AI Recommendations
-        </h3>
-        <div className="space-y-4">
-          {insights.recommendations.length === 0 ? (
-            <div className="text-center py-8">
-              <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
-              <p className="text-foreground">Great job! No specific recommendations at this time.</p>
-              <p className="text-foreground-secondary text-sm">Keep up your healthy habits!</p>
-            </div>
-          ) : (
-            insights.recommendations.map((rec, index) => (
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-foreground">AI Recommendations</h3>
+        </div>
+        <div className="space-y-3">
+          {safeInsights.recommendations.length > 0 ? (
+            safeInsights.recommendations.map((rec, index) => (
               <div
                 key={index}
-                className={`p-4 rounded-lg border ${getPriorityColor(rec.priority)}`}
+                className={`p-4 rounded-lg border-l-4 ${
+                  rec.priority === 'high' ? 'bg-red-50 dark:bg-red-950/20 border-l-red-500' :
+                  rec.priority === 'medium' ? 'bg-yellow-50 dark:bg-yellow-950/20 border-l-yellow-500' :
+                  'bg-blue-50 dark:bg-blue-950/20 border-l-blue-500'
+                }`}
               >
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    {getPriorityIcon(rec.priority)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      {getTypeIcon(rec.type)}
-                      <span className="font-medium text-foreground capitalize">
-                        {rec.type} Recommendation
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        rec.priority === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                        rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                        'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                      }`}>
-                        {rec.priority} priority
-                      </span>
-                    </div>
-                    <p className="text-foreground-secondary text-sm">{rec.message}</p>
-                    {rec.actionable && (
-                      <button className="mt-2 text-xs text-primary-600 hover:text-primary-700 font-medium">
-                        Take Action →
-                      </button>
-                    )}
+                <div className="flex items-start space-x-2">
+                  {getPriorityIcon(rec.priority)}
+                  <div>
+                    <p className={`font-medium ${
+                      rec.priority === 'high' ? 'text-red-800 dark:text-red-200' :
+                      rec.priority === 'medium' ? 'text-yellow-800 dark:text-yellow-200' :
+                      'text-blue-800 dark:text-blue-200'
+                    }`}>
+                      {rec.type.charAt(0).toUpperCase() + rec.type.slice(1)} Recommendation
+                    </p>
+                    <p className={`text-sm mt-1 ${
+                      rec.priority === 'high' ? 'text-red-700 dark:text-red-300' :
+                      rec.priority === 'medium' ? 'text-yellow-700 dark:text-yellow-300' :
+                      'text-blue-700 dark:text-blue-300'
+                    }`}>
+                      {rec.message}
+                    </p>
                   </div>
                 </div>
               </div>
             ))
+          ) : (
+            <div className="text-center py-8 text-foreground-secondary">
+              <p>No AI insights available yet</p>
+              <p className="text-sm">Log more health activities to get personalized recommendations</p>
+            </div>
           )}
         </div>
       </div>
 
       {/* Health Correlations */}
-      {insights.correlations && insights.correlations.length > 0 && (
+      {safeInsights.correlations.length > 0 && (
         <div className="card p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-            <Brain className="w-5 h-5 mr-2 text-foreground-secondary" />
-            Health Correlations
-          </h3>
-          <div className="space-y-4">
-            {insights.correlations.map((correlation, index) => (
-              <div key={index} className="p-4 bg-background-secondary rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium text-foreground">
-                      {correlation.metric1} ↔ {correlation.metric2}
-                    </span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      correlation.significance === 'high' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                      correlation.significance === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                    }`}>
-                      {correlation.significance} significance
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className={`font-medium ${
-                      correlation.correlation > 0.5 ? 'text-green-600' :
-                      correlation.correlation > 0.2 ? 'text-yellow-600' :
-                      correlation.correlation > -0.2 ? 'text-gray-600' :
-                      correlation.correlation > -0.5 ? 'text-orange-600' :
-                      'text-red-600'
-                    }`}>
-                      {correlation.correlation > 0 ? '+' : ''}{(correlation.correlation * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-                <p className="text-sm text-foreground-secondary">{correlation.insight}</p>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Health Correlations</h3>
+          <div className="space-y-3">
+            {safeInsights.correlations.map((correlation, index) => (
+              <div key={index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <p className="text-sm text-foreground-secondary">
+                  <span className="font-medium">{correlation.factor1}</span> and{' '}
+                  <span className="font-medium">{correlation.factor2}</span> show a{' '}
+                  <span className={`font-medium ${
+                    correlation.strength === 'strong' ? 'text-green-600' :
+                    correlation.strength === 'moderate' ? 'text-yellow-600' :
+                    'text-blue-600'
+                  }`}>
+                    {correlation.strength}
+                  </span>{' '}
+                  correlation
+                </p>
+                <p className="text-xs text-foreground-secondary mt-1">
+                  {correlation.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* Insights Summary */}
-      <div className="card p-6 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border-green-200 dark:border-green-800">
-        <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-3">
-          💡 Key Insights Summary
-        </h3>
-        <div className="space-y-2 text-sm text-green-800 dark:text-green-200">
-          <p>• Your health data shows {insights.overallScore >= 7 ? 'excellent' : insights.overallScore >= 5 ? 'good' : 'room for improvement'} overall wellness patterns</p>
-          <p>• {insights.recommendations.filter(r => r.priority === 'high').length} high-priority recommendations need attention</p>
-          <p>• Most improving area: {Object.entries(insights.trends).find(([_, trend]) => trend === 'improving')?.[0] || 'Keep tracking to see trends'}</p>
-          {insights.correlations && insights.correlations.length > 0 && (
-            <p>• Found {insights.correlations.filter(c => c.significance === 'high').length} significant health correlations</p>
-          )}
-        </div>
-      </div>
     </div>
   );
 };

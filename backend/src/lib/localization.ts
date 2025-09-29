@@ -366,16 +366,8 @@ export class LocalizationService {
    * Get supported languages
    */
   async getSupportedLanguages(): Promise<string[]> {
-    try {
-      const results = await this.db.query(`
-        SELECT DISTINCT language FROM localized_content ORDER BY language
-      `);
-
-      return results.map((row: any) => row.language);
-    } catch (error) {
-      console.error('Error getting supported languages:', error);
-      return ['en'];
-    }
+    // Return hardcoded supported languages for now
+    return ['en', 'de'];
   }
 
   /**

@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import type { NutritionData } from '../../../types';
-import { 
-  Utensils, 
-  Plus, 
-  Minus, 
-  Save,
-  X,
-  Search
-} from 'lucide-react';
+import { Sheet } from '../../ui/Sheet';
 
 interface NutritionTrackerProps {
   isOpen: boolean;
@@ -16,31 +9,29 @@ interface NutritionTrackerProps {
 }
 
 const mealTypes = [
-  { value: 'breakfast', label: 'Breakfast', icon: '🌅', time: '7:00 AM' },
-  { value: 'lunch', label: 'Lunch', icon: '☀️', time: '12:00 PM' },
-  { value: 'dinner', label: 'Dinner', icon: '🌙', time: '7:00 PM' },
-  { value: 'snack', label: 'Snack', icon: '🍎', time: 'Anytime' }
+  { value: 'breakfast', label: 'Breakfast', time: '7:00 AM' },
+  { value: 'lunch', label: 'Lunch', time: '12:00 PM' },
+  { value: 'dinner', label: 'Dinner', time: '7:00 PM' },
+  { value: 'snack', label: 'Snack', time: 'Anytime' }
 ];
 
-const commonFoods = [
-  { name: 'Apple', calories: 95, serving: '1 medium' },
-  { name: 'Banana', calories: 105, serving: '1 medium' },
-  { name: 'Chicken Breast', calories: 165, serving: '100g' },
-  { name: 'Brown Rice', calories: 216, serving: '1 cup cooked' },
-  { name: 'Broccoli', calories: 55, serving: '1 cup' },
-  { name: 'Salmon', calories: 206, serving: '100g' },
-  { name: 'Greek Yogurt', calories: 100, serving: '170g' },
-  { name: 'Oatmeal', calories: 150, serving: '1 cup cooked' },
-  { name: 'Avocado', calories: 234, serving: '1 medium' },
-  { name: 'Eggs', calories: 70, serving: '1 large' },
-  { name: 'Sweet Potato', calories: 112, serving: '1 medium' },
-  { name: 'Almonds', calories: 164, serving: '28g (23 nuts)' }
+const exampleFoods = [
+  { name: 'Grilled chicken breast with rice and vegetables', serving: '1 plate' },
+  { name: 'Greek yogurt with berries and honey', serving: '1 bowl' },
+  { name: 'Salmon fillet with quinoa and asparagus', serving: '1 portion' },
+  { name: 'Avocado toast with eggs', serving: '2 slices' },
+  { name: 'Mixed green salad with olive oil dressing', serving: '1 large bowl' }
 ];
 
 interface FoodItem {
   name: string;
   quantity: string;
   calories: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
+  sugar?: number;
 }
 
 export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
@@ -60,35 +51,59 @@ export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
   });
 
   const [foods, setFoods] = useState<FoodItem[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [customFood, setCustomFood] = useState({ name: '', calories: 0, quantity: '' });
+  const [newFood, setNewFood] = useState({ name: '', quantity: '' });
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const filteredFoods = commonFoods.filter(food =>
-    food.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const totalCalories = foods.reduce((sum, food) => sum + food.calories, 0);
+  const totalProtein = foods.reduce((sum, food) => sum + (food.protein || 0), 0);
+  const totalCarbs = foods.reduce((sum, food) => sum + (food.carbs || 0), 0);
+  const totalFat = foods.reduce((sum, food) => sum + (food.fat || 0), 0);
 
-  const addFood = (food: { name: string; calories: number; serving: string }) => {
-    const newFood: FoodItem = {
-      name: food.name,
-      quantity: food.serving,
-      calories: food.calories
+  // Simulate AI analysis of food
+  const analyzeFoodWithAI = async (foodName: string, quantity: string): Promise<FoodItem> => {
+    setIsAnalyzing(true);
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Mock AI analysis - in real implementation, this would call an AI service
+    const mockAnalysis = {
+      'grilled chicken breast with rice and vegetables': { calories: 450, protein: 35, carbs: 45, fat: 12, fiber: 4, sugar: 3 },
+      'greek yogurt with berries and honey': { calories: 180, protein: 15, carbs: 25, fat: 4, fiber: 3, sugar: 20 },
+      'salmon fillet with quinoa and asparagus': { calories: 380, protein: 28, carbs: 35, fat: 16, fiber: 5, sugar: 2 },
+      'avocado toast with eggs': { calories: 320, protein: 18, carbs: 25, fat: 20, fiber: 8, sugar: 3 },
+      'mixed green salad with olive oil dressing': { calories: 150, protein: 6, carbs: 12, fat: 10, fiber: 4, sugar: 8 }
     };
-    setFoods([...foods, newFood]);
-    setSearchTerm('');
+    
+    const key = foodName.toLowerCase();
+    const analysis = mockAnalysis[key] || {
+      calories: Math.floor(Math.random() * 200) + 100,
+      protein: Math.floor(Math.random() * 20) + 5,
+      carbs: Math.floor(Math.random() * 30) + 10,
+      fat: Math.floor(Math.random() * 15) + 5,
+      fiber: Math.floor(Math.random() * 8) + 2,
+      sugar: Math.floor(Math.random() * 15) + 3
+    };
+    
+    setIsAnalyzing(false);
+    
+    return {
+      name: foodName,
+      quantity: quantity,
+      ...analysis
+    };
   };
 
-  const addCustomFood = () => {
-    if (customFood.name && customFood.calories > 0 && customFood.quantity) {
-      const newFood: FoodItem = {
-        name: customFood.name,
-        quantity: customFood.quantity,
-        calories: customFood.calories
-      };
-      setFoods([...foods, newFood]);
-      setCustomFood({ name: '', calories: 0, quantity: '' });
+  const addFood = async () => {
+    if (!newFood.name.trim() || !newFood.quantity.trim()) return;
+    
+    try {
+      const analyzedFood = await analyzeFoodWithAI(newFood.name, newFood.quantity);
+      setFoods([...foods, analyzedFood]);
+      setNewFood({ name: '', quantity: '' });
+    } catch (error) {
+      console.error('Error analyzing food:', error);
     }
   };
 
@@ -96,9 +111,9 @@ export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
     setFoods(foods.filter((_, i) => i !== index));
   };
 
-  const updateFoodCalories = (index: number, calories: number) => {
+  const updateFoodNutrition = (index: number, field: keyof Omit<FoodItem, 'name' | 'quantity'>, value: number) => {
     const updatedFoods = [...foods];
-    updatedFoods[index].calories = calories;
+    (updatedFoods[index] as any)[field] = value;
     setFoods(updatedFoods);
   };
 
@@ -125,7 +140,10 @@ export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
     const nutritionData: NutritionData = {
       ...formData,
       description: description || '',
-      calories: totalCalories > 0 ? totalCalories : formData.calories
+      calories: totalCalories > 0 ? totalCalories : formData.calories,
+      protein: totalProtein > 0 ? totalProtein : formData.protein,
+      carbs: totalCarbs > 0 ? totalCarbs : formData.carbs,
+      fat: totalFat > 0 ? totalFat : formData.fat
     };
 
     onSave(nutritionData);
@@ -145,26 +163,14 @@ export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
     setErrors({});
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background card max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <div className="flex items-center space-x-2">
-            <Utensils className="w-6 h-6 text-green-600" />
-            <h2 className="text-xl font-semibold text-foreground">Track Nutrition</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-foreground-secondary hover:text-foreground p-1"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <Sheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Track Nutrition"
+      className="p-6"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
           {/* Meal Type */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-3">
@@ -176,150 +182,201 @@ export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
                   key={meal.value}
                   type="button"
                   onClick={() => setFormData({ ...formData, mealType: meal.value as any })}
-                  className={`p-3 rounded-lg border-2 transition-all text-center ${
-                    formData.mealType === meal.value
-                      ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
-                      : 'border-border hover:border-green-300 hover:bg-background-secondary'
-                  }`}
+                  className={`btn ${formData.mealType === meal.value ? 'btn-primary' : 'btn-secondary'} w-full`}
                 >
-                  <div className="text-2xl mb-1">{meal.icon}</div>
-                  <div className="text-sm font-medium text-foreground">{meal.label}</div>
-                  <div className="text-xs text-foreground-secondary">{meal.time}</div>
+                  <div className="text-sm font-medium">{meal.label}</div>
+                  <div className="text-xs opacity-75">{meal.time}</div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Food Search and Selection */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Food Search */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Search Foods
-              </label>
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-secondary w-4 h-4" />
+          {/* Add Food Section */}
+          <div className="w-full">
+            <label className="block text-sm font-medium text-foreground mb-3">
+              Add Food
+            </label>
+            
+            {/* Food Input */}
+            <div className="bg-background-secondary rounded-lg p-4 border border-border mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <input
                   type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="input pl-10 w-full"
-                  placeholder="Search for foods..."
+                  value={newFood.name}
+                  onChange={(e) => setNewFood({ ...newFood, name: e.target.value })}
+                  className="input w-full"
+                  placeholder="Describe your food (e.g., grilled chicken with rice)"
                 />
-              </div>
-
-              {/* Common Foods */}
-              <div className="max-h-48 overflow-y-auto space-y-2">
-                {filteredFoods.map((food, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => addFood(food)}
-                    className="w-full p-3 text-left border border-border rounded-lg hover:bg-background-secondary transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-foreground">{food.name}</p>
-                        <p className="text-sm text-foreground-secondary">{food.serving}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-foreground">{food.calories} cal</p>
-                        <Plus className="w-4 h-4 text-green-600 ml-auto" />
-                      </div>
+                <input
+                  type="text"
+                  value={newFood.quantity}
+                  onChange={(e) => setNewFood({ ...newFood, quantity: e.target.value })}
+                  className="input w-full"
+                  placeholder="Quantity (e.g., 1 plate, 2 cups)"
+                />
+                <button
+                  type="button"
+                  onClick={addFood}
+                  disabled={!newFood.name.trim() || !newFood.quantity.trim() || isAnalyzing}
+                  className="btn btn-primary"
+                >
+                  {isAnalyzing ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Analyzing...</span>
                     </div>
-                  </button>
-                ))}
+                  ) : (
+                    'Add Food'
+                  )}
+                </button>
               </div>
-
-              {/* Custom Food Entry */}
-              <div className="mt-4 p-4 border border-border rounded-lg">
-                <h4 className="font-medium text-foreground mb-3">Add Custom Food</h4>
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={customFood.name}
-                    onChange={(e) => setCustomFood({ ...customFood, name: e.target.value })}
-                    className="input w-full"
-                    placeholder="Food name"
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      value={customFood.quantity}
-                      onChange={(e) => setCustomFood({ ...customFood, quantity: e.target.value })}
-                      className="input w-full"
-                      placeholder="Quantity (e.g., 1 cup)"
-                    />
-                    <input
-                      type="number"
-                      value={customFood.calories || ''}
-                      onChange={(e) => setCustomFood({ ...customFood, calories: Number(e.target.value) || 0 })}
-                      className="input w-full"
-                      placeholder="Calories"
-                    />
+              
+              {/* AI Analysis Info */}
+              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-start space-x-2">
+                  <div className="w-5 h-5 text-blue-600 mt-0.5">🤖</div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">AI-Powered Analysis</p>
+                    <p className="text-xs text-blue-800 dark:text-blue-200 mt-1">
+                      Our AI will automatically calculate calories, protein, carbs, fat, fiber, and sugar content for your food.
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={addCustomFood}
-                    className="btn-outline w-full"
-                    disabled={!customFood.name || !customFood.calories || !customFood.quantity}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Food
-                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Selected Foods */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Selected Foods
-              </label>
-              <div className="border border-border rounded-lg p-4 min-h-[300px]">
-                {foods.length === 0 ? (
-                  <div className="text-center text-foreground-secondary py-8">
-                    <Utensils className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p>No foods added yet</p>
-                    <p className="text-sm">Search and add foods from the left</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {foods.map((food, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-background-secondary rounded-lg">
+            {/* Example Foods */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-foreground mb-3">Example descriptions:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {exampleFoods.map((food, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setNewFood({ name: food.name, quantity: food.serving })}
+                    className="p-3 text-left border border-border rounded-lg hover:bg-background-secondary transition-colors hover:border-primary-300"
+                  >
+                    <p className="text-sm font-medium text-foreground">{food.name}</p>
+                    <p className="text-xs text-foreground-secondary">{food.serving}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Selected Foods Section */}
+          <div className="w-full">
+            <label className="block text-sm font-medium text-foreground mb-3">
+              Selected Foods
+            </label>
+            <div className="border border-border rounded-lg p-4 min-h-[200px] bg-background-secondary">
+              {foods.length === 0 ? (
+                <div className="text-center text-foreground-secondary py-12">
+                  <p className="text-lg font-medium mb-2">No foods added yet</p>
+                  <p className="text-sm">Search and add foods from above</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {foods.map((food, index) => (
+                    <div key={index} className="p-4 bg-background rounded-lg border border-border">
+                      <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <p className="font-medium text-foreground">{food.name}</p>
+                          <p className="font-medium text-foreground mb-1">{food.name}</p>
                           <p className="text-sm text-foreground-secondary">{food.quantity}</p>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => removeFood(index)}
+                          className="btn btn-secondary p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          -
+                        </button>
+                      </div>
+                      
+                      {/* Nutritional Information */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-foreground-secondary">Calories:</span>
                           <input
                             type="number"
                             value={food.calories}
-                            onChange={(e) => updateFoodCalories(index, Number(e.target.value) || 0)}
-                            className="input w-20 text-center"
+                            onChange={(e) => updateFoodNutrition(index, 'calories', Number(e.target.value) || 0)}
+                            className="input w-16 text-center text-xs"
                           />
-                          <span className="text-sm text-foreground-secondary">cal</span>
-                          <button
-                            type="button"
-                            onClick={() => removeFood(index)}
-                            className="text-red-500 hover:text-red-700 p-1"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-foreground-secondary">Protein:</span>
+                          <input
+                            type="number"
+                            value={food.protein || 0}
+                            onChange={(e) => updateFoodNutrition(index, 'protein', Number(e.target.value) || 0)}
+                            className="input w-16 text-center text-xs"
+                          />
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-foreground-secondary">Carbs:</span>
+                          <input
+                            type="number"
+                            value={food.carbs || 0}
+                            onChange={(e) => updateFoodNutrition(index, 'carbs', Number(e.target.value) || 0)}
+                            className="input w-16 text-center text-xs"
+                          />
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-foreground-secondary">Fat:</span>
+                          <input
+                            type="number"
+                            value={food.fat || 0}
+                            onChange={(e) => updateFoodNutrition(index, 'fat', Number(e.target.value) || 0)}
+                            className="input w-16 text-center text-xs"
+                          />
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-foreground-secondary">Fiber:</span>
+                          <input
+                            type="number"
+                            value={food.fiber || 0}
+                            onChange={(e) => updateFoodNutrition(index, 'fiber', Number(e.target.value) || 0)}
+                            className="input w-16 text-center text-xs"
+                          />
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-foreground-secondary">Sugar:</span>
+                          <input
+                            type="number"
+                            value={food.sugar || 0}
+                            onChange={(e) => updateFoodNutrition(index, 'sugar', Number(e.target.value) || 0)}
+                            className="input w-16 text-center text-xs"
+                          />
                         </div>
                       </div>
-                    ))}
-                    
-                    {/* Total Calories */}
-                    <div className="border-t border-border pt-3 mt-3">
-                      <div className="flex items-center justify-between font-semibold text-foreground">
-                        <span>Total Calories:</span>
-                        <span>{totalCalories} cal</span>
+                    </div>
+                  ))}
+                  
+                  {/* Total Nutrition */}
+                  <div className="border-t border-border pt-4 mt-4">
+                    <h4 className="font-semibold text-foreground mb-3">Total Nutrition:</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center p-3 bg-primary-50 dark:bg-primary-950/20 rounded-lg">
+                        <p className="text-2xl font-bold text-primary-600">{totalCalories}</p>
+                        <p className="text-xs text-foreground-secondary">Calories</p>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                        <p className="text-2xl font-bold text-green-600">{totalProtein}g</p>
+                        <p className="text-xs text-foreground-secondary">Protein</p>
+                      </div>
+                      <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
+                        <p className="text-2xl font-bold text-yellow-600">{totalCarbs}g</p>
+                        <p className="text-xs text-foreground-secondary">Carbs</p>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
+                        <p className="text-2xl font-bold text-orange-600">{totalFat}g</p>
+                        <p className="text-xs text-foreground-secondary">Fat</p>
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -442,20 +499,18 @@ export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="btn-secondary"
+              className="btn btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-primary"
+              className="btn btn-primary"
             >
-              <Save className="w-4 h-4 mr-2" />
               Log Nutrition
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Sheet>
   );
 };

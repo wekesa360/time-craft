@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { sign, verify } from 'hono/jwt';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 
 import type { Env } from '../lib/env';
 import { UserRepository } from '../lib/db';
@@ -17,7 +17,6 @@ const registerSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   firstName: z.string().min(1, 'First name is required').max(50),
   lastName: z.string().min(1, 'Last name is required').max(50),
-  timezone: z.string().default('UTC'),
   preferredLanguage: z.enum(['en', 'de']).default('en'),
   isStudent: z.boolean().default(false)
 });
@@ -38,6 +37,20 @@ const forgotPasswordSchema = z.object({
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Reset token is required'),
   newPassword: z.string().min(8, 'Password must be at least 8 characters')
+});
+
+const emailOTPSchema = z.object({
+  email: z.string().email('Invalid email format')
+});
+
+const verifyOTPSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  otpCode: z.string().length(6, 'OTP must be 6 digits')
+});
+
+const googleAuthSchema = z.object({
+  code: z.string().min(1, 'Authorization code is required'),
+  state: z.string().min(1, 'State parameter is required')
 });
 
 // JWT token generation
@@ -95,10 +108,12 @@ auth.post('/register', zValidator('json', registerSchema), async (c) => {
       password, 
       firstName, 
       lastName, 
-      timezone, 
       preferredLanguage, 
       isStudent 
     } = c.req.valid('json');
+    
+    // Auto-detect timezone from request headers or default to UTC
+    const timezone = c.req.header('x-timezone') || 'UTC';
 
     const userRepo = new UserRepository(c.env);
 
@@ -315,7 +330,7 @@ auth.post('/forgot-password', zValidator('json', forgotPasswordSchema), async (c
       const { createEmailService } = await import('../lib/email');
       const emailService = createEmailService(c.env);
       
-      const resetLink = `${c.req.url.split('/api')[0]}/reset-password?token=${resetToken}`;
+      const resetLink = `${c.env.APP_BASE_URL}/reset-password?token=${resetToken}`;
       await emailService.sendPasswordReset(user.email, resetLink, user.preferred_language || 'en');
     } catch (error) {
       console.error('Failed to send password reset email:', error);
@@ -418,6 +433,228 @@ auth.get('/validate', async (c) => {
       valid: false,
       error: 'Invalid or expired token'
     }, 401);
+  }
+});
+
+// POST /auth/send-otp - Send OTP to email
+auth.post('/send-otp', zValidator('json', emailOTPSchema), async (c) => {
+  try {
+    const { email } = c.req.valid('json');
+
+    const userRepo = new UserRepository(c.env);
+    
+    // Check if user exists
+    let user = await userRepo.findByEmail(email);
+    if (!user) {
+      // Create a temporary user for OTP login
+      const tempUser = await userRepo.createUser({
+        email,
+        password_hash: '', // No password for OTP users
+        first_name: '',
+        last_name: '',
+        timezone: 'UTC',
+        preferred_language: 'en' as SupportedLanguage,
+        subscription_type: 'free',
+        subscription_expires_at: null,
+        stripe_customer_id: null,
+        is_student: false,
+        student_verification_status: 'none'
+      });
+      user = tempUser;
+    }
+
+    // Generate and send OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpId = crypto.randomUUID();
+    const expiresAt = Date.now() + (10 * 60 * 1000); // 10 minutes
+
+    // Store OTP in cache using email as key for easier lookup
+    await c.env.CACHE.put(`otp_${email}`, JSON.stringify({
+      userId: user.id,
+      email,
+      otpCode,
+      expiresAt
+    }), { expirationTtl: 600 });
+
+    // Send email (in production, use actual email service)
+    console.log(`OTP for ${email}: ${otpCode}`);
+
+    return c.json({
+      message: 'OTP sent successfully',
+      otpId,
+      expiresAt
+    });
+
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    return c.json({ error: 'Failed to send OTP' }, 500);
+  }
+});
+
+// POST /auth/verify-otp - Verify OTP and login
+auth.post('/verify-otp', zValidator('json', verifyOTPSchema), async (c) => {
+  try {
+    const { email, otpCode } = c.req.valid('json');
+
+    // Find OTP in cache
+    const otpData = await c.env.CACHE.get(`otp_${email}`);
+    if (!otpData) {
+      return c.json({ error: 'OTP not found or expired' }, 400);
+    }
+
+    const { userId, otpCode: storedOtp, expiresAt } = JSON.parse(otpData);
+
+    if (Date.now() > expiresAt) {
+      await c.env.CACHE.delete(`otp_${email}`);
+      return c.json({ error: 'OTP expired' }, 400);
+    }
+
+    if (storedOtp !== otpCode) {
+      return c.json({ error: 'Invalid OTP' }, 400);
+    }
+
+    // Get user
+    const userRepo = new UserRepository(c.env);
+    const user = await userRepo.findById(userId);
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // Generate tokens
+    const tokens = await generateTokens(user, c.env);
+
+    // Clean up OTP
+    await c.env.CACHE.delete(`otp_${email}`);
+
+    // Update last login
+    await userRepo.updateUser(user.id, { updated_at: Date.now() });
+
+    return c.json({
+      message: 'Login successful',
+      user: sanitizeUser(user),
+      tokens
+    });
+
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    return c.json({ error: 'Failed to verify OTP' }, 500);
+  }
+});
+
+// GET /auth/google - Start Google OAuth flow
+auth.get('/google', async (c) => {
+  try {
+    const state = crypto.randomUUID();
+    const redirectUri = `${c.env.APP_BASE_URL}/auth/google/callback`;
+    
+    const params = new URLSearchParams({
+      client_id: c.env.GOOGLE_CLIENT_ID,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'openid email profile',
+      state,
+      access_type: 'offline',
+      prompt: 'consent'
+    });
+
+    // Store state for verification
+    await c.env.CACHE.put(`google_oauth_state_${state}`, 'pending', { expirationTtl: 600 });
+
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    
+    return c.json({ authUrl, state });
+
+  } catch (error) {
+    console.error('Google OAuth initiation error:', error);
+    return c.json({ error: 'Failed to initiate Google OAuth' }, 500);
+  }
+});
+
+// GET /auth/google/callback - Handle Google OAuth callback
+auth.get('/google/callback', async (c) => {
+  try {
+    const { code, state } = c.req.query();
+
+    if (!code || !state) {
+      return c.json({ error: 'Missing authorization code or state' }, 400);
+    }
+
+    // Verify state
+    const storedState = await c.env.CACHE.get(`google_oauth_state_${state}`);
+    if (!storedState) {
+      return c.json({ error: 'Invalid or expired state' }, 400);
+    }
+
+    // Exchange code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: c.env.GOOGLE_CLIENT_ID,
+        client_secret: c.env.GOOGLE_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: `${c.env.APP_BASE_URL}/auth/google/callback`
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error(`Google token exchange failed: ${tokenResponse.status}`);
+    }
+
+    const tokens = await tokenResponse.json();
+
+    // Get user info from Google
+    const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokens.access_token}` }
+    });
+
+    if (!userResponse.ok) {
+      throw new Error(`Failed to get user info: ${userResponse.status}`);
+    }
+
+    const googleUser = await userResponse.json();
+
+    // Find or create user
+    const userRepo = new UserRepository(c.env);
+    let user = await userRepo.findByEmail(googleUser.email);
+
+    if (!user) {
+      // Create new user
+      const newUser = await userRepo.createUser({
+        email: googleUser.email,
+        password_hash: '', // No password for OAuth users
+        first_name: googleUser.given_name || '',
+        last_name: googleUser.family_name || '',
+        timezone: 'UTC',
+        preferred_language: 'en' as SupportedLanguage,
+        subscription_type: 'free',
+        subscription_expires_at: null,
+        stripe_customer_id: null,
+        is_student: false,
+        student_verification_status: 'none'
+      });
+      user = newUser;
+    }
+
+    // Generate our tokens
+    const authTokens = await generateTokens(user, c.env);
+
+    // Clean up state
+    await c.env.CACHE.delete(`google_oauth_state_${state}`);
+
+    // Update last login
+    await userRepo.updateUser(user.id, { updated_at: Date.now() });
+
+    return c.json({
+      message: 'Google authentication successful',
+      user: sanitizeUser(user),
+      tokens: authTokens
+    });
+
+  } catch (error) {
+    console.error('Google OAuth callback error:', error);
+    return c.json({ error: 'Failed to complete Google authentication' }, 500);
   }
 });
 

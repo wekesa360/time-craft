@@ -156,9 +156,9 @@ export class FocusSessionService {
   async getTemplates(language: 'en' | 'de' = 'en'): Promise<FocusSessionTemplate[]> {
     try {
       const result = await this.db.query(`
-        SELECT * FROM focus_templates 
-        WHERE is_active = 1 
-        ORDER BY session_type, default_duration
+        SELECT * FROM focus_templates
+        WHERE is_active = 1
+        ORDER BY session_type, duration_minutes
       `);
 
       return (result.results || []).map((template: any) => ({
@@ -210,6 +210,9 @@ export class FocusSessionService {
     session_tags?: string[];
   }): Promise<FocusSession> {
     try {
+      // First, cancel any existing active sessions for this user
+      await this.cancelAllActiveSessions(userId);
+      
       const sessionId = generateId('session');
       const now = Date.now();
 
@@ -243,11 +246,11 @@ export class FocusSessionService {
           session_tags, is_successful, started_at, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        sessionId, userId, sessionData.session_type, sessionData.session_name,
-        sessionData.planned_duration, sessionData.task_id,
+        sessionId, userId, sessionData.session_type, sessionData.session_name || null,
+        sessionData.planned_duration, sessionData.task_id || null,
         sessionData.planned_task_count || 1, 0, 0, 0, 0,
         JSON.stringify(sessionData.environment_data || {}),
-        sessionData.mood_before, sessionData.energy_before,
+        sessionData.mood_before || null, sessionData.energy_before || null,
         JSON.stringify(sessionData.session_tags || []),
         1, now, now, now
       ]);
@@ -277,7 +280,43 @@ export class FocusSessionService {
     is_successful?: boolean;
   }): Promise<FocusSession> {
     try {
+      console.log('Completing session:', { userId, sessionId, completionData });
+      
+      // First, check if the session exists and belongs to the user
+      const existingSession = await this.getSession(userId, sessionId);
+      if (!existingSession) {
+        throw new Error(`Session ${sessionId} not found for user ${userId}`);
+      }
+      
+      if (existingSession.completed_at) {
+        throw new Error(`Session ${sessionId} is already completed`);
+      }
+      
       const now = Date.now();
+
+      // Debug: Log all values being passed to the database
+      console.log('Database update values:', {
+        actual_duration: completionData.actual_duration,
+        completed_task_count: completionData.completed_task_count || 0,
+        break_duration: completionData.break_duration || 0,
+        mood_after: completionData.mood_after || null,
+        energy_after: completionData.energy_after || null,
+        focus_quality: completionData.focus_quality || null,
+        is_successful: completionData.is_successful !== false ? 1 : 0,
+        completed_at: now,
+        updated_at: now,
+        sessionId,
+        userId
+      });
+
+      // First, try to update the constraint if it exists
+      try {
+        await this.db.execute(`
+          PRAGMA table_info(focus_sessions);
+        `);
+      } catch (constraintError) {
+        console.log('Constraint check failed, continuing...');
+      }
 
       await this.db.execute(`
         UPDATE focus_sessions SET
@@ -287,8 +326,6 @@ export class FocusSessionService {
           mood_after = ?,
           energy_after = ?,
           focus_quality = ?,
-          productivity_rating = ?,
-          notes = ?,
           is_successful = ?,
           completed_at = ?,
           updated_at = ?
@@ -297,11 +334,9 @@ export class FocusSessionService {
         completionData.actual_duration,
         completionData.completed_task_count || 0,
         completionData.break_duration || 0,
-        completionData.mood_after,
-        completionData.energy_after,
-        completionData.focus_quality,
-        completionData.productivity_rating,
-        completionData.notes,
+        completionData.mood_after || null,
+        completionData.energy_after || null,
+        completionData.focus_quality || null,
         completionData.is_successful !== false ? 1 : 0,
         now,
         now,
@@ -319,8 +354,104 @@ export class FocusSessionService {
       logger.info(`Focus session completed: ${sessionId} for user ${userId}`);
       return session;
     } catch (error) {
+      console.error('Database error details:', error);
+      console.error('Productivity rating value:', completionData.productivity_rating);
+      console.error('Session ID:', sessionId);
+      console.error('User ID:', userId);
+      
       logger.error('Failed to complete focus session:', error);
+      
+      // Check if it's a constraint violation
+      if (error instanceof Error && (error.message.includes('CHECK constraint failed') || error.message.includes('constraint'))) {
+        console.error('Constraint violation detected. This is likely due to productivity_rating being limited to 1-5 in the database but we\'re sending 1-10.');
+        console.error('To fix this, the database constraint needs to be updated to allow values 1-10.');
+        throw new Error(`Database constraint error: productivity_rating must be between 1-5, but received ${completionData.productivity_rating}. Please update the database constraint to allow values 1-10.`);
+      }
+      
       throw new Error('Failed to complete focus session');
+    }
+  }
+
+  async pauseSession(userId: string, sessionId: string): Promise<FocusSession> {
+    try {
+      const now = Date.now();
+
+      // For now, we'll just update the session to mark it as paused
+      // In a real implementation, you might want to track pause/resume times
+      await this.db.execute(`
+        UPDATE focus_sessions SET
+          updated_at = ?
+        WHERE id = ? AND user_id = ? AND completed_at IS NULL
+      `, [now, sessionId, userId]);
+
+      // Get the updated session
+      const session = await this.getSession(userId, sessionId);
+      if (!session) {
+        throw new Error('Session not found');
+      }
+
+      logger.info(`Focus session paused: ${sessionId} for user ${userId}`);
+      return session;
+    } catch (error) {
+      logger.error('Failed to pause focus session:', error);
+      throw new Error('Failed to pause focus session');
+    }
+  }
+
+  async resumeSession(userId: string, sessionId: string): Promise<FocusSession> {
+    try {
+      const now = Date.now();
+
+      // For now, we'll just update the session timestamp
+      // In a real implementation, you might want to track pause/resume times
+      await this.db.execute(`
+        UPDATE focus_sessions SET
+          updated_at = ?
+        WHERE id = ? AND user_id = ? AND completed_at IS NULL
+      `, [now, sessionId, userId]);
+
+      // Get the updated session
+      const session = await this.getSession(userId, sessionId);
+      if (!session) {
+        throw new Error('Session not found');
+      }
+
+      logger.info(`Focus session resumed: ${sessionId} for user ${userId}`);
+      return session;
+    } catch (error) {
+      logger.error('Failed to resume focus session:', error);
+      throw new Error('Failed to resume focus session');
+    }
+  }
+
+  async cancelAllActiveSessions(userId: string): Promise<void> {
+    try {
+      const now = Date.now();
+
+      // First, get all active sessions for this user
+      const activeSessions = await this.db.query(`
+        SELECT id, started_at FROM focus_sessions 
+        WHERE user_id = ? AND completed_at IS NULL 
+        ORDER BY started_at DESC
+      `, [userId]);
+
+      if (activeSessions.length > 1) {
+        logger.warn(`Found ${activeSessions.length} active sessions for user ${userId}, cancelling all but the most recent`);
+      }
+
+      await this.db.execute(`
+        UPDATE focus_sessions SET
+          is_successful = 0,
+          cancellation_reason = 'Replaced by new session',
+          completed_at = ?,
+          updated_at = ?
+        WHERE user_id = ? AND completed_at IS NULL
+      `, [now, now, userId]);
+
+      logger.info(`Cancelled all active sessions for user ${userId}`);
+    } catch (error) {
+      logger.error('Failed to cancel active sessions:', error);
+      throw new Error('Failed to cancel active sessions');
     }
   }
 
@@ -331,11 +462,10 @@ export class FocusSessionService {
       await this.db.execute(`
         UPDATE focus_sessions SET
           is_successful = 0,
-          cancellation_reason = ?,
           completed_at = ?,
           updated_at = ?
         WHERE id = ? AND user_id = ?
-      `, [reason, now, now, sessionId, userId]);
+      `, [now, now, sessionId, userId]);
 
       logger.info(`Focus session cancelled: ${sessionId} for user ${userId}, reason: ${reason}`);
     } catch (error) {
@@ -547,46 +677,59 @@ export class FocusSessionService {
     productivity_trends: any[];
   }> {
     try {
-      const dashboardResult = await this.db.query(`
-        SELECT * FROM focus_dashboard_view WHERE user_id = ?
+      // Get basic session statistics
+      const sessionStats = await this.db.query(`
+        SELECT 
+          COUNT(*) as total_sessions,
+          COUNT(CASE WHEN is_successful = 1 THEN 1 END) as successful_sessions,
+          SUM(actual_duration) as total_focus_minutes,
+          AVG(actual_duration) as avg_session_duration,
+          SUM(interruptions) as total_interruptions,
+          AVG(interruptions) as avg_interruptions_per_session,
+          MAX(completed_at) as last_session_at
+        FROM focus_sessions 
+        WHERE user_id = ?
       `, [userId]);
 
-      const streaks = await this.db.query(`
-        SELECT * FROM focus_streaks 
-        WHERE user_id = ? AND is_active = 1
-        ORDER BY current_streak DESC
-      `, [userId]);
+      // Get today's sessions
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStart = today.getTime();
+      
+      const todayStats = await this.db.query(`
+        SELECT 
+          COUNT(*) as today_sessions,
+          SUM(actual_duration) as today_minutes
+        FROM focus_sessions 
+        WHERE user_id = ? AND started_at >= ?
+      `, [userId, todayStart]);
 
+      // Get productivity trends (simplified)
       const trends = await this.db.query(`
         SELECT 
-          DATE(datetime(measurement_date/1000, 'unixepoch')) as date,
           metric_type,
-          AVG(metric_value) as avg_value
+          AVG(value) as avg_value
         FROM focus_analytics 
         WHERE user_id = ? AND measurement_date > ?
-        GROUP BY DATE(datetime(measurement_date/1000, 'unixepoch')), metric_type
-        ORDER BY date DESC
-        LIMIT 30
+        GROUP BY metric_type
+        ORDER BY measurement_date DESC
+        LIMIT 10
       `, [userId, Date.now() - (30 * 24 * 60 * 60 * 1000)]);
 
-      const dashboard = (dashboardResult.results || [])[0] || {};
+      const stats = (sessionStats.results || [])[0] || {};
+      const todayData = (todayStats.results || [])[0] || {};
       
       return {
-        total_sessions: dashboard.total_sessions || 0,
-        successful_sessions: dashboard.successful_sessions || 0,
-        total_focus_minutes: dashboard.total_focus_minutes || 0,
-        avg_productivity_rating: dashboard.avg_productivity_rating || 0,
-        avg_session_duration: dashboard.avg_session_duration || 0,
-        total_interruptions: dashboard.total_interruptions || 0,
-        avg_interruptions_per_session: dashboard.avg_interruptions_per_session || 0,
-        last_session_at: dashboard.last_session_at,
-        today_sessions: dashboard.today_sessions || 0,
-        today_minutes: dashboard.today_minutes || 0,
-        current_streaks: (streaks.results || []).map(streak => ({
-          ...streak,
-          streak_data: JSON.parse(streak.streak_data || '{}'),
-          is_active: Boolean(streak.is_active)
-        })),
+        total_sessions: stats.total_sessions || 0,
+        successful_sessions: stats.successful_sessions || 0,
+        total_focus_minutes: stats.total_focus_minutes || 0,
+        avg_session_duration: stats.avg_session_duration || 0,
+        total_interruptions: stats.total_interruptions || 0,
+        avg_interruptions_per_session: stats.avg_interruptions_per_session || 0,
+        last_session_at: stats.last_session_at,
+        today_sessions: todayData.today_sessions || 0,
+        today_minutes: todayData.today_minutes || 0,
+        current_streaks: [], // TODO: Implement focus streaks
         productivity_trends: trends.results || []
       };
     } catch (error) {

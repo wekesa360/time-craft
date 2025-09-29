@@ -2,6 +2,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import { localStorageCoordinator } from '../lib/localStorageCoordinator';
 
 // Import translation files
 import en from './locales/en.json';
@@ -27,6 +28,9 @@ i18n
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
+      // Use coordinator for safe localStorage access
+      lookupLocalStorage: 'i18nextLng',
+      checkWhitelist: true,
     },
     
     react: {

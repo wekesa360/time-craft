@@ -141,24 +141,44 @@ interface StorageInterface {
   removeItem: (key: string) => Promise<void>;
 }
 
-// LocalStorage adapter (for simple data)
-const localStorageAdapter: StorageInterface = {
-  getItem: async (key: string) => {
+import { localStorageCoordinator } from './localStorageCoordinator';
+
+// LocalStorage adapter (for simple data) - coordinated for Zustand persist
+const localStorageAdapter = {
+  getItem: (key: string) => {
     try {
-      return localStorage.getItem(key);
+      const value = localStorage.getItem(key);
+      console.log(`🔍 localStorageAdapter.getItem(${key}):`, value);
+      return value;
     } catch {
       return null;
     }
   },
-  setItem: async (key: string, value: string) => {
+  setItem: (key: string, value: any) => {
     try {
-      localStorage.setItem(key, value);
-    } catch {
-      // Handle quota exceeded or other errors
-      console.warn('LocalStorage setItem failed for key:', key);
+      console.log(`💾 localStorageAdapter.setItem(${key}):`, value, 'type:', typeof value);
+      
+      // Zustand persist sometimes passes objects directly, so we need to handle both cases
+      let jsonString: string;
+      
+      if (typeof value === 'string') {
+        jsonString = value;
+      } else if (typeof value === 'object' && value !== null) {
+        // This is the Zustand persist object format
+        jsonString = JSON.stringify(value);
+        console.log(`🔄 Converted object to JSON string:`, jsonString);
+      } else {
+        console.error(`❌ Invalid value type for ${key}:`, typeof value, value);
+        jsonString = JSON.stringify(value);
+      }
+      
+      localStorage.setItem(key, jsonString);
+      console.log(`✅ Successfully stored ${key} in localStorage`);
+    } catch (error) {
+      console.error(`❌ LocalStorage setItem failed for key ${key}:`, error);
     }
   },
-  removeItem: async (key: string) => {
+  removeItem: (key: string) => {
     try {
       localStorage.removeItem(key);
     } catch {
@@ -215,16 +235,46 @@ export const persistenceConfigs = {
     }),
   } as PersistConfig<any>,
 
-  // Complex stores (use IndexedDB)
+  // Auth store (use localStorage for tokens)
   auth: {
     name: 'timecraft-auth',
-    storage: indexedDBAdapter('auth'),
+    storage: localStorageAdapter,
     partialize: (state: any) => ({
       user: state.user,
-      token: state.token,
+      tokens: state.tokens,
       isAuthenticated: state.isAuthenticated,
       preferences: state.preferences,
     }),
+    serialize: (state: any) => {
+      console.log('🔄 Zustand persist serialize:', state);
+      return JSON.stringify(state);
+    },
+    deserialize: (str: string) => {
+      console.log('🔄 Zustand persist deserialize:', str);
+      try {
+        return JSON.parse(str);
+      } catch (error) {
+        console.error('❌ Failed to deserialize auth state:', error);
+        return null;
+      }
+    },
+    onRehydrateStorage: (state) => {
+      return (state, error) => {
+        if (error) {
+          console.error('Auth store rehydration failed:', error);
+          return;
+        }
+        console.log('Auth store rehydrated with state:', { hasTokens: !!state?.tokens?.accessToken, isAuthenticated: state?.isAuthenticated });
+
+        // Always initialize after rehydration to validate tokens
+        if (state?.initialize) {
+          // Delay initialization slightly to ensure store is fully setup
+          setTimeout(() => {
+            state.initialize();
+          }, 100);
+        }
+      };
+    },
   } as PersistConfig<any>,
 
   tasks: {

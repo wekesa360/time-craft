@@ -114,7 +114,7 @@ export const BadgeShare: React.FC<BadgeShareProps> = ({
   const isMessageTooLong = messageLength > maxLength;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md flex items-center justify-center z-50 p-4">
       <div className="bg-background card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">

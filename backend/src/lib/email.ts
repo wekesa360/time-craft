@@ -53,11 +53,11 @@ export class EmailService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({})) as any;
         throw new Error(`Resend API error: ${response.status} - ${errorData.message || response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       logger.info('Email sent successfully', {
         emailId: data.id,
@@ -98,6 +98,23 @@ export class EmailService {
       text: template.text.replace('{{OTP_CODE}}', otpCode),
       tags: [
         { name: 'type', value: 'verification_otp' },
+        { name: 'language', value: language }
+      ]
+    });
+  }
+
+  // Login OTP Email
+  async sendLoginOTP(email: string, otpCode: string, language: string = 'en'): Promise<EmailResponse> {
+    const templates = this.getLoginOTPTemplates();
+    const template = templates[language] || templates.en;
+
+    return this.sendEmail({
+      to: email,
+      subject: template.subject,
+      html: template.html.replace('{{OTP_CODE}}', otpCode),
+      text: template.text.replace('{{OTP_CODE}}', otpCode),
+      tags: [
+        { name: 'type', value: 'login_otp' },
         { name: 'language', value: language }
       ]
     });
@@ -257,6 +274,111 @@ Vielen Dank für die Anmeldung bei TimeCraft! Um Ihre Registrierung abzuschließ
 Dieser Code läuft aus Sicherheitsgründen in 15 Minuten ab.
 
 Wenn Sie kein Konto bei TimeCraft erstellt haben, ignorieren Sie diese E-Mail bitte.
+
+© 2025 TimeCraft. Alle Rechte vorbehalten.
+        `
+      }
+    };
+  }
+
+  private getLoginOTPTemplates(): Record<string, EmailTemplate> {
+    return {
+      en: {
+        subject: 'Your TimeCraft login code',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Login to TimeCraft</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">TimeCraft</h1>
+              <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Your Personal Productivity & Wellness Companion</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #333; margin-top: 0;">Login Code</h2>
+              <p>You requested a login code for your TimeCraft account. Use the code below to sign in:</p>
+              
+              <div style="background: #667eea; color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; margin: 30px 0; border-radius: 8px; letter-spacing: 5px;">
+                {{OTP_CODE}}
+              </div>
+              
+              <p>This code will expire in 10 minutes for security reasons.</p>
+              
+              <p>If you didn't request this login code, please ignore this email and consider changing your password.</p>
+              
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+              <p style="font-size: 14px; color: #666; text-align: center;">
+                © 2025 TimeCraft. All rights reserved.
+              </p>
+            </div>
+          </body>
+          </html>
+        `,
+        text: `
+TimeCraft - Login Code
+
+You requested a login code for your TimeCraft account. Use the code below to sign in:
+
+{{OTP_CODE}}
+
+This code will expire in 10 minutes for security reasons.
+
+If you didn't request this login code, please ignore this email and consider changing your password.
+
+© 2025 TimeCraft. All rights reserved.
+        `
+      },
+      de: {
+        subject: 'Ihr TimeCraft-Anmeldecode',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Bei TimeCraft anmelden</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">TimeCraft</h1>
+              <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Ihr persönlicher Produktivitäts- und Wellness-Begleiter</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #333; margin-top: 0;">Anmeldecode</h2>
+              <p>Sie haben einen Anmeldecode für Ihr TimeCraft-Konto angefordert. Verwenden Sie den folgenden Code, um sich anzumelden:</p>
+              
+              <div style="background: #667eea; color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; margin: 30px 0; border-radius: 8px; letter-spacing: 5px;">
+                {{OTP_CODE}}
+              </div>
+              
+              <p>Dieser Code läuft aus Sicherheitsgründen in 10 Minuten ab.</p>
+              
+              <p>Wenn Sie diesen Anmeldecode nicht angefordert haben, ignorieren Sie diese E-Mail bitte und erwägen Sie, Ihr Passwort zu ändern.</p>
+              
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+              <p style="font-size: 14px; color: #666; text-align: center;">
+                © 2025 TimeCraft. Alle Rechte vorbehalten.
+              </p>
+            </div>
+          </body>
+          </html>
+        `,
+        text: `
+TimeCraft - Anmeldecode
+
+Sie haben einen Anmeldecode für Ihr TimeCraft-Konto angefordert. Verwenden Sie den folgenden Code, um sich anzumelden:
+
+{{OTP_CODE}}
+
+Dieser Code läuft aus Sicherheitsgründen in 10 Minuten ab.
+
+Wenn Sie diesen Anmeldecode nicht angefordert haben, ignorieren Sie diese E-Mail bitte und erwägen Sie, Ihr Passwort zu ändern.
 
 © 2025 TimeCraft. Alle Rechte vorbehalten.
         `
@@ -607,7 +729,7 @@ TimeCraft-Benachrichtigung
 // Factory function to create email service
 export function createEmailService(env: any): EmailService {
   const apiKey = env.RESEND_API_KEY;
-  const fromEmail = env.FROM_EMAIL || 'noreply@timecraft.app';
+  const fromEmail = env.FROM_EMAIL || 'noreply@qura.co.ke';
   
   if (!apiKey) {
     throw new Error('RESEND_API_KEY is required for email service');

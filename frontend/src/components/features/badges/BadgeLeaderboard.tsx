@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import type { LeaderboardEntry } from '../../../types';
 import { 
-  Trophy, 
-  Medal, 
-  Award, 
-  Crown,
-  TrendingUp,
-  Users,
   Calendar,
   Filter
 } from 'lucide-react';
@@ -32,21 +26,17 @@ export const BadgeLeaderboard: React.FC<BadgeLeaderboardProps> = ({
 }) => {
   const [timeRange, setTimeRange] = useState('month');
 
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return <Crown className="w-6 h-6 text-yellow-500" />;
-      case 2:
-        return <Medal className="w-6 h-6 text-gray-400" />;
-      case 3:
-        return <Award className="w-6 h-6 text-amber-600" />;
-      default:
-        return (
-          <div className="w-6 h-6 rounded-full bg-background-secondary flex items-center justify-center">
-            <span className="text-sm font-medium text-foreground-secondary">{rank}</span>
-          </div>
-        );
-    }
+  const getRankDisplay = (rank: number) => {
+    return (
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+        rank === 1 ? 'bg-yellow-500 text-white' :
+        rank === 2 ? 'bg-gray-400 text-white' :
+        rank === 3 ? 'bg-amber-600 text-white' :
+        'bg-background-secondary text-foreground'
+      }`}>
+        {rank}
+      </div>
+    );
   };
 
   const getRankBadgeColor = (rank: number) => {
@@ -89,7 +79,6 @@ export const BadgeLeaderboard: React.FC<BadgeLeaderboardProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <Trophy className="w-6 h-6 text-yellow-600" />
           <h3 className="text-xl font-semibold text-foreground">Badge Leaderboard</h3>
         </div>
         
@@ -128,7 +117,6 @@ export const BadgeLeaderboard: React.FC<BadgeLeaderboardProps> = ({
             {/* 1st Place */}
             <div className="text-center">
               <div className="w-20 h-24 bg-gradient-to-t from-yellow-400 to-yellow-500 rounded-t-lg flex items-end justify-center pb-2 mb-3 relative">
-                <Crown className="absolute -top-3 w-8 h-8 text-yellow-600" />
                 <span className="text-white font-bold text-xl">1</span>
               </div>
               <div className="space-y-1">
@@ -181,7 +169,6 @@ export const BadgeLeaderboard: React.FC<BadgeLeaderboardProps> = ({
         <div className="space-y-3">
           {topEntries.length === 0 ? (
             <div className="text-center py-8">
-              <Users className="w-12 h-12 text-foreground-secondary mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium text-foreground mb-2">No leaderboard data</h3>
               <p className="text-foreground-secondary">
                 Start earning badges to appear on the leaderboard!
@@ -205,7 +192,7 @@ export const BadgeLeaderboard: React.FC<BadgeLeaderboardProps> = ({
                   <div className="flex items-center space-x-4">
                     {/* Rank */}
                     <div className="flex items-center justify-center w-8">
-                      {getRankIcon(entry.rank)}
+                      {getRankDisplay(entry.rank)}
                     </div>
 
                     {/* User Info */}
@@ -261,7 +248,6 @@ export const BadgeLeaderboard: React.FC<BadgeLeaderboardProps> = ({
       {/* Competition Info */}
       <div className="card p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
         <div className="flex items-center space-x-2 mb-2">
-          <TrendingUp className="w-5 h-5 text-blue-600" />
           <h4 className="font-semibold text-blue-900 dark:text-blue-100">How to Climb the Leaderboard</h4>
         </div>
         <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">

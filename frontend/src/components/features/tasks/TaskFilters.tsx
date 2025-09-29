@@ -58,7 +58,6 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-foreground-secondary" />
             <input
               type="text"
-              placeholder="Search tasks..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               className="input pl-10 w-full"
@@ -76,17 +75,17 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
                 : 'bg-background-secondary text-foreground-secondary hover:bg-background-tertiary'
             }`}
           >
-            Pending ({taskCounts.pending})
+            Pending
           </button>
           <button
-            onClick={() => handleFilterChange('status', filters.status === 'completed' ? '' : 'completed')}
+            onClick={() => handleFilterChange('status', filters.status === 'done' ? '' : 'done')}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-              filters.status === 'completed'
+              filters.status === 'done'
                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                 : 'bg-background-secondary text-foreground-secondary hover:bg-background-tertiary'
             }`}
           >
-            Completed ({taskCounts.completed})
+            Completed
           </button>
           <button
             onClick={() => handleFilterChange('dateRange', filters.dateRange === 'overdue' ? '' : 'overdue')}
@@ -96,18 +95,10 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
                 : 'bg-background-secondary text-foreground-secondary hover:bg-background-tertiary'
             }`}
           >
-            Overdue ({taskCounts.overdue})
+            Overdue
           </button>
         </div>
 
-        {/* Advanced Filters Toggle */}
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="btn-outline flex items-center space-x-2"
-        >
-          <Filter className="w-4 h-4" />
-          <span>Advanced</span>
-        </button>
 
         {/* Clear Filters */}
         {hasActiveFilters && (
@@ -136,9 +127,8 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
             >
               <option value="">All Status</option>
               <option value="pending">Pending</option>
-              <option value="in_progress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="done">Completed</option>
+              <option value="archived">Archived</option>
             </select>
           </div>
 

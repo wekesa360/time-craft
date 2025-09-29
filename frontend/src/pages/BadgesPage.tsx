@@ -3,12 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { 
-  Award, 
-  Trophy, 
-  Users, 
-  TrendingUp,
-  Share2,
-  Target
+  Share2
 } from 'lucide-react';
 
 // Components
@@ -97,36 +92,33 @@ export default function BadgesPage() {
           <div className="flex items-center bg-background-secondary rounded-lg p-1">
             <button
               onClick={() => setViewMode('badges')}
-              className={`p-2 rounded transition-colors ${
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
                 viewMode === 'badges' 
                   ? 'bg-primary-600 text-white' 
                   : 'text-foreground-secondary hover:text-foreground'
               }`}
-              title="My Badges"
             >
-              <Award className="w-4 h-4" />
+              My Badges
             </button>
             <button
               onClick={() => setViewMode('leaderboard')}
-              className={`p-2 rounded transition-colors ${
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
                 viewMode === 'leaderboard' 
                   ? 'bg-primary-600 text-white' 
                   : 'text-foreground-secondary hover:text-foreground'
               }`}
-              title="Leaderboard"
             >
-              <Trophy className="w-4 h-4" />
+              Leaderboard
             </button>
             <button
               onClick={() => setViewMode('achievements')}
-              className={`p-2 rounded transition-colors ${
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
                 viewMode === 'achievements' 
                   ? 'bg-primary-600 text-white' 
                   : 'text-foreground-secondary hover:text-foreground'
               }`}
-              title="Achievements"
             >
-              <Target className="w-4 h-4" />
+              Achievements
             </button>
           </div>
         </div>
@@ -134,61 +126,41 @@ export default function BadgesPage() {
 
       {/* Progress Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card p-6 border-l-4 border-l-yellow-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground-secondary">Badges Earned</p>
-              <p className="text-2xl font-bold text-foreground">{unlockedBadges}</p>
-              <p className="text-xs text-yellow-600">of {totalBadges} total</p>
-            </div>
-            <div className="p-3 bg-yellow-100 dark:bg-yellow-950 rounded-lg">
-              <Award className="w-6 h-6 text-yellow-600" />
-            </div>
+        <div className="card p-6">
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground-secondary mb-2">Badges Earned</p>
+            <p className="text-3xl font-bold text-foreground mb-1">{unlockedBadges}</p>
+            <p className="text-sm text-foreground-secondary">of {totalBadges} total</p>
           </div>
         </div>
 
-        <div className="card p-6 border-l-4 border-l-blue-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground-secondary">Total Points</p>
-              <p className="text-2xl font-bold text-foreground">
-                {badges.filter(b => b.isUnlocked).reduce((sum, b) => sum + b.points, 0)}
-              </p>
-              <p className="text-xs text-blue-600">Badge points earned</p>
-            </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-950 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
-            </div>
+        <div className="card p-6">
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground-secondary mb-2">Total Points</p>
+            <p className="text-3xl font-bold text-foreground mb-1">
+              {badges.filter(b => b.isUnlocked).reduce((sum, b) => sum + b.points, 0)}
+            </p>
+            <p className="text-sm text-foreground-secondary">Badge points earned</p>
           </div>
         </div>
 
-        <div className="card p-6 border-l-4 border-l-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground-secondary">Completion Rate</p>
-              <p className="text-2xl font-bold text-foreground">
-                {totalBadges > 0 ? Math.round((unlockedBadges / totalBadges) * 100) : 0}%
-              </p>
-              <p className="text-xs text-green-600">Badges unlocked</p>
-            </div>
-            <div className="p-3 bg-green-100 dark:bg-green-950 rounded-lg">
-              <Target className="w-6 h-6 text-green-600" />
-            </div>
+        <div className="card p-6">
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground-secondary mb-2">Completion Rate</p>
+            <p className="text-3xl font-bold text-foreground mb-1">
+              {totalBadges > 0 ? Math.round((unlockedBadges / totalBadges) * 100) : 0}%
+            </p>
+            <p className="text-sm text-foreground-secondary">Badges unlocked</p>
           </div>
         </div>
 
-        <div className="card p-6 border-l-4 border-l-purple-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground-secondary">Leaderboard Rank</p>
-              <p className="text-2xl font-bold text-foreground">
-                {leaderboard.find(entry => entry.userId === 'current-user')?.rank || '-'}
-              </p>
-              <p className="text-xs text-purple-600">Your position</p>
-            </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-950 rounded-lg">
-              <Users className="w-6 h-6 text-purple-600" />
-            </div>
+        <div className="card p-6">
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground-secondary mb-2">Leaderboard Rank</p>
+            <p className="text-3xl font-bold text-foreground mb-1">
+              {leaderboard.find(entry => entry.userId === 'current-user')?.rank || '-'}
+            </p>
+            <p className="text-sm text-foreground-secondary">Your position</p>
           </div>
         </div>
       </div>
@@ -218,17 +190,10 @@ export default function BadgesPage() {
             
             {badges.filter(b => b.isUnlocked).length === 0 ? (
               <div className="text-center py-12">
-                <Award className="w-12 h-12 text-foreground-secondary mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No achievements yet</h3>
-                <p className="text-foreground-secondary mb-4">
+                <p className="text-foreground-secondary">
                   Complete tasks, log health activities, and maintain streaks to earn your first badges
                 </p>
-                <div className="flex items-center justify-center space-x-2">
-                  <button className="btn-primary">
-                    <Target className="w-4 h-4 mr-2" />
-                    View Available Badges
-                  </button>
-                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -267,7 +232,6 @@ export default function BadgesPage() {
             
             {badges.filter(b => !b.isUnlocked && b.progress.percentage > 0).length === 0 ? (
               <div className="text-center py-8">
-                <Target className="w-8 h-8 text-foreground-secondary mx-auto mb-2 opacity-50" />
                 <p className="text-foreground-secondary">No badges in progress</p>
                 <p className="text-sm text-foreground-muted">Complete more activities to start earning badges</p>
               </div>

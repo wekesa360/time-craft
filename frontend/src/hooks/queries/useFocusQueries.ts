@@ -128,8 +128,8 @@ export const useCompleteFocusSessionMutation = () => {
     }: {
       id: string;
       data: {
-        actualEndTime: number;
-        productivityRating: number;
+        actual_duration: number;
+        productivity_rating: number;
         notes?: string;
       };
     }) => apiClient.completeFocusSession(id, data),
@@ -143,9 +143,9 @@ export const useCompleteFocusSessionMutation = () => {
       // Optimistically update
       queryClient.setQueryData(focusKeys.session(id), (old: FocusSession) => ({
         ...old,
-        status: "completed" as const,
-        actualEndTime: data.actualEndTime,
-        productivityRating: data.productivityRating,
+        completed_at: Date.now(),
+        actual_duration: data.actual_duration,
+        productivity_rating: data.productivity_rating,
         notes: data.notes,
       }));
 
@@ -162,7 +162,7 @@ export const useCompleteFocusSessionMutation = () => {
     },
     onSuccess: (session) => {
       toast.success(
-        `🎉 Focus session completed! Rating: ${session.productivityRating}/10`
+        `🎉 Focus session completed! Rating: ${session.productivity_rating}/10`
       );
     },
     onSettled: (data, error, { id }) => {
@@ -170,6 +170,7 @@ export const useCompleteFocusSessionMutation = () => {
       queryClient.invalidateQueries({ queryKey: focusKeys.sessions() });
       queryClient.invalidateQueries({ queryKey: focusKeys.dashboard() });
       queryClient.invalidateQueries({ queryKey: focusKeys.analytics() });
+      queryClient.invalidateQueries({ queryKey: focusKeys.analytics('7d') });
     },
   });
 };
@@ -251,11 +252,13 @@ export const useCancelFocusSessionMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => apiClient.cancelFocusSession(id),
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) => apiClient.cancelFocusSession(id, reason),
     onSuccess: () => {
       toast("Focus session cancelled");
       queryClient.invalidateQueries({ queryKey: focusKeys.sessions() });
       queryClient.invalidateQueries({ queryKey: focusKeys.dashboard() });
+      queryClient.invalidateQueries({ queryKey: focusKeys.analytics() });
+      queryClient.invalidateQueries({ queryKey: focusKeys.analytics('7d') });
     },
     onError: () => {
       toast.error("Failed to cancel focus session");

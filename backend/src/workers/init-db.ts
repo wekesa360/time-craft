@@ -178,24 +178,42 @@ initDb.post('/', async (c) => {
       `CREATE TABLE IF NOT EXISTS focus_sessions (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id),
-        title TEXT NOT NULL,
-        duration INTEGER NOT NULL,
-        start_time INTEGER NOT NULL,
-        end_time INTEGER,
-        status TEXT CHECK(status IN ('active','completed','cancelled')) DEFAULT 'active',
-        template_id TEXT,
-        environment TEXT,
-        distractions TEXT,
-        created_at INTEGER NOT NULL
+        session_type TEXT CHECK(session_type IN ('pomodoro','deep_work','custom','sprint','flow','meditation','exercise','break')) NOT NULL,
+        session_name TEXT,
+        planned_duration INTEGER NOT NULL,
+        actual_duration INTEGER,
+        task_id TEXT,
+        planned_task_count INTEGER DEFAULT 1,
+        completed_task_count INTEGER DEFAULT 0,
+        break_duration INTEGER DEFAULT 0,
+        interruptions INTEGER DEFAULT 0,
+        distraction_count INTEGER DEFAULT 0,
+        environment_data TEXT,
+        mood_before INTEGER,
+        energy_before INTEGER,
+        mood_after INTEGER,
+        energy_after INTEGER,
+        focus_quality INTEGER,
+        session_tags TEXT,
+        is_successful BOOLEAN DEFAULT 1,
+        started_at INTEGER NOT NULL,
+        completed_at INTEGER,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
       )`,
       `CREATE TABLE IF NOT EXISTS focus_templates (
         id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL REFERENCES users(id),
+        template_key TEXT UNIQUE NOT NULL,
         name TEXT NOT NULL,
-        duration INTEGER NOT NULL,
-        environment TEXT,
-        is_public BOOLEAN DEFAULT 0,
-        created_at INTEGER NOT NULL
+        description TEXT,
+        session_type TEXT CHECK(session_type IN ('pomodoro','deep_work','break','meditation','exercise')) NOT NULL,
+        duration_minutes INTEGER NOT NULL,
+        break_duration_minutes INTEGER DEFAULT 5,
+        is_default BOOLEAN DEFAULT 0,
+        is_active BOOLEAN DEFAULT 1,
+        language TEXT DEFAULT 'en',
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
       )`,
       `CREATE TABLE IF NOT EXISTS distractions (
         id TEXT PRIMARY KEY,
@@ -341,6 +359,18 @@ initDb.post('/', async (c) => {
     // Execute each statement
     for (const statement of statements) {
       await c.env.DB.prepare(statement).run();
+    }
+
+    // Insert default focus templates
+    const defaultTemplates = [
+      `INSERT OR IGNORE INTO focus_templates (id, template_key, name, description, session_type, duration_minutes, break_duration_minutes, is_default, is_active, language, created_at, updated_at) VALUES ('template_1', 'pomodoro_25', 'Pomodoro 25min', 'Classic Pomodoro technique with 25-minute focus sessions', 'pomodoro', 25, 5, 1, 1, 'en', 1640995200000, 1640995200000)`,
+      `INSERT OR IGNORE INTO focus_templates (id, template_key, name, description, session_type, duration_minutes, break_duration_minutes, is_default, is_active, language, created_at, updated_at) VALUES ('template_2', 'deep_work_90', 'Deep Work 90min', 'Extended deep work session for complex tasks', 'deep_work', 90, 15, 0, 1, 'en', 1640995200000, 1640995200000)`,
+      `INSERT OR IGNORE INTO focus_templates (id, template_key, name, description, session_type, duration_minutes, break_duration_minutes, is_default, is_active, language, created_at, updated_at) VALUES ('template_3', 'meditation_10', 'Meditation 10min', 'Short meditation session for mindfulness', 'meditation', 10, 0, 0, 1, 'en', 1640995200000, 1640995200000)`,
+      `INSERT OR IGNORE INTO focus_templates (id, template_key, name, description, session_type, duration_minutes, break_duration_minutes, is_default, is_active, language, created_at, updated_at) VALUES ('template_4', 'exercise_30', 'Exercise 30min', 'Physical exercise session', 'exercise', 30, 5, 0, 1, 'en', 1640995200000, 1640995200000)`
+    ];
+
+    for (const template of defaultTemplates) {
+      await c.env.DB.prepare(template).run();
     }
     
     return c.json({ 

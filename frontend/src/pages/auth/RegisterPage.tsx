@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, UserPlus, Check } from 'lucide-react';
+import { Eye, EyeOff, Check } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { useAuthStore } from '../../stores/auth';
@@ -19,41 +19,13 @@ const registerSchema = z.object({
     .min(8, 'Password must be at least 8 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and number'),
   confirmPassword: z.string(),
-  timezone: z.string().min(1, 'Timezone is required'),
-  preferredLanguage: z.string().min(1, 'Language is required'),
   isStudent: z.boolean(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
 
-// Common timezones
-const timezones = [
-  { value: 'America/New_York', label: 'Eastern Time (ET)' },
-  { value: 'America/Chicago', label: 'Central Time (CT)' },
-  { value: 'America/Denver', label: 'Mountain Time (MT)' },
-  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
-  { value: 'Europe/London', label: 'London (GMT)' },
-  { value: 'Europe/Paris', label: 'Paris (CET)' },
-  { value: 'Europe/Berlin', label: 'Berlin (CET)' },
-  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
-  { value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
-  { value: 'Australia/Sydney', label: 'Sydney (AEST)' },
-];
 
-// Languages
-const languages = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español' },
-  { value: 'fr', label: 'Français' },
-  { value: 'de', label: 'Deutsch' },
-  { value: 'it', label: 'Italiano' },
-  { value: 'pt', label: 'Português' },
-  { value: 'ru', label: 'Русский' },
-  { value: 'ja', label: '日本語' },
-  { value: 'ko', label: '한국어' },
-  { value: 'zh', label: '中文' },
-];
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -70,8 +42,6 @@ export default function RegisterPage() {
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
-      preferredLanguage: 'en',
       isStudent: false,
     },
   });
@@ -143,7 +113,6 @@ export default function RegisterPage() {
               type="text"
               autoComplete="given-name"
               className={`input ${errors.firstName ? 'border-red-300 focus:ring-red-500' : ''}`}
-              placeholder="John"
               {...register('firstName')}
             />
             {errors.firstName && (
@@ -162,7 +131,6 @@ export default function RegisterPage() {
               type="text"
               autoComplete="family-name"
               className={`input ${errors.lastName ? 'border-red-300 focus:ring-red-500' : ''}`}
-              placeholder="Doe"
               {...register('lastName')}
             />
             {errors.lastName && (
@@ -183,7 +151,6 @@ export default function RegisterPage() {
             type="email"
             autoComplete="email"
             className={`input ${errors.email ? 'border-red-300 focus:ring-red-500' : ''}`}
-            placeholder="you@example.com"
             {...register('email')}
           />
           {errors.email && (
@@ -204,7 +171,6 @@ export default function RegisterPage() {
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
               className={`input pr-10 ${errors.password ? 'border-red-300 focus:ring-red-500' : ''}`}
-              placeholder="••••••••"
               {...register('password')}
             />
             <button
@@ -269,7 +235,6 @@ export default function RegisterPage() {
               type={showConfirmPassword ? 'text' : 'password'}
               autoComplete="new-password"
               className={`input pr-10 ${errors.confirmPassword ? 'border-red-300 focus:ring-red-500' : ''}`}
-              placeholder="••••••••"
               {...register('confirmPassword')}
             />
             <button
@@ -287,63 +252,17 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {/* Timezone and Language */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {t('auth.timezone')}
-            </label>
-            <select
-              id="timezone"
-              className={`input ${errors.timezone ? 'border-red-300 focus:ring-red-500' : ''}`}
-              {...register('timezone')}
-            >
-              {timezones.map((tz) => (
-                <option key={tz.value} value={tz.value}>
-                  {tz.label}
-                </option>
-              ))}
-            </select>
-            {errors.timezone && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.timezone.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="preferredLanguage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {t('auth.language')}
-            </label>
-            <select
-              id="preferredLanguage"
-              className={`input ${errors.preferredLanguage ? 'border-red-300 focus:ring-red-500' : ''}`}
-              {...register('preferredLanguage')}
-            >
-              {languages.map((lang) => (
-                <option key={lang.value} value={lang.value}>
-                  {lang.label}
-                </option>
-              ))}
-            </select>
-            {errors.preferredLanguage && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.preferredLanguage.message}
-              </p>
-            )}
-          </div>
-        </div>
 
         {/* Student Checkbox */}
         <div className="flex items-center">
           <input
             id="isStudent"
             type="checkbox"
-            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+            className="h-3 w-3 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
             {...register('isStudent')}
           />
-          <label htmlFor="isStudent" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-            {t('auth.isStudent')} <span className="text-gray-500">(Optional - for student discounts)</span>
+          <label htmlFor="isStudent" className="ml-1.5 block text-sm text-gray-700 dark:text-gray-300">
+            {t('auth.isStudent')}
           </label>
         </div>
 
@@ -361,10 +280,7 @@ export default function RegisterPage() {
               {t('common.loading')}
             </>
           ) : (
-            <>
-              <UserPlus className="h-4 w-4" />
-              {t('auth.createAccount')}
-            </>
+            t('auth.createAccount')
           )}
         </button>
       </form>

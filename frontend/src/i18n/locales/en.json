@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Time & Wellness",
+    "name": "Time Craft",
     "tagline": "Your personal productivity and wellness companion"
   },
   "auth": {
@@ -195,6 +195,7 @@
     "technicalDetails": "Technical Details"
   },
   "common": {
+    "home": "Home",
     "loading": "Loading...",
     "saving": "Saving...",
     "saved": "Saved",
@@ -510,12 +511,19 @@
   },
   "dashboard": {
     "welcome": "Welcome back",
+    "subtitle": "Here's what's happening with your productivity today",
     "todaysTasks": "Today's Tasks",
-    "healthSummary": "Health Summary",
+    "healthScore": "Health Score",
     "focusTime": "Focus Time",
+    "streak": "Streak",
     "recentActivity": "Recent Activity",
     "quickActions": "Quick Actions",
     "upcomingEvents": "Upcoming Events",
+    "actions": {
+      "addTask": "Add Task",
+      "startFocus": "Start Focus",
+      "logHealth": "Log Health"
+    },
     "noTasksToday": "No tasks scheduled for today",
     "noRecentActivity": "No recent activity",
     "noUpcomingEvents": "No upcoming events",
@@ -693,6 +701,11 @@
   },
   "settings": {
     "title": "Settings",
+    "description": "Manage your account preferences and application settings",
+    "navigation": "Settings navigation",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "How others see your name",
+    "emailChangeNote": "Contact support to change your email address",
     "profile": "Profile Settings",
     "preferences": "Preferences",
     "theme": "Theme Settings",

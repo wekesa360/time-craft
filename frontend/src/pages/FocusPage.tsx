@@ -2,22 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { 
-  Play, 
-  Pause, 
-  Square, 
-  RotateCcw,
-  Timer,
-  Target,
-  Coffee,
-  Settings,
-  TrendingUp
-} from 'lucide-react';
 
 // Components
 import FocusTimer from '../components/features/focus/FocusTimer';
 import { SessionTemplates } from '../components/features/focus/SessionTemplates';
 import FocusAnalytics from '../components/features/focus/FocusAnalytics';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
 // Hooks and API
 import { useFocusQueries } from '../hooks/queries/useFocusQueries';
@@ -33,6 +23,7 @@ export default function FocusPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('timer');
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<SessionTemplate | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Queries
   const {
@@ -55,18 +46,29 @@ export default function FocusPage() {
   const resumeSessionMutation = useResumeFocusSessionMutation();
   const cancelSessionMutation = useCancelFocusSessionMutation();
 
-  // Find active session
+  // Find active session - only one should be active at a time
   useEffect(() => {
-    const active = sessions.find(session => 
-      session.status === 'active' || session.status === 'paused'
+    // Filter for truly active sessions (not completed, not cancelled)
+    const activeSessions = sessions.filter(session => 
+      !session.completed_at && 
+      session.started_at > 0 &&
+      !session.cancellation_reason
     );
-    setActiveSession(active || null);
+    
+    // If multiple active sessions found, log warning and take the most recent one
+    if (activeSessions.length > 1) {
+      console.warn(`Found ${activeSessions.length} active sessions, taking the most recent one`);
+    }
+    
+    // Sort by started_at descending and take the first (most recent)
+    const active = activeSessions.sort((a, b) => b.started_at - a.started_at)[0] || null;
+    setActiveSession(active);
   }, [sessions]);
 
   // Set default template
   useEffect(() => {
     if (templates.length > 0 && !selectedTemplate) {
-      const classicTemplate = templates.find(t => t.key === 'classic_pomodoro') || templates[0];
+      const classicTemplate = templates.find(t => t.template_key === 'classic_pomodoro') || templates[0];
       setSelectedTemplate(classicTemplate);
     }
   }, [templates, selectedTemplate]);
@@ -79,6 +81,13 @@ export default function FocusPage() {
         taskId
       });
       setActiveSession(session);
+      
+      // Find and set the template that was used for this session
+      const usedTemplate = templates.find(t => t.template_key === templateKey);
+      if (usedTemplate) {
+        setSelectedTemplate(usedTemplate);
+      }
+      
       toast.success('Focus session started!');
     } catch (error) {
       toast.error('Failed to start session');
@@ -116,8 +125,8 @@ export default function FocusPage() {
       await completeSessionMutation.mutateAsync({
         id: activeSession.id,
         data: {
-          actualEndTime: Date.now(),
-          productivityRating: rating,
+          actual_duration: Math.floor((Date.now() - activeSession.started_at) / 60000), // minutes
+          productivity_rating: rating,
           notes
         }
       });
@@ -130,15 +139,22 @@ export default function FocusPage() {
 
   const handleCancelSession = async () => {
     if (!activeSession) return;
+    setShowCancelDialog(true);
+  };
+
+  const confirmCancelSession = async () => {
+    if (!activeSession) return;
     
-    if (window.confirm('Are you sure you want to cancel this session?')) {
-      try {
-        await cancelSessionMutation.mutateAsync(activeSession.id);
-        setActiveSession(null);
-        toast.success('Session cancelled');
-      } catch (error) {
-        toast.error('Failed to cancel session');
-      }
+    try {
+      await cancelSessionMutation.mutateAsync({ 
+        id: activeSession.id, 
+        reason: 'User cancelled session' 
+      });
+      setActiveSession(null);
+      setShowCancelDialog(false);
+      toast.success('Session cancelled');
+    } catch (error) {
+      toast.error('Failed to cancel session');
     }
   };
 
@@ -168,36 +184,33 @@ export default function FocusPage() {
           <div className="flex items-center bg-background-secondary rounded-lg p-1">
             <button
               onClick={() => setViewMode('timer')}
-              className={`p-2 rounded transition-colors ${
-                viewMode === 'timer' 
-                  ? 'bg-primary-600 text-white' 
+              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                viewMode === 'timer'
+                  ? 'bg-primary-600 text-white'
                   : 'text-foreground-secondary hover:text-foreground'
               }`}
-              title="Timer"
             >
-              <Timer className="w-4 h-4" />
+              Timer
             </button>
             <button
               onClick={() => setViewMode('templates')}
-              className={`p-2 rounded transition-colors ${
-                viewMode === 'templates' 
-                  ? 'bg-primary-600 text-white' 
+              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                viewMode === 'templates'
+                  ? 'bg-primary-600 text-white'
                   : 'text-foreground-secondary hover:text-foreground'
               }`}
-              title="Templates"
             >
-              <Target className="w-4 h-4" />
+              Templates
             </button>
             <button
               onClick={() => setViewMode('analytics')}
-              className={`p-2 rounded transition-colors ${
-                viewMode === 'analytics' 
-                  ? 'bg-primary-600 text-white' 
+              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                viewMode === 'analytics'
+                  ? 'bg-primary-600 text-white'
                   : 'text-foreground-secondary hover:text-foreground'
               }`}
-              title="Analytics"
             >
-              <TrendingUp className="w-4 h-4" />
+              Analytics
             </button>
           </div>
         </div>
@@ -208,33 +221,22 @@ export default function FocusPage() {
         <div className="card p-4 border-l-4 border-l-primary-500">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded-full ${
-                activeSession.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'
-              }`} />
+              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
               <div>
                 <p className="font-medium text-foreground">
-                  {activeSession.status === 'active' ? 'Focus Session Active' : 'Session Paused'}
+                  Focus Session Active
                 </p>
                 <p className="text-sm text-foreground-secondary">
-                  Template: {templates.find(t => t.key === activeSession.templateKey)?.name}
+                  Session: {activeSession.session_name || activeSession.session_type}
                 </p>
               </div>
             </div>
             
             <div className="flex items-center space-x-2">
-              {activeSession.status === 'active' ? (
-                <button onClick={handlePauseSession} className="btn-outline">
-                  <Pause className="w-4 h-4 mr-2" />
-                  Pause
-                </button>
-              ) : (
-                <button onClick={handleResumeSession} className="btn-primary">
-                  <Play className="w-4 h-4 mr-2" />
-                  Resume
-                </button>
-              )}
-              <button onClick={handleCancelSession} className="btn-outline text-red-600">
-                <Square className="w-4 h-4 mr-2" />
+              <button onClick={handlePauseSession} className="btn btn-secondary">
+                Pause
+              </button>
+              <button onClick={handleCancelSession} className="btn btn-secondary text-red-600 hover:text-red-700">
                 Cancel
               </button>
             </div>
@@ -269,6 +271,18 @@ export default function FocusPage() {
       {viewMode === 'analytics' && (
         <FocusAnalytics />
       )}
+
+      {/* Cancel Session Dialog */}
+      <ConfirmDialog
+        isOpen={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onConfirm={confirmCancelSession}
+        title="Cancel Focus Session"
+        message="Are you sure you want to cancel this focus session? This action cannot be undone."
+        confirmText="Cancel Session"
+        cancelText="Keep Session"
+        variant="danger"
+      />
     </div>
   );
 }

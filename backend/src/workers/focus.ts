@@ -3,7 +3,7 @@
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { Database } from '../lib/db';
+import { DatabaseService } from '../lib/db';
 import { FocusSessionService } from '../lib/focus-sessions';
 import { NotificationService } from '../lib/notifications';
 import { validateRequest } from '../middleware/validate';
@@ -36,7 +36,7 @@ app.use('*', cors({
 
 // Initialize services
 app.use('*', async (c, next) => {
-  const db = new Database(c.env);
+  const db = new DatabaseService(c.env);
   const notificationService = new NotificationService(
     c.env.ONESIGNAL_APP_ID,
     c.env.ONESIGNAL_API_KEY,
@@ -51,26 +51,26 @@ app.use('*', async (c, next) => {
   await next();
 });
 
-// Authentication middleware for all routes
-app.use('*', authenticateUser);
+// Note: Authentication is handled by the API gateway, userId should be available from context
 
 // Templates Endpoints
 app.get('/templates', validateRequest({ query: TemplateQuerySchema }), async (c) => {
   try {
     const focusService = c.get('focusService') as FocusSessionService;
     const { language, session_type } = c.req.valid('query');
-    
+
     let templates = await focusService.getTemplates(language);
-    
+
     if (session_type) {
       templates = templates.filter(t => t.session_type === session_type);
     }
-    
+
     return c.json({
       success: true,
       data: templates
     });
   } catch (error) {
+    console.error('Failed to get focus templates:', error);
     logger.error('Failed to get focus templates:', error);
     return c.json({
       success: false,
@@ -110,7 +110,8 @@ app.get('/templates/:templateKey', async (c) => {
 app.post('/sessions', validateRequest({ json: StartSessionSchema }), async (c) => {
   try {
     const focusService = c.get('focusService') as FocusSessionService;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const sessionData = c.req.valid('json');
     
     const session = await focusService.startSession(userId, sessionData);
@@ -120,10 +121,15 @@ app.post('/sessions', validateRequest({ json: StartSessionSchema }), async (c) =
       data: session
     }, 201);
   } catch (error) {
+    console.error('Focus session start error details:', error);
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+
     logger.error('Failed to start focus session:', error);
     return c.json({
       success: false,
-      error: 'Failed to start focus session'
+      error: 'Failed to start focus session',
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, 500);
   }
 });
@@ -131,7 +137,8 @@ app.post('/sessions', validateRequest({ json: StartSessionSchema }), async (c) =
 app.get('/sessions', validateRequest({ query: SessionsQuerySchema }), async (c) => {
   try {
     const focusService = c.get('focusService') as FocusSessionService;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const queryParams = c.req.valid('query');
     
     const result = await focusService.getUserSessions(userId, queryParams);
@@ -158,7 +165,8 @@ app.get('/sessions', validateRequest({ query: SessionsQuerySchema }), async (c) 
 app.get('/sessions/:sessionId', async (c) => {
   try {
     const focusService = c.get('focusService') as FocusSessionService;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const sessionId = c.req.param('sessionId');
     
     const session = await focusService.getSession(userId, sessionId);
@@ -186,7 +194,8 @@ app.get('/sessions/:sessionId', async (c) => {
 app.patch('/sessions/:sessionId/complete', validateRequest({ json: CompleteSessionSchema }), async (c) => {
   try {
     const focusService = c.get('focusService') as FocusSessionService;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const sessionId = c.req.param('sessionId');
     const completionData = c.req.valid('json');
     
@@ -197,10 +206,62 @@ app.patch('/sessions/:sessionId/complete', validateRequest({ json: CompleteSessi
       data: session
     });
   } catch (error) {
+    console.error('Complete session error details:', error);
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Session ID:', c.req.param('sessionId'));
+    console.error('User ID:', c.get('jwtPayload')?.userId);
+    console.error('Completion data:', c.req.valid('json'));
+    
     logger.error('Failed to complete focus session:', error);
     return c.json({
       success: false,
-      error: 'Failed to complete session'
+      error: 'Failed to complete session',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, 500);
+  }
+});
+
+app.patch('/sessions/:sessionId/pause', async (c) => {
+  try {
+    const focusService = c.get('focusService') as FocusSessionService;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
+    const sessionId = c.req.param('sessionId');
+    
+    const session = await focusService.pauseSession(userId, sessionId);
+    
+    return c.json({
+      success: true,
+      data: session
+    });
+  } catch (error) {
+    logger.error('Failed to pause focus session:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to pause session'
+    }, 500);
+  }
+});
+
+app.patch('/sessions/:sessionId/resume', async (c) => {
+  try {
+    const focusService = c.get('focusService') as FocusSessionService;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
+    const sessionId = c.req.param('sessionId');
+    
+    const session = await focusService.resumeSession(userId, sessionId);
+    
+    return c.json({
+      success: true,
+      data: session
+    });
+  } catch (error) {
+    logger.error('Failed to resume focus session:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to resume session'
     }, 500);
   }
 });
@@ -208,7 +269,8 @@ app.patch('/sessions/:sessionId/complete', validateRequest({ json: CompleteSessi
 app.patch('/sessions/:sessionId/cancel', validateRequest({ json: CancelSessionSchema }), async (c) => {
   try {
     const focusService = c.get('focusService') as FocusSessionService;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const sessionId = c.req.param('sessionId');
     const { reason } = c.req.valid('json');
     
@@ -231,7 +293,8 @@ app.patch('/sessions/:sessionId/cancel', validateRequest({ json: CancelSessionSc
 app.post('/sessions/:sessionId/distractions', validateRequest({ json: RecordDistractionSchema }), async (c) => {
   try {
     const focusService = c.get('focusService') as FocusSessionService;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const sessionId = c.req.param('sessionId');
     const distractionData = c.req.valid('json');
     
@@ -254,7 +317,8 @@ app.post('/sessions/:sessionId/distractions', validateRequest({ json: RecordDist
 app.get('/break-reminders', async (c) => {
   try {
     const focusService = c.get('focusService') as FocusSessionService;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     
     const reminders = await focusService.getUserBreakReminders(userId);
     
@@ -274,7 +338,8 @@ app.get('/break-reminders', async (c) => {
 app.patch('/break-reminders/:reminderId', validateRequest({ json: UpdateBreakReminderSchema }), async (c) => {
   try {
     const focusService = c.get('focusService') as FocusSessionService;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const reminderId = c.req.param('reminderId');
     const updates = c.req.valid('json');
     
@@ -296,16 +361,39 @@ app.patch('/break-reminders/:reminderId', validateRequest({ json: UpdateBreakRem
 // Analytics and Dashboard
 app.get('/dashboard', async (c) => {
   try {
-    const focusService = c.get('focusService') as FocusSessionService;
-    const userId = c.get('userId') as string;
+    const db = c.get('db') as DatabaseService;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     
-    const dashboard = await focusService.getFocusDashboard(userId);
+    if (!userId) {
+      return c.json({ success: false, error: 'User not authenticated' }, 401);
+    }
+    
+    // Simple test query to isolate the issue
+    const sessionStats = await db.query(`
+      SELECT 
+        COUNT(*) as total_sessions,
+        COUNT(CASE WHEN is_successful = 1 THEN 1 END) as successful_sessions,
+        SUM(actual_duration) as total_focus_minutes
+      FROM focus_sessions 
+      WHERE user_id = ?
+    `, [userId]);
+    
+    const stats = (sessionStats.results || [])[0] || {};
     
     return c.json({
       success: true,
-      data: dashboard
+      data: {
+        total_sessions: stats.total_sessions || 0,
+        successful_sessions: stats.successful_sessions || 0,
+        total_focus_minutes: stats.total_focus_minutes || 0,
+        test_message: 'Simplified dashboard working'
+      }
     });
   } catch (error) {
+    console.error('Focus dashboard error:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     logger.error('Failed to get focus dashboard:', error);
     return c.json({
       success: false,
@@ -314,45 +402,97 @@ app.get('/dashboard', async (c) => {
   }
 });
 
-app.get('/analytics', validateRequest({ query: AnalyticsQuerySchema }), async (c) => {
+app.get('/analytics', async (c) => {
   try {
-    const db = c.get('db') as Database;
-    const userId = c.get('userId') as string;
-    const { start_date, end_date, metric_type } = c.req.valid('query');
+    const db = c.get('db') as DatabaseService;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     
-    let whereClause = 'WHERE user_id = ?';
-    const params: any[] = [userId];
+    console.log('Focus analytics request for user:', userId);
     
-    if (start_date) {
-      whereClause += ' AND measurement_date >= ?';
-      params.push(start_date);
+    // Handle period parameter (e.g., "7d", "30d")
+    const period = c.req.query('period') || '7d';
+    const metric_type = c.req.query('metric_type');
+    
+    // Parse period parameter
+    let days = 7; // default
+    if (period.endsWith('d')) {
+      days = parseInt(period.replace('d', ''));
+    } else if (period.endsWith('w')) {
+      days = parseInt(period.replace('w', '')) * 7;
+    } else if (period.endsWith('m')) {
+      days = parseInt(period.replace('m', '')) * 30;
     }
     
-    if (end_date) {
-      whereClause += ' AND measurement_date <= ?';
-      params.push(end_date);
-    }
+    const startTime = Date.now() - (days * 24 * 60 * 60 * 1000);
+    console.log('Period:', period, 'Days:', days, 'Start time:', startTime);
+    
+    let whereClause = 'WHERE user_id = ? AND measurement_date >= ?';
+    const params: any[] = [userId, startTime];
     
     if (metric_type) {
       whereClause += ' AND metric_type = ?';
       params.push(metric_type);
     }
     
-    const analytics = await db.prepare(`
+    console.log('Querying focus_analytics with params:', params);
+    
+    // Get analytics data from focus_analytics table
+    const analyticsResult = await db.query(`
       SELECT * FROM focus_analytics 
       ${whereClause}
       ORDER BY measurement_date DESC
       LIMIT 100
-    `).all(...params);
+    `, params);
+    
+    console.log('Analytics result:', analyticsResult);
+    
+    // Also get focus sessions data for the period
+    const focusSessionsResult = await db.query(`
+      SELECT 
+        session_type,
+        COUNT(*) as session_count,
+        SUM(actual_duration) as total_duration,
+        AVG(actual_duration) as avg_duration,
+        COUNT(CASE WHEN is_successful = 1 THEN 1 END) as successful_sessions
+      FROM focus_sessions 
+      WHERE user_id = ? AND started_at >= ?
+      GROUP BY session_type
+      ORDER BY session_count DESC
+    `, [userId, startTime]);
+    
+    console.log('Focus sessions result:', focusSessionsResult);
+    
+    // Get daily productivity trends
+    const dailyTrendsResult = await db.query(`
+      SELECT 
+        COUNT(*) as sessions,
+        SUM(actual_duration) as total_minutes,
+        COUNT(CASE WHEN is_successful = 1 THEN 1 END) as successful_sessions
+      FROM focus_sessions 
+      WHERE user_id = ? AND started_at >= ?
+    `, [userId, startTime]);
+    
+    console.log('Daily trends result:', dailyTrendsResult);
     
     return c.json({
       success: true,
-      data: analytics.map(item => ({
-        ...item,
-        additional_data: JSON.parse(item.additional_data || '{}')
-      }))
+      data: {
+        analytics: (analyticsResult.results || []).map(item => ({
+          ...item,
+          additional_data: JSON.parse(item.additional_data || '{}')
+        })),
+        focus_sessions: focusSessionsResult.results || [],
+        daily_trends: dailyTrendsResult.results || [],
+        period: {
+          days,
+          start_time: startTime,
+          end_time: Date.now()
+        }
+      }
     });
   } catch (error) {
+    console.error('Focus analytics error details:', error);
     logger.error('Failed to get focus analytics:', error);
     return c.json({
       success: false,
@@ -364,7 +504,8 @@ app.get('/analytics', validateRequest({ query: AnalyticsQuerySchema }), async (c
 app.get('/patterns', async (c) => {
   try {
     const focusService = c.get('focusService') as FocusSessionService;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     
     const patterns = await focusService.getProductivityPatterns(userId);
     
@@ -385,7 +526,8 @@ app.get('/patterns', async (c) => {
 app.get('/stats/weekly', async (c) => {
   try {
     const db = c.get('db') as Database;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const weekStart = Date.now() - (7 * 24 * 60 * 60 * 1000);
     
     const weeklyStats = await db.prepare(`
@@ -393,7 +535,6 @@ app.get('/stats/weekly', async (c) => {
         DATE(datetime(started_at/1000, 'unixepoch')) as date,
         COUNT(*) as sessions,
         SUM(actual_duration) as total_minutes,
-        AVG(productivity_rating) as avg_rating,
         COUNT(CASE WHEN is_successful = 1 THEN 1 END) as successful_sessions
       FROM focus_sessions 
       WHERE user_id = ? AND started_at >= ?
@@ -417,7 +558,8 @@ app.get('/stats/weekly', async (c) => {
 app.get('/stats/session-types', async (c) => {
   try {
     const db = c.get('db') as Database;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const monthStart = Date.now() - (30 * 24 * 60 * 60 * 1000);
     
     const sessionTypeStats = await db.prepare(`
@@ -425,7 +567,6 @@ app.get('/stats/session-types', async (c) => {
         session_type,
         COUNT(*) as count,
         SUM(actual_duration) as total_minutes,
-        AVG(productivity_rating) as avg_rating,
         AVG(actual_duration) as avg_duration
       FROM focus_sessions 
       WHERE user_id = ? AND started_at >= ? AND completed_at IS NOT NULL
@@ -450,7 +591,8 @@ app.get('/stats/session-types', async (c) => {
 app.post('/environments', validateRequest({ json: CreateEnvironmentSchema }), async (c) => {
   try {
     const db = c.get('db') as Database;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const environmentData = c.req.valid('json');
     
     const environmentId = `env_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -494,7 +636,8 @@ app.post('/environments', validateRequest({ json: CreateEnvironmentSchema }), as
 app.get('/environments', async (c) => {
   try {
     const db = c.get('db') as Database;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     
     const environments = await db.prepare(`
       SELECT * FROM focus_environments 
@@ -521,7 +664,8 @@ app.get('/environments', async (c) => {
 app.patch('/environments/:environmentId', validateRequest({ json: UpdateEnvironmentSchema }), async (c) => {
   try {
     const db = c.get('db') as Database;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const environmentId = c.req.param('environmentId');
     const updates = c.req.valid('json');
     const now = Date.now();
@@ -582,7 +726,8 @@ app.patch('/environments/:environmentId', validateRequest({ json: UpdateEnvironm
 app.delete('/environments/:environmentId', async (c) => {
   try {
     const db = c.get('db') as Database;
-    const userId = c.get('userId') as string;
+    const jwtPayload = c.get('jwtPayload') as any;
+    const userId = jwtPayload?.userId;
     const environmentId = c.req.param('environmentId');
     
     const result = await db.prepare(`

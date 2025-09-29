@@ -128,8 +128,7 @@ metrics.get('/analytics', async (c) => {
         COUNT(CASE WHEN created_at > ? THEN 1 END) as sessions_24h,
         COUNT(CASE WHEN created_at > ? THEN 1 END) as sessions_7d,
         COUNT(CASE WHEN is_successful = 1 THEN 1 END) as successful_sessions,
-        AVG(actual_duration) as avg_session_duration,
-        AVG(productivity_rating) as avg_productivity_rating
+        AVG(actual_duration) as avg_session_duration
       FROM focus_sessions
     `, [last24h, last7d]);
 

@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
+import { apiClient } from '../lib/api';
 import { 
   Plus, 
   Activity, 
   Heart, 
   Droplets, 
   Smile,
-  Brain,
-  TrendingUp,
   Calendar,
-  Target,
-  BarChart3
+  Target
 } from 'lucide-react';
 
 // Components
@@ -21,14 +19,24 @@ import ExerciseLogger from '../components/features/health/ExerciseLogger';
 import { NutritionTracker } from '../components/features/health/NutritionTracker';
 import MoodTracker from '../components/features/health/MoodTracker';
 import { HydrationLogger } from '../components/features/health/HydrationLogger';
+import { GoalCreationSheet } from '../components/features/health/GoalCreationSheet';
 import HealthInsights from '../components/features/health/HealthInsights';
 
 // Hooks and API
-import { useHealthQueries } from '../hooks/queries/useHealthQueries';
+import { 
+  useHealthSummaryQuery,
+  useHealthInsightsQuery,
+  useHealthLogsQuery,
+  useHealthGoalsQuery,
+  useLogExerciseMutation,
+  useLogNutritionMutation,
+  useLogMoodMutation,
+  useLogHydrationMutation
+} from '../hooks/queries/useHealthQueries';
 import type { ExerciseData, NutritionData, MoodData, HydrationData } from '../types';
 
 type ViewMode = 'dashboard' | 'insights' | 'logs' | 'goals';
-type LoggerType = 'exercise' | 'nutrition' | 'mood' | 'hydration' | null;
+type LoggerType = 'exercise' | 'nutrition' | 'mood' | 'hydration' | 'goal' | null;
 
 export default function HealthPage() {
   const { t } = useTranslation();
@@ -39,17 +47,6 @@ export default function HealthPage() {
   const [activeLogger, setActiveLogger] = useState<LoggerType>(null);
 
   // Queries
-  const {
-    useHealthSummaryQuery,
-    useHealthInsightsQuery,
-    useHealthLogsQuery,
-    useHealthGoalsQuery,
-    useLogExerciseMutation,
-    useLogNutritionMutation,
-    useLogMoodMutation,
-    useLogHydrationMutation
-  } = useHealthQueries();
-
   const { data: summary, isLoading: summaryLoading } = useHealthSummaryQuery();
   const { data: insights, isLoading: insightsLoading } = useHealthInsightsQuery();
   const { data: logs = [], isLoading: logsLoading } = useHealthLogsQuery();
@@ -102,7 +99,38 @@ export default function HealthPage() {
     }
   };
 
+  const handleCreateGoal = async (data: any) => {
+    try {
+      await apiClient.createHealthGoal(data);
+      toast.success('Health goal created successfully!');
+      setActiveLogger(null);
+      // Refresh goals data
+      queryClient.invalidateQueries({ queryKey: ['health-goals'] });
+    } catch (error) {
+      toast.error('Failed to create health goal');
+    }
+  };
+
   const isLoading = summaryLoading || insightsLoading || logsLoading || goalsLoading;
+
+  // Fallback data for when API calls fail or return undefined
+  const fallbackSummary = {
+    exerciseCount: 0,
+    nutritionCount: 0,
+    hydrationTotal: 0,
+    moodAverage: 5
+  };
+
+  const fallbackInsights = {
+    overallScore: 5,
+    trends: {
+      exercise: 'stable' as const,
+      nutrition: 'stable' as const,
+      mood: 'stable' as const
+    },
+    recommendations: [],
+    correlations: []
+  };
 
   if (isLoading) {
     return (
@@ -126,100 +154,69 @@ export default function HealthPage() {
         </div>
         
         <div className="flex items-center space-x-3">
-          {/* View Mode Toggle */}
+          {/* View Mode Tabs */}
           <div className="flex items-center bg-background-secondary rounded-lg p-1">
             <button
               onClick={() => setViewMode('dashboard')}
-              className={`p-2 rounded transition-colors ${
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
                 viewMode === 'dashboard' 
                   ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
+                  : 'text-foreground-secondary hover:text-foreground hover:bg-background-tertiary'
               }`}
-              title="Dashboard"
             >
-              <Heart className="w-4 h-4" />
+              Dashboard
             </button>
             <button
               onClick={() => setViewMode('insights')}
-              className={`p-2 rounded transition-colors ${
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
                 viewMode === 'insights' 
                   ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
+                  : 'text-foreground-secondary hover:text-foreground hover:bg-background-tertiary'
               }`}
-              title="AI Insights"
             >
-              <Brain className="w-4 h-4" />
+              AI Insights
             </button>
             <button
               onClick={() => setViewMode('logs')}
-              className={`p-2 rounded transition-colors ${
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
                 viewMode === 'logs' 
                   ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
+                  : 'text-foreground-secondary hover:text-foreground hover:bg-background-tertiary'
               }`}
-              title="Health Logs"
             >
-              <BarChart3 className="w-4 h-4" />
+              Health Logs
             </button>
             <button
               onClick={() => setViewMode('goals')}
-              className={`p-2 rounded transition-colors ${
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
                 viewMode === 'goals' 
                   ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
+                  : 'text-foreground-secondary hover:text-foreground hover:bg-background-tertiary'
               }`}
-              title="Goals"
             >
-              <Target className="w-4 h-4" />
+              Goals
             </button>
           </div>
 
-          {/* Quick Log Buttons */}
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => setActiveLogger('exercise')}
-              className="btn-outline text-orange-600 border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950/20"
-              title="Log Exercise"
-            >
-              <Activity className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => setActiveLogger('nutrition')}
-              className="btn-outline text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-950/20"
-              title="Log Nutrition"
-            >
-              <Heart className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => setActiveLogger('hydration')}
-              className="btn-outline text-blue-600 border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/20"
-              title="Log Hydration"
-            >
-              <Droplets className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => setActiveLogger('mood')}
-              className="btn-outline text-purple-600 border-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/20"
-              title="Log Mood"
-            >
-              <Smile className="w-4 h-4" />
-            </button>
-          </div>
         </div>
       </div>
 
       {/* Content based on view mode */}
-      {viewMode === 'dashboard' && summary && insights && (
+      {viewMode === 'dashboard' && (
         <HealthDashboard
-          summary={summary}
-          insights={insights}
-          goals={goals}
+          summary={summary || fallbackSummary}
+          insights={insights || fallbackInsights}
+          goals={goals || []}
+          onLogExercise={() => setActiveLogger('exercise')}
+          onLogNutrition={() => setActiveLogger('nutrition')}
+          onLogHydration={() => setActiveLogger('hydration')}
+          onLogMood={() => setActiveLogger('mood')}
         />
       )}
 
-      {viewMode === 'insights' && insights && (
+      {viewMode === 'insights' && (
         <HealthInsights
-          insights={insights}
+          insights={insights || fallbackInsights}
           isLoading={insightsLoading}
         />
       )}
@@ -230,25 +227,14 @@ export default function HealthPage() {
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">Recent Health Logs</h3>
-              <Calendar className="w-5 h-5 text-foreground-secondary" />
             </div>
             
             {logs.length === 0 ? (
               <div className="text-center py-12">
-                <Heart className="w-12 h-12 text-foreground-secondary mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No health logs yet</h3>
                 <p className="text-foreground-secondary mb-4">
                   Start tracking your health by logging your first activity
                 </p>
-                <div className="flex items-center justify-center space-x-2">
-                  <button 
-                    onClick={() => setActiveLogger('exercise')}
-                    className="btn-primary"
-                  >
-                    <Activity className="w-4 h-4 mr-2" />
-                    Log Exercise
-                  </button>
-                </div>
               </div>
             ) : (
               <div className="space-y-3">
@@ -292,23 +278,20 @@ export default function HealthPage() {
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">Health Goals</h3>
-              <button className="btn-primary">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Goal
+              <button 
+                onClick={() => setActiveLogger('goal')}
+                className="btn btn-primary"
+              >
+                {goals.length === 0 ? 'Create Your First Goal' : 'Add Goal'}
               </button>
             </div>
             
             {goals.length === 0 ? (
               <div className="text-center py-12">
-                <Target className="w-12 h-12 text-foreground-secondary mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No health goals set</h3>
                 <p className="text-foreground-secondary mb-4">
                   Set health goals to track your progress and stay motivated
                 </p>
-                <button className="btn-primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Goal
-                </button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -371,6 +354,12 @@ export default function HealthPage() {
         isOpen={activeLogger === 'hydration'}
         onClose={() => setActiveLogger(null)}
         onSave={handleLogHydration}
+      />
+
+      <GoalCreationSheet
+        isOpen={activeLogger === 'goal'}
+        onClose={() => setActiveLogger(null)}
+        onSave={handleCreateGoal}
       />
     </div>
   );

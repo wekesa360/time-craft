@@ -1,14 +1,12 @@
 import React from 'react';
 import type { SessionTemplate, FocusSession } from '../../../types';
-import { 
-  Play, 
-  Clock, 
-  Coffee, 
-  Target, 
-  Zap, 
+import {
+  Clock,
+  Coffee,
+  Target,
+  Zap,
   Brain,
-  Timer,
-  Repeat
+  Timer
 } from 'lucide-react';
 
 interface SessionTemplatesProps {
@@ -20,6 +18,11 @@ interface SessionTemplatesProps {
 }
 
 const templateIcons = {
+  pomodoro_25: Timer,
+  deep_work_90: Brain,
+  meditation_10: Coffee,
+  exercise_30: Zap,
+  // Legacy support
   classic_pomodoro: Timer,
   extended_pomodoro: Clock,
   deep_work: Brain,
@@ -28,6 +31,11 @@ const templateIcons = {
 };
 
 const templateColors = {
+  pomodoro_25: 'red',
+  deep_work_90: 'purple',
+  meditation_10: 'green',
+  exercise_30: 'orange',
+  // Legacy support
   classic_pomodoro: 'red',
   extended_pomodoro: 'blue',
   deep_work: 'purple',
@@ -62,16 +70,16 @@ export const SessionTemplates: React.FC<SessionTemplatesProps> = ({
       </div>
 
       {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {templates.map((template) => {
-          const Icon = getTemplateIcon(template.key);
-          const color = getTemplateColor(template.key);
-          const isSelected = selectedTemplate?.key === template.key;
-          const canStart = !activeSession;
+          const Icon = getTemplateIcon(template.template_key);
+          const color = getTemplateColor(template.template_key);
+          const isSelected = selectedTemplate?.template_key === template.template_key;
+          const canStart = !activeSession || activeSession.completed_at;
 
           return (
             <div
-              key={template.key}
+              key={template.template_key}
               className={`card p-6 cursor-pointer transition-all duration-200 ${
                 isSelected 
                   ? `border-2 border-${color}-500 bg-${color}-50 dark:bg-${color}-950/20` 
@@ -87,7 +95,7 @@ export const SessionTemplates: React.FC<SessionTemplatesProps> = ({
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground">{template.name}</h3>
                   <p className="text-sm text-foreground-secondary">
-                    {template.key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    {template.template_key?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                   </p>
                 </div>
               </div>
@@ -104,7 +112,7 @@ export const SessionTemplates: React.FC<SessionTemplatesProps> = ({
                     <Clock className="w-4 h-4 text-foreground-secondary" />
                     <span className="text-foreground-secondary">Focus Time</span>
                   </div>
-                  <span className="font-medium text-foreground">{template.focusDuration}m</span>
+                  <span className="font-medium text-foreground">{template.duration_minutes}m</span>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
@@ -112,23 +120,15 @@ export const SessionTemplates: React.FC<SessionTemplatesProps> = ({
                     <Coffee className="w-4 h-4 text-foreground-secondary" />
                     <span className="text-foreground-secondary">Short Break</span>
                   </div>
-                  <span className="font-medium text-foreground">{template.shortBreakDuration}m</span>
+                  <span className="font-medium text-foreground">{template.break_duration_minutes}m</span>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-2">
-                    <Coffee className="w-4 h-4 text-foreground-secondary" />
-                    <span className="text-foreground-secondary">Long Break</span>
+                    <Target className="w-4 h-4 text-foreground-secondary" />
+                    <span className="text-foreground-secondary">Session Type</span>
                   </div>
-                  <span className="font-medium text-foreground">{template.longBreakDuration}m</span>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Repeat className="w-4 h-4 text-foreground-secondary" />
-                    <span className="text-foreground-secondary">Sessions Until Long Break</span>
-                  </div>
-                  <span className="font-medium text-foreground">{template.sessionsUntilLongBreak}</span>
+                  <span className="font-medium text-foreground">{template.session_type}</span>
                 </div>
               </div>
 
@@ -138,19 +138,18 @@ export const SessionTemplates: React.FC<SessionTemplatesProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onStartSession(template.key);
+                      onStartSession(template.template_key);
                     }}
-                    className={`btn-primary w-full ${
+                    className={`btn btn-primary w-full ${
                       isSelected ? '' : 'opacity-75 hover:opacity-100'
                     }`}
                   >
-                    <Play className="w-4 h-4 mr-2" />
                     Start Session
                   </button>
                 ) : (
                   <button
                     disabled
-                    className="btn-secondary w-full opacity-50 cursor-not-allowed"
+                    className="btn btn-secondary w-full opacity-50 cursor-not-allowed"
                   >
                     Session Active
                   </button>
@@ -177,36 +176,33 @@ export const SessionTemplates: React.FC<SessionTemplatesProps> = ({
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left py-2 text-foreground">Template</th>
-                <th className="text-center py-2 text-foreground">Focus</th>
-                <th className="text-center py-2 text-foreground">Short Break</th>
-                <th className="text-center py-2 text-foreground">Long Break</th>
-                <th className="text-center py-2 text-foreground">Cycle</th>
+                <th className="text-center py-2 text-foreground">Duration</th>
+                <th className="text-center py-2 text-foreground">Break</th>
+                <th className="text-center py-2 text-foreground">Type</th>
                 <th className="text-left py-2 text-foreground">Best For</th>
               </tr>
             </thead>
             <tbody>
               {templates.map((template) => {
-                const Icon = getTemplateIcon(template.key);
-                const color = getTemplateColor(template.key);
+                const Icon = getTemplateIcon(template.template_key);
+                const color = getTemplateColor(template.template_key);
                 
                 return (
-                  <tr key={template.key} className="border-b border-border/50">
+                  <tr key={template.template_key} className="border-b border-border/50">
                     <td className="py-3">
                       <div className="flex items-center space-x-2">
                         <Icon className={`w-4 h-4 text-${color}-600`} />
                         <span className="font-medium text-foreground">{template.name}</span>
                       </div>
                     </td>
-                    <td className="text-center py-3 text-foreground">{template.focusDuration}m</td>
-                    <td className="text-center py-3 text-foreground">{template.shortBreakDuration}m</td>
-                    <td className="text-center py-3 text-foreground">{template.longBreakDuration}m</td>
-                    <td className="text-center py-3 text-foreground">{template.sessionsUntilLongBreak}</td>
+                    <td className="text-center py-3 text-foreground">{template.duration_minutes}m</td>
+                    <td className="text-center py-3 text-foreground">{template.break_duration_minutes}m</td>
+                    <td className="text-center py-3 text-foreground">{template.session_type}</td>
                     <td className="py-3 text-foreground-secondary">
-                      {template.key === 'classic_pomodoro' && 'General productivity, time management'}
-                      {template.key === 'extended_pomodoro' && 'Deep work, complex tasks'}
-                      {template.key === 'deep_work' && 'Research, writing, coding'}
-                      {template.key === 'quick_sprint' && 'Quick tasks, email, admin'}
-                      {template.key === 'flow_state' && 'Creative work, problem solving'}
+                      {template.template_key === 'pomodoro_25' && 'General productivity, time management'}
+                      {template.template_key === 'deep_work_90' && 'Research, writing, complex tasks'}
+                      {template.template_key === 'meditation_10' && 'Mindfulness, stress relief'}
+                      {template.template_key === 'exercise_30' && 'Physical activity, breaks'}
                     </td>
                   </tr>
                 );
@@ -216,20 +212,6 @@ export const SessionTemplates: React.FC<SessionTemplatesProps> = ({
         </div>
       </div>
 
-      {/* Tips */}
-      <div className="card p-6 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-        <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">
-          💡 Focus Session Tips
-        </h3>
-        <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-          <li>• Choose a quiet environment free from distractions</li>
-          <li>• Turn off notifications on your devices</li>
-          <li>• Have a clear goal for each focus session</li>
-          <li>• Take breaks seriously - they help maintain focus</li>
-          <li>• Experiment with different templates to find what works best</li>
-          <li>• Track your productivity to identify patterns</li>
-        </ul>
-      </div>
     </div>
   );
 };

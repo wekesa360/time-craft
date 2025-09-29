@@ -1,8 +1,10 @@
 import React from 'react';
-import { 
-  TrendingUp, 
-  Clock, 
-  Target, 
+import { useQuery } from '@tanstack/react-query';
+import { useFocusQueries } from '../../../hooks/queries/useFocusQueries';
+import {
+  TrendingUp,
+  Clock,
+  Target,
   Calendar,
   Award,
   BarChart3,
@@ -11,30 +13,103 @@ import {
 } from 'lucide-react';
 
 const FocusAnalytics: React.FC = () => {
-  // Mock data - in real app this would come from API
-  const mockStats = {
-    totalSessions: 47,
-    totalFocusTime: 1420, // minutes
-    averageRating: 7.8,
-    streakDays: 12,
-    completionRate: 85,
-    favoriteTemplate: 'Classic Pomodoro',
-    weeklyData: [
-      { day: 'Mon', sessions: 3, minutes: 75 },
-      { day: 'Tue', sessions: 4, minutes: 100 },
-      { day: 'Wed', sessions: 2, minutes: 50 },
-      { day: 'Thu', sessions: 5, minutes: 125 },
-      { day: 'Fri', sessions: 3, minutes: 75 },
-      { day: 'Sat', sessions: 1, minutes: 25 },
-      { day: 'Sun', sessions: 2, minutes: 50 }
-    ],
-    templateStats: [
-      { name: 'Classic Pomodoro', sessions: 25, percentage: 53 },
-      { name: 'Deep Work', sessions: 12, percentage: 26 },
-      { name: 'Quick Sprint', sessions: 7, percentage: 15 },
-      { name: 'Extended', sessions: 3, percentage: 6 }
-    ]
+  const { useFocusAnalyticsQuery, useFocusSessionsQuery } = useFocusQueries();
+
+  // Get analytics data from backend
+  const { data: analyticsData, isLoading: analyticsLoading, error: analyticsError } = useFocusAnalyticsQuery('7d');
+  const { data: sessionsData = [], isLoading: sessionsLoading } = useFocusSessionsQuery();
+
+  // Calculate real stats from backend data
+  const calculateStats = () => {
+    if (!sessionsData || sessionsData.length === 0) {
+      return {
+        totalSessions: 0,
+        totalFocusTime: 0,
+        averageRating: 0,
+        streakDays: 0,
+        completionRate: 0,
+        favoriteTemplate: 'None',
+        weeklyData: [],
+        templateStats: []
+      };
+    }
+
+    const totalSessions = sessionsData.length;
+    const completedSessions = sessionsData.filter(s => s.completed_at);
+    const totalFocusTime = completedSessions.reduce((total, session) =>
+      total + (session.actual_duration || session.planned_duration || 0), 0
+    );
+
+    const sessionsWithRating = completedSessions.filter(s => s.productivity_rating);
+    const averageRating = sessionsWithRating.length > 0
+      ? sessionsWithRating.reduce((sum, s) => sum + (s.productivity_rating || 0), 0) / sessionsWithRating.length
+      : 0;
+
+    const completionRate = totalSessions > 0 ? (completedSessions.length / totalSessions) * 100 : 0;
+
+    // Calculate weekly data
+    const now = Date.now();
+    const weekAgo = now - (7 * 24 * 60 * 60 * 1000);
+    const recentSessions = sessionsData.filter(s => s.started_at >= weekAgo);
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weeklyData = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(now - (6 - i) * 24 * 60 * 60 * 1000);
+      const dayStart = new Date(date.setHours(0, 0, 0, 0)).getTime();
+      const dayEnd = dayStart + (24 * 60 * 60 * 1000);
+
+      const daySessions = recentSessions.filter(s =>
+        s.started_at >= dayStart && s.started_at < dayEnd
+      );
+
+      return {
+        day: dayNames[new Date(dayStart).getDay()],
+        sessions: daySessions.length,
+        minutes: daySessions.reduce((total, s) =>
+          total + (s.actual_duration || s.planned_duration || 0), 0
+        )
+      };
+    });
+
+    // Calculate template usage
+    const templateCounts = {};
+    sessionsData.forEach(session => {
+      const type = session.session_type || 'unknown';
+      templateCounts[type] = (templateCounts[type] || 0) + 1;
+    });
+
+    const templateStats = Object.entries(templateCounts)
+      .map(([name, count]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1).replace('_', ' '),
+        sessions: count as number,
+        percentage: totalSessions > 0 ? Math.round(((count as number) / totalSessions) * 100) : 0
+      }))
+      .sort((a, b) => b.sessions - a.sessions);
+
+    const favoriteTemplate = templateStats.length > 0 ? templateStats[0].name : 'None';
+
+    return {
+      totalSessions,
+      totalFocusTime,
+      averageRating: Math.round(averageRating * 10) / 10,
+      streakDays: 0, // Would need more complex calculation for streaks
+      completionRate: Math.round(completionRate),
+      favoriteTemplate,
+      weeklyData,
+      templateStats
+    };
   };
+
+  const stats = calculateStats();
+
+  // Loading state
+  if (analyticsLoading || sessionsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -58,8 +133,8 @@ const FocusAnalytics: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-foreground-secondary">Total Sessions</p>
-              <p className="text-2xl font-bold text-foreground">{mockStats.totalSessions}</p>
-              <p className="text-xs text-green-600">+12% this week</p>
+              <p className="text-2xl font-bold text-foreground">{stats.totalSessions}</p>
+              <p className="text-xs text-green-600">Focus sessions completed</p>
             </div>
             <div className="p-3 bg-blue-100 dark:bg-blue-950 rounded-lg">
               <Target className="w-6 h-6 text-blue-600" />
@@ -71,8 +146,8 @@ const FocusAnalytics: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-foreground-secondary">Focus Time</p>
-              <p className="text-2xl font-bold text-foreground">{formatTime(mockStats.totalFocusTime)}</p>
-              <p className="text-xs text-green-600">+8% this week</p>
+              <p className="text-2xl font-bold text-foreground">{formatTime(stats.totalFocusTime)}</p>
+              <p className="text-xs text-green-600">Total focused time</p>
             </div>
             <div className="p-3 bg-green-100 dark:bg-green-950 rounded-lg">
               <Clock className="w-6 h-6 text-green-600" />
@@ -84,8 +159,8 @@ const FocusAnalytics: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-foreground-secondary">Avg Rating</p>
-              <p className="text-2xl font-bold text-foreground">{mockStats.averageRating}/10</p>
-              <p className="text-xs text-green-600">+0.3 this week</p>
+              <p className="text-2xl font-bold text-foreground">{stats.averageRating}/10</p>
+              <p className="text-xs text-green-600">Average productivity rating</p>
             </div>
             <div className="p-3 bg-purple-100 dark:bg-purple-950 rounded-lg">
               <Award className="w-6 h-6 text-purple-600" />
@@ -97,7 +172,7 @@ const FocusAnalytics: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-foreground-secondary">Streak</p>
-              <p className="text-2xl font-bold text-foreground">{mockStats.streakDays} days</p>
+              <p className="text-2xl font-bold text-foreground">{stats.streakDays} days</p>
               <p className="text-xs text-orange-600">Keep it up!</p>
             </div>
             <div className="p-3 bg-orange-100 dark:bg-orange-950 rounded-lg">
@@ -124,7 +199,7 @@ const FocusAnalytics: React.FC = () => {
         </div>
 
         <div className="space-y-4">
-          {mockStats.weeklyData.map((day, index) => (
+          {stats.weeklyData.map((day, index) => (
             <div key={day.day} className="flex items-center space-x-4">
               <div className="w-12 text-sm font-medium text-foreground-secondary">
                 {day.day}
@@ -168,7 +243,7 @@ const FocusAnalytics: React.FC = () => {
         <div className="card p-6">
           <h3 className="text-lg font-semibold text-foreground mb-4">Template Usage</h3>
           <div className="space-y-4">
-            {mockStats.templateStats.map((template, index) => (
+            {stats.templateStats.map((template, index) => (
               <div key={template.name} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-foreground">{template.name}</span>
@@ -195,47 +270,71 @@ const FocusAnalytics: React.FC = () => {
         <div className="card p-6">
           <h3 className="text-lg font-semibold text-foreground mb-4">Insights & Recommendations</h3>
           <div className="space-y-4">
-            <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="flex items-start space-x-2">
-                <TrendingUp className="w-5 h-5 text-green-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                    Great Progress!
-                  </p>
-                  <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                    Your focus time increased by 8% this week. Keep up the momentum!
-                  </p>
-                </div>
-              </div>
-            </div>
+            {stats.totalSessions > 0 ? (
+              <>
+                {stats.completionRate >= 80 && (
+                  <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="flex items-start space-x-2">
+                      <TrendingUp className="w-5 h-5 text-green-600 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                          Excellent Completion Rate!
+                        </p>
+                        <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                          You're completing {stats.completionRate}% of your sessions. Keep up the great work!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="flex items-start space-x-2">
-                <Calendar className="w-5 h-5 text-blue-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    Peak Performance
-                  </p>
-                  <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                    You're most productive on Thursdays. Consider scheduling important tasks then.
-                  </p>
-                </div>
-              </div>
-            </div>
+                {stats.totalFocusTime > 60 && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-start space-x-2">
+                      <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                          Total Focus Time
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                          You've focused for {formatTime(stats.totalFocusTime)} total. Great dedication!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-            <div className="p-4 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-              <div className="flex items-start space-x-2">
-                <Activity className="w-5 h-5 text-yellow-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                    Try Deep Work
-                  </p>
-                  <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                    Your ratings are highest with longer sessions. Try the Deep Work template.
-                  </p>
+                {stats.favoriteTemplate !== 'None' && (
+                  <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                    <div className="flex items-start space-x-2">
+                      <Target className="w-5 h-5 text-purple-600 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                          Favorite Template
+                        </p>
+                        <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+                          You prefer {stats.favoriteTemplate} sessions. Consider optimizing your schedule around this.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="p-4 bg-gray-50 dark:bg-gray-950/20 rounded-lg border border-gray-200 dark:border-gray-800">
+                <div className="flex items-start space-x-2">
+                  <Activity className="w-5 h-5 text-gray-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                      Get Started!
+                    </p>
+                    <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">
+                      Start your first focus session to see personalized insights and recommendations.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -246,26 +345,26 @@ const FocusAnalytics: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600 mb-1">
-              {mockStats.completionRate}%
+              {stats.completionRate}%
             </div>
             <p className="text-sm text-foreground-secondary">Completion Rate</p>
-            <p className="text-xs text-green-600 mt-1">+5% from last month</p>
+            <p className="text-xs text-green-600 mt-1">Keep up the great work!</p>
           </div>
           
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600 mb-1">
-              30.2m
+              {stats.totalSessions > 0 ? formatTime(Math.round(stats.totalFocusTime / stats.totalSessions)) : '0m'}
             </div>
             <p className="text-sm text-foreground-secondary">Avg Session Length</p>
-            <p className="text-xs text-blue-600 mt-1">+2.5m from last month</p>
+            <p className="text-xs text-blue-600 mt-1">Based on your sessions</p>
           </div>
           
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600 mb-1">
-              6.7
+              {stats.totalSessions > 0 ? Math.round(stats.totalSessions / 7 * 10) / 10 : '0'}
             </div>
             <p className="text-sm text-foreground-secondary">Sessions per Day</p>
-            <p className="text-xs text-purple-600 mt-1">+1.2 from last month</p>
+            <p className="text-xs text-purple-600 mt-1">Weekly average</p>
           </div>
         </div>
       </div>

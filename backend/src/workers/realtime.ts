@@ -13,15 +13,26 @@ import { RealtimeCalendarService } from '../lib/realtime-calendar';
 
 const realtime = new Hono<{ Bindings: Env }>();
 
-// Helper function to get user from token
+// Helper function to get user from JWT middleware context
 async function getUserFromToken(c: any) {
-  const token = c.req.header('Authorization')?.replace('Bearer ', '');
-  if (!token) return null;
+  // For SSE connections, the token is passed as a query parameter
+  // We need to handle this case specially since the JWT middleware expects Authorization header
+  const token = c.req.query('token');
+  
+  if (!token) {
+    console.log('No token found in request');
+    return null;
+  }
 
   try {
+    console.log('JWT Secret:', c.env.JWT_SECRET);
+    console.log('Token:', token.substring(0, 50) + '...');
     const payload = await verify(token, c.env.JWT_SECRET);
+    console.log('JWT payload:', payload);
     return { userId: payload.userId, email: payload.email };
   } catch (error) {
+    console.log('JWT verification failed:', error);
+    console.log('Error details:', error.message);
     return null;
   }
 }
@@ -35,23 +46,14 @@ realtime.get('/sse', async (c) => {
     return c.json({ error: 'Unauthorized' }, 401);
   }
 
-  // Subscribe to common event types
-  const connectionId = c.req.header('X-Connection-ID');
-  if (connectionId) {
-    sseService.subscribe(connectionId, [
-      SSE_EVENT_TYPES.CALENDAR_EVENT_CREATED,
-      SSE_EVENT_TYPES.CALENDAR_EVENT_UPDATED,
-      SSE_EVENT_TYPES.CALENDAR_EVENT_DELETED,
-      SSE_EVENT_TYPES.TASK_CREATED,
-      SSE_EVENT_TYPES.TASK_UPDATED,
-      SSE_EVENT_TYPES.TASK_COMPLETED,
-      SSE_EVENT_TYPES.FOCUS_SESSION_STARTED,
-      SSE_EVENT_TYPES.FOCUS_SESSION_COMPLETED,
-      SSE_EVENT_TYPES.NOTIFICATION_RECEIVED
-    ]);
-  }
-
-  return createSSEResponse(auth.userId);
+  // TEMPORARY: Disable SSE to prevent worker hanging
+  // Cloudflare Workers are not designed for persistent connections
+  // TODO: Implement polling-based real-time updates instead
+  return c.json({ 
+    error: 'SSE temporarily disabled',
+    message: 'Real-time updates are temporarily disabled to prevent worker hanging. Please use polling for updates.',
+    pollingEndpoint: '/api/realtime/poll'
+  }, 503);
 });
 
 // POST /realtime/sse/subscribe - Subscribe to specific event types

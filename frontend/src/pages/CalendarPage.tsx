@@ -4,18 +4,20 @@ import MeetingScheduler from '../components/features/calendar/MeetingScheduler';
 import CalendarView from '../components/features/calendar/CalendarView';
 import { MeetingRequests } from '../components/features/calendar/MeetingRequests';
 import { AvailabilityPicker } from '../components/features/calendar/AvailabilityPicker';
+import CalendarIntegrations from '../components/features/calendar/CalendarIntegrations';
 
-type ViewMode = 'calendar' | 'scheduler' | 'requests' | 'availability';
+type ViewMode = 'calendar' | 'scheduler' | 'requests' | 'availability' | 'integrations';
 
 export default function CalendarPage() {
   const { t } = useTranslation();
   const [activeView, setActiveView] = useState<ViewMode>('calendar');
 
   const views = [
-    { id: 'calendar' as const, label: 'Calendar', icon: '📅' },
-    { id: 'scheduler' as const, label: 'Schedule Meeting', icon: '🤝' },
-    { id: 'requests' as const, label: 'Requests', icon: '📬' },
-    { id: 'availability' as const, label: 'Availability', icon: '⏰' },
+    { id: 'calendar' as const, label: 'Calendar' },
+    { id: 'scheduler' as const, label: 'Schedule Meeting' },
+    { id: 'requests' as const, label: 'Requests' },
+    { id: 'availability' as const, label: 'Availability' },
+    { id: 'integrations' as const, label: 'Integrations' },
   ];
 
   const renderActiveView = () => {
@@ -28,6 +30,8 @@ export default function CalendarPage() {
         return <MeetingRequests />;
       case 'availability':
         return <AvailabilityPicker />;
+      case 'integrations':
+        return <CalendarIntegrations />;
       default:
         return <CalendarView />;
     }
@@ -57,7 +61,6 @@ export default function CalendarPage() {
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700'
               }`}
             >
-              <span className="mr-2">{view.icon}</span>
               {view.label}
             </button>
           ))}

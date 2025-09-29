@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -34,6 +34,7 @@ import {
   LazyLoginPage,
   LazyRegisterPage,
   LazyForgotPasswordPage,
+  LazyResetPasswordPage,
   LazyTermsOfServicePage,
   LazyPrivacyPolicyPage,
   LazyDashboard,
@@ -56,47 +57,7 @@ import {
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, initialize, isLoading } = useAuthStore();
-  const { t } = useTranslation();
-
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen gradient-bg flex items-center justify-center">
-        <div className="text-center">
-          {/* Animated logo */}
-          <div className="mb-8">
-            <div className="relative">
-              <div className="w-16 h-16 mx-auto mb-4 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center animate-pulse">
-                <div className="w-8 h-8 rounded-full bg-primary-600"></div>
-              </div>
-              <div className="absolute -inset-4">
-                <div className="w-24 h-24 border-2 border-primary-300 dark:border-primary-700 rounded-full animate-spin border-t-primary-600"></div>
-              </div>
-            </div>
-          </div>
-          
-          {/* App name and loading message */}
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('app.name')}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {t('common.loading')}...
-          </p>
-          
-          {/* Loading dots */}
-          <div className="flex justify-center space-x-1">
-            <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-            <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const { isAuthenticated } = useAuthStore();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -124,14 +85,14 @@ function UnprotectedRoute({ children }: { children: React.ReactNode }) {
 function App() {
   const { i18n } = useTranslation();
   const { applyTheme } = useThemeStore();
+  const { initialize } = useAuthStore();
 
   useEffect(() => {
+    // Always initialize authentication to check token validity
+    initialize();
+
     // Apply theme on mount
     applyTheme();
-
-    // Set up theme change listener
-    const handleThemeChange = () => applyTheme();
-    window.addEventListener('themeChange', handleThemeChange);
 
     // Set document language
     document.documentElement.lang = i18n.language;
@@ -151,10 +112,9 @@ function App() {
     }
 
     return () => {
-      window.removeEventListener('themeChange', handleThemeChange);
       performanceMonitor?.destroy();
     };
-  }, [applyTheme, i18n.language]);
+  }, [applyTheme, i18n.language, initialize]);
 
   // Listen for language changes
   useEffect(() => {
@@ -212,6 +172,16 @@ function App() {
                 <PublicRoute>
                   <AuthLayout>
                     <LazyForgotPasswordPage />
+                  </AuthLayout>
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <PublicRoute>
+                  <AuthLayout>
+                    <LazyResetPasswordPage />
                   </AuthLayout>
                 </PublicRoute>
               }
@@ -387,11 +357,25 @@ function App() {
               }
             />
 
-            {/* Redirect root to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* Redirect root based on authentication */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/dashboard" replace />
+                </ProtectedRoute>
+              }
+            />
 
             {/* 404 fallback */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route
+              path="*"
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/dashboard" replace />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
 
           {/* Global Toast Notifications */}

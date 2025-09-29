@@ -31,6 +31,63 @@ const getUserFromToken = async (c: any): Promise<{ userId: string; language?: Su
   }
 };
 
+// ========== ROOT ENDPOINT ==========
+
+// GET /notifications - Get user notifications with filtering
+notifications.get('/', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const filter = c.req.query('filter') || 'all';
+    const limit = Math.min(Number(c.req.query('limit')) || 50, 100);
+    const offset = Number(c.req.query('offset')) || 0;
+
+    const db = new DatabaseService(c.env);
+    
+    let whereClause = 'WHERE user_id = ?';
+    const params: any[] = [auth.userId];
+    
+    if (filter !== 'all') {
+      whereClause += ' AND category = ?';
+      params.push(filter);
+    }
+
+    const notifications = await db.query(`
+      SELECT * FROM notification_history 
+      ${whereClause}
+      ORDER BY sent_at DESC
+      LIMIT ? OFFSET ?
+    `, [...params, limit, offset]);
+
+    const notificationList = (notifications.results || []).map((notif: any) => ({
+      id: notif.id,
+      title: notif.title,
+      message: notif.message,
+      category: notif.category,
+      sentAt: notif.sent_at,
+      opened: Boolean(notif.opened_at),
+      openedAt: notif.opened_at,
+      data: notif.data ? JSON.parse(notif.data) : null
+    }));
+
+    return c.json({
+      notifications: notificationList,
+      filter,
+      pagination: {
+        limit,
+        offset,
+        total: notificationList.length
+      }
+    });
+  } catch (error) {
+    console.error('Get notifications error:', error);
+    return c.json({ error: 'Failed to get notifications' }, 500);
+  }
+});
+
 // ========== DEVICE REGISTRATION ==========
 
 // POST /notifications/register-device - Register device for push notifications

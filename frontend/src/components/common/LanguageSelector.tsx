@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef, memo, useCallback, useMemo } from '
 import { useTranslation } from 'react-i18next';
 import { 
   useAvailableLanguagesQuery, 
-  useUpdateUserLanguageMutation,
   useCurrentLanguage 
 } from '../../hooks/queries/useLocalizationQueries';
 import { useLanguageTransition } from '../../hooks/useLanguageTransition';
+import { useAuthStore } from '../../stores/auth';
 
 interface LanguageSelectorProps {
   variant?: 'dropdown' | 'buttons' | 'compact';
@@ -29,7 +29,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
   const { t } = useTranslation();
   const currentLanguage = useCurrentLanguage();
   const { data: languages, isLoading } = useAvailableLanguagesQuery();
-  const updateLanguageMutation = useUpdateUserLanguageMutation();
+  const { updateLanguage, isLoading: isUpdatingLanguage } = useAuthStore();
   
   const [isOpen, setIsOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -44,13 +44,13 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
   });
   
   const handleLanguageChange = useCallback(async (languageCode: string) => {
-    if (languageCode === currentLanguage || isTransitioning) return;
+    if (languageCode === currentLanguage || isTransitioning || isUpdatingLanguage) return;
     
     try {
       setPreviousLanguage(currentLanguage);
       
       await performLanguageTransition(languageCode, async () => {
-        await updateLanguageMutation.mutateAsync(languageCode);
+        await updateLanguage(languageCode);
       });
       
       // Close dropdown
@@ -62,7 +62,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
     } catch (error) {
       console.error('Error updating language:', error);
     }
-  }, [currentLanguage, isTransitioning, performLanguageTransition, updateLanguageMutation, onLanguageChange]);
+  }, [currentLanguage, isTransitioning, isUpdatingLanguage, performLanguageTransition, updateLanguage, onLanguageChange]);
 
   // Effect to handle language changes from external sources
   useEffect(() => {
@@ -104,7 +104,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
   }, [languages, currentLanguage]);
 
   // Show transition state
-  const isChanging = updateLanguageMutation.isPending || isTransitioning;
+  const isChanging = isUpdatingLanguage || isTransitioning;
 
   if (isLoading) {
     return (
@@ -155,7 +155,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
       <div className={`relative ${className}`}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          disabled={updateLanguageMutation.isPending}
+          disabled={isUpdatingLanguage}
           className="flex items-center gap-1 px-2 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
         >
           {showFlags && <span>{getLanguageFlag(currentLanguage)}</span>}
@@ -218,7 +218,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
       {/* Dropdown Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        disabled={updateLanguageMutation.isPending}
+        disabled={isUpdatingLanguage}
         className="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
       >
         <div className="flex items-center gap-2">
@@ -238,7 +238,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
               <button
                 key={language.code}
                 onClick={() => handleLanguageChange(language.code)}
-                disabled={updateLanguageMutation.isPending}
+                disabled={isUpdatingLanguage}
                 className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg disabled:opacity-50 ${
                   currentLanguage === language.code
                     ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'

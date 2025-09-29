@@ -113,7 +113,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
+        <div className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md transition-opacity" onClick={onClose} />
 
         <div className="inline-block align-bottom bg-background rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -135,12 +135,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 {/* Title */}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Title *
+                    Task Title *
                   </label>
+                  <p className="text-xs text-foreground-secondary mb-2">Give your task a clear, descriptive name</p>
                   <input
                     {...register('title')}
                     className="input w-full"
-                    placeholder="Enter task title"
+                    placeholder="e.g., Complete project proposal, Call dentist, Review quarterly reports"
                   />
                   {errors.title && (
                     <p className="text-red-600 text-sm mt-1">{errors.title.message}</p>
@@ -150,12 +151,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 {/* Description */}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Description
+                    Task Description
                   </label>
+                  <p className="text-xs text-foreground-secondary mb-2">Add details, notes, or context for this task</p>
                   <textarea
                     {...register('description')}
                     className="input w-full h-20 resize-none"
-                    placeholder="Enter task description"
+                    placeholder="e.g., Include specific requirements, deadlines, or any additional context that will help you complete this task..."
                   />
                   {errors.description && (
                     <p className="text-red-600 text-sm mt-1">{errors.description.message}</p>
@@ -165,16 +167,17 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 {/* Priority */}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Priority
+                    Priority Level
                   </label>
+                  <p className="text-xs text-foreground-secondary mb-2">How important is this task compared to others?</p>
                   <select
                     {...register('priority', { valueAsNumber: true })}
                     className="input w-full"
                   >
-                    <option value={1}>Low (1)</option>
-                    <option value={2}>Medium (2)</option>
-                    <option value={3}>High (3)</option>
-                    <option value={4}>Urgent (4)</option>
+                    <option value={1}>Low (1) - Can be done later</option>
+                    <option value={2}>Medium (2) - Normal priority</option>
+                    <option value={3}>High (3) - Important task</option>
+                    <option value={4}>Urgent (4) - Critical, needs immediate attention</option>
                   </select>
                   {errors.priority && (
                     <p className="text-red-600 text-sm mt-1">{errors.priority.message}</p>
@@ -183,9 +186,10 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
                 {/* Eisenhower Matrix */}
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-1">
                     Eisenhower Matrix
                   </label>
+                  <p className="text-xs text-foreground-secondary mb-3">Rate urgency and importance to automatically categorize your task</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs text-foreground-secondary mb-1">
@@ -241,6 +245,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     <Calendar className="w-4 h-4 inline mr-1" />
                     Due Date
                   </label>
+                  <p className="text-xs text-foreground-secondary mb-2">When does this task need to be completed?</p>
                   <input
                     {...register('dueDate')}
                     type="date"

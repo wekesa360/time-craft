@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
 import type { ExerciseData } from '../../../types';
-import { 
-  Activity, 
-  Clock, 
-  Zap, 
-  Flame, 
-  MapPin, 
-  Heart,
-  Save,
-  X
-} from 'lucide-react';
+import { Sheet } from '../../ui/Sheet';
 
 interface ExerciseLoggerProps {
   isOpen: boolean;
@@ -18,19 +9,19 @@ interface ExerciseLoggerProps {
 }
 
 const activityTypes = [
-  { value: 'running', label: 'Running', icon: '🏃‍♂️' },
-  { value: 'cycling', label: 'Cycling', icon: '🚴‍♂️' },
-  { value: 'swimming', label: 'Swimming', icon: '🏊‍♂️' },
-  { value: 'walking', label: 'Walking', icon: '🚶‍♂️' },
-  { value: 'weightlifting', label: 'Weight Lifting', icon: '🏋️‍♂️' },
-  { value: 'yoga', label: 'Yoga', icon: '🧘‍♀️' },
-  { value: 'pilates', label: 'Pilates', icon: '🤸‍♀️' },
-  { value: 'dancing', label: 'Dancing', icon: '💃' },
-  { value: 'hiking', label: 'Hiking', icon: '🥾' },
-  { value: 'tennis', label: 'Tennis', icon: '🎾' },
-  { value: 'basketball', label: 'Basketball', icon: '🏀' },
-  { value: 'soccer', label: 'Soccer', icon: '⚽' },
-  { value: 'other', label: 'Other', icon: '🏃‍♂️' }
+  { value: 'running', label: 'Running' },
+  { value: 'cycling', label: 'Cycling' },
+  { value: 'swimming', label: 'Swimming' },
+  { value: 'walking', label: 'Walking' },
+  { value: 'weightlifting', label: 'Weight Lifting' },
+  { value: 'yoga', label: 'Yoga' },
+  { value: 'pilates', label: 'Pilates' },
+  { value: 'dancing', label: 'Dancing' },
+  { value: 'hiking', label: 'Hiking' },
+  { value: 'tennis', label: 'Tennis' },
+  { value: 'basketball', label: 'Basketball' },
+  { value: 'soccer', label: 'Soccer' },
+  { value: 'other', label: 'Other' }
 ];
 
 const intensityLevels = [
@@ -114,26 +105,14 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
 
   const selectedIntensity = intensityLevels.find(level => level.value === formData.intensity);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <div className="flex items-center space-x-2">
-            <Activity className="w-6 h-6 text-orange-600" />
-            <h2 className="text-xl font-semibold text-foreground">Log Exercise</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-foreground-secondary hover:text-foreground p-1"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <Sheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Log Exercise"
+      className="p-6"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
           {/* Activity Type */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-3">
@@ -145,16 +124,9 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
                   key={activity.value}
                   type="button"
                   onClick={() => setFormData({ ...formData, activity: activity.value })}
-                  className={`p-3 rounded-lg border-2 transition-all text-left ${
-                    formData.activity === activity.value
-                      ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20'
-                      : 'border-border hover:border-orange-300 hover:bg-background-secondary'
-                  }`}
+                  className={`btn ${formData.activity === activity.value ? 'btn-primary' : 'btn-secondary'} w-full`}
                 >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">{activity.icon}</span>
-                    <span className="text-sm font-medium text-foreground">{activity.label}</span>
-                  </div>
+                  {activity.label}
                 </button>
               ))}
             </div>
@@ -168,7 +140,6 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
             {/* Duration */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                <Clock className="w-4 h-4 inline mr-1" />
                 Duration (minutes) *
               </label>
               <input
@@ -189,23 +160,64 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
 
             {/* Intensity */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                <Zap className="w-4 h-4 inline mr-1" />
-                Intensity: {formData.intensity}/10
+              <label className="block text-sm font-medium text-foreground mb-3">
+                Exercise Intensity
               </label>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.intensity}
-                onChange={(e) => setFormData({ ...formData, intensity: Number(e.target.value) })}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-              />
+              
+              {/* Intensity Slider */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-foreground-secondary">Very Light</span>
+                  <span className="text-lg font-semibold text-foreground">{formData.intensity}/10</span>
+                  <span className="text-sm text-foreground-secondary">Maximum</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={formData.intensity}
+                  onChange={(e) => setFormData({ ...formData, intensity: Number(e.target.value) })}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                  style={{
+                    background: `linear-gradient(to right, #10b981 0%, #f59e0b 50%, #ef4444 100%)`
+                  }}
+                />
+              </div>
+
+              {/* Intensity Display Card */}
               {selectedIntensity && (
-                <div className="mt-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedIntensity.color}`}>
-                    {selectedIntensity.label} - {selectedIntensity.description}
-                  </span>
+                <div className="bg-background-secondary rounded-lg p-4 border border-border">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold text-foreground mb-1">
+                        {selectedIntensity.label}
+                      </h4>
+                      <p className="text-sm text-foreground-secondary">
+                        {selectedIntensity.description}
+                      </p>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${selectedIntensity.color}`}>
+                      Level {selectedIntensity.value}
+                    </div>
+                  </div>
+                  
+                  {/* Intensity Scale Indicator */}
+                  <div className="flex items-center space-x-1">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+                      <div
+                        key={level}
+                        className={`h-2 flex-1 rounded-full ${
+                          level <= formData.intensity
+                            ? level <= 3
+                              ? 'bg-green-400'
+                              : level <= 6
+                              ? 'bg-yellow-400'
+                              : 'bg-red-400'
+                            : 'bg-gray-200 dark:bg-gray-700'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -216,7 +228,6 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
             {/* Calories */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                <Flame className="w-4 h-4 inline mr-1" />
                 Calories Burned
               </label>
               <input
@@ -235,7 +246,6 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
             {/* Distance */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                <MapPin className="w-4 h-4 inline mr-1" />
                 Distance (km)
               </label>
               <input
@@ -258,7 +268,6 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
             {/* Average Heart Rate */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                <Heart className="w-4 h-4 inline mr-1" />
                 Average Heart Rate (bpm)
               </label>
               <input
@@ -281,7 +290,6 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
             {/* Max Heart Rate */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                <Heart className="w-4 h-4 inline mr-1" />
                 Max Heart Rate (bpm)
               </label>
               <input
@@ -320,21 +328,19 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="btn-secondary"
+              className="btn btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-primary"
+              className="btn btn-primary"
             >
-              <Save className="w-4 h-4 mr-2" />
               Log Exercise
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Sheet>
   );
 };
 

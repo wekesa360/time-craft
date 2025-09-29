@@ -112,8 +112,8 @@ export const useFocusStore = create<FocusStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const session = await apiClient.completeFocusSession(activeSession.id, {
-        actualEndTime: Date.now(),
-        productivityRating,
+        actual_duration: Math.floor((Date.now() - activeSession.started_at) / 1000 / 60), // Convert to minutes
+        productivity_rating: productivityRating,
         notes,
       });
       

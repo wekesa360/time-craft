@@ -144,27 +144,65 @@ export interface CalendarEvent {
 
 export interface FocusSession {
   id: string;
-  userId: string;
-  templateKey: string;
-  taskId?: string;
-  environmentId?: string;
-  status: 'active' | 'paused' | 'completed' | 'cancelled';
-  startTime: number;
-  plannedEndTime: number;
-  actualEndTime?: number;
-  productivityRating?: number;
+  user_id: string;
+  session_type: 'pomodoro' | 'deep_work' | 'custom' | 'sprint' | 'flow';
+  session_name?: string;
+  planned_duration: number;
+  actual_duration?: number;
+  task_id?: string;
+  planned_task_count: number;
+  completed_task_count: number;
+  break_duration: number;
+  interruptions: number;
+  distraction_count: number;
+  distraction_details?: Record<string, any>;
+  environment_data?: Record<string, any>;
+  mood_before?: number;
+  mood_after?: number;
+  energy_before?: number;
+  energy_after?: number;
+  focus_quality?: number;
+  session_tags?: string[];
+  productivity_rating?: number;
   notes?: string;
-  distractions: Distraction[];
+  is_successful: boolean;
+  cancellation_reason?: string;
+  started_at: number;
+  completed_at?: number;
+  created_at: number;
+  updated_at: number;
+  // Legacy properties for backward compatibility
+  templateKey?: string;
+  status?: 'active' | 'paused' | 'completed' | 'cancelled';
+  startTime?: number;
+  plannedEndTime?: number;
+  actualEndTime?: number;
+  distractions?: Distraction[];
 }
 
 export interface SessionTemplate {
-  key: string;
+  id: string;
+  template_key: string;
   name: string;
   description: string;
-  focusDuration: number;
-  shortBreakDuration: number;
-  longBreakDuration: number;
-  sessionsUntilLongBreak: number;
+  session_type: string;
+  duration_minutes: number;
+  break_duration_minutes: number;
+  is_default: number;
+  is_active: number;
+  language: string;
+  created_at: number;
+  updated_at: number;
+  suggested_tasks: string[];
+  productivity_tips_en: string[];
+  productivity_tips_de: string[];
+  environment_suggestions: Record<string, any>;
+  // Legacy properties for backward compatibility
+  key?: string;
+  focusDuration?: number;
+  shortBreakDuration?: number;
+  longBreakDuration?: number;
+  sessionsUntilLongBreak?: number;
 }
 
 export interface Distraction {
@@ -268,8 +306,6 @@ export interface RegisterForm {
   confirmPassword: string;
   firstName: string;
   lastName: string;
-  timezone: string;
-  preferredLanguage: string;
   isStudent: boolean;
 }
 

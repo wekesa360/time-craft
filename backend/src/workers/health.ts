@@ -75,7 +75,7 @@ const moodLogSchema = z.object({
 
 const hydrationLogSchema = z.object({
   amountMl: z.number().int().min(1).max(5000),
-  type: z.enum(['water', 'coffee', 'tea', 'other']).default('water'),
+  type: z.enum(['water', 'coffee', 'tea', 'juice', 'sports_drink', 'other']).default('water'),
   notes: z.string().max(200).optional(),
   recordedAt: z.number().optional(),
   source: z.enum(['manual', 'auto', 'device']).default('manual')

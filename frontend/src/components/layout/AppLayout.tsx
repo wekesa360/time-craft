@@ -3,9 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth';
 import { ThemeToggle } from '../theme/ThemeToggle';
-import { SSEStatus } from '../common/SSEStatus';
 import { NotificationCenter } from '../common/NotificationCenter';
-import { LanguageSelector } from '../common/LanguageSelector';
+import { SimpleLanguageSelector } from '../common/SimpleLanguageSelector';
 import { AccessibilityProvider, useAccessibilityContext } from '../accessibility/AccessibilityProvider';
 import { AccessibleNavigation } from '../ui/AccessibleNavigation';
 import { GermanAccessibleNavigation, GermanAccessibleMain } from '../accessibility/GermanAccessibilityProvider';
@@ -41,9 +40,9 @@ const getNavigationItems = (t: any) => [
   { name: t('navigation.focus'), href: '/focus', icon: Target, key: 'focus' },
   { name: t('navigation.badges'), href: '/badges', icon: Award, key: 'badges' },
   { name: t('navigation.social'), href: '/social', icon: Users, key: 'social' },
-  { name: t('navigation.voice'), href: '/voice', icon: Mic, key: 'voice' },
-  { name: t('navigation.analytics'), href: '/analytics', icon: BarChart3, key: 'analytics' },
-  { name: t('navigation.admin'), href: '/admin', icon: Shield, key: 'admin' },
+  // { name: t('navigation.voice'), href: '/voice', icon: Mic, key: 'voice' },
+  // { name: t('navigation.analytics'), href: '/analytics', icon: BarChart3, key: 'analytics' },
+  // { name: t('navigation.admin'), href: '/admin', icon: Shield, key: 'admin' },
   { name: t('navigation.settings'), href: '/settings', icon: Settings, key: 'settings' },
 ];
 
@@ -66,7 +65,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          className="fixed inset-0 z-40 bg-white/20 dark:bg-black/20 backdrop-blur-md lg:hidden"
           onClick={() => setSidebarOpen(false)}
           role="button"
           tabIndex={0}
@@ -122,7 +121,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`
-                    flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                    flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors
                     ${isActive 
                       ? 'bg-primary-100 text-primary-700 dark:bg-primary-950 dark:text-primary-300' 
                       : 'text-foreground-secondary hover:text-foreground hover:bg-background-tertiary'
@@ -131,7 +130,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   aria-label={i18n.language === 'de' ? `${item.name} aufrufen` : `Go to ${item.name}`}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  <item.icon className="w-5 h-5" aria-hidden="true" />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -189,15 +187,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </div>
 
             <div className="flex items-center space-x-4" role="toolbar" aria-label={i18n.language === 'de' ? 'Benutzer-Werkzeugleiste' : 'User toolbar'}>
-              <SSEStatus />
               <NotificationCenter 
                 isOpen={false} 
                 onClose={() => {}} 
               />
-              <LanguageSelector 
+              <SimpleLanguageSelector 
                 variant="compact" 
-                showLabel={false}
-                data-testid="language-selector"
+                className="data-testid=language-selector"
               />
               <ThemeToggle />
               

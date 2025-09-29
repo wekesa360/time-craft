@@ -12,6 +12,7 @@ import { collectMetrics } from '@/middleware/metrics';
 
 // sub-routers
 import authRoutes from './auth';
+import otpAuthRoutes from './otp-auth';
 import coreRoutes from './core';
 import healthRoutes from './health';
 import aiRoutes from './ai';
@@ -33,6 +34,8 @@ import mobileRoutes from './mobile';
 import migrationsRoutes from './migrations';
 import securityRoutes from './security';
 import initDbRoutes from './init-db';
+import fixFocusTableRoutes from './fix-focus-table';
+import fixFocusSessionsTableRoutes from './fix-focus-sessions-table';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -49,7 +52,34 @@ app.use('/auth/*', authRateLimit());
 
 // Rate limiting and JWT for API endpoints
 app.use('/api/*', apiRateLimit());
+
+// JWT middleware for most API endpoints, but exclude auth, realtime SSE, and public localization routes
 app.use('/api/*', async (c, next) => {
+  // Skip JWT middleware for auth routes (they handle their own authentication)
+  if (c.req.path.startsWith('/api/auth')) {
+    return next();
+  }
+  
+  // Skip JWT middleware for realtime SSE routes (they handle auth differently)
+  if (c.req.path.startsWith('/api/realtime/sse')) {
+    return next();
+  }
+  
+  // Skip JWT middleware for public localization routes
+  if (c.req.path.startsWith('/api/localization/languages')) {
+    return next();
+  }
+
+  // Skip JWT middleware for public focus templates
+  if (c.req.path === '/api/focus/templates') {
+    return next();
+  }
+
+  // Skip JWT middleware for OTP authentication routes
+  if (c.req.path.startsWith('/api/otp/')) {
+    return next();
+  }
+  
   const jwtMiddleware = jwt({ secret: c.env.JWT_SECRET });
   return jwtMiddleware(c, next);
 });
@@ -66,7 +96,12 @@ app.get('/health', async (c) => {
 
 // mount sub-routers - specific routes first, then general
 app.route('/init-db', initDbRoutes);
+app.route('/fix-focus-table', fixFocusTableRoutes);
+app.route('/fix-focus-sessions-table', fixFocusSessionsTableRoutes);
 app.route('/auth', authRoutes);
+app.route('/api/auth', authRoutes);
+app.route('/api/otp', otpAuthRoutes);
+app.route('/api', coreRoutes);
 app.route('/api/health', healthRoutes);
 app.route('/api/ai', aiRoutes);
 app.route('/api/badges', badgeRoutes);

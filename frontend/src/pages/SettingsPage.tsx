@@ -103,6 +103,10 @@ export default function SettingsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
       toast.success(t('settings.notificationsUpdated', 'Notification preferences updated'));
+    },
+    onError: (error: any) => {
+      console.error('Failed to update notification preferences:', error);
+      toast.error(t('settings.notificationsUpdateError', 'Failed to update notification preferences'));
     }
   });
   
@@ -233,7 +237,7 @@ export default function SettingsPage() {
         </p>
       </GermanTextOptimizer>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Settings Navigation */}
         <div className="lg:col-span-1">
           <div className="card p-4 sticky top-6">
@@ -293,13 +297,17 @@ export default function SettingsPage() {
                 <Shield className="w-4 h-4" aria-hidden="true" />
                 <span>{t('settings.security', 'Security')}</span>
               </button>
-              <Link
-                to="/localization"
-                className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors"
+              <button
+                onClick={() => setActiveSection('language')}
+                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeSection === 'language'
+                    ? 'text-primary-600 bg-primary-50 dark:bg-primary-950 dark:text-primary-400'
+                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+                }`}
               >
                 <Globe className="w-4 h-4" aria-hidden="true" />
                 <span>{t('settings.language', 'Language')}</span>
-              </Link>
+              </button>
               <button
                 onClick={() => setActiveSection('privacy')}
                 className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -308,7 +316,6 @@ export default function SettingsPage() {
                     : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
                 }`}
               >
-                <Database className="w-4 h-4" aria-hidden="true" />
                 <span>{t('settings.privacy', 'Privacy & Data')}</span>
               </button>
             </nav>
@@ -476,16 +483,28 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => profileForm.reset()}
-                      className="btn-ghost"
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
                     >
                       {t('common.cancel', 'Cancel')}
                     </button>
                     <button
                       type="submit"
                       disabled={updateProfileMutation.isPending}
-                      className="btn-primary"
+                      className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg transition-colors duration-200 ${
+                        updateProfileMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                     >
-                      {updateProfileMutation.isPending ? t('common.saving', 'Saving...') : t('common.save', 'Save Changes')}
+                      {updateProfileMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          {t('common.saving', 'Saving...')}
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          {t('common.save', 'Save Changes')}
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
@@ -816,10 +835,12 @@ export default function SettingsPage() {
                   {/* Subscription Actions */}
                   {profile?.subscriptionType !== 'free' && (
                     <div className="flex space-x-3 pt-4 border-t border-border">
-                      <button className="btn-ghost">
+                      <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                        <CreditCard className="w-4 h-4 mr-2" />
                         {t('settings.manageBilling', 'Manage Billing')}
                       </button>
-                      <button className="btn-outline text-red-600 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-800">
+                      <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 border border-red-300 dark:border-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                        <Trash2 className="w-4 h-4 mr-2" />
                         {t('settings.cancelSubscription', 'Cancel Subscription')}
                       </button>
                     </div>
@@ -850,7 +871,7 @@ export default function SettingsPage() {
                       </div>
                       <button
                         onClick={() => setShowPasswordForm(!showPasswordForm)}
-                        className="btn-secondary"
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                       >
                         <Key className="w-4 h-4 mr-2" />
                         {t('settings.changePassword', 'Change Password')}
@@ -943,9 +964,11 @@ export default function SettingsPage() {
                         <h3 className="text-sm font-medium text-foreground">{t('settings.twoFactorAuth', 'Two-Factor Authentication')}</h3>
                         <p className="text-xs text-foreground-secondary">{t('settings.twoFactorAuthDesc', 'Add an extra layer of security to your account')}</p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-foreground-secondary">{t('settings.disabled', 'Disabled')}</span>
-                        <button className="btn-secondary">
+                      <div className="flex items-center space-x-3">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300">
+                          {t('settings.disabled', 'Disabled')}
+                        </span>
+                        <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg transition-colors duration-200">
                           <Lock className="w-4 h-4 mr-2" />
                           {t('settings.enable2FA', 'Enable 2FA')}
                         </button>
@@ -978,8 +1001,7 @@ export default function SettingsPage() {
           {activeSection === 'privacy' && (
             <section className="space-y-6">
               <div className="card p-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <Database className="w-5 h-5 text-primary-500" />
+                <div className="mb-6">
                   <GermanTitle level={2} className="text-xl font-semibold text-foreground">
                     {t('settings.privacy', 'Privacy & Data')}
                   </GermanTitle>
@@ -1017,35 +1039,6 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   
-                  {/* Data Export */}
-                  <div className="pt-4 border-t border-border">
-                    <h3 className="text-sm font-medium text-foreground mb-4">{t('settings.dataManagement', 'Data Management')}</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="text-sm font-medium text-foreground mb-2">{t('settings.storageUsage', 'Storage Usage')}</h4>
-                        <div className="bg-background-secondary rounded-lg p-3">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="text-foreground-secondary">{t('settings.used', 'Used')}</span>
-                            <span className="text-foreground">2.4 MB of 100 MB</span>
-                          </div>
-                          <div className="w-full bg-background-tertiary rounded-full h-2">
-                            <div className="bg-primary-500 h-2 rounded-full" style={{ width: '2.4%' }}></div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex space-x-3">
-                        <button onClick={handleDataExport} className="btn-secondary">
-                          <Download className="w-4 h-4 mr-2" />
-                          {t('settings.exportData', 'Export My Data')}
-                        </button>
-                        <button className="btn-outline">
-                          <Upload className="w-4 h-4 mr-2" />
-                          {t('settings.importData', 'Import Data')}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                   
                   {/* Account Deletion */}
                   <div className="pt-4 border-t border-border">
@@ -1071,6 +1064,11 @@ export default function SettingsPage() {
                 </div>
               </div>
             </section>
+          )}
+
+          {/* Language Section */}
+          {activeSection === 'language' && (
+            <LanguagePreferencesSection />
           )}
 
         </div>

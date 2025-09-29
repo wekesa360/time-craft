@@ -78,7 +78,6 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
       {/* Header with Tabs */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Users className="w-6 h-6 text-primary-600" />
           <h2 className="text-xl font-semibold text-foreground">Connections</h2>
         </div>
         
@@ -139,7 +138,6 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
           <div className="card p-6">
             {filteredConnections.length === 0 ? (
               <div className="text-center py-12">
-                <Users className="w-12 h-12 text-foreground-secondary mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
                   {connections.length === 0 ? 'No connections yet' : 'No connections found'}
                 </h3>
@@ -152,9 +150,8 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
                 {connections.length === 0 && (
                   <button 
                     onClick={() => setActiveTab('add')}
-                    className="btn-primary"
+                    className="btn btn-primary"
                   >
-                    <UserPlus className="w-4 h-4 mr-2" />
                     Add Your First Connection
                   </button>
                 )}
@@ -203,7 +200,6 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
         <div className="card p-6">
           {pendingRequests.length === 0 ? (
             <div className="text-center py-12">
-              <UserCheck className="w-12 h-12 text-foreground-secondary mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium text-foreground mb-2">No pending requests</h3>
               <p className="text-foreground-secondary">
                 Connection requests will appear here when you receive them
@@ -241,16 +237,14 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => onAcceptRequest(request.id)}
-                      className="btn-primary px-3 py-1 text-sm"
+                      className="btn btn-primary px-3 py-1 text-sm"
                     >
-                      <Check className="w-4 h-4 mr-1" />
                       Accept
                     </button>
                     <button
                       onClick={() => onDeclineRequest(request.id)}
-                      className="btn-outline text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 py-1 text-sm"
+                      className="btn btn-secondary text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 py-1 text-sm"
                     >
-                      <X className="w-4 h-4 mr-1" />
                       Decline
                     </button>
                   </div>
@@ -305,10 +299,9 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
 
               <button
                 type="submit"
-                className="btn-primary w-full"
+                className="btn btn-primary w-full"
                 disabled={!newConnectionEmail.trim()}
               >
-                <UserPlus className="w-4 h-4 mr-2" />
                 Send Connection Request
               </button>
             </form>
@@ -316,7 +309,7 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
             {/* Tips */}
             <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                💡 Connection Tips
+                Connection Tips
               </h4>
               <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                 <li>• Connect with friends, family, and colleagues</li>

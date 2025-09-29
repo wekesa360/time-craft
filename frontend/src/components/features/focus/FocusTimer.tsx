@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import type { FocusSession, SessionTemplate } from '../../../types';
 import { 
-  Play, 
-  Pause, 
-  Square, 
   Coffee,
-  Target,
-  Clock,
-  Star,
-  MessageSquare
+  Clock
 } from 'lucide-react';
 
 interface FocusTimerProps {
@@ -40,11 +34,12 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
 
   // Calculate time left
   useEffect(() => {
-    if (!activeSession || activeSession.status !== 'active') return;
+    if (!activeSession || activeSession.completed_at) return;
 
     const interval = setInterval(() => {
       const now = Date.now();
-      const remaining = Math.max(0, activeSession.plannedEndTime - now);
+      const sessionEndTime = activeSession.started_at + (activeSession.planned_duration * 60 * 1000);
+      const remaining = Math.max(0, sessionEndTime - now);
       setTimeLeft(remaining);
 
       // Auto-complete when time runs out
@@ -58,10 +53,15 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
 
   // Initialize time left when session starts
   useEffect(() => {
-    if (activeSession && activeSession.status === 'active') {
+    if (activeSession && !activeSession.completed_at) {
       const now = Date.now();
-      const remaining = Math.max(0, activeSession.plannedEndTime - now);
+      const sessionEndTime = activeSession.started_at + (activeSession.planned_duration * 60 * 1000);
+      const remaining = Math.max(0, sessionEndTime - now);
       setTimeLeft(remaining);
+    } else if (!activeSession || activeSession.completed_at) {
+      // Reset timer when no active session or session is completed
+      setTimeLeft(0);
+      setShowCompletionModal(false); // Reset modal when session ends
     }
   }, [activeSession]);
 
@@ -73,15 +73,15 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
   };
 
   const getProgress = () => {
-    if (!activeSession || !selectedTemplate) return 0;
-    const totalTime = selectedTemplate.focusDuration * 60 * 1000;
+    if (!activeSession) return 0;
+    const totalTime = activeSession.planned_duration * 60 * 1000;
     const elapsed = totalTime - timeLeft;
     return Math.min(100, (elapsed / totalTime) * 100);
   };
 
   const handleStartSession = () => {
     if (selectedTemplate) {
-      onStartSession(selectedTemplate.key);
+      onStartSession(selectedTemplate.template_key);
     }
   };
 
@@ -131,7 +131,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                   {formatTime(timeLeft)}
                 </div>
                 <div className="text-sm text-foreground-secondary mt-2">
-                  {activeSession.status === 'paused' ? 'Paused' : 'Focus Time'}
+                  Focus Time
                 </div>
               </div>
             </div>
@@ -139,7 +139,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
             {/* Session Info */}
             <div className="space-y-2">
               <h3 className="text-xl font-semibold text-foreground">
-                {templates.find(t => t.key === activeSession.templateKey)?.name}
+                {activeSession.session_name || activeSession.session_type}
               </h3>
               <p className="text-foreground-secondary">
                 Stay focused and avoid distractions
@@ -148,19 +148,10 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
 
             {/* Controls */}
             <div className="flex items-center justify-center space-x-4">
-              {activeSession.status === 'active' ? (
-                <button onClick={onPauseSession} className="btn-outline">
-                  <Pause className="w-5 h-5 mr-2" />
-                  Pause
-                </button>
-              ) : (
-                <button onClick={onResumeSession} className="btn-primary">
-                  <Play className="w-5 h-5 mr-2" />
-                  Resume
-                </button>
-              )}
-              <button onClick={onCancelSession} className="btn-outline text-red-600">
-                <Square className="w-5 h-5 mr-2" />
+              <button onClick={onPauseSession} className="btn btn-secondary">
+                Pause
+              </button>
+              <button onClick={onCancelSession} className="btn btn-secondary text-red-600 hover:text-red-700">
                 Stop
               </button>
             </div>
@@ -170,8 +161,10 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
             {/* No Active Session */}
             <div className="w-64 h-64 mx-auto flex items-center justify-center border-2 border-dashed border-border rounded-full">
               <div className="text-center">
-                <Target className="w-12 h-12 text-foreground-secondary mx-auto mb-4" />
-                <p className="text-foreground-secondary">Ready to focus?</p>
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-950/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-6 h-6 text-primary-600" />
+                </div>
+                <p className="text-foreground-secondary text-lg font-medium">Ready to focus?</p>
               </div>
             </div>
 
@@ -187,11 +180,11 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                 <div className="flex items-center justify-center space-x-6 text-sm text-foreground-secondary">
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>{selectedTemplate.focusDuration}m focus</span>
+                    <span>{selectedTemplate.duration_minutes}m focus</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Coffee className="w-4 h-4" />
-                    <span>{selectedTemplate.shortBreakDuration}m break</span>
+                    <span>{selectedTemplate.break_duration_minutes}m break</span>
                   </div>
                 </div>
               </div>
@@ -201,112 +194,82 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
             <button 
               onClick={handleStartSession}
               disabled={!selectedTemplate}
-              className="btn-primary text-lg px-8 py-3"
+              className="btn btn-primary text-lg px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Play className="w-5 h-5 mr-2" />
               Start Focus Session
             </button>
           </div>
         )}
       </div>
 
-      {/* Template Quick Select */}
-      {!activeSession && (
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Start Templates</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {templates.slice(0, 3).map((template) => (
-              <button
-                key={template.key}
-                onClick={() => onStartSession(template.key)}
-                className={`p-4 rounded-lg border-2 transition-all text-left ${
-                  selectedTemplate?.key === template.key
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-950/20'
-                    : 'border-border hover:border-primary-300 hover:bg-background-secondary'
-                }`}
-              >
-                <div className="flex items-center space-x-2 mb-2">
-                  <Target className="w-5 h-5 text-primary-600" />
-                  <h4 className="font-medium text-foreground">{template.name}</h4>
-                </div>
-                <p className="text-sm text-foreground-secondary mb-3">
-                  {template.description}
-                </p>
-                <div className="flex items-center space-x-4 text-xs text-foreground-secondary">
-                  <span>{template.focusDuration}m</span>
-                  <span>•</span>
-                  <span>{template.shortBreakDuration}m break</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Session Completion Modal */}
       {showCompletionModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background card max-w-md w-full">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-950/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Target className="w-8 h-8 text-green-600" />
+        <div className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-background card max-w-lg w-full">
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-semibold text-foreground mb-3">
+                  Session Complete!
+                </h3>
               </div>
-              
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                🎉 Session Complete!
-              </h3>
-              <p className="text-foreground-secondary mb-6">
-                Great job! How productive was this session?
-              </p>
 
               {/* Rating */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-foreground mb-3">
+              <div className="mb-8">
+                <label className="block text-base font-medium text-foreground mb-4 text-center">
                   Productivity Rating
                 </label>
-                <div className="flex items-center justify-center space-x-2">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
+                <div className="flex items-center justify-center space-x-2 flex-wrap gap-y-2">
+                  {[1, 2, 3, 4, 5].map((value) => (
                     <button
                       key={value}
                       onClick={() => setRating(value)}
-                      className={`w-8 h-8 rounded-full border-2 text-sm font-medium transition-colors ${
+                      className={`w-10 h-10 rounded-full border-2 text-sm font-medium transition-all duration-200 ${
                         rating >= value
-                          ? 'bg-primary-600 border-primary-600 text-white'
-                          : 'border-border text-foreground-secondary hover:border-primary-300'
+                          ? 'bg-primary-600 border-primary-600 text-white scale-110'
+                          : 'border-border text-foreground-secondary hover:border-primary-300 hover:scale-105'
                       }`}
                     >
                       {value}
                     </button>
                   ))}
                 </div>
+                <div className="text-center mt-3">
+                  <span className="text-sm text-foreground-secondary">
+                    {rating === 1 && 'Very Low'}
+                    {rating === 2 && 'Low'}
+                    {rating === 3 && 'Average'}
+                    {rating === 4 && 'Good'}
+                    {rating === 5 && 'Excellent'}
+                  </span>
+                </div>
               </div>
 
               {/* Notes */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-foreground mb-2">
+              <div className="mb-8">
+                <label className="block text-base font-medium text-foreground mb-3 text-center">
                   Notes (optional)
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="input w-full h-20 resize-none"
-                  placeholder="How did the session go? Any insights?"
+                  className="input w-full h-24 resize-none"
+                  placeholder="How did the session go? Any insights or reflections?"
                 />
               </div>
 
               {/* Actions */}
-              <div className="flex space-x-3">
+              <div className="flex space-x-4">
                 <button
                   onClick={() => setShowCompletionModal(false)}
-                  className="btn-secondary flex-1"
+                  className="btn btn-secondary flex-1 py-3 text-base"
                 >
                   Skip
                 </button>
                 <button
                   onClick={handleCompleteSession}
-                  className="btn-primary flex-1"
+                  className="btn btn-primary flex-1 py-3 text-base"
                 >
-                  <Star className="w-4 h-4 mr-2" />
                   Complete Session
                 </button>
               </div>

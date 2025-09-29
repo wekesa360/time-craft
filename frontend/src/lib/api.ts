@@ -1,4 +1,4 @@
-// API client for Time & Wellness Application
+// API client for Time Craft Application
 import axios from 'axios';
 import type { AxiosInstance, AxiosError } from 'axios';
 import { toast } from 'react-hot-toast';
@@ -86,8 +86,7 @@ class ApiClient {
     if (token) {
       try {
         await this.ensureValidToken();
-        // Connect to SSE if we have valid tokens
-        this.connectSSE();
+        // SSE connection will be handled by auth store after successful authentication
       } catch (error) {
         console.error('Auth initialization failed:', error);
         this.clearTokens();
@@ -329,8 +328,9 @@ class ApiClient {
   }
 
   private redirectToLogin() {
-    // This will be handled by the auth store
-    window.location.href = '/login';
+    // Do nothing - routing will be handled by React Router and auth store
+    // No page reloads needed
+    console.log('Auth failed - user will be redirected by routing logic');
   }
 
   private setupOfflineHandling() {
@@ -429,12 +429,14 @@ class ApiClient {
     }
 
     const sseUrl = `${this.baseURL}/api/realtime/sse`;
+    // Note: EventSource doesn't support custom headers, so we need to modify the backend
+    // to accept token as query parameter or use a different approach
     this.sseConnection = new EventSource(`${sseUrl}?token=${token}`);
 
     this.sseConnection.onopen = () => {
       console.log('SSE connected');
       this.sseReconnectAttempts = 0;
-      toast.success('Real-time updates connected');
+      // Silent - no toast needed
     };
 
     this.sseConnection.onmessage = (event) => {
@@ -448,6 +450,11 @@ class ApiClient {
 
     this.sseConnection.onerror = (error) => {
       console.error('SSE error:', error);
+      // Check if SSE is disabled (503 status)
+      if (this.sseConnection?.readyState === EventSource.CLOSED) {
+        console.warn('SSE is temporarily disabled. Real-time updates will not be available.');
+        return; // Don't try to reconnect if SSE is disabled
+      }
       this.handleSSEReconnect();
     };
 
@@ -536,7 +543,7 @@ class ApiClient {
     switch (message.type) {
       // Calendar Events
       case 'calendar.event.created':
-        toast.success(`📅 Calendar event created: ${message.data.title}`);
+        toast.success(`Calendar event created: ${message.data.title}`);
         break;
       case 'calendar.event.updated':
         toast.success(`📅 Calendar event updated: ${message.data.title}`);
@@ -657,10 +664,10 @@ class ApiClient {
 
       // Connection Events
       case 'connected':
-        toast.success('🔗 Real-time connection established');
+        // Silent - no toast needed
         break;
       case 'disconnected':
-        toast.error('🔌 Real-time connection lost');
+        // Silent - no toast needed
         break;
       case 'heartbeat':
         // Silent - no toast needed
@@ -700,7 +707,7 @@ class ApiClient {
   private handleSSEReconnect() {
     if (this.sseReconnectAttempts >= this.maxSseReconnectAttempts) {
       console.error('Max SSE reconnection attempts reached');
-      toast.error('Real-time updates disconnected. Please refresh the page.');
+      // Silent - no toast needed
       return;
     }
 
@@ -742,19 +749,238 @@ class ApiClient {
   }
 
   // Token management
-  private getStoredToken(): string | null {
-    return localStorage.getItem('accessToken');
+  getStoredToken(): string | null {
+    // Get token from auth store persistence
+    try {
+      const authData = localStorage.getItem('timecraft-auth');
+      console.log('API Client getStoredToken - raw authData:', authData);
+
+      if (authData) {
+        // Improved corruption detection - more specific checks
+        console.log('🔍 Checking if auth data is corrupted...');
+        const isCorrupted = this.isAuthDataCorrupted(authData);
+        console.log('🔍 Corruption check result:', isCorrupted);
+        
+        if (isCorrupted) {
+          console.warn('Corrupted auth data detected, clearing localStorage');
+          this.clearCorruptedData();
+          return null;
+        }
+
+        const parsed = JSON.parse(authData);
+        console.log('API Client getStoredToken - parsed data:', parsed);
+        
+        // Validate the parsed structure
+        if (!parsed || typeof parsed !== 'object') {
+          console.warn('Invalid auth data structure, clearing localStorage');
+          this.clearCorruptedData();
+          return null;
+        }
+        
+        let token = null;
+        
+        // Handle Zustand persist format: {state: {...}, version: 0}
+        if (parsed.state && parsed.version !== undefined) {
+          token = parsed.state?.tokens?.accessToken || null;
+          console.log('API Client getStoredToken - extracted from Zustand format:', token ? 'present' : 'null');
+        }
+        // Handle direct auth state format (legacy): {user: {...}, tokens: {...}}
+        else if (parsed.tokens) {
+          token = parsed.tokens?.accessToken || null;
+          console.log('API Client getStoredToken - extracted from legacy format:', token ? 'present' : 'null');
+        }
+        else {
+          console.warn('Unknown auth data format, clearing localStorage');
+          this.clearCorruptedData();
+          return null;
+        }
+        
+        return token;
+      }
+    } catch (error) {
+      console.warn('Failed to parse auth data from localStorage:', error);
+      // Only clear if it's a JSON parse error, not other errors
+      if (error instanceof SyntaxError) {
+        this.clearCorruptedData();
+      }
+    }
+    console.log('API Client getStoredToken - returning null');
+    return null;
+  }
+
+  // Check if auth data is corrupted without clearing it
+  isAuthDataCorrupted(authData?: string): boolean {
+    try {
+      const data = authData || localStorage.getItem('timecraft-auth');
+      console.log('🔍 isAuthDataCorrupted - checking data:', data);
+      
+      if (!data) {
+        console.log('🔍 No data found, not corrupted');
+        return false;
+      }
+      
+      // Check for the specific [object Object] corruption
+      if (data === '[object Object]') {
+        console.warn('🚨 Detected [object Object] corruption in auth data');
+        return true;
+      }
+      
+      // More specific corruption detection
+      const exactCorruptionPatterns = [
+        '[object Object]',
+        '[object Undefined]',
+        '[object Null]',
+        'undefined',
+        'null',
+        'NaN',
+        'true',
+        'false'
+      ];
+      
+      // Check for exact matches first
+      if (exactCorruptionPatterns.includes(data)) {
+        console.log('🔍 Exact corruption pattern match:', data);
+        return true;
+      }
+      
+      // Check for partial matches that indicate corruption (but be more specific)
+      const partialCorruptionPatterns = [
+        '[object Object]',
+        '[object Undefined]',
+        '[object Null]'
+      ];
+      
+      if (partialCorruptionPatterns.some(pattern => data.includes(pattern))) {
+        console.log('🔍 Partial corruption pattern match:', data);
+        return true;
+      }
+      
+      // Check if it's valid JSON
+      try {
+        const parsed = JSON.parse(data);
+        console.log('🔍 Parsed JSON successfully:', parsed);
+        
+        // Additional validation for auth data structure
+        if (!parsed || typeof parsed !== 'object') {
+          console.log('🔍 Invalid parsed structure, corrupted');
+          return true;
+        }
+        
+        // Check if it's the Zustand persist format
+        if (parsed.state && parsed.version !== undefined) {
+          console.log('🔍 Valid Zustand persist format detected');
+          return false;
+        }
+        
+        // Check if it's a direct auth state format (legacy)
+        if (parsed.user !== undefined || parsed.tokens !== undefined) {
+          console.log('🔍 Valid legacy format detected');
+          return false;
+        }
+        
+        // If it doesn't match either format, it's corrupted
+        console.log('🔍 No valid format detected, corrupted');
+        return true;
+      } catch (error) {
+        console.log('🔍 JSON parse error, corrupted:', error);
+        return true;
+      }
+    } catch (error) {
+      return true;
+    }
+  }
+
+  // Restore tokens from auth store to API client
+  restoreTokensFromStore(): boolean {
+    try {
+      const authData = localStorage.getItem('timecraft-auth');
+      if (authData && !this.isAuthDataCorrupted()) {
+        const parsed = JSON.parse(authData);
+        
+        let tokens = null;
+        
+        // Handle Zustand persist format: {state: {...}, version: 0}
+        if (parsed.state && parsed.version !== undefined) {
+          tokens = parsed.state?.tokens;
+        }
+        // Handle direct auth state format (legacy): {user: {...}, tokens: {...}}
+        else if (parsed.tokens) {
+          tokens = parsed.tokens;
+        }
+        
+        if (tokens?.accessToken) {
+          this.setTokens(tokens);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to restore tokens from store:', error);
+    }
+    return false;
   }
 
   private getStoredRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
+    // Get refresh token from auth store persistence
+    try {
+      const authData = localStorage.getItem('timecraft-auth');
+      if (authData) {
+        // Check if the data is corrupted (stored as object string)
+        if (authData === '[object Object]' || authData.includes('[object Object]')) {
+          console.warn('Corrupted auth data detected, clearing localStorage');
+          this.clearCorruptedData();
+          return null;
+        }
+        
+        const parsed = JSON.parse(authData);
+        
+        // Handle Zustand persist format: {state: {...}, version: 0}
+        if (parsed.state && parsed.version !== undefined) {
+          return parsed.state?.tokens?.refreshToken || null;
+        }
+        // Handle direct auth state format (legacy): {user: {...}, tokens: {...}}
+        else if (parsed.tokens) {
+          return parsed.tokens?.refreshToken || null;
+        }
+        
+        return null;
+      }
+    } catch (error) {
+      console.warn('Failed to parse auth data from localStorage:', error);
+      // Clear corrupted data
+      this.clearCorruptedData();
+    }
+    return null;
+  }
+
+  private clearCorruptedData(): void {
+    try {
+      // Clear all Time Craft related localStorage data
+      localStorage.removeItem('timecraft-auth');
+      localStorage.removeItem('timecraft-theme');
+      localStorage.removeItem('timecraft-ui');
+      localStorage.removeItem('tokenExpiry');
+      localStorage.removeItem('user');
+      
+      // Clear any other potentially corrupted data
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('timecraft-') || key.includes('auth') || key.includes('token')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      console.log('✅ Corrupted localStorage data cleared');
+      
+      // Also clear any queued operations in the coordinator
+      if (typeof window !== 'undefined' && (window as any).localStorageCoordinator) {
+        (window as any).localStorageCoordinator.writeQueue = [];
+      }
+    } catch (error) {
+      console.error('Failed to clear corrupted data:', error);
+    }
   }
 
   setTokens(tokens: AuthTokens) {
-    localStorage.setItem('accessToken', tokens.accessToken);
-    localStorage.setItem('refreshToken', tokens.refreshToken);
-    
-    // Store token expiration time if available
+    // Store token expiration time for validation
     try {
       const payload = JSON.parse(atob(tokens.accessToken.split('.')[1]));
       if (payload.exp) {
@@ -766,11 +992,9 @@ class ApiClient {
   }
 
   clearTokens() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    // Clear token expiration
     localStorage.removeItem('tokenExpiry');
-    localStorage.removeItem('user');
-    
+
     // Disconnect SSE when tokens are cleared
     this.disconnectSSE();
   }
@@ -779,34 +1003,65 @@ class ApiClient {
   isTokenExpired(): boolean {
     const expiry = localStorage.getItem('tokenExpiry');
     if (!expiry) return false;
-    
+
     const expiryTime = parseInt(expiry) * 1000; // Convert to milliseconds
     const now = Date.now();
-    const fiveMinutes = 5 * 60 * 1000;
-    
-    return now >= (expiryTime - fiveMinutes); // Consider expired if expires within 5 minutes
+    const oneMinute = 1 * 60 * 1000; // Only refresh if expires within 1 minute
+
+    return now >= (expiryTime - oneMinute); // Consider expired if expires within 1 minute
   }
 
   // Proactively refresh token if it's about to expire
   async ensureValidToken(): Promise<void> {
-    if (this.isTokenExpired()) {
-      const refreshToken = this.getStoredRefreshToken();
-      if (refreshToken) {
-        try {
-          const tokens = await this.refreshTokens(refreshToken);
-          this.setTokens(tokens);
-        } catch (error) {
-          console.error('Proactive token refresh failed:', error);
+    const token = this.getStoredToken();
+    if (!token) {
+      console.log('No access token found');
+      return;
+    }
+
+    // Check if token is actually expired by parsing JWT
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const now = Math.floor(Date.now() / 1000);
+
+      // If token is expired, try to refresh
+      if (payload.exp && now >= payload.exp) {
+        console.log('Token is expired, attempting refresh...');
+        const refreshToken = this.getStoredRefreshToken();
+        if (refreshToken) {
+          try {
+            const tokens = await this.refreshTokens(refreshToken);
+            this.setTokens(tokens);
+            console.log('Token refreshed successfully');
+          } catch (error) {
+            console.error('Token refresh failed:', error);
+            this.clearTokens();
+            this.redirectToLogin();
+          }
+        } else {
+          console.log('No refresh token available');
           this.clearTokens();
           this.redirectToLogin();
         }
+      } else {
+        console.log('Token is still valid');
       }
+    } catch (error) {
+      console.error('Failed to parse token:', error);
+      // If we can't parse the token, it's probably invalid
+      this.clearTokens();
     }
   }
 
   // Auth endpoints
   async register(data: RegisterForm): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/auth/register', data);
+    // Auto-detect timezone and send in headers
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const response = await this.client.post<AuthResponse>('/auth/register', data, {
+      headers: {
+        'x-timezone': timezone
+      }
+    });
     return response.data;
   }
 
@@ -814,6 +1069,17 @@ class ApiClient {
     const response = await this.client.post<AuthResponse>('/auth/login', data);
     return response.data;
   }
+
+  async sendOTP(email: string): Promise<{ success: boolean; message: string; data: { otpId: string; expiresAt: number; email: string } }> {
+    const response = await this.client.post('/api/otp/send-otp', { email });
+    return response.data;
+  }
+
+  async verifyOTP(email: string, otpCode: string): Promise<{ success: boolean; message: string; data: { user: any; accessToken: string; refreshToken: string } }> {
+    const response = await this.client.post('/api/otp/verify-otp', { email, otpCode });
+    return response.data;
+  }
+
 
   async logout(): Promise<void> {
     await this.client.post('/auth/logout');
@@ -861,8 +1127,37 @@ class ApiClient {
     endDate?: number;
     page?: number;
     limit?: number;
+    quadrant?: string;
+    urgency?: number;
+    importance?: number;
+    isDelegated?: boolean;
   }): Promise<PaginatedResponse<Task[]>> {
-    const response = await this.client.get<PaginatedResponse<Task[]>>('/api/tasks', { params });
+    // Clean parameters - remove undefined, null, empty strings, and invalid numbers
+    const cleanParams = Object.fromEntries(
+      Object.entries(params || {}).filter(([key, value]) => {
+        if (value === undefined || value === null || value === '') return false;
+        
+        // Validate status enum
+        if (key === 'status' && !['pending', 'done', 'archived', 'completed'].includes(value as string)) return false;
+        
+        // Validate quadrant enum
+        if (key === 'quadrant' && !['do', 'decide', 'delegate', 'delete'].includes(value as string)) return false;
+        
+        // Validate numeric ranges
+        if (key === 'priority' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 4)) return false;
+        if (key === 'urgency' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 4)) return false;
+        if (key === 'importance' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 4)) return false;
+        if (key === 'limit' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 100)) return false;
+        if (key === 'page' && (isNaN(Number(value)) || Number(value) < 0)) return false;
+        
+        // Validate boolean
+        if (key === 'isDelegated' && typeof value !== 'boolean') return false;
+        
+        return true;
+      })
+    );
+    
+    const response = await this.client.get<PaginatedResponse<Task[]>>('/api/tasks', { params: cleanParams });
     return response.data;
   }
 
@@ -946,7 +1241,16 @@ class ApiClient {
   }
 
   async logHydration(data: HydrationData): Promise<HealthLog> {
-    const response = await this.client.post<{ log: HealthLog }>('/api/health/hydration', data);
+    // Transform frontend data to match backend schema
+    const backendData = {
+      amountMl: data.amount,
+      type: data.drinkType,
+      notes: data.temperature ? `Temperature: ${data.temperature}` : undefined,
+      recordedAt: Date.now(),
+      source: 'manual' as const
+    };
+    
+    const response = await this.client.post<{ log: HealthLog }>('/api/health/hydration', backendData);
     return response.data.log;
   }
 
@@ -989,8 +1293,8 @@ class ApiClient {
 
   // Focus endpoints
   async getFocusTemplates(): Promise<SessionTemplate[]> {
-    const response = await this.client.get<{ templates: SessionTemplate[] }>('/api/focus/templates');
-    return response.data.templates;
+    const response = await this.client.get<{ success: boolean; data: SessionTemplate[] }>('/api/focus/templates');
+    return response.data.data || [];
   }
 
   async startFocusSession(data: {
@@ -998,8 +1302,25 @@ class ApiClient {
     taskId?: string;
     environmentId?: string;
   }): Promise<FocusSession> {
-    const response = await this.client.post<{ session: FocusSession }>('/api/focus/sessions', data);
-    return response.data.session;
+    // First get the template to extract session details
+    const templates = await this.getFocusTemplates();
+    const template = templates.find(t => t.template_key === data.templateKey);
+
+    if (!template) {
+      throw new Error(`Template not found: ${data.templateKey}`);
+    }
+
+    // Transform frontend data to backend format
+    const sessionData = {
+      session_type: template.session_type,
+      session_name: template.name,
+      planned_duration: template.duration_minutes,
+      task_id: data.taskId,
+      environment_data: data.environmentId ? { environmentId: data.environmentId } : undefined
+    };
+
+    const response = await this.client.post<{ success: boolean; data: FocusSession }>('/api/focus/sessions', sessionData);
+    return response.data.data;
   }
 
   async getFocusSessions(params?: {
@@ -1008,66 +1329,72 @@ class ApiClient {
     endDate?: number;
     limit?: number;
   }): Promise<FocusSession[]> {
-    const response = await this.client.get<{ sessions: FocusSession[] }>('/api/focus/sessions', { params });
-    return response.data.sessions;
+    const response = await this.client.get<{ success: boolean; data: FocusSession[] }>('/api/focus/sessions', { params });
+    return response.data.data || [];
   }
 
   async getFocusSession(id: string): Promise<FocusSession> {
-    const response = await this.client.get<{ session: FocusSession }>(`/api/focus/sessions/${id}`);
-    return response.data.session;
+    const response = await this.client.get<{ success: boolean; data: FocusSession }>(`/api/focus/sessions/${id}`);
+    return response.data.data;
   }
 
   async completeFocusSession(
     id: string,
-    data: { actualEndTime: number; productivityRating: number; notes?: string }
+    data: { actual_duration: number; productivity_rating: number; notes?: string }
   ): Promise<FocusSession> {
-    const response = await this.client.patch<{ session: FocusSession }>(`/api/focus/sessions/${id}/complete`, data);
-    return response.data.session;
+    const response = await this.client.patch<{ success: boolean; data: FocusSession }>(`/api/focus/sessions/${id}/complete`, data);
+    return response.data.data;
   }
 
   async pauseFocusSession(id: string): Promise<FocusSession> {
-    const response = await this.client.patch<{ session: FocusSession }>(`/api/focus/sessions/${id}/pause`);
-    return response.data.session;
+    const response = await this.client.patch<{ success: boolean; data: FocusSession }>(`/api/focus/sessions/${id}/pause`);
+    return response.data.data;
   }
 
   async resumeFocusSession(id: string): Promise<FocusSession> {
-    const response = await this.client.patch<{ session: FocusSession }>(`/api/focus/sessions/${id}/resume`);
-    return response.data.session;
+    const response = await this.client.patch<{ success: boolean; data: FocusSession }>(`/api/focus/sessions/${id}/resume`);
+    return response.data.data;
   }
 
-  async cancelFocusSession(id: string): Promise<FocusSession> {
-    const response = await this.client.patch<{ session: FocusSession }>(`/api/focus/sessions/${id}/cancel`);
-    return response.data.session;
+  async cancelFocusSession(id: string, reason: string = 'User cancelled'): Promise<FocusSession> {
+    const response = await this.client.patch<{ success: boolean; data: FocusSession }>(`/api/focus/sessions/${id}/cancel`, { reason });
+    return response.data.data;
   }
 
   async logDistraction(sessionId: string, data: { type: string; description?: string }): Promise<Distraction> {
-    const response = await this.client.post<{ distraction: Distraction }>(`/api/focus/sessions/${sessionId}/distractions`, data);
-    return response.data.distraction;
+    const response = await this.client.post<{ success: boolean; data: Distraction }>(`/api/focus/sessions/${sessionId}/distractions`, data);
+    return response.data.data;
   }
 
   async getSessionDistractions(sessionId: string): Promise<Distraction[]> {
-    const response = await this.client.get<{ distractions: Distraction[] }>(`/api/focus/sessions/${sessionId}/distractions`);
-    return response.data.distractions;
+    try {
+      const response = await this.client.get<{ success: boolean; data: Distraction[] }>(`/api/focus/sessions/${sessionId}/distractions`);
+      return response.data.data || [];
+    } catch (error) {
+      // Endpoint might not exist yet, return empty array
+      console.warn('Distractions endpoint not available:', error);
+      return [];
+    }
   }
 
   async getFocusDashboard(): Promise<any> {
-    const response = await this.client.get('/api/focus/dashboard');
-    return response.data;
+    const response = await this.client.get<{ success: boolean; data: any }>('/api/focus/dashboard');
+    return response.data.data;
   }
 
   async getFocusAnalytics(period?: string): Promise<any> {
-    const response = await this.client.get('/api/focus/analytics', { params: { period } });
-    return response.data;
+    const response = await this.client.get<{ success: boolean; data: any }>('/api/focus/analytics', { params: { period } });
+    return response.data.data;
   }
 
   async getFocusEnvironments(): Promise<FocusEnvironment[]> {
-    const response = await this.client.get<{ environments: FocusEnvironment[] }>('/api/focus/environments');
-    return response.data.environments;
+    const response = await this.client.get<{ success: boolean; data: FocusEnvironment[] }>('/api/focus/environments');
+    return response.data.data || [];
   }
 
   async createFocusEnvironment(data: Omit<FocusEnvironment, 'id' | 'userId'>): Promise<FocusEnvironment> {
-    const response = await this.client.post<{ environment: FocusEnvironment }>('/api/focus/environments', data);
-    return response.data.environment;
+    const response = await this.client.post<{ success: boolean; data: FocusEnvironment }>('/api/focus/environments', data);
+    return response.data.data;
   }
 
   // Badge endpoints
@@ -1107,6 +1434,36 @@ class ApiClient {
 
   async deleteEvent(id: string): Promise<void> {
     await this.client.delete(`/api/calendar/events/${id}`);
+  }
+
+  // Calendar Integration endpoints
+  async getCalendarIntegrations(): Promise<any[]> {
+    const response = await this.client.get<{ connections: any[] }>('/api/calendar/connections');
+    return response.data.connections || [];
+  }
+
+  async connectCalendar(data: {
+    provider: string;
+    authCode: string;
+    redirectUri: string;
+    syncSettings?: any;
+  }): Promise<{ connectionId: string; message: string }> {
+    const response = await this.client.post<{ connectionId: string; message: string }>('/api/calendar/connect', data);
+    return response.data;
+  }
+
+  async disconnectCalendar(connectionId: string): Promise<void> {
+    await this.client.delete(`/api/calendar/connections/${connectionId}`);
+  }
+
+  async syncCalendars(): Promise<{ imported: number; exported: number; errors: string[] }> {
+    const response = await this.client.post<{ result: { imported: number; exported: number; errors: string[] } }>('/api/calendar/sync');
+    return response.data.result;
+  }
+
+  async getGoogleAuthUrl(): Promise<{ authUrl: string; state: string }> {
+    const response = await this.client.get<{ authUrl: string; state: string }>('/api/calendar/google/auth');
+    return response.data;
   }
 
   // Notification endpoints

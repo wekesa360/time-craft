@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Time & Wellness",
+    "name": "Time Craft",
     "tagline": "Ihr persönlicher Begleiter für Produktivität und Wohlbefinden"
   },
   "auth": {
@@ -195,6 +195,7 @@
     "technicalDetails": "Technische Details"
   },
   "common": {
+    "home": "Startseite",
     "loading": "Laden...",
     "saving": "Speichern...",
     "saved": "Gespeichert",
@@ -510,12 +511,19 @@
   },
   "dashboard": {
     "welcome": "Willkommen zurück",
+    "subtitle": "Hier ist, was heute mit Ihrer Produktivität passiert",
     "todaysTasks": "Heutige Aufgaben",
-    "healthSummary": "Gesundheitszusammenfassung",
+    "healthScore": "Gesundheitswert",
     "focusTime": "Fokuszeit",
+    "streak": "Serie",
     "recentActivity": "Letzte Aktivitäten",
     "quickActions": "Schnellaktionen",
     "upcomingEvents": "Anstehende Termine",
+    "actions": {
+      "addTask": "Aufgabe hinzufügen",
+      "startFocus": "Fokus starten",
+      "logHealth": "Gesundheit protokollieren"
+    },
     "noTasksToday": "Keine Aufgaben für heute geplant",
     "noRecentActivity": "Keine aktuellen Aktivitäten",
     "noUpcomingEvents": "Keine anstehenden Termine",

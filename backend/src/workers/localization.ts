@@ -5,7 +5,10 @@
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { Database } from '../lib/db';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+import { verify } from 'hono/jwt';
+import { Database, DatabaseService } from '../lib/db';
 import { LocalizationService } from '../lib/localization';
 import { authenticateUser, optionalAuth } from '../middleware/auth';
 import { Env } from '../lib/env';
@@ -224,6 +227,63 @@ app.post('/detect-language', optionalAuth, async (c) => {
   } catch (error) {
     console.error('Error detecting language:', error);
     return c.json({ error: 'Failed to detect language' }, 500);
+  }
+});
+
+/**
+ * PUT /api/localization/user/language
+ * Update user's preferred language
+ */
+// Helper function to get user from JWT token (same as core.ts)
+const getUserFromToken = async (c: any): Promise<{ userId: string } | null> => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return null;
+    }
+
+    const token = authHeader.substring(7);
+    const payload = await verify(token, c.env.JWT_SECRET);
+    
+    return { 
+      userId: payload.userId as string
+    };
+  } catch {
+    return null;
+  }
+};
+
+app.put('/user/language', zValidator('json', z.object({
+  language: z.enum(['en', 'de'])
+})), async (c) => {
+  try {
+    const { language } = c.req.valid('json');
+    const auth = await getUserFromToken(c);
+    
+    if (!auth) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const db = new DatabaseService(c.env);
+    
+    // Update user's preferred language
+    await db.query(`
+      UPDATE users 
+      SET preferred_language = ?, updated_at = ?
+      WHERE id = ?
+    `, [language, Date.now(), auth.userId]);
+
+    return c.json({
+      success: true,
+      message: 'Language preference updated successfully',
+      data: {
+        language,
+        updated_at: Date.now()
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user language:', error);
+    return c.json({ error: 'Failed to update language preference' }, 500);
   }
 });
 

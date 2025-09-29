@@ -1,16 +1,6 @@
 import React, { useState } from 'react';
 import type { MoodData } from '../../../types';
-import { 
-  Smile, 
-  Frown, 
-  Meh, 
-  Zap, 
-  AlertTriangle, 
-  Moon,
-  Save,
-  X,
-  Tag
-} from 'lucide-react';
+import { Sheet } from '../../ui/Sheet';
 
 interface MoodTrackerProps {
   isOpen: boolean;
@@ -18,30 +8,30 @@ interface MoodTrackerProps {
   onSave: (data: MoodData) => void;
 }
 
-const moodEmojis = [
-  { value: 1, emoji: '😢', label: 'Terrible', color: 'text-red-600' },
-  { value: 2, emoji: '😞', label: 'Bad', color: 'text-red-500' },
-  { value: 3, emoji: '😕', label: 'Poor', color: 'text-orange-500' },
-  { value: 4, emoji: '😐', label: 'Okay', color: 'text-yellow-500' },
-  { value: 5, emoji: '🙂', label: 'Fine', color: 'text-yellow-400' },
-  { value: 6, emoji: '😊', label: 'Good', color: 'text-green-400' },
-  { value: 7, emoji: '😄', label: 'Great', color: 'text-green-500' },
-  { value: 8, emoji: '😁', label: 'Excellent', color: 'text-green-600' },
-  { value: 9, emoji: '🤩', label: 'Amazing', color: 'text-blue-500' },
-  { value: 10, emoji: '🥳', label: 'Fantastic', color: 'text-purple-500' }
+const moodLevels = [
+  { value: 1, label: 'Terrible', color: 'text-red-600' },
+  { value: 2, label: 'Bad', color: 'text-red-500' },
+  { value: 3, label: 'Poor', color: 'text-orange-500' },
+  { value: 4, label: 'Okay', color: 'text-yellow-500' },
+  { value: 5, label: 'Fine', color: 'text-yellow-400' },
+  { value: 6, label: 'Good', color: 'text-green-400' },
+  { value: 7, label: 'Great', color: 'text-green-500' },
+  { value: 8, label: 'Excellent', color: 'text-green-600' },
+  { value: 9, label: 'Amazing', color: 'text-blue-500' },
+  { value: 10, label: 'Fantastic', color: 'text-purple-500' }
 ];
 
 const energyLevels = [
-  { value: 1, label: 'Exhausted', icon: '🔋', description: 'No energy at all' },
-  { value: 2, label: 'Very Low', icon: '🪫', description: 'Barely functioning' },
-  { value: 3, label: 'Low', icon: '🔋', description: 'Sluggish and tired' },
-  { value: 4, label: 'Below Average', icon: '🔋', description: 'A bit tired' },
-  { value: 5, label: 'Average', icon: '🔋', description: 'Normal energy' },
-  { value: 6, label: 'Above Average', icon: '🔋', description: 'Feeling good' },
-  { value: 7, label: 'High', icon: '⚡', description: 'Energetic' },
-  { value: 8, label: 'Very High', icon: '⚡', description: 'Very energetic' },
-  { value: 9, label: 'Excellent', icon: '⚡', description: 'Full of energy' },
-  { value: 10, label: 'Peak', icon: '🚀', description: 'Unstoppable energy' }
+  { value: 1, label: 'Exhausted', description: 'No energy at all' },
+  { value: 2, label: 'Very Low', description: 'Barely functioning' },
+  { value: 3, label: 'Low', description: 'Sluggish and tired' },
+  { value: 4, label: 'Below Average', description: 'A bit tired' },
+  { value: 5, label: 'Average', description: 'Normal energy' },
+  { value: 6, label: 'Above Average', description: 'Feeling good' },
+  { value: 7, label: 'High', description: 'Energetic' },
+  { value: 8, label: 'Very High', description: 'Very energetic' },
+  { value: 9, label: 'Excellent', description: 'Full of energy' },
+  { value: 10, label: 'Peak', description: 'Unstoppable energy' }
 ];
 
 const stressLevels = [
@@ -93,7 +83,7 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
   const [customTag, setCustomTag] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const selectedMood = moodEmojis.find(mood => mood.value === formData.score);
+  const selectedMood = moodLevels.find(mood => mood.value === formData.score);
   const selectedEnergy = energyLevels.find(energy => energy.value === formData.energy);
   const selectedStress = stressLevels.find(stress => stress.value === formData.stress);
   const selectedSleep = sleepQuality.find(sleep => sleep.value === (formData.sleep || 5));
@@ -173,45 +163,28 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <div className="flex items-center space-x-2">
-            <Smile className="w-6 h-6 text-purple-600" />
-            <h2 className="text-xl font-semibold text-foreground">Track Mood</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-foreground-secondary hover:text-foreground p-1"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <Sheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Track Mood"
+      className="p-6"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
           {/* Mood Score */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-4">
               How are you feeling right now?
             </label>
             <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
-              {moodEmojis.map((mood) => (
+              {moodLevels.map((mood) => (
                 <button
                   key={mood.value}
                   type="button"
                   onClick={() => setFormData({ ...formData, score: mood.value })}
-                  className={`p-3 rounded-lg border-2 transition-all text-center ${
-                    formData.score === mood.value
-                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/20'
-                      : 'border-border hover:border-purple-300 hover:bg-background-secondary'
-                  }`}
+                  className={`btn ${formData.score === mood.value ? 'btn-primary' : 'btn-secondary'} w-full`}
                 >
-                  <div className="text-2xl mb-1">{mood.emoji}</div>
-                  <div className="text-xs font-medium text-foreground">{mood.value}</div>
+                  <div className="text-xs font-medium">{mood.value}</div>
                 </button>
               ))}
             </div>
@@ -227,7 +200,6 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
           {/* Energy Level */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              <Zap className="w-4 h-4 inline mr-1" />
               Energy Level: {formData.energy}/10
             </label>
             <input
@@ -241,7 +213,7 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
             {selectedEnergy && (
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-foreground-secondary">
-                  {selectedEnergy.icon} {selectedEnergy.label}
+                  {selectedEnergy.label}
                 </span>
                 <span className="text-foreground-secondary">
                   {selectedEnergy.description}
@@ -253,7 +225,6 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
           {/* Stress Level */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              <AlertTriangle className="w-4 h-4 inline mr-1" />
               Stress Level: {formData.stress}/10
             </label>
             <input
@@ -276,7 +247,6 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
           {/* Sleep Quality */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              <Moon className="w-4 h-4 inline mr-1" />
               Sleep Quality (last night): {formData.sleep}/10
             </label>
             <input
@@ -302,7 +272,6 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
           {/* Mood Tags */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-3">
-              <Tag className="w-4 h-4 inline mr-1" />
               How would you describe your mood? (Select all that apply)
             </label>
             
@@ -320,7 +289,7 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
                       onClick={() => removeTag(tag)}
                       className="ml-2 text-purple-600 hover:text-purple-800"
                     >
-                      <X className="w-3 h-3" />
+                      ×
                     </button>
                   </span>
                 ))}
@@ -380,21 +349,19 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="btn-secondary"
+              className="btn btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-primary"
+              className="btn btn-primary"
             >
-              <Save className="w-4 h-4 mr-2" />
               Log Mood
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Sheet>
   );
 };
 

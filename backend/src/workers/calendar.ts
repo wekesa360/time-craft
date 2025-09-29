@@ -790,6 +790,7 @@ calendar.get('/events', async (c) => {
       startTime: event.start,
       endTime: event.end,
       location: event.location,
+      eventType: event.eventType || 'appointment',
       isAllDay: event.is_all_day,
       status: event.status,
       source: event.source,
@@ -797,8 +798,13 @@ calendar.get('/events', async (c) => {
     }));
 
     return c.json({
-      events,
-      count: events.length,
+      data: events,
+      pagination: {
+        total: events.length,
+        page: 1,
+        limit: events.length,
+        totalPages: 1
+      },
       timeframe: {
         start: startDate,
         end: endDate

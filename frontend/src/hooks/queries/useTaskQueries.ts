@@ -27,6 +27,10 @@ export const useTasksQuery = (params?: {
   endDate?: number;
   page?: number;
   limit?: number;
+  quadrant?: string;
+  urgency?: number;
+  importance?: number;
+  isDelegated?: boolean;
 }) => {
   const { tasks, setLoading, fetchTasks } = useTaskStore();
 
@@ -39,6 +43,9 @@ export const useTasksQuery = (params?: {
         const tasksData = response.data || [];
         // Tasks are managed by the store
         return tasksData;
+      } catch (error) {
+        console.error('Failed to fetch tasks:', error);
+        throw error;
       } finally {
         setLoading(false);
       }
@@ -46,6 +53,14 @@ export const useTasksQuery = (params?: {
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     initialData: tasks, // Use store data as initial data
+    retry: (failureCount, error: any) => {
+      // Don't retry on 400 errors (client errors)
+      if (error?.response?.status === 400) {
+        return false;
+      }
+      // Retry up to 3 times for other errors
+      return failureCount < 3;
+    },
   });
 };
 

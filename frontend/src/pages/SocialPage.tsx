@@ -3,13 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { 
-  Users, 
-  Target, 
-  Activity, 
-  Plus, 
   Trophy,
   MessageCircle,
-  TrendingUp
+  TrendingUp,
+  Users,
+  Target
 } from 'lucide-react';
 
 // Components
@@ -159,49 +157,35 @@ export default function SocialPage() {
           <div className="flex items-center bg-background-secondary rounded-lg p-1">
             <button
               onClick={() => setViewMode('feed')}
-              className={`p-2 rounded transition-colors ${
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
                 viewMode === 'feed' 
                   ? 'bg-primary-600 text-white' 
                   : 'text-foreground-secondary hover:text-foreground'
               }`}
-              title="Activity Feed"
             >
-              <Activity className="w-4 h-4" />
+              Activity Feed
             </button>
             <button
               onClick={() => setViewMode('challenges')}
-              className={`p-2 rounded transition-colors ${
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
                 viewMode === 'challenges' 
                   ? 'bg-primary-600 text-white' 
                   : 'text-foreground-secondary hover:text-foreground'
               }`}
-              title="Challenges"
             >
-              <Target className="w-4 h-4" />
+              Challenges
             </button>
             <button
               onClick={() => setViewMode('connections')}
-              className={`p-2 rounded transition-colors ${
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
                 viewMode === 'connections' 
                   ? 'bg-primary-600 text-white' 
                   : 'text-foreground-secondary hover:text-foreground'
               }`}
-              title="Connections"
             >
-              <Users className="w-4 h-4" />
+              Connections
             </button>
           </div>
-
-          {/* Action Button */}
-          {viewMode === 'challenges' && (
-            <button 
-              onClick={() => setChallengeCreatorOpen(true)}
-              className="btn-primary"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Challenge
-            </button>
-          )}
         </div>
       </div>
 
@@ -302,7 +286,6 @@ export default function SocialPage() {
           {/* Challenges Grid */}
           {filteredChallenges.length === 0 ? (
             <div className="card p-12 text-center">
-              <Target className="w-16 h-16 text-foreground-secondary mx-auto mb-4 opacity-50" />
               <h3 className="text-xl font-semibold text-foreground mb-2">
                 {challengeFilter === 'all' ? 'No challenges available' : 
                  challengeFilter === 'my' ? 'You haven\'t joined any challenges yet' :
@@ -317,15 +300,14 @@ export default function SocialPage() {
               <div className="flex items-center justify-center space-x-3">
                 <button 
                   onClick={() => setChallengeCreatorOpen(true)}
-                  className="btn-primary"
+                  className="btn btn-primary"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
                   Create Challenge
                 </button>
                 {challengeFilter !== 'all' && (
                   <button 
                     onClick={() => setChallengeFilter('all')}
-                    className="btn-outline"
+                    className="btn btn-secondary"
                   >
                     View All Challenges
                   </button>
