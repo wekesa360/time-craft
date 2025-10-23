@@ -71,7 +71,7 @@ export const SessionTemplates: React.FC<SessionTemplatesProps> = ({
 
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {templates.map((template) => {
+        {(templates || []).map((template) => {
           const Icon = getTemplateIcon(template.template_key);
           const color = getTemplateColor(template.template_key);
           const isSelected = selectedTemplate?.template_key === template.template_key;
@@ -183,7 +183,7 @@ export const SessionTemplates: React.FC<SessionTemplatesProps> = ({
               </tr>
             </thead>
             <tbody>
-              {templates.map((template) => {
+              {(templates || []).map((template) => {
                 const Icon = getTemplateIcon(template.template_key);
                 const color = getTemplateColor(template.template_key);
                 

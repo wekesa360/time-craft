@@ -40,16 +40,20 @@ const LineChart: React.FC<LineChartProps> = ({
   showGrid = true,
   showDots = true,
   smooth = true,
-  formatValue = (value) => value.toString(),
-  formatLabel = (label) => label.toString(),
+  formatValue = (value) => (value ?? 0).toString(),
+  formatLabel = (label) => (label ?? '').toString(),
 }) => {
   const { pathData, points, minY, maxY, minX, maxX } = useMemo(() => {
     if (!data || data.length === 0) {
       return { pathData: '', points: [], minY: 0, maxY: 0, minX: 0, maxX: 0 };
     }
 
-    const yValues = data.map(d => d.y);
+    const yValues = data.map(d => d.y ?? 0).filter(y => !isNaN(y));
     const xValues = data.map((d, i) => typeof d.x === 'number' ? d.x : i);
+    
+    if (yValues.length === 0) {
+      return { pathData: '', points: [], minY: 0, maxY: 0, minX: 0, maxX: 0 };
+    }
     
     const minY = Math.min(...yValues);
     const maxY = Math.max(...yValues);
@@ -66,14 +70,15 @@ const LineChart: React.FC<LineChartProps> = ({
     
     const points = data.map((point, index) => {
       const x = typeof point.x === 'number' ? point.x : index;
+      const y = point.y ?? 0;
       const normalizedX = ((x - minX) / (maxX - minX)) * width;
-      const normalizedY = chartHeight - ((point.y - paddedMinY) / (paddedMaxY - paddedMinY)) * chartHeight;
+      const normalizedY = chartHeight - ((y - paddedMinY) / (paddedMaxY - paddedMinY)) * chartHeight;
       
       return {
         x: normalizedX,
         y: normalizedY,
-        originalX: point.x,
-        originalY: point.y,
+        originalX: point.x ?? index,
+        originalY: y,
         label: point.label,
       };
     });
@@ -192,7 +197,7 @@ const LineChart: React.FC<LineChartProps> = ({
               }}
             >
               <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded px-2 py-1 mb-1">
-                {point.label || formatLabel(point.originalX)}: {formatValue(point.originalY)}
+                {point.label || formatLabel(point.originalX)}: {formatValue(point.originalY ?? 0)}
               </div>
             </div>
           ))}
