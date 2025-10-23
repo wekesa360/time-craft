@@ -215,3 +215,5 @@ export const SessionTemplates: React.FC<SessionTemplatesProps> = ({
     </div>
   );
 };
+
+export default SessionTemplates;
