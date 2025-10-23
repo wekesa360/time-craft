@@ -203,6 +203,8 @@ class BadgeEngine {
   constructor(env: Env) {
     this.env = env;
     this.db = new DatabaseService(env);
+    // Ensure badge columns exist on initialization
+    this.ensureBadgeColumns().catch(console.error);
   }
 
   // Check all badges for a user and unlock any newly earned badges
@@ -361,6 +363,52 @@ class BadgeEngine {
     return Math.min((recentLogs.results || []).length, 30);
   }
 
+  // Ensure badge columns exist in users table
+  private async ensureBadgeColumns(): Promise<void> {
+    try {
+      // Try to add badge_points column
+      await this.db.execute(`
+        ALTER TABLE users ADD COLUMN badge_points INTEGER DEFAULT 0;
+      `);
+      console.log('Added badge_points column to users table');
+    } catch (error) {
+      // Column might already exist, ignore error
+    }
+
+    try {
+      // Try to add total_badges column
+      await this.db.execute(`
+        ALTER TABLE users ADD COLUMN total_badges INTEGER DEFAULT 0;
+      `);
+      console.log('Added total_badges column to users table');
+    } catch (error) {
+      // Column might already exist, ignore error
+    }
+
+    try {
+      // Try to add badge_tier column
+      await this.db.execute(`
+        ALTER TABLE users ADD COLUMN badge_tier TEXT DEFAULT 'bronze';
+      `);
+      console.log('Added badge_tier column to users table');
+    } catch (error) {
+      // Column might already exist, ignore error
+    }
+
+    try {
+      // Create indexes
+      await this.db.execute(`
+        CREATE INDEX IF NOT EXISTS idx_users_badge_points ON users(badge_points DESC);
+      `);
+      await this.db.execute(`
+        CREATE INDEX IF NOT EXISTS idx_users_total_badges ON users(total_badges DESC);
+      `);
+      console.log('Created badge indexes');
+    } catch (error) {
+      // Indexes might already exist, ignore error
+    }
+  }
+
   // Unlock a badge for a user
   private async unlockBadge(userId: string, badge: Badge): Promise<UserBadge> {
     const userBadge: UserBadge = {
@@ -379,9 +427,13 @@ class BadgeEngine {
 
     // Update user's total points (skip if column doesn't exist)
     try {
+      // Ensure columns exist before updating
+      await this.ensureBadgeColumns();
+      
       await this.db.query(`
         UPDATE users 
-        SET badge_points = COALESCE(badge_points, 0) + ?
+        SET badge_points = COALESCE(badge_points, 0) + ?,
+            total_badges = COALESCE(total_badges, 0) + 1
         WHERE id = ?
       `, [badge.points, userId]);
     } catch (error) {
@@ -628,6 +680,9 @@ badges.get('/leaderboard', async (c) => {
     let leaderboard, userRank;
     
     try {
+      // Ensure badge columns exist before querying
+      await badgeEngine.ensureBadgeColumns();
+      
       leaderboard = await db.query(`
         SELECT 
           u.first_name,
