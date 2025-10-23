@@ -274,12 +274,13 @@ const FocusAnalytics: React.FC<FocusAnalyticsProps> = ({
             
             <LineChart
               data={dailyData.map(day => ({
-                label: new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                value: selectedMetric === 'duration' 
+                x: day.date,
+                y: selectedMetric === 'duration' 
                   ? day.duration 
                   : selectedMetric === 'sessions' 
                   ? day.sessions 
                   : day.productivity,
+                label: new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
               }))}
               height={300}
               color="#3b82f6"

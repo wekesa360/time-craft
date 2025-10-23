@@ -197,7 +197,7 @@ const LineChart: React.FC<LineChartProps> = ({
               }}
             >
               <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded px-2 py-1 mb-1">
-                {point.label || formatLabel(point.originalX)}: {formatValue(point.originalY ?? 0)}
+                {point.label || formatLabel(point.originalX ?? '')}: {formatValue(point.originalY ?? 0)}
               </div>
             </div>
           ))}
