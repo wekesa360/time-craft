@@ -1,17 +1,13 @@
+/**
+ * Feature Flags Component
+ * A/B testing and feature rollout management
+ */
+
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { 
-  Flag, 
-  Search, 
-  Plus,
-  Edit,
-  Trash2,
-  Users,
-  Percent,
-  Calendar,
-  AlertTriangle,
-  Settings
-} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../../../utils/cn';
+import { Button } from '../../ui';
+import { FadeIn, Stagger } from '../../ui/animations';
 
 interface FeatureFlag {
   id: string;
@@ -20,431 +16,526 @@ interface FeatureFlag {
   description: string;
   enabled: boolean;
   rolloutPercentage: number;
-  targetUsers: string[];
   environment: 'development' | 'staging' | 'production';
+  targetAudience: 'all' | 'beta' | 'premium' | 'admin';
   createdAt: string;
   updatedAt: string;
   createdBy: string;
-  category: 'feature' | 'experiment' | 'killswitch' | 'config';
-  status: 'active' | 'inactive' | 'scheduled';
+  tags: string[];
+  conditions?: {
+    userRole?: string[];
+    subscription?: string[];
+    country?: string[];
+  };
 }
-
-// Mock data - in real app this would come from API
-const mockFeatureFlags: FeatureFlag[] = [
-  {
-    id: '1',
-    name: 'Voice Commands',
-    key: 'voice_commands_enabled',
-    description: 'Enable voice command functionality for task creation and navigation',
-    enabled: true,
-    rolloutPercentage: 100,
-    targetUsers: [],
-    environment: 'production',
-    createdAt: '2024-01-15',
-    updatedAt: '2024-02-01',
-    createdBy: 'admin@timecraft.app',
-    category: 'feature',
-    status: 'active'
-  },
-  {
-    id: '2',
-    name: 'AI Meeting Scheduler',
-    key: 'ai_meeting_scheduler',
-    description: 'AI-powered meeting scheduling with conflict detection',
-    enabled: true,
-    rolloutPercentage: 75,
-    targetUsers: ['premium', 'student'],
-    environment: 'production',
-    createdAt: '2024-02-01',
-    updatedAt: '2024-02-15',
-    createdBy: 'admin@timecraft.app',
-    category: 'feature',
-    status: 'active'
-  },
-  {
-    id: '3',
-    name: 'New Dashboard Layout',
-    key: 'new_dashboard_layout',
-    description: 'A/B test for the new dashboard design',
-    enabled: true,
-    rolloutPercentage: 25,
-    targetUsers: [],
-    environment: 'production',
-    createdAt: '2024-02-10',
-    updatedAt: '2024-02-20',
-    createdBy: 'designer@timecraft.app',
-    category: 'experiment',
-    status: 'active'
-  },
-  {
-    id: '4',
-    name: 'Legacy API Killswitch',
-    key: 'legacy_api_killswitch',
-    description: 'Emergency killswitch for legacy API endpoints',
-    enabled: false,
-    rolloutPercentage: 0,
-    targetUsers: [],
-    environment: 'production',
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-01',
-    createdBy: 'admin@timecraft.app',
-    category: 'killswitch',
-    status: 'inactive'
-  },
-  {
-    id: '5',
-    name: 'Beta Features Access',
-    key: 'beta_features_access',
-    description: 'Access to beta features for selected users',
-    enabled: true,
-    rolloutPercentage: 10,
-    targetUsers: ['beta_testers'],
-    environment: 'production',
-    createdAt: '2024-02-05',
-    updatedAt: '2024-02-25',
-    createdBy: 'admin@timecraft.app',
-    category: 'config',
-    status: 'active'
-  }
-];
 
 interface FeatureFlagsProps {
   className?: string;
 }
 
-export const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className = '' }) => {
-  const { t } = useTranslation();
-  const [flags, setFlags] = useState<FeatureFlag[]>(mockFeatureFlags);
+const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedEnvironment, setSelectedEnvironment] = useState<string>('all');
+  const [filterEnvironment, setFilterEnvironment] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingFlag, setEditingFlag] = useState<FeatureFlag | null>(null);
+
+  // Mock data - in real app, this would come from API
+  const [flags, setFlags] = useState<FeatureFlag[]>([
+    {
+      id: '1',
+      name: 'New Dashboard',
+      key: 'new_dashboard',
+      description: 'Enable the redesigned dashboard interface with improved analytics',
+      enabled: true,
+      rolloutPercentage: 25,
+      environment: 'production',
+      targetAudience: 'beta',
+      createdAt: '2024-01-15',
+      updatedAt: '2024-02-10',
+      createdBy: 'admin@example.com',
+      tags: ['ui', 'dashboard', 'analytics'],
+      conditions: {
+        subscription: ['premium', 'student'],
+      },
+    },
+    {
+      id: '2',
+      name: 'AI Recommendations',
+      key: 'ai_recommendations',
+      description: 'Show AI-powered task and health recommendations',
+      enabled: false,
+      rolloutPercentage: 0,
+      environment: 'staging',
+      targetAudience: 'all',
+      createdAt: '2024-02-01',
+      updatedAt: '2024-02-08',
+      createdBy: 'dev@example.com',
+      tags: ['ai', 'recommendations', 'experimental'],
+    },
+    {
+      id: '3',
+      name: 'Voice Commands',
+      key: 'voice_commands',
+      description: 'Enable voice command processing for task management',
+      enabled: true,
+      rolloutPercentage: 100,
+      environment: 'production',
+      targetAudience: 'premium',
+      createdAt: '2024-01-20',
+      updatedAt: '2024-02-05',
+      createdBy: 'product@example.com',
+      tags: ['voice', 'accessibility', 'premium'],
+      conditions: {
+        subscription: ['premium'],
+      },
+    },
+    {
+      id: '4',
+      name: 'Dark Mode',
+      key: 'dark_mode',
+      description: 'Enable dark theme option for all users',
+      enabled: true,
+      rolloutPercentage: 100,
+      environment: 'production',
+      targetAudience: 'all',
+      createdAt: '2024-01-10',
+      updatedAt: '2024-01-25',
+      createdBy: 'design@example.com',
+      tags: ['ui', 'theme', 'accessibility'],
+    },
+  ]);
 
   const filteredFlags = flags.filter(flag => {
     const matchesSearch = flag.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          flag.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         flag.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || flag.category === selectedCategory;
-    const matchesEnvironment = selectedEnvironment === 'all' || flag.environment === selectedEnvironment;
+                         flag.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesEnvironment = filterEnvironment === 'all' || flag.environment === filterEnvironment;
+    const matchesStatus = filterStatus === 'all' || 
+                         (filterStatus === 'enabled' && flag.enabled) ||
+                         (filterStatus === 'disabled' && !flag.enabled);
     
-    return matchesSearch && matchesCategory && matchesEnvironment;
+    return matchesSearch && matchesEnvironment && matchesStatus;
   });
 
-  const handleToggleFlag = (flagId: string) => {
-    setFlags(flags.map(flag => 
+  const toggleFlag = (flagId: string) => {
+    setFlags(prev => prev.map(flag => 
       flag.id === flagId 
         ? { ...flag, enabled: !flag.enabled, updatedAt: new Date().toISOString().split('T')[0] }
         : flag
     ));
   };
 
-  const handleUpdateRollout = (flagId: string, percentage: number) => {
-    setFlags(flags.map(flag => 
+  const updateRollout = (flagId: string, percentage: number) => {
+    setFlags(prev => prev.map(flag => 
       flag.id === flagId 
         ? { ...flag, rolloutPercentage: percentage, updatedAt: new Date().toISOString().split('T')[0] }
         : flag
     ));
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'feature': return <Flag className="w-4 h-4 text-blue-500" />;
-      case 'experiment': return <Percent className="w-4 h-4 text-purple-500" />;
-      case 'killswitch': return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      case 'config': return <Settings className="w-4 h-4 text-green-500" />;
-      default: return <Flag className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getCategoryBadge = (category: string) => {
-    const baseClasses = "px-2 py-1 text-xs font-medium rounded-full";
-    switch (category) {
-      case 'feature':
-        return <span className={`${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200`}>Feature</span>;
-      case 'experiment':
-        return <span className={`${baseClasses} bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200`}>Experiment</span>;
-      case 'killswitch':
-        return <span className={`${baseClasses} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200`}>Killswitch</span>;
-      case 'config':
-        return <span className={`${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`}>Config</span>;
-      default:
-        return <span className={`${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200`}>Unknown</span>;
-    }
-  };
-
-  const getEnvironmentBadge = (environment: string) => {
-    const baseClasses = "px-2 py-1 text-xs font-medium rounded-full";
+  const getEnvironmentColor = (environment: FeatureFlag['environment']) => {
     switch (environment) {
       case 'production':
-        return <span className={`${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`}>Production</span>;
+        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
       case 'staging':
-        return <span className={`${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`}>Staging</span>;
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
       case 'development':
-        return <span className={`${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200`}>Development</span>;
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
       default:
-        return <span className={`${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200`}>Unknown</span>;
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+    }
+  };
+
+  const getAudienceColor = (audience: FeatureFlag['targetAudience']) => {
+    switch (audience) {
+      case 'all':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
+      case 'beta':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
+      case 'premium':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+      case 'admin':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={cn('space-y-6', className)}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            {t('admin.featureFlags.title', 'Feature Flags')}
-          </h2>
-          <p className="text-foreground-secondary mt-1">
-            {t('admin.featureFlags.subtitle', 'Manage feature rollouts and A/B testing')}
-          </p>
-        </div>
-        
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="btn-primary flex items-center space-x-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('admin.featureFlags.createFlag', 'Create Flag')}</span>
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="card p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-secondary w-4 h-4" />
-              <input
-                type="text"
-                placeholder={t('admin.featureFlags.searchPlaceholder', 'Search feature flags...')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="input pl-10 w-full"
-              />
-            </div>
+      <FadeIn>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Feature Flags
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">
+              Manage feature rollouts and A/B testing
+            </p>
           </div>
           
-          <div className="flex gap-3">
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-primary-600 hover:bg-primary-700 text-white"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Create Flag
+          </Button>
+        </div>
+      </FadeIn>
+
+      {/* Filters */}
+      <FadeIn delay={0.1}>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search flags..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            
+            {/* Environment Filter */}
             <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="input"
+              value={filterEnvironment}
+              onChange={(e) => setFilterEnvironment(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
-              <option value="all">{t('admin.featureFlags.allCategories', 'All Categories')}</option>
-              <option value="feature">{t('admin.featureFlags.category.feature', 'Feature')}</option>
-              <option value="experiment">{t('admin.featureFlags.category.experiment', 'Experiment')}</option>
-              <option value="killswitch">{t('admin.featureFlags.category.killswitch', 'Killswitch')}</option>
-              <option value="config">{t('admin.featureFlags.category.config', 'Config')}</option>
+              <option value="all">All Environments</option>
+              <option value="development">Development</option>
+              <option value="staging">Staging</option>
+              <option value="production">Production</option>
             </select>
             
+            {/* Status Filter */}
             <select
-              value={selectedEnvironment}
-              onChange={(e) => setSelectedEnvironment(e.target.value)}
-              className="input"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
-              <option value="all">{t('admin.featureFlags.allEnvironments', 'All Environments')}</option>
-              <option value="production">{t('admin.featureFlags.environment.production', 'Production')}</option>
-              <option value="staging">{t('admin.featureFlags.environment.staging', 'Staging')}</option>
-              <option value="development">{t('admin.featureFlags.environment.development', 'Development')}</option>
+              <option value="all">All Status</option>
+              <option value="enabled">Enabled</option>
+              <option value="disabled">Disabled</option>
             </select>
           </div>
         </div>
-      </div>
+      </FadeIn>
 
       {/* Feature Flags List */}
-      <div className="space-y-4">
-        {filteredFlags.map((flag) => (
-          <div key={flag.id} className="card p-6">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  {getCategoryIcon(flag.category)}
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {flag.name}
-                  </h3>
-                  {getCategoryBadge(flag.category)}
-                  {getEnvironmentBadge(flag.environment)}
+      <Stagger stagger={0.1} direction="up">
+        <div className="space-y-4">
+          {filteredFlags.map((flag) => (
+            <motion.div
+              key={flag.id}
+              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {flag.name}
+                    </h3>
+                    
+                    {/* Status Toggle */}
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={flag.enabled}
+                        onChange={() => toggleFlag(flag.id)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                    </label>
+                    
+                    {/* Environment Badge */}
+                    <span className={cn(
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      getEnvironmentColor(flag.environment)
+                    )}>
+                      {flag.environment}
+                    </span>
+                    
+                    {/* Audience Badge */}
+                    <span className={cn(
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                      getAudienceColor(flag.targetAudience)
+                    )}>
+                      {flag.targetAudience}
+                    </span>
+                  </div>
+                  
+                  <p className="text-gray-600 dark:text-gray-300 mb-3">
+                    {flag.description}
+                  </p>
+                  
+                  <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span>Key: <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">{flag.key}</code></span>
+                    <span>Created: {new Date(flag.createdAt).toLocaleDateString()}</span>
+                    <span>By: {flag.createdBy}</span>
+                  </div>
+                  
+                  {/* Tags */}
+                  {flag.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {flag.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
-                <p className="text-foreground-secondary mb-3">
-                  {flag.description}
-                </p>
-                
-                <div className="flex items-center space-x-4 text-sm text-foreground-secondary">
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="w-3 h-3" />
-                    <span>{t('admin.featureFlags.updated', 'Updated')}: {flag.updatedAt}</span>
+                <div className="ml-6 flex flex-col items-end space-y-3">
+                  {/* Rollout Percentage */}
+                  <div className="text-right">
+                    <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+                      Rollout: {flag.rolloutPercentage}%
+                    </div>
+                    <div className="w-32">
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={flag.rolloutPercentage}
+                        onChange={(e) => updateRollout(flag.id, parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                        disabled={!flag.enabled}
+                      />
+                      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <span>0%</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Users className="w-3 h-3" />
-                    <span>{t('admin.featureFlags.createdBy', 'Created by')}: {flag.createdBy}</span>
+                  
+                  {/* Actions */}
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={() => {
+                        setEditingFlag(flag);
+                        setShowCreateModal(true);
+                      }}
+                      size="sm"
+                      variant="outline"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        // TODO: Implement delete flag
+                        console.log('Delete flag:', flag.id);
+                      }}
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20"
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4">
-                {/* Rollout Percentage */}
-                <div className="text-center">
-                  <div className="text-sm text-foreground-secondary mb-1">
-                    {t('admin.featureFlags.rollout', 'Rollout')}
+              {/* Conditions */}
+              {flag.conditions && (
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="text-sm text-gray-600 dark:text-gray-300">
+                    <strong>Conditions:</strong>
+                    {flag.conditions.subscription && (
+                      <span className="ml-2">
+                        Subscription: {flag.conditions.subscription.join(', ')}
+                      </span>
+                    )}
+                    {flag.conditions.userRole && (
+                      <span className="ml-2">
+                        Role: {flag.conditions.userRole.join(', ')}
+                      </span>
+                    )}
+                    {flag.conditions.country && (
+                      <span className="ml-2">
+                        Country: {flag.conditions.country.join(', ')}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center space-x-2">
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </Stagger>
+
+      {/* Empty State */}
+      {filteredFlags.length === 0 && (
+        <FadeIn>
+          <div className="text-center py-12">
+            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 2H21l-3 6 3 6h-8.5l-1-2H5a2 2 0 00-2 2zm9-13.5V9" />
+            </svg>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              No feature flags found
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Try adjusting your search or filter criteria.
+            </p>
+          </div>
+        </FadeIn>
+      )}
+
+      {/* Create/Edit Modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                {editingFlag ? 'Edit Feature Flag' : 'Create New Feature Flag'}
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Name
+                    </label>
                     <input
-                      type="range"
+                      type="text"
+                      defaultValue={editingFlag?.name || ''}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Key
+                    </label>
+                    <input
+                      type="text"
+                      defaultValue={editingFlag?.key || ''}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    defaultValue={editingFlag?.description || ''}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Environment
+                    </label>
+                    <select
+                      defaultValue={editingFlag?.environment || 'development'}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                      <option value="development">Development</option>
+                      <option value="staging">Staging</option>
+                      <option value="production">Production</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Target Audience
+                    </label>
+                    <select
+                      defaultValue={editingFlag?.targetAudience || 'all'}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                      <option value="all">All Users</option>
+                      <option value="beta">Beta Users</option>
+                      <option value="premium">Premium Users</option>
+                      <option value="admin">Admin Users</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Rollout %
+                    </label>
+                    <input
+                      type="number"
                       min="0"
                       max="100"
-                      value={flag.rolloutPercentage}
-                      onChange={(e) => handleUpdateRollout(flag.id, parseInt(e.target.value))}
-                      className="w-20"
-                      disabled={!flag.enabled}
+                      defaultValue={editingFlag?.rolloutPercentage || 0}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
-                    <span className="text-sm font-medium text-foreground w-8">
-                      {flag.rolloutPercentage}%
-                    </span>
                   </div>
                 </div>
                 
-                {/* Toggle Switch */}
-                <div className="text-center">
-                  <div className="text-sm text-foreground-secondary mb-1">
-                    {t('admin.featureFlags.status', 'Status')}
-                  </div>
-                  <button
-                    onClick={() => handleToggleFlag(flag.id)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      flag.enabled ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        flag.enabled ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-                
-                {/* Actions */}
-                <div className="flex items-center space-x-2">
-                  <button
-                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                    title={t('admin.featureFlags.edit', 'Edit flag')}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  
-                  <button
-                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                    title={t('admin.featureFlags.delete', 'Delete flag')}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tags (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={editingFlag?.tags.join(', ') || ''}
+                    placeholder="ui, experimental, beta"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
                 </div>
               </div>
-            </div>
-            
-            {/* Target Users */}
-            {flag.targetUsers.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <div className="flex items-center space-x-2">
-                  <Users className="w-4 h-4 text-foreground-secondary" />
-                  <span className="text-sm text-foreground-secondary">
-                    {t('admin.featureFlags.targetUsers', 'Target Users')}:
-                  </span>
-                  <div className="flex flex-wrap gap-1">
-                    {flag.targetUsers.map((user, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded"
-                      >
-                        {user}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+
+              <div className="flex items-center justify-end space-x-3 mt-6">
+                <Button
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setEditingFlag(null);
+                  }}
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    // TODO: Implement save flag
+                    setShowCreateModal(false);
+                    setEditingFlag(null);
+                  }}
+                  className="bg-primary-600 hover:bg-primary-700 text-white"
+                >
+                  {editingFlag ? 'Update' : 'Create'} Flag
+                </Button>
               </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {filteredFlags.length === 0 && (
-        <div className="card p-12 text-center">
-          <Flag className="w-12 h-12 text-foreground-secondary mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            {t('admin.featureFlags.noFlags', 'No feature flags found')}
-          </h3>
-          <p className="text-foreground-secondary">
-            {t('admin.featureFlags.noFlagsDescription', 'Try adjusting your search or filter criteria.')}
-          </p>
-        </div>
-      )}
-
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-foreground">
-            {flags.length}
-          </div>
-          <div className="text-sm text-foreground-secondary">
-            {t('admin.featureFlags.stats.total', 'Total Flags')}
-          </div>
-        </div>
-        
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-green-500">
-            {flags.filter(f => f.enabled).length}
-          </div>
-          <div className="text-sm text-foreground-secondary">
-            {t('admin.featureFlags.stats.enabled', 'Enabled')}
-          </div>
-        </div>
-        
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-purple-500">
-            {flags.filter(f => f.category === 'experiment').length}
-          </div>
-          <div className="text-sm text-foreground-secondary">
-            {t('admin.featureFlags.stats.experiments', 'Experiments')}
-          </div>
-        </div>
-        
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-blue-500">
-            {flags.filter(f => f.environment === 'production').length}
-          </div>
-          <div className="text-sm text-foreground-secondary">
-            {t('admin.featureFlags.stats.production', 'Production')}
-          </div>
-        </div>
-      </div>
-
-      {/* Create Flag Modal (placeholder) */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              {t('admin.featureFlags.createFlag', 'Create Feature Flag')}
-            </h3>
-            <p className="text-foreground-secondary mb-4">
-              {t('admin.featureFlags.createFlagDescription', 'Feature flag creation form would be implemented here.')}
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="btn-secondary"
-              >
-                {t('common.cancel', 'Cancel')}
-              </button>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="btn-primary"
-              >
-                {t('common.create', 'Create')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
+
+export default FeatureFlags;

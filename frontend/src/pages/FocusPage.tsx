@@ -4,16 +4,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
 // Components
-import FocusTimer from '../components/features/focus/FocusTimer';
-import { SessionTemplates } from '../components/features/focus/SessionTemplates';
-import FocusAnalytics from '../components/features/focus/FocusAnalytics';
+import { 
+  FocusTimer, 
+  PomodoroTimer, 
+  SessionTemplates, 
+  FocusAnalytics, 
+  DistractionLogger,
+  type SessionTemplate 
+} from '../components/features/focus';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
 // Hooks and API
 import { useFocusQueries } from '../hooks/queries/useFocusQueries';
-import type { FocusSession, SessionTemplate } from '../types';
+import type { FocusSession } from '../types';
 
-type ViewMode = 'timer' | 'templates' | 'analytics';
+type ViewMode = 'timer' | 'pomodoro' | 'templates' | 'analytics' | 'distractions';
 
 export default function FocusPage() {
   const { t } = useTranslation();
@@ -24,6 +29,7 @@ export default function FocusPage() {
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<SessionTemplate | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [sessionDistractions, setSessionDistractions] = useState<any[]>([]);
 
   // Queries
   const {
@@ -193,6 +199,16 @@ export default function FocusPage() {
               Timer
             </button>
             <button
+              onClick={() => setViewMode('pomodoro')}
+              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                viewMode === 'pomodoro'
+                  ? 'bg-primary-600 text-white'
+                  : 'text-foreground-secondary hover:text-foreground'
+              }`}
+            >
+              Pomodoro
+            </button>
+            <button
               onClick={() => setViewMode('templates')}
               className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                 viewMode === 'templates'
@@ -211,6 +227,16 @@ export default function FocusPage() {
               }`}
             >
               Analytics
+            </button>
+            <button
+              onClick={() => setViewMode('distractions')}
+              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                viewMode === 'distractions'
+                  ? 'bg-primary-600 text-white'
+                  : 'text-foreground-secondary hover:text-foreground'
+              }`}
+            >
+              Distractions
             </button>
           </div>
         </div>
@@ -246,30 +272,85 @@ export default function FocusPage() {
 
       {/* Content based on view mode */}
       {viewMode === 'timer' && (
-        <FocusTimer
-          activeSession={activeSession}
-          selectedTemplate={selectedTemplate}
-          templates={templates}
-          onStartSession={handleStartSession}
-          onCompleteSession={handleCompleteSession}
-          onPauseSession={handlePauseSession}
-          onResumeSession={handleResumeSession}
-          onCancelSession={handleCancelSession}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <FocusTimer
+              duration={selectedTemplate?.duration_minutes ? selectedTemplate.duration_minutes * 60 : 1500}
+              onComplete={() => handleCompleteSession(5, 'Session completed')}
+              autoStart={false}
+              size="lg"
+            />
+          </div>
+          <div>
+            <SessionTemplates
+              onSelectTemplate={setSelectedTemplate}
+              selectedTemplate={selectedTemplate}
+              onCreateCustom={() => setViewMode('templates')}
+            />
+          </div>
+        </div>
+      )}
+
+      {viewMode === 'pomodoro' && (
+        <div className="max-w-2xl mx-auto">
+          <PomodoroTimer
+            settings={{
+              focusDuration: 25,
+              shortBreakDuration: 5,
+              longBreakDuration: 15,
+              sessionsUntilLongBreak: 4,
+              autoStartBreaks: false,
+              autoStartFocus: false,
+            }}
+            onSessionComplete={(type, sessionCount) => {
+              toast.success(`${type} session completed! Session ${sessionCount}`);
+            }}
+            onCycleComplete={(cycleCount) => {
+              toast.success(`🎉 Cycle ${cycleCount} completed!`);
+            }}
+          />
+        </div>
       )}
 
       {viewMode === 'templates' && (
         <SessionTemplates
-          templates={templates}
-          selectedTemplate={selectedTemplate}
           onSelectTemplate={setSelectedTemplate}
-          onStartSession={handleStartSession}
-          activeSession={activeSession}
+          selectedTemplate={selectedTemplate}
+          onCreateCustom={() => {
+            // TODO: Implement custom template creation
+            toast.info('Custom template creation coming soon!');
+          }}
         />
       )}
 
       {viewMode === 'analytics' && (
-        <FocusAnalytics />
+        <FocusAnalytics 
+          sessions={sessions.map(session => ({
+            id: session.id,
+            date: new Date(session.started_at).toISOString(),
+            duration: session.actual_duration || session.planned_duration,
+            type: session.session_type === 'pomodoro' ? 'pomodoro' : 'focus',
+            templateName: session.session_name || session.session_type,
+            completed: !!session.completed_at,
+            interruptions: sessionDistractions.filter(d => d.sessionId === session.id).length,
+            productivity: session.productivity_rating || 3,
+          }))}
+        />
+      )}
+
+      {viewMode === 'distractions' && (
+        <DistractionLogger
+          sessionId={activeSession?.id || 'no-session'}
+          isSessionActive={!!activeSession}
+          onDistractionLogged={(distraction) => {
+            setSessionDistractions(prev => [...prev, { ...distraction, sessionId: activeSession?.id }]);
+            toast.info('Distraction logged');
+          }}
+          onDistractionAnalysis={(distractions) => {
+            // TODO: Send distraction analysis to backend
+            console.log('Distraction analysis:', distractions);
+          }}
+        />
       )}
 
       {/* Cancel Session Dialog */}
