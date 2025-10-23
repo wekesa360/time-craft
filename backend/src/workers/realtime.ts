@@ -10,6 +10,7 @@ import type { Env } from '../lib/env';
 import { DatabaseService } from '../lib/db';
 import { createSSEResponse, sseService, SSE_EVENT_TYPES } from '../lib/realtime-sse';
 import { RealtimeCalendarService } from '../lib/realtime-calendar';
+import { RealtimeEventsService, REALTIME_EVENT_TYPES } from '../lib/realtime-events';
 
 const realtime = new Hono<{ Bindings: Env }>();
 
@@ -39,21 +40,62 @@ async function getUserFromToken(c: any) {
 
 // ========== SSE CONNECTIONS ==========
 
-// GET /realtime/sse - Establish SSE connection
+// GET /realtime/sse - Establish SSE connection (DISABLED - Use polling instead)
 realtime.get('/sse', async (c) => {
   const auth = await getUserFromToken(c);
   if (!auth) {
     return c.json({ error: 'Unauthorized' }, 401);
   }
 
-  // TEMPORARY: Disable SSE to prevent worker hanging
-  // Cloudflare Workers are not designed for persistent connections
-  // TODO: Implement polling-based real-time updates instead
+  // SSE is disabled in Cloudflare Workers to prevent hanging
+  // Use polling endpoint instead for real-time updates
   return c.json({ 
     error: 'SSE temporarily disabled',
     message: 'Real-time updates are temporarily disabled to prevent worker hanging. Please use polling for updates.',
-    pollingEndpoint: '/api/realtime/poll'
+    pollingEndpoint: '/api/realtime/poll',
+    documentation: 'Use GET /api/realtime/poll?token=<jwt_token>&lastEventId=<id> for real-time updates'
   }, 503);
+});
+
+// GET /realtime/poll - Polling-based real-time updates
+realtime.get('/poll', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  const lastEventId = c.req.query('lastEventId');
+  const timeout = parseInt(c.req.query('timeout') || '30000'); // 30 seconds default
+  
+  try {
+    const db = new DatabaseService(c.env);
+    const eventsService = new RealtimeEventsService(db);
+    
+    // Get events since last event ID or last minute
+    const events = lastEventId ? 
+      await eventsService.getEventsSinceLastId(auth.userId, lastEventId) :
+      await eventsService.getEventsForUser(auth.userId, Date.now() - 60000);
+    
+    // Clean up old events (older than 1 hour)
+    await eventsService.cleanupOldEvents(1);
+    
+    return c.json({
+      success: true,
+      events,
+      hasMore: events.length === 50,
+      nextPollDelay: 5000, // 5 seconds
+      timestamp: Date.now()
+    });
+    
+  } catch (error) {
+    console.error('Polling error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch events',
+      events: [],
+      nextPollDelay: 10000 // 10 seconds on error
+    }, 500);
+  }
 });
 
 // POST /realtime/sse/subscribe - Subscribe to specific event types
@@ -322,17 +364,19 @@ realtime.post('/tasks/create',
         Date.now()
       ]);
 
-      // Send real-time notification
-      sseService.sendToUser(auth.userId, {
-        type: SSE_EVENT_TYPES.TASK_CREATED,
-        data: {
+      // Send real-time notification via events service
+      const eventsService = new RealtimeEventsService(db);
+      await eventsService.createEvent(
+        auth.userId,
+        REALTIME_EVENT_TYPES.TASK_CREATED,
+        {
           taskId,
           title: taskData.title,
           priority: taskData.priority,
           dueDate: taskData.dueDate,
           timestamp: Date.now()
         }
-      });
+      );
       
       return c.json({
         success: true,
@@ -383,16 +427,18 @@ realtime.post('/focus/start',
         Date.now()
       ]);
 
-      // Send real-time notification
-      sseService.sendToUser(auth.userId, {
-        type: SSE_EVENT_TYPES.FOCUS_SESSION_STARTED,
-        data: {
+      // Send real-time notification via events service
+      const eventsService = new RealtimeEventsService(db);
+      await eventsService.createEvent(
+        auth.userId,
+        REALTIME_EVENT_TYPES.FOCUS_SESSION_STARTED,
+        {
           sessionId,
           duration,
           type,
           startedAt: Date.now()
         }
-      });
+      );
       
       return c.json({
         success: true,
@@ -432,14 +478,16 @@ realtime.post('/focus/complete',
         WHERE id = ? AND user_id = ?
       `, [Date.now(), Date.now(), sessionId, auth.userId]);
 
-      // Send real-time notification
-      sseService.sendToUser(auth.userId, {
-        type: SSE_EVENT_TYPES.FOCUS_SESSION_COMPLETED,
-        data: {
+      // Send real-time notification via events service
+      const eventsService = new RealtimeEventsService(db);
+      await eventsService.createEvent(
+        auth.userId,
+        REALTIME_EVENT_TYPES.FOCUS_SESSION_COMPLETED,
+        {
           sessionId,
           completedAt: Date.now()
         }
-      });
+      );
       
       return c.json({
         success: true,
@@ -453,5 +501,64 @@ realtime.post('/focus/complete',
     }
   }
 );
+
+// GET /realtime/events/stats - Get real-time events statistics
+realtime.get('/events/stats', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const db = new DatabaseService(c.env);
+    const eventsService = new RealtimeEventsService(db);
+    
+    const stats = await eventsService.getEventStats();
+    
+    return c.json({
+      success: true,
+      stats,
+      timestamp: Date.now()
+    });
+    
+  } catch (error) {
+    console.error('Stats error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch stats'
+    }, 500);
+  }
+});
+
+// POST /realtime/events/cleanup - Clean up old events (admin only)
+realtime.post('/events/cleanup', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const db = new DatabaseService(c.env);
+    const eventsService = new RealtimeEventsService(db);
+    
+    const expiredCount = await eventsService.cleanupExpiredEvents();
+    const oldCount = await eventsService.cleanupOldEvents(24); // Clean up events older than 24 hours
+    
+    return c.json({
+      success: true,
+      message: 'Cleanup completed',
+      expiredEventsRemoved: expiredCount,
+      oldEventsRemoved: oldCount,
+      timestamp: Date.now()
+    });
+    
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to cleanup events'
+    }, 500);
+  }
+});
 
 export default realtime;
