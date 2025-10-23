@@ -1,6 +1,7 @@
 // SSE Connection Status Component
 import React from 'react';
-import { useSSE } from '../../hooks/useSSE';
+import { useSSE, useBadgeUnlockNotifications, useChallengeUpdates, useTaskReminders, useHealthInsights, useFocusSessionUpdates } from '../../hooks/useSSE';
+import { toast } from 'react-hot-toast';
 import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
 
 interface SSEStatusProps {
@@ -68,6 +69,37 @@ export const SSENotificationHandler: React.FC = () => {
     onError: (error) => {
       console.error('SSE error:', error);
     },
+  });
+
+  // Badge unlock notifications
+  useBadgeUnlockNotifications((badge) => {
+    toast.success(`Badge Unlocked! You've earned the "${badge.name}" badge!`);
+  });
+
+  // Challenge updates
+  useChallengeUpdates((challenge) => {
+    if (challenge.type === 'completed') {
+      toast.success(`Challenge Completed! You've completed the "${challenge.name}" challenge!`);
+    } else if (challenge.type === 'leaderboard_update') {
+      toast.success(`Leaderboard Update: Your position in "${challenge.name}" has changed!`);
+    }
+  });
+
+  // Task reminders
+  useTaskReminders((task) => {
+    toast.success(`Task Reminder: Don't forget: ${task.title}`);
+  });
+
+  // Health insights
+  useHealthInsights((insight) => {
+    toast.success(`Health Insight: ${insight.message}`);
+  });
+
+  // Focus session updates
+  useFocusSessionUpdates((session) => {
+    if (session.completed) {
+      toast.success(`Focus Session Complete! Great job! You focused for ${session.duration} minutes.`);
+    }
   });
 
   return null; // This component doesn't render anything
