@@ -151,23 +151,24 @@ export default function SocialPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Social Hub</h1>
-          <p className="text-muted-foreground mt-1">
-            Connect with others and participate in challenges together
-          </p>
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Social Hub</h1>
+            <p className="text-muted-foreground mt-1">
+              Connect with others and participate in challenges together
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* View Navigation */}
-      <TabSwitcher
-        tabs={socialTabs}
-        activeTab={viewMode}
-        onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
-      />
+        {/* View Navigation */}
+        <TabSwitcher
+          tabs={socialTabs}
+          activeTab={viewMode}
+          onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
+        />
 
       {/* Social Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -329,6 +330,7 @@ export default function SocialPage() {
         onClose={() => setChallengeCreatorOpen(false)}
         onSave={handleCreateChallenge}
       />
+      </div>
     </div>
   );
 }

@@ -151,25 +151,26 @@ export default function HealthPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-            {t('navigation.health')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Track your wellness journey with AI-powered insights
-          </p>
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+              {t('navigation.health')}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Track your wellness journey with AI-powered insights
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* View Navigation */}
-      <TabSwitcher
-        tabs={healthTabs}
-        activeTab={viewMode}
-        onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
-      />
+        {/* View Navigation */}
+        <TabSwitcher
+          tabs={healthTabs}
+          activeTab={viewMode}
+          onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
+        />
 
       {/* Content based on view mode */}
       {viewMode === 'dashboard' && (
@@ -331,6 +332,7 @@ export default function HealthPage() {
         onClose={() => setActiveLogger(null)}
         onSave={handleCreateGoal}
       />
+      </div>
     </div>
   );
 }

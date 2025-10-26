@@ -40,29 +40,31 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-            {t('navigation.calendar')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            AI-powered meeting scheduling and calendar management
-          </p>
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+              {t('navigation.calendar')}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              AI-powered meeting scheduling and calendar management
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* View Navigation */}
-      <TabSwitcher
-        tabs={views}
-        activeTab={activeView}
-        onTabChange={(tabId) => setActiveView(tabId as ViewMode)}
-      />
+        {/* View Navigation */}
+        <TabSwitcher
+          tabs={views}
+          activeTab={activeView}
+          onTabChange={(tabId) => setActiveView(tabId as ViewMode)}
+        />
 
-      {/* Active View Content */}
-      <div className="bg-card rounded-2xl border border-border p-6">
-        {renderActiveView()}
+        {/* Active View Content */}
+        <div className="bg-card rounded-2xl border border-border p-6">
+          {renderActiveView()}
+        </div>
       </div>
     </div>
   );

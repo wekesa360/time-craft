@@ -184,25 +184,26 @@ export default function FocusPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-            {t('navigation.focus')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Boost your productivity with focused work sessions
-          </p>
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+              {t('navigation.focus')}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Boost your productivity with focused work sessions
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* View Navigation */}
-      <TabSwitcher
-        tabs={focusTabs}
-        activeTab={viewMode}
-        onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
-      />
+        {/* View Navigation */}
+        <TabSwitcher
+          tabs={focusTabs}
+          activeTab={viewMode}
+          onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
+        />
 
       {/* Active Session Status */}
       {activeSession && (
@@ -324,17 +325,18 @@ export default function FocusPage() {
         />
       )}
 
-      {/* Cancel Session Dialog */}
-      <ConfirmDialog
-        isOpen={showCancelDialog}
-        onClose={() => setShowCancelDialog(false)}
-        onConfirm={confirmCancelSession}
-        title="Cancel Focus Session"
-        message="Are you sure you want to cancel this focus session? This action cannot be undone."
-        confirmText="Cancel Session"
-        cancelText="Keep Session"
-        variant="danger"
-      />
+        {/* Cancel Session Dialog */}
+        <ConfirmDialog
+          isOpen={showCancelDialog}
+          onClose={() => setShowCancelDialog(false)}
+          onConfirm={confirmCancelSession}
+          title="Cancel Focus Session"
+          message="Are you sure you want to cancel this focus session? This action cannot be undone."
+          confirmText="Cancel Session"
+          cancelText="Keep Session"
+          variant="danger"
+        />
+      </div>
     </div>
   );
 }

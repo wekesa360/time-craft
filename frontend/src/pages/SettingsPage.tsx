@@ -226,16 +226,17 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Header */}
-      <GermanTextOptimizer className="mb-8">
-        <GermanTitle level={1} className="text-3xl font-bold text-foreground mb-2">
-          {t('settings.title')}
-        </GermanTitle>
-        <p className="text-foreground-secondary">
-          {t('settings.description', 'Manage your account preferences and application settings')}
-        </p>
-      </GermanTextOptimizer>
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Header */}
+        <GermanTextOptimizer className="mb-8">
+          <GermanTitle level={1} className="text-3xl font-bold text-foreground mb-2">
+            {t('settings.title')}
+          </GermanTitle>
+          <p className="text-foreground-secondary">
+            {t('settings.description', 'Manage your account preferences and application settings')}
+          </p>
+        </GermanTextOptimizer>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Settings Navigation */}
@@ -1072,6 +1073,7 @@ export default function SettingsPage() {
           )}
 
         </div>
+      </div>
       </div>
     </div>
   );

@@ -28,13 +28,13 @@ const StudentPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground dark:text-white mb-2">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             Student Portal
           </h1>
-          <p className="text-muted-foreground dark:text-muted-foreground">
+          <p className="text-muted-foreground">
             Verify your student status and access exclusive student pricing
           </p>
         </div>

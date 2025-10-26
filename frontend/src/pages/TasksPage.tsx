@@ -157,13 +157,14 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Tasks</h1>
-          <p className="text-muted-foreground mt-1">Manage your tasks and stay organized</p>
-        </div>
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Tasks</h1>
+            <p className="text-muted-foreground mt-1">Manage your tasks and stay organized</p>
+          </div>
         <div className="flex gap-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -497,6 +498,7 @@ export default function TasksPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
