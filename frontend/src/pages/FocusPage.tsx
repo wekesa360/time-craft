@@ -14,6 +14,7 @@ import {
 } from '../components/features/focus';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { Button } from '../components/ui/Button';
+import TabSwitcher, { type TabItem } from '../components/ui/TabSwitcher';
 
 // Hooks and API
 import { useFocusQueries } from '../hooks/queries/useFocusQueries';
@@ -173,193 +174,155 @@ export default function FocusPage() {
     );
   }
 
+  // Tab configuration
+  const focusTabs: TabItem[] = [
+    { id: 'timer', label: 'Timer' },
+    { id: 'pomodoro', label: 'Pomodoro' },
+    { id: 'templates', label: 'Templates' },
+    { id: 'analytics', label: 'Analytics' },
+    { id: 'distractions', label: 'Distractions' },
+  ];
+
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Focus</h1>
-            <p className="text-muted-foreground mt-1">
-              Boost your productivity with focused work sessions
-            </p>
-          </div>
-          
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-card border border-border rounded-xl p-1">
-            <Button
-              onClick={() => setViewMode('timer')}
-              variant={viewMode === 'timer' ? 'default' : 'ghost'}
-              size="sm"
-              className={viewMode === 'timer' ? '' : 'text-muted-foreground hover:text-foreground'}
-            >
-              Timer
-            </Button>
-            <Button
-              onClick={() => setViewMode('pomodoro')}
-              variant={viewMode === 'pomodoro' ? 'default' : 'ghost'}
-              size="sm"
-              className={viewMode === 'pomodoro' ? '' : 'text-muted-foreground hover:text-foreground'}
-            >
-              Pomodoro
-            </Button>
-            <Button
-              onClick={() => setViewMode('templates')}
-              variant={viewMode === 'templates' ? 'default' : 'ghost'}
-              size="sm"
-              className={viewMode === 'templates' ? '' : 'text-muted-foreground hover:text-foreground'}
-            >
-              Templates
-            </Button>
-            <Button
-              onClick={() => setViewMode('analytics')}
-              variant={viewMode === 'analytics' ? 'default' : 'ghost'}
-              size="sm"
-              className={viewMode === 'analytics' ? '' : 'text-muted-foreground hover:text-foreground'}
-            >
-              Analytics
-            </Button>
-            <Button
-              onClick={() => setViewMode('distractions')}
-              variant={viewMode === 'distractions' ? 'default' : 'ghost'}
-              size="sm"
-              className={viewMode === 'distractions' ? '' : 'text-muted-foreground hover:text-foreground'}
-            >
-              Distractions
-            </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+            {t('navigation.focus')}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Boost your productivity with focused work sessions
+          </p>
+        </div>
+      </div>
+
+      {/* View Navigation */}
+      <TabSwitcher
+        tabs={focusTabs}
+        activeTab={viewMode}
+        onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
+      />
+
+      {/* Active Session Status */}
+      {activeSession && (
+        <div className="bg-card rounded-2xl p-6 border border-border border-l-4 border-l-primary">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
+              <div>
+                <p className="font-semibold text-foreground">
+                  Focus Session Active
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Session: {activeSession.session_name || activeSession.session_type}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={handlePauseSession} 
+                variant="outline"
+                size="sm"
+              >
+                Pause
+              </Button>
+              <Button 
+                onClick={handleCancelSession} 
+                variant="outline"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Active Session Status */}
-        {activeSession && (
-          <div className="bg-card rounded-2xl p-6 border border-border border-l-4 border-l-primary">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
-                <div>
-                  <p className="font-semibold text-foreground">
-                    Focus Session Active
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Session: {activeSession.session_name || activeSession.session_type}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <Button 
-                  onClick={handlePauseSession} 
-                  variant="outline"
-                  size="sm"
-                >
-                  Pause
-                </Button>
-                <Button 
-                  onClick={handleCancelSession} 
-                  variant="outline"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
+      {/* Content based on view mode */}
+      {viewMode === 'timer' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <FocusTimer
+              duration={selectedTemplate?.duration_minutes ? selectedTemplate.duration_minutes * 60 : 1500}
+              onComplete={() => handleCompleteSession(5, 'Session completed')}
+              autoStart={false}
+              size="lg"
+            />
           </div>
-        )}
-
-        {/* Content based on view mode */}
-        <div className="bg-card rounded-2xl border border-border overflow-hidden">
-        {viewMode === 'timer' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
-            <div className="lg:col-span-2">
-              <FocusTimer
-                duration={selectedTemplate?.duration_minutes ? selectedTemplate.duration_minutes * 60 : 1500}
-                onComplete={() => handleCompleteSession(5, 'Session completed')}
-                autoStart={false}
-                size="lg"
-              />
-            </div>
-            <div className="lg:border-l lg:border-border lg:pl-6">
-              <SessionTemplates
-                onSelectTemplate={setSelectedTemplate}
-                selectedTemplate={selectedTemplate}
-                onCreateCustom={() => setViewMode('templates')}
-              />
-            </div>
-          </div>
-        )}
-
-        {viewMode === 'pomodoro' && (
-          <div className="p-6">
-            <div className="max-w-2xl mx-auto">
-              <PomodoroTimer
-                settings={{
-                  focusDuration: 25,
-                  shortBreakDuration: 5,
-                  longBreakDuration: 15,
-                  sessionsUntilLongBreak: 4,
-                  autoStartBreaks: false,
-                  autoStartFocus: false,
-                }}
-                onSessionComplete={(type, sessionCount) => {
-                  toast.success(`${type} session completed! Session ${sessionCount}`);
-                }}
-                onCycleComplete={(cycleCount) => {
-                  toast.success(`🎉 Cycle ${cycleCount} completed!`);
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {viewMode === 'templates' && (
-          <div className="p-6">
+          <div className="lg:border-l lg:border-border lg:pl-6">
             <SessionTemplates
               onSelectTemplate={setSelectedTemplate}
               selectedTemplate={selectedTemplate}
-              onCreateCustom={() => {
-                // TODO: Implement custom template creation
-                toast.info('Custom template creation coming soon!');
-              }}
+              onCreateCustom={() => setViewMode('templates')}
             />
           </div>
-        )}
-
-        {viewMode === 'analytics' && (
-          <div className="p-6">
-            <FocusAnalytics 
-              sessions={sessions.map(session => ({
-                id: session.id,
-                date: new Date(session.started_at).toISOString(),
-                duration: session.actual_duration || session.planned_duration,
-                type: session.session_type === 'pomodoro' ? 'pomodoro' : 'focus',
-                templateName: session.session_name || session.session_type,
-                completed: !!session.completed_at,
-                interruptions: sessionDistractions.filter(d => d.sessionId === session.id).length,
-                productivity: session.productivity_rating || 3,
-              }))}
-            />
-          </div>
-        )}
-
-        {viewMode === 'distractions' && (
-          <div className="p-6">
-            <DistractionLogger
-              sessionId={activeSession?.id || 'no-session'}
-              isSessionActive={!!activeSession}
-              onDistractionLogged={(distraction) => {
-                setSessionDistractions(prev => [...prev, { ...distraction, sessionId: activeSession?.id }]);
-                toast.info('Distraction logged');
-              }}
-              onDistractionAnalysis={(distractions) => {
-                // TODO: Send distraction analysis to backend
-                console.log('Distraction analysis:', distractions);
-              }}
-            />
-          </div>
-        )}
         </div>
-      </div>
+      )}
+
+      {viewMode === 'pomodoro' && (
+        <div className="max-w-2xl mx-auto">
+          <PomodoroTimer
+            settings={{
+              focusDuration: 25,
+              shortBreakDuration: 5,
+              longBreakDuration: 15,
+              sessionsUntilLongBreak: 4,
+              autoStartBreaks: false,
+              autoStartFocus: false,
+            }}
+            onSessionComplete={(type, sessionCount) => {
+              toast.success(`${type} session completed! Session ${sessionCount}`);
+            }}
+            onCycleComplete={(cycleCount) => {
+              toast.success(`🎉 Cycle ${cycleCount} completed!`);
+            }}
+          />
+        </div>
+      )}
+
+      {viewMode === 'templates' && (
+        <SessionTemplates
+          onSelectTemplate={setSelectedTemplate}
+          selectedTemplate={selectedTemplate}
+          onCreateCustom={() => {
+            // TODO: Implement custom template creation
+            toast.success('Custom template creation coming soon!');
+          }}
+        />
+      )}
+
+      {viewMode === 'analytics' && (
+        <FocusAnalytics 
+          sessions={sessions.map(session => ({
+            id: session.id,
+            date: new Date(session.started_at).toISOString(),
+            duration: session.actual_duration || session.planned_duration,
+            type: session.session_type === 'pomodoro' ? 'pomodoro' : 'focus',
+            templateName: session.session_name || session.session_type,
+            completed: !!session.completed_at,
+            interruptions: sessionDistractions.filter(d => d.sessionId === session.id).length,
+            productivity: session.productivity_rating || 3,
+          }))}
+        />
+      )}
+
+      {viewMode === 'distractions' && (
+        <DistractionLogger
+          sessionId={activeSession?.id || 'no-session'}
+          isSessionActive={!!activeSession}
+          onDistractionLogged={(distraction) => {
+            setSessionDistractions(prev => [...prev, { ...distraction, sessionId: activeSession?.id }]);
+            toast.success('Distraction logged');
+          }}
+          onDistractionAnalysis={(distractions) => {
+            // TODO: Send distraction analysis to backend
+            console.log('Distraction analysis:', distractions);
+          }}
+        />
+      )}
 
       {/* Cancel Session Dialog */}
       <ConfirmDialog

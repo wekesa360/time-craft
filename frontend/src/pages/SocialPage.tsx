@@ -9,7 +9,8 @@ import {
   Users,
   Target
 } from 'lucide-react';
-import { TabSwitcher, TabItem } from '../components/ui/TabSwitcher';
+import TabSwitcher from '../components/ui/TabSwitcher';
+import type { TabItem } from '../components/ui/TabSwitcher';
 
 // Components
 import ConnectionsList from '../components/features/social/ConnectionsList';

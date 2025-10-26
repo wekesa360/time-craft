@@ -12,7 +12,8 @@ import {
   Calendar,
   Target
 } from 'lucide-react';
-import { TabSwitcher, TabItem } from '../components/ui/TabSwitcher';
+import TabSwitcher from '../components/ui/TabSwitcher';
+import type { TabItem } from '../components/ui/TabSwitcher';
 
 // Components
 import HealthDashboard from '../components/features/health/HealthDashboard';

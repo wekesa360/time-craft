@@ -5,7 +5,8 @@ import { toast } from 'react-hot-toast';
 import { 
   Share2
 } from 'lucide-react';
-import { TabSwitcher, TabItem } from '../components/ui/TabSwitcher';
+import TabSwitcher from '../components/ui/TabSwitcher';
+import type { TabItem } from '../components/ui/TabSwitcher';
 
 // Components
 import { BadgeGrid } from '../components/features/badges/BadgeGrid';

@@ -73,8 +73,6 @@ export default function Dashboard() {
     },
   ];
 
-
-
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header */}

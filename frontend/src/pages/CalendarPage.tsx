@@ -5,7 +5,8 @@ import CalendarView from '../components/features/calendar/CalendarView';
 import { MeetingRequests } from '../components/features/calendar/MeetingRequests';
 import { AvailabilityPicker } from '../components/features/calendar/AvailabilityPicker';
 import CalendarIntegrations from '../components/features/calendar/CalendarIntegrations';
-import { TabSwitcher, TabItem } from '../components/ui/TabSwitcher';
+import TabSwitcher from '../components/ui/TabSwitcher';
+import type { TabItem } from '../components/ui/TabSwitcher';
 
 type ViewMode = 'calendar' | 'scheduler' | 'requests' | 'availability' | 'integrations';
 
