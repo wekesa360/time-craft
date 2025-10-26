@@ -118,22 +118,22 @@ const RouteErrorFallback: React.FC<RouteErrorFallbackProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 text-red-500">
+    <div className="min-h-screen flex items-center justify-center bg-muted dark:bg-muted p-4">
+      <div className="max-w-lg w-full bg-white dark:bg-muted rounded-lg shadow-lg p-6 text-center">
+        <div className="w-16 h-16 mx-auto mb-4 text-error-light0">
           <AlertTriangle className="w-full h-full" />
         </div>
         
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-2xl font-bold text-foreground dark:text-white mb-2">
           Something went wrong
         </h1>
         
-        <p className="text-gray-600 dark:text-gray-400 mb-2">
+        <p className="text-muted-foreground dark:text-muted-foreground mb-2">
           An unexpected error occurred while loading this page.
         </p>
 
         {routeName && (
-          <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-6">
             Route: {routeName}
           </p>
         )}
@@ -141,7 +141,7 @@ const RouteErrorFallback: React.FC<RouteErrorFallbackProps> = ({
         <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
           <button
             onClick={onRetry}
-            className="flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="flex items-center justify-center space-x-2 px-4 py-2 bg-info hover:bg-info text-white rounded-lg transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Try Again</span>
@@ -149,7 +149,7 @@ const RouteErrorFallback: React.FC<RouteErrorFallbackProps> = ({
           
           <button
             onClick={onGoBack}
-            className="flex items-center justify-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            className="flex items-center justify-center space-x-2 px-4 py-2 bg-muted hover:bg-muted text-white rounded-lg transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Go Back</span>
@@ -157,7 +157,7 @@ const RouteErrorFallback: React.FC<RouteErrorFallbackProps> = ({
           
           <button
             onClick={onGoHome}
-            className="flex items-center justify-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            className="flex items-center justify-center space-x-2 px-4 py-2 bg-muted hover:bg-muted text-white rounded-lg transition-colors"
           >
             <Home className="w-4 h-4" />
             <span>Go Home</span>
@@ -166,15 +166,15 @@ const RouteErrorFallback: React.FC<RouteErrorFallbackProps> = ({
 
         {showDetails && error && (
           <details className="text-left">
-            <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-2">
+            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-muted-foreground mb-2">
               Technical Details
             </summary>
-            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 text-xs font-mono overflow-auto max-h-40">
-              <p className="text-red-600 dark:text-red-400 mb-2">
+            <div className="bg-muted dark:bg-muted rounded-lg p-4 text-xs font-mono overflow-auto max-h-40">
+              <p className="text-error dark:text-error-light mb-2">
                 {error.name}: {error.message}
               </p>
               {error.stack && (
-                <pre className="whitespace-pre-wrap text-gray-600 dark:text-gray-300">
+                <pre className="whitespace-pre-wrap text-muted-foreground dark:text-muted-foreground">
                   {error.stack}
                 </pre>
               )}
@@ -234,14 +234,14 @@ export const DataErrorBoundary: React.FC<{
       onError={(error) => onError?.(error)}
       fallback={
         fallback || (
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="p-4 bg-error-light dark:bg-error/20 border border-red-200 dark:border-red-800 rounded-lg">
             <div className="flex items-center space-x-2">
-              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+              <AlertTriangle className="w-5 h-5 text-error dark:text-error-light" />
+              <h3 className="text-sm font-medium text-error dark:text-error-light">
                 Data Error
               </h3>
             </div>
-            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+            <p className="mt-1 text-sm text-error dark:text-error-light">
               There was an error loading data for this page.
             </p>
           </div>
@@ -263,14 +263,14 @@ export const FormErrorBoundary: React.FC<{
       onError={(error) => onError?.(error)}
       fallback={
         fallback || (
-          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <div className="p-4 bg-warning-light dark:bg-warning/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
             <div className="flex items-center space-x-2">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-              <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+              <AlertTriangle className="w-5 h-5 text-warning dark:text-warning-light" />
+              <h3 className="text-sm font-medium text-warning dark:text-warning-light">
                 Form Error
               </h3>
             </div>
-            <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+            <p className="mt-1 text-sm text-warning dark:text-warning-light">
               There was an error with the form. Please check your input and try again.
             </p>
           </div>
@@ -292,14 +292,14 @@ export const ChartErrorBoundary: React.FC<{
       onError={(error) => onError?.(error)}
       fallback={
         fallback || (
-          <div className="p-8 bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
-            <div className="w-12 h-12 mx-auto mb-4 text-gray-400">
+          <div className="p-8 bg-muted dark:bg-muted rounded-lg text-center">
+            <div className="w-12 h-12 mx-auto mb-4 text-muted-foreground">
               <AlertTriangle className="w-full h-full" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-medium text-foreground dark:text-white mb-2">
               Chart Error
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-muted-foreground dark:text-muted-foreground">
               There was an error loading the chart data.
             </p>
           </div>

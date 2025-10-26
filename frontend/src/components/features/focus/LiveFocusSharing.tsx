@@ -111,11 +111,11 @@ const LiveFocusSharing: React.FC<LiveFocusSharingProps> = ({
       {/* Header */}
       <FadeIn>
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white">
             Live Focus Sessions
           </h3>
-          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-muted-foreground">
+            <div className="w-2 h-2 bg-success-light0 rounded-full animate-pulse" />
             <span>{liveSessions.length} active</span>
           </div>
         </div>
@@ -131,7 +131,7 @@ const LiveFocusSharing: React.FC<LiveFocusSharingProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+              className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-4"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
@@ -152,10 +152,10 @@ const LiveFocusSharing: React.FC<LiveFocusSharingProps> = ({
                   
                   {/* Session Info */}
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-white">
+                    <div className="font-medium text-foreground dark:text-white">
                       {session.userName}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                    <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                       {session.sessionType} • {session.duration} min
                     </div>
                   </div>
@@ -163,10 +163,10 @@ const LiveFocusSharing: React.FC<LiveFocusSharingProps> = ({
                 
                 {/* Timer */}
                 <div className="text-right">
-                  <div className="text-lg font-mono font-bold text-gray-900 dark:text-white">
+                  <div className="text-lg font-mono font-bold text-foreground dark:text-white">
                     {formatElapsedTime(session.elapsed)}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground">
                     {Math.round(getProgressPercentage(session.elapsed, session.duration))}%
                   </div>
                 </div>
@@ -174,9 +174,9 @@ const LiveFocusSharing: React.FC<LiveFocusSharingProps> = ({
               
               {/* Progress Bar */}
               <div className="mb-3">
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div className="w-full bg-muted dark:bg-muted rounded-full h-2">
                   <motion.div
-                    className="bg-green-500 h-2 rounded-full"
+                    className="bg-success-light0 h-2 rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${getProgressPercentage(session.elapsed, session.duration)}%` }}
                     transition={{ duration: 0.5 }}
@@ -193,14 +193,14 @@ const LiveFocusSharing: React.FC<LiveFocusSharingProps> = ({
                         key={encouragement.id}
                         initial={{ scale: 0, rotate: -10 }}
                         animate={{ scale: 1, rotate: 0 }}
-                        className="flex items-center space-x-1 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 px-2 py-1 rounded-full text-xs"
+                        className="flex items-center space-x-1 bg-warning-light dark:bg-warning/20 text-warning dark:text-warning-light px-2 py-1 rounded-full text-xs"
                       >
                         <span>{encouragement.emoji}</span>
                         <span>{encouragement.fromUserName}</span>
                       </motion.div>
                     ))}
                     {session.encouragements.length > 3 && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1">
+                      <div className="text-xs text-muted-foreground dark:text-muted-foreground px-2 py-1">
                         +{session.encouragements.length - 3} more
                       </div>
                     )}
@@ -243,8 +243,8 @@ const LiveFocusSharing: React.FC<LiveFocusSharingProps> = ({
       {/* Empty State */}
       {liveSessions.length === 0 && (
         <FadeIn>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-            <div className="text-gray-500 dark:text-gray-400">
+          <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+            <div className="text-muted-foreground dark:text-muted-foreground">
               <svg className="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -269,17 +269,17 @@ const LiveFocusSharing: React.FC<LiveFocusSharingProps> = ({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md"
+              className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
                 Encourage {selectedSession.userName}
               </h3>
               
               <div className="space-y-4">
                 {/* Quick Options */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                     Quick Encouragement
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -299,7 +299,7 @@ const LiveFocusSharing: React.FC<LiveFocusSharingProps> = ({
                 
                 {/* Custom Message */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                     Custom Message
                   </label>
                   <div className="flex space-x-2">
@@ -308,7 +308,7 @@ const LiveFocusSharing: React.FC<LiveFocusSharingProps> = ({
                       value={encouragementMessage}
                       onChange={(e) => setEncouragementMessage(e.target.value)}
                       placeholder="Write a custom message..."
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       maxLength={100}
                     />
                     <Button

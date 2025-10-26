@@ -62,7 +62,7 @@ export const SimpleLanguageSelector: React.FC<SimpleLanguageSelectorProps> = ({
         <button
           onClick={() => setIsOpen(!isOpen)}
           disabled={isChanging}
-          className="flex items-center gap-1 px-2 py-1 text-sm bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300 rounded hover:bg-white dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 px-2 py-1 text-sm bg-white/90 dark:bg-muted/90 text-muted-foreground dark:text-muted-foreground rounded hover:bg-white dark:hover:bg-muted transition-colors border border-gray-200 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
           title="Change language"
         >
           <span>{getCurrentLanguageInfo().flag}</span>
@@ -78,22 +78,22 @@ export const SimpleLanguageSelector: React.FC<SimpleLanguageSelectorProps> = ({
 
         {isOpen && (
           <>
-            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 min-w-[120px]">
+            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 min-w-[120px]">
               {languages.map((language) => (
                 <button
                   key={language.code}
                   onClick={() => handleLanguageChange(language.code)}
                   disabled={isChanging}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted dark:hover:bg-muted transition-colors first:rounded-t-lg last:rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed ${
                     currentLanguage === language.code
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-900 dark:text-white'
+                      ? 'bg-info-light dark:bg-info/20 text-info dark:text-info'
+                      : 'text-foreground dark:text-white'
                   }`}
                 >
                   <span>{language.flag}</span>
                   <span>{language.nativeName}</span>
                   {currentLanguage === language.code && !isChanging && (
-                    <span className="ml-auto text-blue-600 dark:text-blue-400">✓</span>
+                    <span className="ml-auto text-info dark:text-info">✓</span>
                   )}
                   {isChanging && currentLanguage === language.code && (
                     <div className="ml-auto w-3 h-3 border border-blue-400 border-t-transparent rounded-full animate-spin"></div>
@@ -117,7 +117,7 @@ export const SimpleLanguageSelector: React.FC<SimpleLanguageSelectorProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isChanging}
-        className="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg text-foreground dark:text-white hover:bg-muted dark:hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <div className="flex items-center gap-2">
           <span>{getCurrentLanguageInfo().flag}</span>
@@ -134,25 +134,25 @@ export const SimpleLanguageSelector: React.FC<SimpleLanguageSelectorProps> = ({
 
       {isOpen && (
         <>
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50">
             {languages.map((language) => (
               <button
                 key={language.code}
                 onClick={() => handleLanguageChange(language.code)}
                 disabled={isChanging}
-                className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-muted dark:hover:bg-muted transition-colors first:rounded-t-lg last:rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed ${
                   currentLanguage === language.code
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-900 dark:text-white'
+                    ? 'bg-info-light dark:bg-info/20 text-info dark:text-info'
+                    : 'text-foreground dark:text-white'
                 }`}
               >
                 <span>{language.flag}</span>
                 <div>
                   <div className="font-medium">{language.nativeName}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{language.name}</div>
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground">{language.name}</div>
                 </div>
                 {currentLanguage === language.code && !isChanging && (
-                  <span className="ml-auto text-blue-600 dark:text-blue-400">✓</span>
+                  <span className="ml-auto text-info dark:text-info">✓</span>
                 )}
                 {isChanging && currentLanguage === language.code && (
                   <div className="ml-auto w-3 h-3 border border-blue-400 border-t-transparent rounded-full animate-spin"></div>

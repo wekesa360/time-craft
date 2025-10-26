@@ -339,7 +339,7 @@ describe('ResponsiveTable', () => {
         header: 'Status',
         accessor: (item: TestData) => (
           <span 
-            className={item.status === 'active' ? 'text-green-600' : 'text-red-600'}
+            className={item.status === 'active' ? 'text-success' : 'text-error'}
             data-testid={`status-${item.id}`}
           >
             {item.status}

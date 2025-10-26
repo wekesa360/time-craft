@@ -108,7 +108,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
 
   if (isLoading) {
     return (
-      <div className={`animate-pulse bg-gray-200 dark:bg-gray-600 rounded h-8 w-20 ${className}`} />
+      <div className={`animate-pulse bg-muted dark:bg-muted rounded h-8 w-20 ${className}`} />
     );
   }
 
@@ -116,7 +116,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
     return (
       <div className={`flex gap-2 ${className}`}>
         {showLabel && (
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 self-center transition-opacity duration-300">
+          <span className="text-sm font-medium text-muted-foreground dark:text-muted-foreground self-center transition-opacity duration-300">
             {t('settings.language')}:
           </span>
         )}
@@ -127,8 +127,8 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
             disabled={isChanging}
             className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 ${
               currentLanguage === language.code
-                ? 'bg-blue-600 text-white shadow-md transform scale-105'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:scale-102'
+                ? 'bg-info text-white shadow-md transform scale-105'
+                : 'bg-muted dark:bg-muted text-muted-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-muted hover:scale-102'
             } ${isTransitioning && currentLanguage === language.code ? 'animate-pulse' : ''}`}
           >
             {showFlags && (
@@ -140,7 +140,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
             )}
             {language.nativeName}
             {isChanging && currentLanguage === language.code && (
-              <div className="absolute inset-0 bg-blue-600/20 rounded-lg flex items-center justify-center">
+              <div className="absolute inset-0 bg-info/20 rounded-lg flex items-center justify-center">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               </div>
             )}
@@ -156,7 +156,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
         <button
           onClick={() => setIsOpen(!isOpen)}
           disabled={isUpdatingLanguage}
-          className="flex items-center gap-1 px-2 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1 px-2 py-1 text-sm bg-muted dark:bg-muted text-muted-foreground dark:text-muted-foreground rounded hover:bg-muted dark:hover:bg-muted transition-colors disabled:opacity-50"
         >
           {showFlags && <span>{getLanguageFlag(currentLanguage)}</span>}
           <span className="uppercase font-medium">{currentLanguage}</span>
@@ -167,16 +167,16 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
 
         {isOpen && (
           <>
-            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 min-w-[120px] animate-in slide-in-from-top-2 duration-200">
+            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 min-w-[120px] animate-in slide-in-from-top-2 duration-200">
               {availableLanguages.map((language) => (
                 <button
                   key={language.code}
                   onClick={() => handleLanguageChange(language.code)}
                   disabled={isChanging}
-                  className={`relative w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 first:rounded-t-lg last:rounded-b-lg disabled:opacity-50 ${
+                  className={`relative w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted dark:hover:bg-muted transition-all duration-200 first:rounded-t-lg last:rounded-b-lg disabled:opacity-50 ${
                     currentLanguage === language.code
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-900 dark:text-white'
+                      ? 'bg-info-light dark:bg-info/20 text-info dark:text-info'
+                      : 'text-foreground dark:text-white'
                   }`}
                 >
                   {showFlags && (
@@ -188,7 +188,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
                   )}
                   <span>{language.nativeName}</span>
                   {currentLanguage === language.code && !isChanging && (
-                    <span className="ml-auto text-blue-600 dark:text-blue-400 animate-in fade-in duration-200">✓</span>
+                    <span className="ml-auto text-info dark:text-info animate-in fade-in duration-200">✓</span>
                   )}
                   {isChanging && currentLanguage === language.code && (
                     <div className="ml-auto w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -210,7 +210,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
   return (
     <div className={`relative ${className}`}>
       {showLabel && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
           {t('settings.language')}
         </label>
       )}
@@ -219,7 +219,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isUpdatingLanguage}
-        className="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+        className="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg text-foreground dark:text-white hover:bg-muted dark:hover:bg-muted transition-colors disabled:opacity-50"
       >
         <div className="flex items-center gap-2">
           {showFlags && <span>{getLanguageFlag(currentLanguage)}</span>}
@@ -233,25 +233,25 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
       {/* Dropdown Menu */}
       {isOpen && (
         <>
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50">
             {availableLanguages.map((language) => (
               <button
                 key={language.code}
                 onClick={() => handleLanguageChange(language.code)}
                 disabled={isUpdatingLanguage}
-                className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg disabled:opacity-50 ${
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-muted dark:hover:bg-muted transition-colors first:rounded-t-lg last:rounded-b-lg disabled:opacity-50 ${
                   currentLanguage === language.code
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-900 dark:text-white'
+                    ? 'bg-info-light dark:bg-info/20 text-info dark:text-info'
+                    : 'text-foreground dark:text-white'
                 }`}
               >
                 {showFlags && <span>{getLanguageFlag(language.code)}</span>}
                 <div>
                   <div className="font-medium">{language.nativeName}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{language.name}</div>
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground">{language.name}</div>
                 </div>
                 {currentLanguage === language.code && (
-                  <span className="ml-auto text-blue-600 dark:text-blue-400">✓</span>
+                  <span className="ml-auto text-info dark:text-info">✓</span>
                 )}
               </button>
             ))}
@@ -267,7 +267,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
 
       {/* Loading indicator */}
       {isChanging && (
-        <div className="absolute inset-0 bg-white/50 dark:bg-gray-800/50 rounded-lg flex items-center justify-center backdrop-blur-sm transition-all duration-300">
+        <div className="absolute inset-0 bg-white/50 dark:bg-muted/50 rounded-lg flex items-center justify-center backdrop-blur-sm transition-all duration-300">
           <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
         </div>
       )}

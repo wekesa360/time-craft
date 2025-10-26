@@ -183,7 +183,7 @@ const HealthCharts: React.FC<HealthChartsProps> = ({
     
     if (chartData.length === 0) {
       return (
-        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-center h-64 text-muted-foreground dark:text-muted-foreground">
           <div className="text-center">
             <div className="text-4xl mb-2">{config.icon}</div>
             <p>No {config.title.toLowerCase()} data available</p>
@@ -211,33 +211,33 @@ const HealthCharts: React.FC<HealthChartsProps> = ({
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div className="text-center">
-              <div className="font-semibold text-gray-900 dark:text-white">
+              <div className="font-semibold text-foreground dark:text-white">
                 {stats.latest.toFixed(1)}{config.unit}
               </div>
-              <div className="text-gray-600 dark:text-gray-300">Latest</div>
+              <div className="text-muted-foreground dark:text-muted-foreground">Latest</div>
             </div>
             <div className="text-center">
-              <div className="font-semibold text-gray-900 dark:text-white">
+              <div className="font-semibold text-foreground dark:text-white">
                 {stats.avg.toFixed(1)}{config.unit}
               </div>
-              <div className="text-gray-600 dark:text-gray-300">Average</div>
+              <div className="text-muted-foreground dark:text-muted-foreground">Average</div>
             </div>
             <div className="text-center">
-              <div className="font-semibold text-gray-900 dark:text-white">
+              <div className="font-semibold text-foreground dark:text-white">
                 {stats.min.toFixed(1)} - {stats.max.toFixed(1)}{config.unit}
               </div>
-              <div className="text-gray-600 dark:text-gray-300">Range</div>
+              <div className="text-muted-foreground dark:text-muted-foreground">Range</div>
             </div>
             <div className="text-center">
               <div className={cn(
                 'font-semibold',
                 (config.inverted ? stats.avg <= stats.target : stats.avg >= stats.target)
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-red-600 dark:text-red-400'
+                  ? 'text-success dark:text-success-light'
+                  : 'text-error dark:text-error-light'
               )}>
                 {((config.inverted ? stats.target / stats.avg : stats.avg / stats.target) * 100).toFixed(0)}%
               </div>
-              <div className="text-gray-600 dark:text-gray-300">Target</div>
+              <div className="text-muted-foreground dark:text-muted-foreground">Target</div>
             </div>
           </div>
         )}
@@ -251,8 +251,8 @@ const HealthCharts: React.FC<HealthChartsProps> = ({
       <FadeIn>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Health Trends</h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <h2 className="text-2xl font-bold text-foreground dark:text-white">Health Trends</h2>
+            <p className="text-muted-foreground dark:text-muted-foreground mt-1">
               Visualize your health metrics over time
             </p>
           </div>
@@ -299,8 +299,8 @@ const HealthCharts: React.FC<HealthChartsProps> = ({
 
       {/* Metric Selector */}
       <FadeIn delay={0.1}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <h3 className="font-medium text-gray-900 dark:text-white mb-3">Select Metrics</h3>
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <h3 className="font-medium text-foreground dark:text-white mb-3">Select Metrics</h3>
           <div className="flex flex-wrap gap-2">
             {Object.entries(chartConfigs).map(([key, config]) => (
               <button
@@ -334,11 +334,11 @@ const HealthCharts: React.FC<HealthChartsProps> = ({
             {selectedMetrics.map((metric) => (
               <motion.div
                 key={metric}
-                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+                className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6"
               >
                 <div className="flex items-center space-x-2 mb-4">
                   <span className="text-2xl">{chartConfigs[metric].icon}</span>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-foreground dark:text-white">
                     {chartConfigs[metric].title}
                   </h3>
                 </div>
@@ -349,10 +349,10 @@ const HealthCharts: React.FC<HealthChartsProps> = ({
         </Stagger>
       ) : (
         <FadeIn delay={0.2}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center space-x-2 mb-6">
               <span className="text-3xl">{chartConfigs[focusedMetric].icon}</span>
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-2xl font-semibold text-foreground dark:text-white">
                 {chartConfigs[focusedMetric].title}
               </h3>
             </div>
@@ -364,7 +364,7 @@ const HealthCharts: React.FC<HealthChartsProps> = ({
       {/* Summary Insights */}
       <FadeIn delay={0.3}>
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
-          <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">
+          <h3 className="text-lg font-semibold text-info dark:text-info-light mb-4">
             📊 Health Insights
           </h3>
           
@@ -380,14 +380,14 @@ const HealthCharts: React.FC<HealthChartsProps> = ({
                 : stats.avg >= config.target;
               
               return (
-                <div key={metric} className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
+                <div key={metric} className="bg-white/50 dark:bg-muted/50 rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">
                     <span className="text-lg">{config.icon}</span>
-                    <h4 className="font-medium text-blue-900 dark:text-blue-100">
+                    <h4 className="font-medium text-info dark:text-info-light">
                       {config.title}
                     </h4>
                   </div>
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <p className="text-sm text-info dark:text-info-light">
                     {isOnTarget ? (
                       `Great job! You're ${config.inverted ? 'keeping' : 'meeting'} your ${config.title.toLowerCase()} target.`
                     ) : (

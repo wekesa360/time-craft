@@ -34,7 +34,7 @@ export const SettingsSkeleton: React.FC = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-8">
           {/* Profile Section */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+          <div className="bg-white dark:bg-muted border rounded-lg p-6">
             <Skeleton className="h-6 w-32 mb-6" />
             
             {/* Avatar Upload */}
@@ -68,7 +68,7 @@ export const SettingsSkeleton: React.FC = () => {
           </div>
 
           {/* Notification Preferences */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+          <div className="bg-white dark:bg-muted border rounded-lg p-6">
             <Skeleton className="h-6 w-48 mb-6" />
             
             <div className="space-y-6">
@@ -107,7 +107,7 @@ export const SettingsSkeleton: React.FC = () => {
           </div>
 
           {/* Security Settings */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+          <div className="bg-white dark:bg-muted border rounded-lg p-6">
             <Skeleton className="h-6 w-40 mb-6" />
             
             <div className="space-y-6">
@@ -164,7 +164,7 @@ export const SettingsSkeleton: React.FC = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Account Overview */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+          <div className="bg-white dark:bg-muted border rounded-lg p-6">
             <Skeleton className="h-6 w-32 mb-4" />
             <div className="space-y-3">
               <div className="flex justify-between">
@@ -183,7 +183,7 @@ export const SettingsSkeleton: React.FC = () => {
           </div>
 
           {/* Subscription */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+          <div className="bg-white dark:bg-muted border rounded-lg p-6">
             <Skeleton className="h-6 w-24 mb-4" />
             <div className="space-y-4">
               <div className="text-center">
@@ -206,7 +206,7 @@ export const SettingsSkeleton: React.FC = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+          <div className="bg-white dark:bg-muted border rounded-lg p-6">
             <Skeleton className="h-6 w-28 mb-4" />
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, index) => (
@@ -216,7 +216,7 @@ export const SettingsSkeleton: React.FC = () => {
           </div>
 
           {/* Usage Stats */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+          <div className="bg-white dark:bg-muted border rounded-lg p-6">
             <Skeleton className="h-6 w-24 mb-4" />
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, index) => (

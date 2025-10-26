@@ -39,30 +39,30 @@ const HealthInsights: React.FC<HealthInsightsProps> = ({
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'improving':
-        return <TrendingUp className="w-5 h-5 text-green-600" />;
+        return <TrendingUp className="w-5 h-5 text-success" />;
       case 'declining':
-        return <TrendingDown className="w-5 h-5 text-red-600" />;
+        return <TrendingDown className="w-5 h-5 text-error" />;
       default:
-        return <Minus className="w-5 h-5 text-gray-600" />;
+        return <Minus className="w-5 h-5 text-muted-foreground" />;
     }
   };
 
   const getTrendColor = (trend: string) => {
     switch (trend) {
       case 'improving':
-        return 'text-green-600 bg-green-50 dark:bg-green-950/20';
+        return 'text-success bg-success-light dark:bg-success/20';
       case 'declining':
-        return 'text-red-600 bg-red-50 dark:bg-red-950/20';
+        return 'text-error bg-error-light dark:bg-error/20';
       default:
-        return 'text-gray-600 bg-gray-50 dark:bg-gray-950/20';
+        return 'text-muted-foreground bg-muted dark:bg-muted/20';
     }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-green-600';
-    if (score >= 6) return 'text-yellow-600';
-    if (score >= 4) return 'text-orange-600';
-    return 'text-red-600';
+    if (score >= 8) return 'text-success';
+    if (score >= 6) return 'text-warning';
+    if (score >= 4) return 'text-primary';
+    return 'text-error';
   };
 
   const getScoreDescription = (score: number) => {
@@ -75,22 +75,22 @@ const HealthInsights: React.FC<HealthInsightsProps> = ({
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
       case 'high':
-        return <AlertTriangle className="w-4 h-4 text-red-600" />;
+        return <AlertTriangle className="w-4 h-4 text-error" />;
       case 'medium':
-        return <Target className="w-4 h-4 text-yellow-600" />;
+        return <Target className="w-4 h-4 text-warning" />;
       default:
-        return <CheckCircle className="w-4 h-4 text-blue-600" />;
+        return <CheckCircle className="w-4 h-4 text-info" />;
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'text-red-600 bg-red-50 dark:bg-red-950/20';
+        return 'text-error bg-error-light dark:bg-error/20';
       case 'medium':
-        return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950/20';
+        return 'text-warning bg-warning-light dark:bg-warning/20';
       default:
-        return 'text-blue-600 bg-blue-50 dark:bg-blue-950/20';
+        return 'text-info bg-info-light dark:bg-info/20';
     }
   };
 
@@ -171,25 +171,25 @@ const HealthInsights: React.FC<HealthInsightsProps> = ({
               <div
                 key={index}
                 className={`p-4 rounded-lg border-l-4 ${
-                  rec.priority === 'high' ? 'bg-red-50 dark:bg-red-950/20 border-l-red-500' :
-                  rec.priority === 'medium' ? 'bg-yellow-50 dark:bg-yellow-950/20 border-l-yellow-500' :
-                  'bg-blue-50 dark:bg-blue-950/20 border-l-blue-500'
+                  rec.priority === 'high' ? 'bg-error-light dark:bg-error/20 border-l-red-500' :
+                  rec.priority === 'medium' ? 'bg-warning-light dark:bg-warning/20 border-l-yellow-500' :
+                  'bg-info-light dark:bg-info/20 border-l-blue-500'
                 }`}
               >
                 <div className="flex items-start space-x-2">
                   {getPriorityIcon(rec.priority)}
                   <div>
                     <p className={`font-medium ${
-                      rec.priority === 'high' ? 'text-red-800 dark:text-red-200' :
-                      rec.priority === 'medium' ? 'text-yellow-800 dark:text-yellow-200' :
-                      'text-blue-800 dark:text-blue-200'
+                      rec.priority === 'high' ? 'text-error dark:text-error-light' :
+                      rec.priority === 'medium' ? 'text-warning dark:text-warning-light' :
+                      'text-info dark:text-info-light'
                     }`}>
                       {rec.type.charAt(0).toUpperCase() + rec.type.slice(1)} Recommendation
                     </p>
                     <p className={`text-sm mt-1 ${
-                      rec.priority === 'high' ? 'text-red-700 dark:text-red-300' :
-                      rec.priority === 'medium' ? 'text-yellow-700 dark:text-yellow-300' :
-                      'text-blue-700 dark:text-blue-300'
+                      rec.priority === 'high' ? 'text-error dark:text-error-light' :
+                      rec.priority === 'medium' ? 'text-warning dark:text-warning-light' :
+                      'text-info dark:text-info-light'
                     }`}>
                       {rec.message}
                     </p>
@@ -212,14 +212,14 @@ const HealthInsights: React.FC<HealthInsightsProps> = ({
           <h3 className="text-lg font-semibold text-foreground mb-4">Health Correlations</h3>
           <div className="space-y-3">
             {safeInsights.correlations.map((correlation, index) => (
-              <div key={index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div key={index} className="p-4 bg-muted dark:bg-muted rounded-lg">
                 <p className="text-sm text-foreground-secondary">
                   <span className="font-medium">{correlation.factor1}</span> and{' '}
                   <span className="font-medium">{correlation.factor2}</span> show a{' '}
                   <span className={`font-medium ${
-                    correlation.strength === 'strong' ? 'text-green-600' :
-                    correlation.strength === 'moderate' ? 'text-yellow-600' :
-                    'text-blue-600'
+                    correlation.strength === 'strong' ? 'text-success' :
+                    correlation.strength === 'moderate' ? 'text-warning' :
+                    'text-info'
                   }`}>
                     {correlation.strength}
                   </span>{' '}

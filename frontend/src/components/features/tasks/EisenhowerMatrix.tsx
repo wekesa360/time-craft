@@ -65,10 +65,10 @@ const Quadrant: React.FC<QuadrantProps> = ({
                   )}
                   <div className="flex items-center space-x-2 mt-2">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      task.priority === 4 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                      task.priority === 3 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
-                      task.priority === 2 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      task.priority === 4 ? 'bg-error-light text-error dark:bg-error dark:text-error-light' :
+                      task.priority === 3 ? 'bg-primary-100 text-primary dark:bg-primary dark:text-primary-200' :
+                      task.priority === 2 ? 'bg-warning-light text-warning dark:bg-warning dark:text-warning-light' :
+                      'bg-success-light text-success dark:bg-success dark:text-success-light'
                     }`}>
                       Priority {task.priority}
                     </span>
@@ -82,24 +82,24 @@ const Quadrant: React.FC<QuadrantProps> = ({
                 <div className="flex items-center space-x-1 ml-2">
                   <button
                     onClick={() => onTaskComplete(task.id)}
-                    className="p-1 hover:bg-green-100 dark:hover:bg-green-900 rounded"
+                    className="p-1 hover:bg-success-light dark:hover:bg-success rounded"
                     title="Complete task"
                   >
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-success" />
                   </button>
                   <button
                     onClick={() => onTaskEdit(task)}
-                    className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900 rounded"
+                    className="p-1 hover:bg-info-light dark:hover:bg-info rounded"
                     title="Edit task"
                   >
-                    <Clock className="w-4 h-4 text-blue-600" />
+                    <Clock className="w-4 h-4 text-info" />
                   </button>
                   <button
                     onClick={() => onTaskDelete(task.id)}
-                    className="p-1 hover:bg-red-100 dark:hover:bg-red-900 rounded"
+                    className="p-1 hover:bg-error-light dark:hover:bg-error rounded"
                     title="Delete task"
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-4 h-4 text-error" />
                   </button>
                 </div>
               </div>
@@ -136,7 +136,7 @@ const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           description="Urgent and Important"
           tasks={doTasks}
           color="border-red-500"
-          icon={<div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>}
+          icon={<div className="w-6 h-6 bg-error rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>}
           onTaskComplete={onTaskComplete}
           onTaskEdit={onTaskEdit}
           onTaskDelete={onTaskDelete}
@@ -148,7 +148,7 @@ const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           description="Important but Not Urgent"
           tasks={decideTasks}
           color="border-yellow-500"
-          icon={<div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>}
+          icon={<div className="w-6 h-6 bg-warning-light0 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>}
           onTaskComplete={onTaskComplete}
           onTaskEdit={onTaskEdit}
           onTaskDelete={onTaskDelete}
@@ -160,7 +160,7 @@ const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           description="Urgent but Not Important"
           tasks={delegateTasks}
           color="border-blue-500"
-          icon={<div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">3</div>}
+          icon={<div className="w-6 h-6 bg-info-light0 rounded-full flex items-center justify-center text-white text-xs font-bold">3</div>}
           onTaskComplete={onTaskComplete}
           onTaskEdit={onTaskEdit}
           onTaskDelete={onTaskDelete}
@@ -172,7 +172,7 @@ const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           description="Neither Urgent nor Important"
           tasks={deleteTasks}
           color="border-gray-500"
-          icon={<div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold">4</div>}
+          icon={<div className="w-6 h-6 bg-muted rounded-full flex items-center justify-center text-white text-xs font-bold">4</div>}
           onTaskComplete={onTaskComplete}
           onTaskEdit={onTaskEdit}
           onTaskDelete={onTaskDelete}

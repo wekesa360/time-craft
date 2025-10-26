@@ -192,9 +192,9 @@ const AITaskSuggestions: React.FC<AITaskSuggestionsProps> = ({
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-green-600 dark:text-green-400';
-    if (confidence >= 0.6) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-orange-600 dark:text-orange-400';
+    if (confidence >= 0.8) return 'text-success dark:text-success-light';
+    if (confidence >= 0.6) return 'text-warning dark:text-warning-light';
+    return 'text-primary dark:text-primary-400';
   };
 
   const getConfidenceLabel = (confidence: number) => {
@@ -244,15 +244,15 @@ const AITaskSuggestions: React.FC<AITaskSuggestionsProps> = ({
   }
 
   return (
-    <div className={cn('bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4', className)}>
+    <div className={cn('bg-info-light dark:bg-info/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4', className)}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+          <div className="w-6 h-6 bg-info rounded-full flex items-center justify-center">
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
           </div>
-          <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+          <h3 className="text-sm font-medium text-info dark:text-info-light">
             AI Suggestions
           </h3>
           {loading && (
@@ -261,7 +261,7 @@ const AITaskSuggestions: React.FC<AITaskSuggestionsProps> = ({
         </div>
         <button
           onClick={onDismiss}
-          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
+          className="text-info dark:text-info hover:text-info dark:hover:text-info-light transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -288,15 +288,15 @@ const AITaskSuggestions: React.FC<AITaskSuggestionsProps> = ({
                   className={cn(
                     'flex items-start space-x-3 p-3 rounded-lg border transition-all',
                     isApplied
-                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
+                      ? 'bg-success-light dark:bg-success/20 border-green-200 dark:border-green-800'
+                      : 'bg-white dark:bg-muted border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
                   )}
                 >
                   <div className={cn(
                     'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center',
                     isApplied
-                      ? 'bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400'
-                      : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
+                      ? 'bg-success-light dark:bg-success/40 text-success dark:text-success-light'
+                      : 'bg-info-light dark:bg-info/40 text-info dark:text-info'
                   )}>
                     {isApplied ? (
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,7 +309,7 @@ const AITaskSuggestions: React.FC<AITaskSuggestionsProps> = ({
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h4 className="text-sm font-medium text-foreground dark:text-white">
                         {suggestion.title}
                       </h4>
                       <span className={cn(
@@ -320,10 +320,10 @@ const AITaskSuggestions: React.FC<AITaskSuggestionsProps> = ({
                         {getConfidenceLabel(suggestion.confidence)} ({Math.round(suggestion.confidence * 100)}%)
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-2">
                       {suggestion.description}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground italic">
                       {suggestion.reasoning}
                     </p>
                   </div>
@@ -331,7 +331,7 @@ const AITaskSuggestions: React.FC<AITaskSuggestionsProps> = ({
                   {!isApplied && (
                     <button
                       onClick={() => handleApplySuggestion(suggestion)}
-                      className="flex-shrink-0 px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-300 dark:border-blue-600 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      className="flex-shrink-0 px-3 py-1 text-xs font-medium text-info dark:text-info hover:text-info dark:hover:text-info-light border border-blue-300 dark:border-blue-600 rounded-md hover:bg-info-light dark:hover:bg-info/20 transition-colors"
                     >
                       Apply
                     </button>
@@ -345,7 +345,7 @@ const AITaskSuggestions: React.FC<AITaskSuggestionsProps> = ({
 
       {loading && (
         <div className="flex items-center justify-center py-4">
-          <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+          <div className="flex items-center space-x-2 text-info dark:text-info">
             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
             <span className="text-sm">Analyzing task...</span>
           </div>

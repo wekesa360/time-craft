@@ -224,7 +224,7 @@ export const useAccessibleForm = () => {
       if (!errorElement) {
         errorElement = document.createElement('div');
         errorElement.id = errorId;
-        errorElement.className = 'text-red-500 text-sm mt-1';
+        errorElement.className = 'text-error-light0 text-sm mt-1';
         errorElement.setAttribute('role', 'alert');
         field.parentNode?.appendChild(errorElement);
       }

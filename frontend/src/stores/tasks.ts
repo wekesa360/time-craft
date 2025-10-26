@@ -83,8 +83,17 @@ export const useTaskStore = create<TaskStore>()(
     try {
       set({ isLoading: true });
       const response = await apiClient.getTasks(params);
+      
+      // Handle different response formats
+      let tasks: Task[] = [];
+      if (Array.isArray(response)) {
+        tasks = response;
+      } else if (response && typeof response === 'object' && 'tasks' in response) {
+        tasks = (response as TasksResponse).tasks || [];
+      }
+      
       set({
-        tasks: (response as unknown as TasksResponse).tasks || [],
+        tasks,
         isLoading: false,
       });
     } catch (error) {

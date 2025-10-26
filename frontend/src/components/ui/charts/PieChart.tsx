@@ -124,7 +124,7 @@ const PieChart: React.FC<PieChartProps> = ({
   const renderChart = () => {
     if (!data || data.length === 0) {
       return (
-        <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-center h-full text-muted-foreground dark:text-muted-foreground">
           No data available
         </div>
       );
@@ -170,7 +170,7 @@ const PieChart: React.FC<PieChartProps> = ({
                   y="47"
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  className="text-lg font-bold fill-current text-gray-900 dark:text-white"
+                  className="text-lg font-bold fill-current text-foreground dark:text-white"
                   fontSize="8"
                 >
                   {formatValue(total)}
@@ -180,7 +180,7 @@ const PieChart: React.FC<PieChartProps> = ({
                   y="53"
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  className="text-xs fill-current text-gray-600 dark:text-gray-300"
+                  className="text-xs fill-current text-muted-foreground dark:text-muted-foreground"
                   fontSize="3"
                 >
                   Total
@@ -200,10 +200,10 @@ const PieChart: React.FC<PieChartProps> = ({
                   style={{ backgroundColor: segment.color }}
                 />
                 <div className="flex-1">
-                  <div className="text-gray-900 dark:text-white font-medium">
+                  <div className="text-foreground dark:text-white font-medium">
                     {segment.label}
                   </div>
-                  <div className="text-gray-600 dark:text-gray-300 text-xs">
+                  <div className="text-muted-foreground dark:text-muted-foreground text-xs">
                     {formatValue(segment.value)} ({segment.percentage.toFixed(1)}%)
                   </div>
                 </div>

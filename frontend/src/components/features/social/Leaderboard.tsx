@@ -29,13 +29,13 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
-        return <Trophy className="w-5 h-5 text-yellow-500" />;
+        return <Trophy className="w-5 h-5 text-warning" />;
       case 2:
-        return <Medal className="w-5 h-5 text-gray-400" />;
+        return <Medal className="w-5 h-5 text-muted-foreground" />;
       case 3:
         return <Award className="w-5 h-5 text-amber-600" />;
       default:
-        return <span className="w-5 h-5 flex items-center justify-center text-sm font-medium text-gray-500">{rank}</span>;
+        return <span className="w-5 h-5 flex items-center justify-center text-sm font-medium text-muted-foreground">{rank}</span>;
     }
   };
 
@@ -48,7 +48,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       case 3:
         return 'bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border-amber-200 dark:border-amber-700';
       default:
-        return 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700';
+        return 'bg-white dark:bg-muted border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -60,17 +60,17 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   ];
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}>
+    <div className={`bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}>
       {/* Header */}
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Trophy className="w-6 h-6 text-primary-600" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+            <h3 className="text-lg font-semibold text-foreground dark:text-white">{title}</h3>
           </div>
           <div className="flex items-center space-x-2">
-            <Users className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-500 dark:text-gray-400">{entries.length} participants</span>
+            <Users className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground dark:text-muted-foreground">{entries.length} participants</span>
           </div>
         </div>
 
@@ -83,7 +83,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
               className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
                 selectedTimeRange === option.value
                   ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+                  : 'text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-muted'
               }`}
             >
               {option.label}
@@ -123,7 +123,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-medium text-gray-900 dark:text-white">{entry.name}</span>
+                        <span className="font-medium text-foreground dark:text-white">{entry.name}</span>
                         {entry.badge && (
                           <span className="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 rounded-full">
                             {entry.badge}
@@ -132,8 +132,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                       </div>
                       {entry.change !== undefined && (
                         <div className="flex items-center space-x-1 text-xs">
-                          <TrendingUp className={`w-3 h-3 ${entry.change > 0 ? 'text-green-500' : entry.change < 0 ? 'text-red-500' : 'text-gray-500'}`} />
-                          <span className={`${entry.change > 0 ? 'text-green-600' : entry.change < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                          <TrendingUp className={`w-3 h-3 ${entry.change > 0 ? 'text-success' : entry.change < 0 ? 'text-error-light0' : 'text-muted-foreground'}`} />
+                          <span className={`${entry.change > 0 ? 'text-success' : entry.change < 0 ? 'text-error' : 'text-muted-foreground'}`}>
                             {entry.change > 0 ? '+' : ''}{entry.change}
                           </span>
                         </div>
@@ -143,10 +143,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 </div>
 
                 <div className="text-right">
-                  <div className="text-lg font-bold text-gray-900 dark:text-white">
+                  <div className="text-lg font-bold text-foreground dark:text-white">
                     {entry.score.toLocaleString()}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground">
                     points
                   </div>
                 </div>
@@ -155,9 +155,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           </div>
         ) : (
           <div className="text-center py-12">
-            <Trophy className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Data Yet</h4>
-            <p className="text-gray-500 dark:text-gray-400">
+            <Trophy className="w-12 h-12 text-muted-foreground dark:text-muted-foreground mx-auto mb-4" />
+            <h4 className="text-lg font-medium text-foreground dark:text-white mb-2">No Data Yet</h4>
+            <p className="text-muted-foreground dark:text-muted-foreground">
               Be the first to participate and climb the leaderboard!
             </p>
           </div>
@@ -166,8 +166,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
       {/* Footer */}
       {entries.length > 0 && (
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 rounded-b-lg border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+        <div className="px-6 py-4 bg-muted dark:bg-muted/50 rounded-b-lg border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between text-sm text-muted-foreground dark:text-muted-foreground">
             <span>Last updated: {new Date().toLocaleTimeString()}</span>
             <span>Rankings update every hour</span>
           </div>

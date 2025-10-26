@@ -155,7 +155,7 @@ describe('LanguageSelector', () => {
       );
 
       const englishButton = screen.getByText('English').closest('button');
-      expect(englishButton).toHaveClass('bg-blue-600');
+      expect(englishButton).toHaveClass('bg-info');
     });
 
     it('shows label when showLabel is true', () => {

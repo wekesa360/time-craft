@@ -32,13 +32,13 @@ export const VoiceNotesList: React.FC = () => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+        return 'bg-error-light text-error dark:bg-error/20 dark:text-error-light';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+        return 'bg-warning-light text-warning dark:bg-warning/20 dark:text-warning-light';
       case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+        return 'bg-success-light text-success dark:bg-success/20 dark:text-success-light';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground';
     }
   };
 
@@ -66,7 +66,7 @@ export const VoiceNotesList: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full"></div>
-        <span className="ml-3 text-gray-600 dark:text-gray-300">Loading voice notes...</span>
+        <span className="ml-3 text-muted-foreground dark:text-muted-foreground">Loading voice notes...</span>
       </div>
     );
   }
@@ -74,8 +74,8 @@ export const VoiceNotesList: React.FC = () => {
   if (error) {
     return (
       <div className="text-center py-12">
-        <div className="text-red-600 dark:text-red-400 mb-2">❌ Error loading voice notes</div>
-        <p className="text-gray-600 dark:text-gray-300">Please try again later</p>
+        <div className="text-error dark:text-error-light mb-2">❌ Error loading voice notes</div>
+        <p className="text-muted-foreground dark:text-muted-foreground">Please try again later</p>
       </div>
     );
   }
@@ -84,10 +84,10 @@ export const VoiceNotesList: React.FC = () => {
     <div className="max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-foreground dark:text-white">
             Voice Notes
           </h2>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-muted-foreground dark:text-muted-foreground">
             {data?.total || 0} notes found
           </p>
         </div>
@@ -100,7 +100,7 @@ export const VoiceNotesList: React.FC = () => {
               ...prev, 
               startDate: e.target.value ? new Date(e.target.value).getTime() : undefined 
             }))}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
           />
           <input
             type="date"
@@ -108,7 +108,7 @@ export const VoiceNotesList: React.FC = () => {
               ...prev, 
               endDate: e.target.value ? new Date(e.target.value).getTime() : undefined 
             }))}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
           />
         </div>
       </div>
@@ -118,7 +118,7 @@ export const VoiceNotesList: React.FC = () => {
         {data?.notes.map((note) => (
           <div
             key={note.id}
-            className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+            className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-600 p-4 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
             onClick={() => setSelectedNote(note)}
           >
             {/* Note Header */}
@@ -142,13 +142,13 @@ export const VoiceNotesList: React.FC = () => {
 
             {/* Transcription Preview */}
             <div className="mb-3">
-              <p className="text-gray-900 dark:text-white text-sm line-clamp-3">
+              <p className="text-foreground dark:text-white text-sm line-clamp-3">
                 {note.transcription}
               </p>
             </div>
 
             {/* Confidence & Duration */}
-            <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mb-3">
+            <div className="flex justify-between items-center text-xs text-muted-foreground dark:text-muted-foreground mb-3">
               <span>Confidence: {Math.round(note.confidence * 100)}%</span>
               <span>{formatDuration(note.duration)}</span>
             </div>
@@ -156,20 +156,20 @@ export const VoiceNotesList: React.FC = () => {
             {/* Action Items */}
             {note.analysis.actionItems.length > 0 && (
               <div className="mb-3">
-                <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="text-xs font-medium text-muted-foreground dark:text-muted-foreground mb-1">
                   Action Items:
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {note.analysis.actionItems.slice(0, 2).map((item, index) => (
                     <span
                       key={index}
-                      className="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 text-xs rounded"
+                      className="px-2 py-1 bg-info-light dark:bg-info/20 text-info dark:text-info-light text-xs rounded"
                     >
                       {item}
                     </span>
                   ))}
                   {note.analysis.actionItems.length > 2 && (
-                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs rounded">
+                    <span className="px-2 py-1 bg-muted dark:bg-muted text-muted-foreground dark:text-muted-foreground text-xs rounded">
                       +{note.analysis.actionItems.length - 2} more
                     </span>
                   )}
@@ -178,7 +178,7 @@ export const VoiceNotesList: React.FC = () => {
             )}
 
             {/* Date */}
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="text-xs text-muted-foreground dark:text-muted-foreground">
               {formatDate(note.createdAt)}
             </div>
           </div>
@@ -189,10 +189,10 @@ export const VoiceNotesList: React.FC = () => {
       {data?.notes.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🎤</div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <h3 className="text-xl font-semibold text-foreground dark:text-white mb-2">
             No voice notes yet
           </h3>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-muted-foreground dark:text-muted-foreground">
             Start recording to see your voice notes here
           </p>
         </div>
@@ -204,17 +204,17 @@ export const VoiceNotesList: React.FC = () => {
           <button
             onClick={() => setFilters(prev => ({ ...prev, offset: Math.max(0, prev.offset - prev.limit) }))}
             disabled={filters.offset === 0}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg disabled:bg-gray-400 hover:bg-purple-700 transition-colors"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg disabled:bg-muted hover:bg-purple-700 transition-colors"
           >
             Previous
           </button>
-          <span className="px-4 py-2 text-gray-600 dark:text-gray-300">
+          <span className="px-4 py-2 text-muted-foreground dark:text-muted-foreground">
             {Math.floor(filters.offset / filters.limit) + 1} of {Math.ceil(data.total / filters.limit)}
           </span>
           <button
             onClick={() => setFilters(prev => ({ ...prev, offset: prev.offset + prev.limit }))}
             disabled={filters.offset + filters.limit >= data.total}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg disabled:bg-gray-400 hover:bg-purple-700 transition-colors"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg disabled:bg-muted hover:bg-purple-700 transition-colors"
           >
             Next
           </button>
@@ -224,15 +224,15 @@ export const VoiceNotesList: React.FC = () => {
       {/* Note Detail Modal */}
       {selectedNote && (
         <div className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-white dark:bg-muted rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="text-xl font-bold text-foreground dark:text-white">
                   Voice Note Details
                 </h3>
                 <button
                   onClick={() => setSelectedNote(null)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-muted-foreground"
                 >
                   ✕
                 </button>
@@ -240,38 +240,38 @@ export const VoiceNotesList: React.FC = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                     Transcription
                   </label>
-                  <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                  <p className="text-foreground dark:text-white bg-muted dark:bg-muted p-3 rounded-lg">
                     {selectedNote.transcription}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-1">
                       Confidence
                     </label>
-                    <p className="text-gray-900 dark:text-white">
+                    <p className="text-foreground dark:text-white">
                       {Math.round(selectedNote.confidence * 100)}%
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-1">
                       Duration
                     </label>
-                    <p className="text-gray-900 dark:text-white">
+                    <p className="text-foreground dark:text-white">
                       {formatDuration(selectedNote.duration)}
                     </p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                     Analysis
                   </label>
-                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg space-y-2">
+                  <div className="bg-muted dark:bg-muted p-3 rounded-lg space-y-2">
                     <div className="flex justify-between">
                       <span>Sentiment:</span>
                       <span className="flex items-center gap-1">
@@ -290,13 +290,13 @@ export const VoiceNotesList: React.FC = () => {
 
                 {selectedNote.analysis.actionItems.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                       Action Items
                     </label>
                     <ul className="space-y-1">
                       {selectedNote.analysis.actionItems.map((item, index) => (
-                        <li key={index} className="flex items-center gap-2 text-gray-900 dark:text-white">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <li key={index} className="flex items-center gap-2 text-foreground dark:text-white">
+                          <span className="w-2 h-2 bg-info-light0 rounded-full"></span>
                           {item}
                         </li>
                       ))}
@@ -313,7 +313,7 @@ export const VoiceNotesList: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setSelectedNote(null)}
-                    className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                    className="px-4 py-2 bg-muted dark:bg-muted text-muted-foreground dark:text-muted-foreground rounded-lg hover:bg-muted dark:hover:bg-muted transition-colors"
                   >
                     Close
                   </button>

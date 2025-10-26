@@ -157,8 +157,8 @@ const FocusAnalytics: React.FC<FocusAnalyticsProps> = ({
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Focus Analytics</h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <h2 className="text-2xl font-bold text-foreground dark:text-white">Focus Analytics</h2>
+            <p className="text-muted-foreground dark:text-muted-foreground mt-1">
               Track your focus sessions and productivity insights
             </p>
           </div>
@@ -253,9 +253,9 @@ const FocusAnalytics: React.FC<FocusAnalyticsProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Trend Chart */}
         <FadeIn delay={0.2}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-foreground dark:text-white">
                 Daily Trend
               </h3>
               <div className="flex items-center space-x-2">
@@ -292,8 +292,8 @@ const FocusAnalytics: React.FC<FocusAnalyticsProps> = ({
 
         {/* Template Usage */}
         <FadeIn delay={0.3}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+          <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-semibold text-foreground dark:text-white mb-6">
               Template Usage
             </h3>
             
@@ -311,8 +311,8 @@ const FocusAnalytics: React.FC<FocusAnalyticsProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Hourly Activity */}
         <FadeIn delay={0.4}>
-          <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+          <div className="lg:col-span-2 bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-semibold text-foreground dark:text-white mb-6">
               Activity by Hour
             </h3>
             
@@ -328,8 +328,8 @@ const FocusAnalytics: React.FC<FocusAnalyticsProps> = ({
 
         {/* Recent Sessions */}
         <FadeIn delay={0.5}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+          <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-semibold text-foreground dark:text-white mb-6">
               Recent Sessions
             </h3>
             
@@ -337,34 +337,34 @@ const FocusAnalytics: React.FC<FocusAnalyticsProps> = ({
               {filteredSessions.slice(0, 5).map((session) => (
                 <div
                   key={session.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700"
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted dark:bg-muted"
                 >
                   <div className="flex items-center space-x-3">
                     <div className={cn(
                       'w-3 h-3 rounded-full',
-                      session.completed ? 'bg-green-500' : 'bg-red-500'
+                      session.completed ? 'bg-success-light0' : 'bg-error'
                     )} />
                     <div>
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      <div className="text-sm font-medium text-foreground dark:text-white">
                         {session.templateName}
                       </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-300">
+                      <div className="text-xs text-muted-foreground dark:text-muted-foreground">
                         {new Date(session.date).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
                   
                   <div className="text-right">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                    <div className="text-sm font-medium text-foreground dark:text-white">
                       {formatDuration(session.duration)}
                     </div>
-                    <div className="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-300">
+                    <div className="flex items-center space-x-1 text-xs text-muted-foreground dark:text-muted-foreground">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <svg
                           key={i}
                           className={cn(
                             'w-3 h-3',
-                            i < session.productivity ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'
+                            i < session.productivity ? 'text-warning-light' : 'text-muted-foreground dark:text-muted-foreground'
                           )}
                           fill="currentColor"
                           viewBox="0 0 20 20"
@@ -379,10 +379,10 @@ const FocusAnalytics: React.FC<FocusAnalyticsProps> = ({
               
               {filteredSessions.length === 0 && (
                 <div className="text-center py-8">
-                  <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-12 h-12 text-muted-foreground mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                  <p className="text-muted-foreground dark:text-muted-foreground text-sm">
                     No sessions in this time period
                   </p>
                 </div>
@@ -395,50 +395,50 @@ const FocusAnalytics: React.FC<FocusAnalyticsProps> = ({
       {/* Insights */}
       <FadeIn delay={0.6}>
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
-          <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">
+          <h3 className="text-lg font-semibold text-info dark:text-info-light mb-4">
             📊 Insights & Recommendations
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {stats.completionRate < 70 && (
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+              <div className="bg-white/50 dark:bg-muted/50 rounded-lg p-4">
+                <h4 className="font-medium text-info dark:text-info-light mb-2">
                   Improve Completion Rate
                 </h4>
-                <p className="text-sm text-blue-800 dark:text-blue-200">
+                <p className="text-sm text-info dark:text-info-light">
                   Your completion rate is {stats.completionRate}%. Try shorter sessions or eliminate distractions.
                 </p>
               </div>
             )}
             
             {stats.averageInterruptions > 2 && (
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+              <div className="bg-white/50 dark:bg-muted/50 rounded-lg p-4">
+                <h4 className="font-medium text-info dark:text-info-light mb-2">
                   Reduce Interruptions
                 </h4>
-                <p className="text-sm text-blue-800 dark:text-blue-200">
+                <p className="text-sm text-info dark:text-info-light">
                   You average {stats.averageInterruptions} interruptions per session. Consider using focus mode.
                 </p>
               </div>
             )}
             
             {stats.averageProductivity < 3 && (
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+              <div className="bg-white/50 dark:bg-muted/50 rounded-lg p-4">
+                <h4 className="font-medium text-info dark:text-info-light mb-2">
                   Boost Productivity
                 </h4>
-                <p className="text-sm text-blue-800 dark:text-blue-200">
+                <p className="text-sm text-info dark:text-info-light">
                   Your average productivity is {stats.averageProductivity}/5. Try different templates or adjust session length.
                 </p>
               </div>
             )}
             
             {stats.totalFocusTime > 0 && (
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+              <div className="bg-white/50 dark:bg-muted/50 rounded-lg p-4">
+                <h4 className="font-medium text-info dark:text-info-light mb-2">
                   Great Progress!
                 </h4>
-                <p className="text-sm text-blue-800 dark:text-blue-200">
+                <p className="text-sm text-info dark:text-info-light">
                   You've focused for {formatDuration(stats.totalFocusTime)} in the last {timeRange}. Keep it up!
                 </p>
               </div>

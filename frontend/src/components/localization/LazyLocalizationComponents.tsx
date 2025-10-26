@@ -44,7 +44,7 @@ const LocalizationErrorFallback = ({ error, resetErrorBoundary }: {
 }) => (
   <div className="flex items-center justify-center p-8">
     <div className="text-center space-y-4">
-      <div className="text-red-500 text-lg">⚠️</div>
+      <div className="text-error-light0 text-lg">⚠️</div>
       <h3 className="text-lg font-semibold text-foreground">
         Failed to load localization features
       </h3>

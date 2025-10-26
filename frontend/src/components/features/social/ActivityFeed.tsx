@@ -29,9 +29,9 @@ const activityTypeIcons = {
 };
 
 const activityTypeColors = {
-  badge_unlock: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-950',
-  challenge_join: 'text-blue-600 bg-blue-100 dark:bg-blue-950',
-  challenge_complete: 'text-green-600 bg-green-100 dark:bg-green-950',
+  badge_unlock: 'text-warning bg-warning-light dark:bg-warning',
+  challenge_join: 'text-info bg-info-light dark:bg-info',
+  challenge_complete: 'text-success bg-success-light dark:bg-success',
   achievement_share: 'text-purple-600 bg-purple-100 dark:bg-purple-950'
 };
 
@@ -201,20 +201,20 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                 {activity.content && (
                   <div className="ml-14 mb-4">
                     {activity.type === 'badge_unlock' && (
-                      <div className="flex items-center space-x-3 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                      <div className="flex items-center space-x-3 p-3 bg-warning-light dark:bg-warning/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                         <div className="text-2xl">{activity.content.badgeIcon}</div>
                         <div>
-                          <h4 className="font-medium text-yellow-900 dark:text-yellow-100">
+                          <h4 className="font-medium text-warning dark:text-warning-light">
                             {activity.content.badgeName}
                           </h4>
-                          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                          <p className="text-sm text-warning dark:text-warning-light">
                             {activity.content.badgeDescription}
                           </p>
                           <div className="flex items-center space-x-2 mt-1">
-                            <span className="text-xs px-2 py-0.5 bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 rounded-full">
+                            <span className="text-xs px-2 py-0.5 bg-warning-light dark:bg-warning text-warning dark:text-warning-light rounded-full">
                               {activity.content.badgeTier}
                             </span>
-                            <span className="text-xs text-yellow-700 dark:text-yellow-300">
+                            <span className="text-xs text-warning dark:text-warning-light">
                               +{activity.content.badgePoints as number} points
                             </span>
                           </div>
@@ -223,15 +223,15 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                     )}
 
                     {activity.type === 'challenge_complete' && (
-                      <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <h4 className="font-medium text-green-900 dark:text-green-100 mb-1">
+                      <div className="p-3 bg-success-light dark:bg-success/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <h4 className="font-medium text-success dark:text-success-light mb-1">
                           {activity.content.challengeName}
                         </h4>
-                        <p className="text-sm text-green-800 dark:text-green-200">
+                        <p className="text-sm text-success dark:text-success-light">
                           Final score: {activity.content.finalScore as number}/{activity.content.targetValue as number}
                         </p>
                         {activity.content.rank && (
-                          <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                          <p className="text-xs text-success dark:text-success-light mt-1">
                             Finished #{activity.content.rank as number} out of {activity.content.totalParticipants as number} participants
                           </p>
                         )}
@@ -252,7 +252,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                     {onLike && (
                       <button
                         onClick={() => onLike(activity.id)}
-                        className="flex items-center space-x-1 text-foreground-secondary hover:text-red-500 transition-colors"
+                        className="flex items-center space-x-1 text-foreground-secondary hover:text-error-light0 transition-colors"
                       >
                         <Heart className="w-4 h-4" />
                         <span className="text-sm">Like</span>
@@ -264,7 +264,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                         onClick={() => {
                           // Focus on comment input (would need ref implementation)
                         }}
-                        className="flex items-center space-x-1 text-foreground-secondary hover:text-blue-500 transition-colors"
+                        className="flex items-center space-x-1 text-foreground-secondary hover:text-info-light0 transition-colors"
                       >
                         <MessageCircle className="w-4 h-4" />
                         <span className="text-sm">Comment</span>
@@ -274,7 +274,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                     {onShare && (
                       <button
                         onClick={() => onShare(activity.id)}
-                        className="flex items-center space-x-1 text-foreground-secondary hover:text-green-500 transition-colors"
+                        className="flex items-center space-x-1 text-foreground-secondary hover:text-success transition-colors"
                       >
                         <Share2 className="w-4 h-4" />
                         <span className="text-sm">Share</span>

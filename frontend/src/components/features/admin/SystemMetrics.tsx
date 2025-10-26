@@ -112,10 +112,10 @@ const SystemMetrics: React.FC<SystemMetricsProps> = ({ className }) => {
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-foreground dark:text-white">
               System Metrics
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-muted-foreground dark:text-muted-foreground mt-1">
               Real-time system health and performance monitoring
             </p>
           </div>
@@ -129,11 +129,11 @@ const SystemMetrics: React.FC<SystemMetricsProps> = ({ className }) => {
                 onChange={(e) => setAutoRefresh(e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-300">Auto-refresh</span>
+              <span className="text-sm text-muted-foreground dark:text-muted-foreground">Auto-refresh</span>
             </label>
             
             {/* Time Range Selector */}
-            <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <div className="flex items-center space-x-1 bg-muted dark:bg-muted rounded-lg p-1">
               {timeRangeOptions.map((option) => (
                 <button
                   key={option.value}
@@ -141,8 +141,8 @@ const SystemMetrics: React.FC<SystemMetricsProps> = ({ className }) => {
                   className={cn(
                     'px-3 py-1 rounded text-sm font-medium transition-colors',
                     timeRange === option.value
-                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                      ? 'bg-white dark:bg-muted text-foreground dark:text-white shadow-sm'
+                      : 'text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-white'
                   )}
                 >
                   {option.label}
@@ -169,30 +169,30 @@ const SystemMetrics: React.FC<SystemMetricsProps> = ({ className }) => {
 
       {/* System Status */}
       <FadeIn delay={0.1}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-foreground dark:text-white">
               System Status
             </h3>
             <div className="flex items-center space-x-2">
               <div className={cn(
                 'w-3 h-3 rounded-full',
-                healthStatus.color === 'green' && 'bg-green-500',
-                healthStatus.color === 'yellow' && 'bg-yellow-500',
-                healthStatus.color === 'red' && 'bg-red-500'
+                healthStatus.color === 'green' && 'bg-success-light0',
+                healthStatus.color === 'yellow' && 'bg-warning-light0',
+                healthStatus.color === 'red' && 'bg-error'
               )} />
               <span className={cn(
                 'text-sm font-medium',
-                healthStatus.color === 'green' && 'text-green-600 dark:text-green-400',
-                healthStatus.color === 'yellow' && 'text-yellow-600 dark:text-yellow-400',
-                healthStatus.color === 'red' && 'text-red-600 dark:text-red-400'
+                healthStatus.color === 'green' && 'text-success dark:text-success-light',
+                healthStatus.color === 'yellow' && 'text-warning dark:text-warning-light',
+                healthStatus.color === 'red' && 'text-error dark:text-error-light'
               )}>
                 {healthStatus.label}
               </span>
             </div>
           </div>
           
-          <div className="text-sm text-gray-600 dark:text-gray-300">
+          <div className="text-sm text-muted-foreground dark:text-muted-foreground">
             Last updated: {lastUpdated.toLocaleTimeString()}
           </div>
         </div>
@@ -273,8 +273,8 @@ const SystemMetrics: React.FC<SystemMetricsProps> = ({ className }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Resource Usage Chart */}
         <FadeIn delay={0.2}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+          <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-semibold text-foreground dark:text-white mb-6">
               Resource Usage
             </h3>
             
@@ -304,8 +304,8 @@ const SystemMetrics: React.FC<SystemMetricsProps> = ({ className }) => {
 
         {/* Network Activity */}
         <FadeIn delay={0.3}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+          <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-semibold text-foreground dark:text-white mb-6">
               Network Activity
             </h3>
             
@@ -328,71 +328,71 @@ const SystemMetrics: React.FC<SystemMetricsProps> = ({ className }) => {
 
       {/* Detailed Metrics */}
       <FadeIn delay={0.4}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-6">
             Detailed System Information
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Server Info */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-3">
                 Server Information
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Uptime</span>
-                  <span className="text-gray-900 dark:text-white">15d 7h 23m</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground">Uptime</span>
+                  <span className="text-foreground dark:text-white">15d 7h 23m</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Load Average</span>
-                  <span className="text-gray-900 dark:text-white">0.85, 0.92, 1.01</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground">Load Average</span>
+                  <span className="text-foreground dark:text-white">0.85, 0.92, 1.01</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Processes</span>
-                  <span className="text-gray-900 dark:text-white">247 running</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground">Processes</span>
+                  <span className="text-foreground dark:text-white">247 running</span>
                 </div>
               </div>
             </div>
             
             {/* Storage Info */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-3">
                 Storage Usage
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Root (/)</span>
-                  <span className="text-gray-900 dark:text-white">45.2 GB / 100 GB</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground">Root (/)</span>
+                  <span className="text-foreground dark:text-white">45.2 GB / 100 GB</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Database</span>
-                  <span className="text-gray-900 dark:text-white">12.8 GB / 50 GB</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground">Database</span>
+                  <span className="text-foreground dark:text-white">12.8 GB / 50 GB</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Logs</span>
-                  <span className="text-gray-900 dark:text-white">2.1 GB / 10 GB</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground">Logs</span>
+                  <span className="text-foreground dark:text-white">2.1 GB / 10 GB</span>
                 </div>
               </div>
             </div>
             
             {/* Network Info */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-3">
                 Network Statistics
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Bandwidth In</span>
-                  <span className="text-gray-900 dark:text-white">{formatBytes(currentMetrics.network * 1024)}/s</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground">Bandwidth In</span>
+                  <span className="text-foreground dark:text-white">{formatBytes(currentMetrics.network * 1024)}/s</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Bandwidth Out</span>
-                  <span className="text-gray-900 dark:text-white">{formatBytes(currentMetrics.network * 0.8 * 1024)}/s</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground">Bandwidth Out</span>
+                  <span className="text-foreground dark:text-white">{formatBytes(currentMetrics.network * 0.8 * 1024)}/s</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Connections</span>
-                  <span className="text-gray-900 dark:text-white">{Math.floor(currentMetrics.activeUsers * 0.3)} active</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground">Connections</span>
+                  <span className="text-foreground dark:text-white">{Math.floor(currentMetrics.activeUsers * 0.3)} active</span>
                 </div>
               </div>
             </div>

@@ -137,10 +137,10 @@ const VoiceRecorder: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-2xl font-bold text-foreground dark:text-white mb-4">
           Voice Recorder
         </h2>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-muted-foreground dark:text-muted-foreground">
           Record voice notes that will be automatically transcribed and analyzed
         </p>
       </div>
@@ -153,7 +153,7 @@ const VoiceRecorder: React.FC = () => {
             <div 
               className={`w-32 h-32 rounded-full border-4 transition-all duration-200 ${
                 isRecording 
-                  ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                  ? 'border-red-500 bg-error-light dark:bg-error/20' 
                   : 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
               }`}
               style={{
@@ -173,10 +173,10 @@ const VoiceRecorder: React.FC = () => {
         {/* Recording Timer */}
         {isRecording && (
           <div className="text-center mb-6">
-            <div className="text-3xl font-mono font-bold text-red-600 dark:text-red-400">
+            <div className="text-3xl font-mono font-bold text-error dark:text-error-light">
               {formatTime(recordingTime)}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
               Recording in progress...
             </div>
           </div>
@@ -188,7 +188,7 @@ const VoiceRecorder: React.FC = () => {
             <button
               onClick={startRecording}
               disabled={uploadMutation.isPending}
-              className="px-8 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-xl font-semibold transition-colors duration-200 flex items-center gap-2"
+              className="px-8 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-muted text-white rounded-xl font-semibold transition-colors duration-200 flex items-center gap-2"
             >
               <span>🎤</span>
               Start Recording
@@ -196,7 +196,7 @@ const VoiceRecorder: React.FC = () => {
           ) : (
             <button
               onClick={stopRecording}
-              className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors duration-200 flex items-center gap-2"
+              className="px-8 py-4 bg-error hover:bg-error text-white rounded-xl font-semibold transition-colors duration-200 flex items-center gap-2"
             >
               <span>⏹️</span>
               Stop Recording
@@ -207,10 +207,10 @@ const VoiceRecorder: React.FC = () => {
 
       {/* Upload Status */}
       {uploadMutation.isPending && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+        <div className="bg-info-light dark:bg-info/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-            <span className="text-blue-800 dark:text-blue-200">
+            <span className="text-info dark:text-info-light">
               Processing voice note...
             </span>
           </div>
@@ -218,32 +218,32 @@ const VoiceRecorder: React.FC = () => {
       )}
 
       {/* Settings Quick Access */}
-      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+      <div className="bg-muted dark:bg-muted rounded-lg p-4">
+        <h3 className="font-semibold text-foreground dark:text-white mb-3">
           Quick Settings
         </h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-300">Language:</span>
-            <span className="font-medium text-gray-900 dark:text-white">
+            <span className="text-muted-foreground dark:text-muted-foreground">Language:</span>
+            <span className="font-medium text-foreground dark:text-white">
               {settings.language.toUpperCase()}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-300">Auto Transcribe:</span>
-            <span className="font-medium text-gray-900 dark:text-white">
+            <span className="text-muted-foreground dark:text-muted-foreground">Auto Transcribe:</span>
+            <span className="font-medium text-foreground dark:text-white">
               {settings.autoTranscribe ? '✅' : '❌'}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-300">Commands:</span>
-            <span className="font-medium text-gray-900 dark:text-white">
+            <span className="text-muted-foreground dark:text-muted-foreground">Commands:</span>
+            <span className="font-medium text-foreground dark:text-white">
               {settings.commandsEnabled ? '✅' : '❌'}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-300">Noise Reduction:</span>
-            <span className="font-medium text-gray-900 dark:text-white">
+            <span className="text-muted-foreground dark:text-muted-foreground">Noise Reduction:</span>
+            <span className="font-medium text-foreground dark:text-white">
               {settings.noiseReduction ? '✅' : '❌'}
             </span>
           </div>

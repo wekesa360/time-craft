@@ -56,17 +56,17 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
   const progressPercentage = (userProgress / challenge.targetValue) * 100;
 
   const getStatusColor = () => {
-    if (isCompleted) return 'text-gray-600';
-    if (isUpcoming) return 'text-blue-600';
-    if (isActive) return 'text-green-600';
-    return 'text-gray-600';
+    if (isCompleted) return 'text-muted-foreground';
+    if (isUpcoming) return 'text-info';
+    if (isActive) return 'text-success';
+    return 'text-muted-foreground';
   };
 
   const getStatusBadge = () => {
-    if (isCompleted) return { text: 'Completed', color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' };
-    if (isUpcoming) return { text: 'Upcoming', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' };
-    if (isActive) return { text: 'Active', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' };
-    return { text: 'Inactive', color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' };
+    if (isCompleted) return { text: 'Completed', color: 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground' };
+    if (isUpcoming) return { text: 'Upcoming', color: 'bg-info-light text-info dark:bg-info dark:text-info-light' };
+    if (isActive) return { text: 'Active', color: 'bg-success-light text-success dark:bg-success dark:text-success-light' };
+    return { text: 'Inactive', color: 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground' };
   };
 
   const statusBadge = getStatusBadge();
@@ -167,7 +167,7 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
               {progressPercentage.toFixed(0)}% complete
             </span>
             {userParticipant.isActive && (
-              <span className="text-green-600 font-medium">Active</span>
+              <span className="text-success font-medium">Active</span>
             )}
           </div>
         </div>
@@ -177,7 +177,7 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
       {topParticipants.length > 0 && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-foreground mb-2 flex items-center">
-            <Trophy className="w-4 h-4 mr-1 text-yellow-600" />
+            <Trophy className="w-4 h-4 mr-1 text-warning" />
             Top Participants
           </h4>
           <div className="space-y-1">
@@ -185,8 +185,8 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
               <div key={participant.userId} className="flex items-center justify-between text-sm">
                 <div className="flex items-center space-x-2">
                   <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium ${
-                    index === 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                    index === 1 ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' :
+                    index === 0 ? 'bg-warning-light text-warning dark:bg-warning dark:text-warning-light' :
+                    index === 1 ? 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground' :
                     'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
                   }`}>
                     {index + 1}
@@ -218,7 +218,7 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
           {isParticipating ? (
             <>
               {isActive && (
-                <span className="flex items-center text-sm text-green-600">
+                <span className="flex items-center text-sm text-success">
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Participating
                 </span>
@@ -226,7 +226,7 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
               {onLeave && (
                 <button
                   onClick={() => onLeave(challenge.id)}
-                  className="btn-outline text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 text-sm"
+                  className="btn-outline text-error border-red-300 hover:bg-error-light dark:hover:bg-error/20 text-sm"
                 >
                   Leave Challenge
                 </button>
@@ -244,12 +244,12 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
                 </button>
               )}
               {isUpcoming && (
-                <span className="text-sm text-blue-600">
+                <span className="text-sm text-info">
                   Starts {new Date(challenge.startDate).toLocaleDateString()}
                 </span>
               )}
               {isCompleted && (
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground">
                   Challenge Ended
                 </span>
               )}

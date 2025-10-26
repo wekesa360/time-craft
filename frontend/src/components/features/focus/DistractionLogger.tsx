@@ -145,11 +145,11 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
 
   const colorClasses = {
     purple: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800',
-    blue: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
-    red: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800',
-    green: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
-    yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800',
-    gray: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-300 dark:border-gray-800',
+    blue: 'bg-info-light text-info border-blue-200 dark:bg-info/20 dark:text-info-light dark:border-blue-800',
+    red: 'bg-error-light text-error border-red-200 dark:bg-error/20 dark:text-error-light dark:border-red-800',
+    green: 'bg-success-light text-success border-green-200 dark:bg-success/20 dark:text-success-light dark:border-green-800',
+    yellow: 'bg-warning-light text-warning border-yellow-200 dark:bg-warning/20 dark:text-warning-light dark:border-yellow-800',
+    gray: 'bg-muted text-muted-foreground border-gray-200 dark:bg-muted/20 dark:text-muted-foreground dark:border-gray-800',
   };
 
   if (!isSessionActive) {
@@ -161,7 +161,7 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
       {/* Quick Log Buttons */}
       <FadeIn>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+          <h3 className="text-sm font-medium text-foreground dark:text-white">
             Distraction Tracker
           </h3>
           <div className="flex items-center space-x-2">
@@ -202,13 +202,13 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4"
+            className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4"
           >
-            <h4 className="font-medium text-gray-900 dark:text-white">Log Distraction</h4>
+            <h4 className="font-medium text-foreground dark:text-white">Log Distraction</h4>
             
             {/* Type Selection */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Type of Distraction
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -240,7 +240,7 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-2"
               >
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                   Severity Level
                 </label>
                 <div className="flex space-x-2">
@@ -270,14 +270,14 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-2"
               >
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                   Description (Optional)
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="What caused the distraction?"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white resize-none"
                   rows={2}
                 />
               </motion.div>
@@ -309,7 +309,7 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
       {distractions.length > 0 && (
         <FadeIn delay={0.2}>
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+            <h4 className="text-sm font-medium text-foreground dark:text-white">
               Session Distractions ({distractions.length})
             </h4>
             <div className="space-y-2 max-h-32 overflow-y-auto">
@@ -323,7 +323,7 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                    className="flex items-center justify-between p-2 bg-muted dark:bg-muted rounded-lg"
                   >
                     <div className="flex items-center space-x-3">
                       <div className={cn(
@@ -334,7 +334,7 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
                       </div>
                       <div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          <span className="text-sm font-medium text-foreground dark:text-white">
                             {typeConfig?.label}
                           </span>
                           <span className={cn(
@@ -345,11 +345,11 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
                           </span>
                         </div>
                         {distraction.description && (
-                          <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                          <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                             {distraction.description}
                           </p>
                         )}
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                           {new Date(distraction.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
@@ -359,7 +359,7 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
                       onClick={() => removeDistraction(distraction.id)}
                       size="sm"
                       variant="outline"
-                      className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      className="p-1 text-error hover:bg-error-light dark:hover:bg-error/20"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -376,12 +376,12 @@ const DistractionLogger: React.FC<DistractionLoggerProps> = ({
       {/* Session Summary */}
       {distractions.length > 0 && (
         <FadeIn delay={0.3}>
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-3">
+          <div className="bg-info-light dark:bg-info/20 rounded-lg border border-blue-200 dark:border-blue-800 p-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-blue-800 dark:text-blue-200 font-medium">
+              <span className="text-info dark:text-info-light font-medium">
                 Session Impact
               </span>
-              <div className="flex items-center space-x-4 text-blue-700 dark:text-blue-300">
+              <div className="flex items-center space-x-4 text-info dark:text-info-light">
                 <span>
                   {distractions.length} interruption{distractions.length !== 1 ? 's' : ''}
                 </span>

@@ -127,6 +127,17 @@ export const useAuthStore = create<AuthStore>()(
           apiClient.setTokens(response.tokens);
           // Connect to SSE after successful login
           apiClient.connectSSE();
+          
+          // Load user preferences from backend
+          try {
+            const { useThemeStore } = await import('./theme');
+            const themeStore = useThemeStore.getState();
+            await themeStore.loadPreferencesFromBackend();
+            console.log('User preferences loaded from backend');
+          } catch (error) {
+            console.warn('Failed to load user preferences:', error);
+          }
+          
           console.log('Login completed successfully');
         } catch (error) {
           console.error('Login failed in auth store:', error);

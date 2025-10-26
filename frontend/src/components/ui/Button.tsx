@@ -1,39 +1,60 @@
-import React from 'react';
+import * as React from 'react'
+import { Slot } from '@radix-ui/react-slot'
+import { cva, type VariantProps } from 'class-variance-authority'
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
-  size?: 'sm' | 'md' | 'lg';
-  children: React.ReactNode;
+import { cn } from '../../lib/utils'
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive shadow-sm hover:shadow-md",
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm',
+        destructive:
+          'bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
+        outline:
+          'border border-border bg-card hover:bg-card-hover hover:text-foreground shadow-sm',
+        secondary:
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm',
+        ghost:
+          'hover:bg-card hover:text-foreground rounded-full',
+        link: 'text-primary underline-offset-4 hover:underline',
+      },
+      size: {
+        default: 'h-9 px-4 py-2 has-[>svg]:px-3',
+        sm: 'h-8 rounded-xl gap-1.5 px-3 has-[>svg]:px-2.5',
+        lg: 'h-10 rounded-xl px-6 has-[>svg]:px-4',
+        icon: 'size-9 rounded-full',
+        'icon-sm': 'size-8 rounded-full',
+        'icon-lg': 'size-10 rounded-full',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default',
+    },
+  },
+)
+
+function Button({
+  className,
+  variant,
+  size,
+  asChild = false,
+  ...props
+}: React.ComponentProps<'button'> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot : 'button'
+
+  return (
+    <Comp
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
 }
 
-export const Button: React.FC<ButtonProps> = ({ 
-  variant = 'primary', 
-  size = 'md', 
-  className = '', 
-  children, 
-  ...props 
-}) => {
-  const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
-  
-  const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600',
-    outline: 'border border-gray-300 bg-transparent hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800',
-    ghost: 'hover:bg-gray-100 dark:hover:bg-gray-800',
-    destructive: 'bg-red-600 text-white hover:bg-red-700'
-  };
-  
-  const sizeClasses = {
-    sm: 'h-8 px-3 text-sm',
-    md: 'h-10 px-4 py-2',
-    lg: 'h-12 px-8 text-lg'
-  };
-  
-  const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
-  
-  return (
-    <button className={classes} {...props}>
-      {children}
-    </button>
-  );
-};
+export { Button, buttonVariants }

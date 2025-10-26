@@ -15,7 +15,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({ className, children }) => {
   return (
     <div
       className={cn(
-        'animate-pulse rounded-md bg-gray-200 dark:bg-gray-700',
+        'animate-pulse rounded-md bg-muted dark:bg-muted',
         className
       )}
       role="status"
@@ -29,7 +29,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({ className, children }) => {
 // Card skeleton for dashboard cards
 export const CardSkeleton: React.FC<{ className?: string }> = ({ className }) => {
   return (
-    <div className={cn('p-6 border rounded-lg bg-white dark:bg-gray-800', className)}>
+    <div className={cn('p-6 border rounded-lg bg-white dark:bg-muted', className)}>
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="h-4 w-4 rounded-full" />
@@ -208,7 +208,7 @@ export const StatsSkeleton: React.FC<{ items?: number; className?: string }> = (
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4', className)}>
       {Array.from({ length: items }).map((_, index) => (
-        <div key={index} className="p-4 border rounded-lg bg-white dark:bg-gray-800">
+        <div key={index} className="p-4 border rounded-lg bg-white dark:bg-muted">
           <div className="flex items-center justify-between mb-2">
             <Skeleton className="h-4 w-16" />
             <Skeleton className="h-4 w-4" />

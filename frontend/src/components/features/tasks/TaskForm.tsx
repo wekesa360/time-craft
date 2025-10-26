@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, Calendar, Clock, Tag } from 'lucide-react';
+import { X, Calendar, Clock, Tag, User } from 'lucide-react';
 import type { Task, TaskForm as TaskFormType } from '../../../types';
 
 interface TaskFormProps {
@@ -17,19 +17,20 @@ interface TaskFormProps {
 
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  description: z.string().optional(),
+  description: z.string().max(1000).optional(),
   priority: z.number().min(1).max(4),
-  urgency: z.number().min(1).max(4),
-  importance: z.number().min(1).max(4),
-  eisenhower_quadrant: z.enum(['do', 'decide', 'delegate', 'delete']).optional(),
-  dueDate: z.number().optional(),
-  estimatedDuration: z.number().min(1).max(1440).optional(),
-  contextType: z.enum(['work', 'personal', 'health', 'learning', 'social']).optional(),
+  dueDate: z.string().optional().transform(val => val ? new Date(val).getTime() : undefined),
+  estimatedDuration: z.number().min(1).optional(),
+  energyLevelRequired: z.number().min(1).max(10).optional(),
+  contextType: z.string().max(50).optional(),
   status: z.enum(['pending', 'done', 'archived']).optional(),
-  matrixNotes: z.string().optional(),
-  isDelegated: z.boolean().optional(),
-  delegatedTo: z.string().optional(),
-  delegationNotes: z.string().optional(),
+  // Eisenhower Matrix fields
+  urgency: z.number().min(1).max(4).optional(),
+  importance: z.number().min(1).max(4).optional(),
+  matrixNotes: z.string().max(500).optional(),
+  isDelegated: z.boolean().default(false),
+  delegatedTo: z.string().max(100).optional(),
+  delegationNotes: z.string().max(500).optional(),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -55,9 +56,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
     defaultValues: {
       title: '',
       description: '',
-      priority: 2,
-      contextType: 'personal',
-      status: 'pending',
+      priority: 1,
+      contextType: '',
+      isDelegated: false,
     },
   });
 
@@ -69,28 +70,56 @@ const TaskForm: React.FC<TaskFormProps> = ({
         title: task.title,
         description: task.description || '',
         priority: task.priority,
-        dueDate: task.due_date || undefined,
+        dueDate: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : '',
         estimatedDuration: task.estimated_duration || undefined,
-        contextType: (task.context_type as 'work' | 'personal' | 'health' | 'learning' | 'social') || 'personal',
+        energyLevelRequired: task.energy_level_required || undefined,
+        contextType: task.context_type || '',
         status: task.status,
+        matrixNotes: task.matrix_notes || '',
+        isDelegated: task.is_delegated || false,
+        delegatedTo: task.delegated_to || '',
+        delegationNotes: task.delegation_notes || '',
       });
-      setUrgency(task.urgency);
-      setImportance(task.importance);
+      setUrgency(task.urgency || 3);
+      setImportance(task.importance || 3);
     } else {
       reset({
         title: '',
         description: '',
-        priority: 2,
-        contextType: 'personal',
+        priority: 1,
+        dueDate: '',
+        estimatedDuration: undefined,
+        energyLevelRequired: undefined,
+        contextType: '',
         status: 'pending',
+        matrixNotes: '',
+        isDelegated: false,
+        delegatedTo: '',
+        delegationNotes: '',
       });
       setUrgency(3);
       setImportance(3);
     }
   }, [task, reset]);
 
-  const onSubmit = (data: TaskFormType) => {
-    onSave(data);
+  const onSubmit = (data: TaskFormData) => {
+    const formData: TaskFormType = {
+      title: data.title,
+      description: data.description,
+      priority: data.priority,
+      urgency,
+      importance,
+      dueDate: data.dueDate,
+      estimatedDuration: data.estimatedDuration,
+      energyLevelRequired: data.energyLevelRequired,
+      contextType: data.contextType,
+      status: data.status,
+      matrixNotes: data.matrixNotes,
+      isDelegated: data.isDelegated,
+      delegatedTo: data.delegatedTo,
+      delegationNotes: data.delegationNotes,
+    };
+    onSave(formData);
   };
 
   const handleDelete = () => {
@@ -111,21 +140,18 @@ const TaskForm: React.FC<TaskFormProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md transition-opacity" onClick={onClose} />
-
-        <div className="inline-block align-bottom bg-background rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="bg-background px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-foreground">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-card rounded-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-foreground">
                   {task ? 'Edit Task' : 'Create Task'}
                 </h3>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="btn-ghost p-2"
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -140,11 +166,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
                   <p className="text-xs text-foreground-secondary mb-2">Give your task a clear, descriptive name</p>
                   <input
                     {...register('title')}
-                    className="input w-full"
+                    className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     placeholder="e.g., Complete project proposal, Call dentist, Review quarterly reports"
                   />
                   {errors.title && (
-                    <p className="text-red-600 text-sm mt-1">{errors.title.message}</p>
+                    <p className="text-error text-sm mt-1">{errors.title.message}</p>
                   )}
                 </div>
 
@@ -156,11 +182,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
                   <p className="text-xs text-foreground-secondary mb-2">Add details, notes, or context for this task</p>
                   <textarea
                     {...register('description')}
-                    className="input w-full h-20 resize-none"
+                    className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground h-20 resize-none"
                     placeholder="e.g., Include specific requirements, deadlines, or any additional context that will help you complete this task..."
                   />
                   {errors.description && (
-                    <p className="text-red-600 text-sm mt-1">{errors.description.message}</p>
+                    <p className="text-error text-sm mt-1">{errors.description.message}</p>
                   )}
                 </div>
 
@@ -172,7 +198,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                   <p className="text-xs text-foreground-secondary mb-2">How important is this task compared to others?</p>
                   <select
                     {...register('priority', { valueAsNumber: true })}
-                    className="input w-full"
+                    className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                   >
                     <option value={1}>Low (1) - Can be done later</option>
                     <option value={2}>Medium (2) - Normal priority</option>
@@ -180,7 +206,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     <option value={4}>Urgent (4) - Critical, needs immediate attention</option>
                   </select>
                   {errors.priority && (
-                    <p className="text-red-600 text-sm mt-1">{errors.priority.message}</p>
+                    <p className="text-error text-sm mt-1">{errors.priority.message}</p>
                   )}
                 </div>
 
@@ -193,15 +219,15 @@ const TaskForm: React.FC<TaskFormProps> = ({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs text-foreground-secondary mb-1">
-                        Urgency (1-5)
+                        Urgency (1-4)
                       </label>
                       <input
                         type="range"
                         min="1"
-                        max="5"
+                        max="4"
                         value={urgency}
                         onChange={(e) => setUrgency(parseInt(e.target.value))}
-                        className="w-full"
+                        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                       />
                       <div className="flex justify-between text-xs text-foreground-secondary mt-1">
                         <span>Low</span>
@@ -210,15 +236,15 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     </div>
                     <div>
                       <label className="block text-xs text-foreground-secondary mb-1">
-                        Importance (1-5)
+                        Importance (1-4)
                       </label>
                       <input
                         type="range"
                         min="1"
-                        max="5"
+                        max="4"
                         value={importance}
                         onChange={(e) => setImportance(parseInt(e.target.value))}
-                        className="w-full"
+                        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                       />
                       <div className="flex justify-between text-xs text-foreground-secondary mt-1">
                         <span>Low</span>
@@ -226,13 +252,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="mt-2 p-2 bg-background-secondary rounded text-sm">
+                  <div className="mt-2 p-3 bg-muted rounded-lg text-sm">
                     <span className="font-medium">Quadrant: </span>
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      currentQuadrant === 'do' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                      currentQuadrant === 'decide' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                      currentQuadrant === 'delegate' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                      currentQuadrant === 'do' ? 'bg-error-light text-error dark:bg-error dark:text-error-light' :
+                      currentQuadrant === 'decide' ? 'bg-warning-light text-warning dark:bg-warning dark:text-warning-light' :
+                      currentQuadrant === 'delegate' ? 'bg-info-light text-info dark:bg-info dark:text-info-light' :
+                      'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground'
                     }`}>
                       {currentQuadrant.replace('_', ' ')}
                     </span>
@@ -249,10 +275,10 @@ const TaskForm: React.FC<TaskFormProps> = ({
                   <input
                     {...register('dueDate')}
                     type="date"
-                    className="input w-full"
+                    className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                   />
                   {errors.dueDate && (
-                    <p className="text-red-600 text-sm mt-1">{errors.dueDate.message}</p>
+                    <p className="text-error text-sm mt-1">{errors.dueDate.message}</p>
                   )}
                 </div>
 
@@ -267,11 +293,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     type="number"
                     min="1"
                     max="1440"
-                    className="input w-full"
+                    className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     placeholder="e.g., 30"
                   />
                   {errors.estimatedDuration && (
-                    <p className="text-red-600 text-sm mt-1">{errors.estimatedDuration.message}</p>
+                    <p className="text-error text-sm mt-1">{errors.estimatedDuration.message}</p>
                   )}
                 </div>
 
@@ -281,18 +307,36 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     <Tag className="w-4 h-4 inline mr-1" />
                     Context Type
                   </label>
-                  <select
+                  <p className="text-xs text-foreground-secondary mb-2">e.g., work, personal, health, learning</p>
+                  <input
                     {...register('contextType')}
-                    className="input w-full"
-                  >
-                    <option value="personal">Personal</option>
-                    <option value="work">Work</option>
-                    <option value="health">Health</option>
-                    <option value="learning">Learning</option>
-                    <option value="social">Social</option>
-                  </select>
+                    type="text"
+                    className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+                    placeholder="e.g., work"
+                    maxLength={50}
+                  />
                   {errors.contextType && (
-                    <p className="text-red-600 text-sm mt-1">{errors.contextType.message}</p>
+                    <p className="text-error text-sm mt-1">{errors.contextType.message}</p>
+                  )}
+                </div>
+
+                {/* Energy Level Required */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    <User className="w-4 h-4 inline mr-1" />
+                    Energy Level Required (1-10)
+                  </label>
+                  <p className="text-xs text-foreground-secondary mb-2">How much energy does this task require?</p>
+                  <input
+                    {...register('energyLevelRequired', { valueAsNumber: true })}
+                    type="number"
+                    min="1"
+                    max="10"
+                    className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+                    placeholder="e.g., 7"
+                  />
+                  {errors.energyLevelRequired && (
+                    <p className="text-error text-sm mt-1">{errors.energyLevelRequired.message}</p>
                   )}
                 </div>
 
@@ -304,7 +348,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     </label>
                     <select
                       {...register('status')}
-                      className="input w-full"
+                      className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                     >
                       <option value="pending">Pending</option>
                       <option value="in_progress">In Progress</option>
@@ -312,26 +356,24 @@ const TaskForm: React.FC<TaskFormProps> = ({
                       <option value="cancelled">Cancelled</option>
                     </select>
                     {errors.status && (
-                      <p className="text-red-600 text-sm mt-1">{errors.status.message}</p>
+                      <p className="text-error text-sm mt-1">{errors.status.message}</p>
                     )}
                   </div>
                 )}
               </div>
-            </div>
 
-            <div className="bg-background-secondary px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <div className="flex space-x-2">
+              <div className="flex items-center gap-3 pt-6 border-t border-border">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="btn-primary"
+                  className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
                   {isSubmitting ? 'Saving...' : (task ? 'Update Task' : 'Create Task')}
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="btn-outline"
+                  className="px-6 py-3 bg-muted text-muted-foreground rounded-xl font-medium hover:bg-muted/80 transition-colors"
                 >
                   Cancel
                 </button>
@@ -339,15 +381,14 @@ const TaskForm: React.FC<TaskFormProps> = ({
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="btn-danger"
+                    className="px-6 py-3 bg-error text-error-foreground rounded-xl font-medium hover:bg-error/90 transition-colors ml-auto"
                   >
                     Delete
                   </button>
                 )}
               </div>
             </div>
-          </form>
-        </div>
+        </form>
       </div>
     </div>
   );

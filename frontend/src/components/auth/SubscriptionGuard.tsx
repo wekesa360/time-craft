@@ -41,10 +41,10 @@ const UpgradePrompt: React.FC<{
           </div>
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-2">
             Upgrade to {planName}
           </h3>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
+          <p className="text-muted-foreground dark:text-muted-foreground mb-4">
             {feature} is available with {planName} subscription. 
             You're currently on the {currentPlanName} plan.
           </p>
@@ -57,7 +57,7 @@ const UpgradePrompt: React.FC<{
             </button>
             <button
               onClick={() => window.history.back()}
-              className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors"
+              className="bg-muted hover:bg-muted dark:bg-muted dark:hover:bg-muted text-muted-foreground dark:text-muted-foreground font-medium py-2 px-4 rounded-lg transition-colors"
             >
               Go Back
             </button>
@@ -67,32 +67,32 @@ const UpgradePrompt: React.FC<{
       
       {/* Feature benefits */}
       <div className="mt-6 pt-6 border-t border-primary-200 dark:border-primary-700">
-        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+        <h4 className="text-sm font-medium text-foreground dark:text-white mb-3">
           {planName} includes:
         </h4>
-        <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+        <ul className="space-y-2 text-sm text-muted-foreground dark:text-muted-foreground">
           {requiredPlan === 'premium' ? (
             <>
               <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Advanced analytics and insights
               </li>
               <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Unlimited tasks and projects
               </li>
               <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Priority support
               </li>
               <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Advanced integrations
@@ -101,25 +101,25 @@ const UpgradePrompt: React.FC<{
           ) : (
             <>
               <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Everything in Premium
               </li>
               <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Team collaboration features
               </li>
               <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Admin dashboard and controls
               </li>
               <li className="flex items-center">
-                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Custom integrations and API access

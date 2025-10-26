@@ -25,16 +25,16 @@ const activityTypes = [
 ];
 
 const intensityLevels = [
-  { value: 1, label: 'Very Light', description: 'Minimal effort', color: 'bg-gray-100 text-gray-800' },
-  { value: 2, label: 'Light', description: 'Easy pace', color: 'bg-green-100 text-green-800' },
-  { value: 3, label: 'Light-Moderate', description: 'Comfortable', color: 'bg-green-100 text-green-800' },
-  { value: 4, label: 'Moderate', description: 'Some effort', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 5, label: 'Moderate-Hard', description: 'Noticeable effort', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 6, label: 'Hard', description: 'Vigorous', color: 'bg-orange-100 text-orange-800' },
-  { value: 7, label: 'Very Hard', description: 'Very vigorous', color: 'bg-orange-100 text-orange-800' },
-  { value: 8, label: 'Extremely Hard', description: 'Maximal effort', color: 'bg-red-100 text-red-800' },
-  { value: 9, label: 'Maximum', description: 'All-out effort', color: 'bg-red-100 text-red-800' },
-  { value: 10, label: 'Absolute Maximum', description: 'Peak performance', color: 'bg-red-100 text-red-800' }
+  { value: 1, label: 'Very Light', description: 'Minimal effort', color: 'bg-muted text-muted-foreground' },
+  { value: 2, label: 'Light', description: 'Easy pace', color: 'bg-success-light text-success' },
+  { value: 3, label: 'Light-Moderate', description: 'Comfortable', color: 'bg-success-light text-success' },
+  { value: 4, label: 'Moderate', description: 'Some effort', color: 'bg-warning-light text-warning' },
+  { value: 5, label: 'Moderate-Hard', description: 'Noticeable effort', color: 'bg-warning-light text-warning' },
+  { value: 6, label: 'Hard', description: 'Vigorous', color: 'bg-primary-100 text-primary' },
+  { value: 7, label: 'Very Hard', description: 'Very vigorous', color: 'bg-primary-100 text-primary' },
+  { value: 8, label: 'Extremely Hard', description: 'Maximal effort', color: 'bg-error-light text-error' },
+  { value: 9, label: 'Maximum', description: 'All-out effort', color: 'bg-error-light text-error' },
+  { value: 10, label: 'Absolute Maximum', description: 'Peak performance', color: 'bg-error-light text-error' }
 ];
 
 const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
@@ -131,7 +131,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
               ))}
             </div>
             {errors.activity && (
-              <p className="text-red-500 text-sm mt-1">{errors.activity}</p>
+              <p className="text-error-light0 text-sm mt-1">{errors.activity}</p>
             )}
           </div>
 
@@ -154,7 +154,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
                 placeholder="e.g., 30"
               />
               {errors.durationMinutes && (
-                <p className="text-red-500 text-sm mt-1">{errors.durationMinutes}</p>
+                <p className="text-error-light0 text-sm mt-1">{errors.durationMinutes}</p>
               )}
             </div>
 
@@ -177,7 +177,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
                   max="10"
                   value={formData.intensity}
                   onChange={(e) => setFormData({ ...formData, intensity: Number(e.target.value) })}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer dark:bg-muted"
                   style={{
                     background: `linear-gradient(to right, #10b981 0%, #f59e0b 50%, #ef4444 100%)`
                   }}
@@ -209,11 +209,11 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
                         className={`h-2 flex-1 rounded-full ${
                           level <= formData.intensity
                             ? level <= 3
-                              ? 'bg-green-400'
+                              ? 'bg-success-light'
                               : level <= 6
-                              ? 'bg-yellow-400'
-                              : 'bg-red-400'
-                            : 'bg-gray-200 dark:bg-gray-700'
+                              ? 'bg-warning-light'
+                              : 'bg-error-light'
+                            : 'bg-muted dark:bg-muted'
                         }`}
                       />
                     ))}
@@ -283,7 +283,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
                 placeholder="e.g., 140"
               />
               {errors.heartRateAvg && (
-                <p className="text-red-500 text-sm mt-1">{errors.heartRateAvg}</p>
+                <p className="text-error-light0 text-sm mt-1">{errors.heartRateAvg}</p>
               )}
             </div>
 
@@ -305,7 +305,7 @@ const ExerciseLogger: React.FC<ExerciseLoggerProps> = ({
                 placeholder="e.g., 165"
               />
               {errors.heartRateMax && (
-                <p className="text-red-500 text-sm mt-1">{errors.heartRateMax}</p>
+                <p className="text-error-light0 text-sm mt-1">{errors.heartRateMax}</p>
               )}
             </div>
           </div>

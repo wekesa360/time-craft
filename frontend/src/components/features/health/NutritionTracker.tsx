@@ -232,12 +232,12 @@ export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
               </div>
               
               {/* AI Analysis Info */}
-              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="mt-3 p-3 bg-info-light dark:bg-info/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <div className="flex items-start space-x-2">
-                  <div className="w-5 h-5 text-blue-600 mt-0.5">🤖</div>
+                  <div className="w-5 h-5 text-info mt-0.5">🤖</div>
                   <div>
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">AI-Powered Analysis</p>
-                    <p className="text-xs text-blue-800 dark:text-blue-200 mt-1">
+                    <p className="text-sm font-medium text-info dark:text-info-light">AI-Powered Analysis</p>
+                    <p className="text-xs text-info dark:text-info-light mt-1">
                       Our AI will automatically calculate calories, protein, carbs, fat, fiber, and sugar content for your food.
                     </p>
                   </div>
@@ -287,7 +287,7 @@ export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
                         <button
                           type="button"
                           onClick={() => removeFood(index)}
-                          className="btn btn-secondary p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="btn btn-secondary p-2 text-error hover:text-error hover:bg-error-light"
                         >
                           -
                         </button>
@@ -361,16 +361,16 @@ export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
                         <p className="text-2xl font-bold text-primary-600">{totalCalories}</p>
                         <p className="text-xs text-foreground-secondary">Calories</p>
                       </div>
-                      <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                        <p className="text-2xl font-bold text-green-600">{totalProtein}g</p>
+                      <div className="text-center p-3 bg-success-light dark:bg-success/20 rounded-lg">
+                        <p className="text-2xl font-bold text-success">{totalProtein}g</p>
                         <p className="text-xs text-foreground-secondary">Protein</p>
                       </div>
-                      <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                        <p className="text-2xl font-bold text-yellow-600">{totalCarbs}g</p>
+                      <div className="text-center p-3 bg-warning-light dark:bg-warning/20 rounded-lg">
+                        <p className="text-2xl font-bold text-warning">{totalCarbs}g</p>
                         <p className="text-xs text-foreground-secondary">Carbs</p>
                       </div>
-                      <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
-                        <p className="text-2xl font-bold text-orange-600">{totalFat}g</p>
+                      <div className="text-center p-3 bg-primary-50 dark:bg-primary/20 rounded-lg">
+                        <p className="text-2xl font-bold text-primary">{totalFat}g</p>
                         <p className="text-xs text-foreground-secondary">Fat</p>
                       </div>
                     </div>
@@ -491,7 +491,7 @@ export const NutritionTracker: React.FC<NutritionTrackerProps> = ({
           </div>
 
           {errors.foods && (
-            <p className="text-red-500 text-sm">{errors.foods}</p>
+            <p className="text-error-light0 text-sm">{errors.foods}</p>
           )}
 
           {/* Actions */}

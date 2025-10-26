@@ -21,11 +21,11 @@ const goalTypes = [
 ];
 
 const priorities = [
-  { value: 1, label: 'Low', color: 'text-gray-500' },
-  { value: 2, label: 'Medium', color: 'text-yellow-500' },
-  { value: 3, label: 'High', color: 'text-orange-500' },
-  { value: 4, label: 'Very High', color: 'text-red-500' },
-  { value: 5, label: 'Critical', color: 'text-red-700' }
+  { value: 1, label: 'Low', color: 'text-muted-foreground' },
+  { value: 2, label: 'Medium', color: 'text-warning' },
+  { value: 3, label: 'High', color: 'text-primary' },
+  { value: 4, label: 'Very High', color: 'text-error-light0' },
+  { value: 5, label: 'Critical', color: 'text-error' }
 ];
 
 export const GoalCreationSheet: React.FC<GoalCreationSheetProps> = ({
@@ -150,7 +150,7 @@ export const GoalCreationSheet: React.FC<GoalCreationSheetProps> = ({
               className={`input w-full ${errors.title ? 'border-red-500' : ''}`}
             />
             {errors.title && (
-              <p className="text-red-500 text-sm">{errors.title}</p>
+              <p className="text-error-light0 text-sm">{errors.title}</p>
             )}
           </div>
 
@@ -186,7 +186,7 @@ export const GoalCreationSheet: React.FC<GoalCreationSheetProps> = ({
                 className={`input w-full ${errors.targetValue ? 'border-red-500' : ''}`}
               />
               {errors.targetValue && (
-                <p className="text-red-500 text-sm">{errors.targetValue}</p>
+                <p className="text-error-light0 text-sm">{errors.targetValue}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -216,7 +216,7 @@ export const GoalCreationSheet: React.FC<GoalCreationSheetProps> = ({
               className={`input w-full ${errors.targetDate ? 'border-red-500' : ''}`}
             />
             {errors.targetDate && (
-              <p className="text-red-500 text-sm">{errors.targetDate}</p>
+              <p className="text-error-light0 text-sm">{errors.targetDate}</p>
             )}
           </div>
 

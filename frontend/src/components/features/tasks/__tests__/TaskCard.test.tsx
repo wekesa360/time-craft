@@ -66,7 +66,7 @@ describe('TaskCard', () => {
 
     const priorityBadge = screen.getByText('3');
     expect(priorityBadge).toBeInTheDocument();
-    expect(priorityBadge).toHaveClass('text-orange-600');
+    expect(priorityBadge).toHaveClass('text-primary');
   });
 
   it('shows Eisenhower quadrant when showQuadrant is true', () => {

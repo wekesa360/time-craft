@@ -29,7 +29,7 @@ export const DashboardSkeleton: React.FC = () => {
         {/* Left Column - Tasks and Overview */}
         <div className="lg:col-span-2 space-y-6">
           {/* Quick Actions */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-6">
+          <div className="bg-white dark:bg-muted rounded-lg border p-6">
             <Skeleton className="h-6 w-32 mb-4" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {Array.from({ length: 4 }).map((_, index) => (
@@ -42,7 +42,7 @@ export const DashboardSkeleton: React.FC = () => {
           </div>
 
           {/* Eisenhower Matrix */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-6">
+          <div className="bg-white dark:bg-muted rounded-lg border p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-6 w-40" />
               <Skeleton className="h-8 w-24" />
@@ -78,7 +78,7 @@ export const DashboardSkeleton: React.FC = () => {
         {/* Right Column - Sidebar Content */}
         <div className="space-y-6">
           {/* Health Insights */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-6">
+          <div className="bg-white dark:bg-muted rounded-lg border p-6">
             <Skeleton className="h-6 w-32 mb-4" />
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -100,7 +100,7 @@ export const DashboardSkeleton: React.FC = () => {
           </div>
 
           {/* Badge Progress */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-6">
+          <div className="bg-white dark:bg-muted rounded-lg border p-6">
             <Skeleton className="h-6 w-28 mb-4" />
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, index) => (
@@ -119,11 +119,11 @@ export const DashboardSkeleton: React.FC = () => {
           </div>
 
           {/* Recommendations */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-6">
+          <div className="bg-white dark:bg-muted rounded-lg border p-6">
             <Skeleton className="h-6 w-36 mb-4" />
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div key={index} className="p-3 bg-muted dark:bg-muted rounded-lg">
                   <Skeleton className="h-4 w-full mb-2" />
                   <Skeleton className="h-3 w-3/4" />
                 </div>
@@ -132,7 +132,7 @@ export const DashboardSkeleton: React.FC = () => {
           </div>
 
           {/* Calendar Preview */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-6">
+          <div className="bg-white dark:bg-muted rounded-lg border p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-6 w-20" />
               <Skeleton className="h-8 w-8" />

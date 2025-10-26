@@ -40,8 +40,18 @@ export const useTasksQuery = (params?: {
       setLoading(true);
       try {
         const response = await apiClient.getTasks(params);
-        const tasksData = response.data || [];
-        // Tasks are managed by the store
+        // Handle different response formats
+        let tasksData: Task[] = [];
+        
+        if (Array.isArray(response)) {
+          // Direct array response
+          tasksData = response;
+        } else if (response && typeof response === 'object') {
+          // Object response with tasks property
+          tasksData = (response as any).tasks || (response as any).data || [];
+        }
+        
+        console.log('Fetched tasks from backend:', tasksData);
         return tasksData;
       } catch (error) {
         console.error('Failed to fetch tasks:', error);
@@ -52,7 +62,6 @@ export const useTasksQuery = (params?: {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-    initialData: tasks, // Use store data as initial data
     retry: (failureCount, error: any) => {
       // Don't retry on 400 errors (client errors)
       if (error?.response?.status === 400) {
@@ -120,19 +129,24 @@ export const useCreateTaskMutation = () => {
         id: `temp-${Date.now()}`,
         user_id: 'current-user',
         title: newTask.title,
-        description: newTask.description,
+        description: newTask.description || null,
         priority: newTask.priority as 1 | 2 | 3 | 4,
         urgency: newTask.urgency || 3,
         importance: newTask.importance || 3,
         eisenhower_quadrant: newTask.eisenhower_quadrant || 'do',
         status: newTask.status || 'pending',
-        due_date: newTask.dueDate ? new Date(newTask.dueDate).getTime() : undefined,
-        estimated_duration: newTask.estimatedDuration,
-        context_type: newTask.contextType as any,
-        matrix_notes: newTask.matrixNotes,
+        due_date: newTask.dueDate || null,
+        estimated_duration: newTask.estimatedDuration || null,
+        energy_level_required: newTask.energyLevelRequired || null,
+        context_type: newTask.contextType || null,
+        matrix_notes: newTask.matrixNotes || null,
         is_delegated: newTask.isDelegated || false,
-        delegated_to: newTask.delegatedTo,
-        delegation_notes: newTask.delegationNotes,
+        delegated_to: newTask.delegatedTo || null,
+        delegation_notes: newTask.delegationNotes || null,
+        ai_priority_score: null,
+        ai_planning_session_id: null,
+        ai_matrix_confidence: null,
+        matrix_last_reviewed: null,
         created_at: Date.now(),
         updated_at: Date.now(),
       };

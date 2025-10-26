@@ -1117,6 +1117,17 @@ class ApiClient {
     return response.data.user;
   }
 
+  // User preferences endpoints
+  async getUserPreferences(): Promise<any> {
+    const response = await this.client.get<{ preferences: any }>('/api/user/preferences');
+    return response.data.preferences;
+  }
+
+  async updateUserPreferences(preferences: any): Promise<any> {
+    const response = await this.client.put<{ preferences: any }>('/api/user/preferences', preferences);
+    return response.data.preferences;
+  }
+
   // Task endpoints
   async getTasks(params?: {
     status?: string;

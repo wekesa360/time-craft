@@ -237,7 +237,7 @@ export const AccessibleNavigation: React.FC<AccessibleNavigationProps> = ({
         )}
         
         {item.badge && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-500 text-white ml-2">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-error text-white ml-2">
             {item.badge}
             <span className="sr-only">
               {language === 'de' ? 'Benachrichtigungen' : 'notifications'}

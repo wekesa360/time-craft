@@ -79,7 +79,7 @@ export const SettingsIntegrationDemo: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Navigation Sidebar */}
             <div className="lg:col-span-1">
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted dark:bg-muted p-4 rounded-lg">
                 <h3 className="text-sm font-medium mb-3 text-foreground-secondary">
                   Navigationsleiste:
                 </h3>
@@ -110,7 +110,7 @@ export const SettingsIntegrationDemo: React.FC = () => {
 
             {/* Content Area */}
             <div className="lg:col-span-2">
-              <div className="bg-white dark:bg-gray-900 border border-border rounded-lg p-6">
+              <div className="bg-white dark:bg-muted border border-border rounded-lg p-6">
                 {activeSection === 'language' && (
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3 mb-4">
@@ -140,7 +140,7 @@ export const SettingsIntegrationDemo: React.FC = () => {
                     <div className="text-4xl mb-4">
                       {settingsSections.find(s => s.id === activeSection)?.icon && 
                         React.createElement(settingsSections.find(s => s.id === activeSection)!.icon, {
-                          className: "w-12 h-12 mx-auto text-gray-400"
+                          className: "w-12 h-12 mx-auto text-muted-foreground"
                         })
                       }
                     </div>

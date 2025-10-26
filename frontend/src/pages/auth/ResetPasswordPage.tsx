@@ -93,16 +93,16 @@ export default function ResetPasswordPage() {
     return (
       <div className="text-center">
         <div className="mb-6">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900">
-            <svg className="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-error-light dark:bg-error">
+            <svg className="h-6 w-6 text-error dark:text-error-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-2xl font-bold text-foreground dark:text-white mb-4">
           Invalid Reset Link
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-muted-foreground dark:text-muted-foreground mb-6">
           This password reset link is invalid or has expired. Please request a new one.
         </p>
         <Link
@@ -119,13 +119,13 @@ export default function ResetPasswordPage() {
     return (
       <div className="text-center">
         <div className="mb-6">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900">
-            <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-success-light dark:bg-success">
+            <svg className="h-6 w-6 text-success dark:text-success-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-2xl font-bold text-foreground dark:text-white mb-4">
           Password Reset Successfully
         </h2>
         <Link
@@ -142,7 +142,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Validating reset token...</p>
+        <p className="mt-4 text-muted-foreground dark:text-muted-foreground">Validating reset token...</p>
       </div>
     );
   }
@@ -150,14 +150,14 @@ export default function ResetPasswordPage() {
   return (
     <div>
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-2xl font-bold text-foreground dark:text-white mb-2">
           Reset your password
         </h2>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="password" className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-1">
             New Password
           </label>
           <input
@@ -168,14 +168,14 @@ export default function ResetPasswordPage() {
             {...register('password')}
           />
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-1 text-sm text-error dark:text-error-light">
               {errors.password.message}
             </p>
           )}
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-1">
             Confirm New Password
           </label>
           <input
@@ -186,7 +186,7 @@ export default function ResetPasswordPage() {
             {...register('confirmPassword')}
           />
           {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-1 text-sm text-error dark:text-error-light">
               {errors.confirmPassword.message}
             </p>
           )}
@@ -195,7 +195,7 @@ export default function ResetPasswordPage() {
         {/* Password strength indicator */}
         {password && (
           <div className="space-y-2">
-            <div className="text-sm text-gray-600 dark:text-gray-400">Password strength:</div>
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Password strength:</div>
             <div className="flex space-x-1">
               {[
                 password.length >= 8,
@@ -207,7 +207,7 @@ export default function ResetPasswordPage() {
                 <div
                   key={index}
                   className={`h-2 flex-1 rounded ${
-                    condition ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'
+                    condition ? 'bg-success-light0' : 'bg-muted dark:bg-muted'
                   }`}
                 />
               ))}

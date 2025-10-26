@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '../../lib/api';
 
@@ -162,13 +162,15 @@ export const OTPLogin: React.FC<OTPLoginProps> = ({ onSuccess, onBack }) => {
       {step === 'email' && (
         <form onSubmit={handleSendOTP} className="space-y-4">
           <div>
+            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+              Email Address
+            </label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input w-full"
-              placeholder="Enter your email address"
+              className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
               autoComplete="email"
             />
@@ -177,7 +179,7 @@ export const OTPLogin: React.FC<OTPLoginProps> = ({ onSuccess, onBack }) => {
           <button
             type="submit"
             disabled={isLoading || !email}
-            className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Sending...' : 'Send Code'}
           </button>
@@ -185,9 +187,8 @@ export const OTPLogin: React.FC<OTPLoginProps> = ({ onSuccess, onBack }) => {
           <button
             type="button"
             onClick={onBack}
-            className="w-full flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
           >
-            <ArrowLeft className="w-4 h-4" />
             Back to other options
           </button>
         </form>
@@ -210,26 +211,26 @@ export const OTPLogin: React.FC<OTPLoginProps> = ({ onSuccess, onBack }) => {
                   onChange={(e) => handleDigitChange(index, e.target.value.replace(/\D/g, ''))}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={index === 0 ? handlePaste : undefined}
-                  className="w-12 h-12 text-center text-2xl font-mono border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-12 h-12 text-center text-2xl font-mono border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   autoComplete="one-time-code"
                 />
               ))}
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground text-center mt-2">
               You can paste the entire code at once
             </p>
           </div>
 
           {/* Timer */}
           {timeRemaining > 0 && (
-            <div className="flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center justify-center text-sm text-muted-foreground dark:text-muted-foreground">
               <span>Code expires in {formatTime(timeRemaining)}</span>
             </div>
           )}
 
           {/* Loading indicator */}
           {isLoading && (
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
               <span>Verifying...</span>
             </div>
@@ -240,7 +241,7 @@ export const OTPLogin: React.FC<OTPLoginProps> = ({ onSuccess, onBack }) => {
               type="button"
               onClick={handleResendOTP}
               disabled={timeRemaining > 0}
-              className="btn btn-secondary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 bg-card border border-border rounded-xl text-foreground hover:bg-card-hover transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Resend Code
             </button>
@@ -251,7 +252,7 @@ export const OTPLogin: React.FC<OTPLoginProps> = ({ onSuccess, onBack }) => {
                 setOtpCode('');
                 setTimeRemaining(0);
               }}
-              className="btn btn-secondary flex-1"
+              className="flex-1 px-4 py-3 bg-card border border-border rounded-xl text-foreground hover:bg-card-hover transition-all duration-200"
             >
               Change Email
             </button>
@@ -260,16 +261,15 @@ export const OTPLogin: React.FC<OTPLoginProps> = ({ onSuccess, onBack }) => {
           <button
             type="button"
             onClick={onBack}
-            className="w-full flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
           >
-            <ArrowLeft className="w-4 h-4" />
             Back to other options
           </button>
         </div>
       )}
 
       {/* Help Text */}
-      <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="text-center text-sm text-muted-foreground dark:text-muted-foreground">
         <p>Didn't receive the code? Check your spam folder or try resending.</p>
       </div>
     </div>

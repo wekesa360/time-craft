@@ -380,12 +380,12 @@ export default function SettingsPage() {
                         ? 'bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-300'
                         : profile?.subscriptionType === 'enterprise'
                         ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                        : 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground'
                     }`}>
                       {profile?.subscriptionType?.toUpperCase()}
                     </div>
                     {profile?.isStudent && (
-                      <div className="mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                      <div className="mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-info-light text-info dark:bg-info dark:text-info-light">
                         {t('settings.studentAccount', 'Student')}
                       </div>
                     )}
@@ -483,14 +483,14 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => profileForm.reset()}
-                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground dark:text-muted-foreground bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-muted dark:hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
                     >
                       {t('common.cancel', 'Cancel')}
                     </button>
                     <button
                       type="submit"
                       disabled={updateProfileMutation.isPending}
-                      className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg transition-colors duration-200 ${
+                      className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-info hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg transition-colors duration-200 ${
                         updateProfileMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
                     >
@@ -568,7 +568,7 @@ export default function SettingsPage() {
                               checked={notificationPrefs?.taskReminders || false}
                               onChange={(e) => handleNotificationChange('taskReminders', e.target.checked)}
                             />
-                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
                           </label>
                         </div>
                         
@@ -584,7 +584,7 @@ export default function SettingsPage() {
                               checked={notificationPrefs?.deadlineAlerts || false}
                               onChange={(e) => handleNotificationChange('deadlineAlerts', e.target.checked)}
                             />
-                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
                           </label>
                         </div>
                       </div>
@@ -606,7 +606,7 @@ export default function SettingsPage() {
                               checked={notificationPrefs?.healthReminders || false}
                               onChange={(e) => handleNotificationChange('healthReminders', e.target.checked)}
                             />
-                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
                           </label>
                         </div>
                       </div>
@@ -628,7 +628,7 @@ export default function SettingsPage() {
                               checked={notificationPrefs?.badgeUnlocks || false}
                               onChange={(e) => handleNotificationChange('badgeUnlocks', e.target.checked)}
                             />
-                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
                           </label>
                         </div>
                         
@@ -644,7 +644,7 @@ export default function SettingsPage() {
                               checked={notificationPrefs?.socialNotifications || false}
                               onChange={(e) => handleNotificationChange('socialNotifications', e.target.checked)}
                             />
-                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
                           </label>
                         </div>
                       </div>
@@ -666,7 +666,7 @@ export default function SettingsPage() {
                               checked={notificationPrefs?.quietHours?.enabled || false}
                               onChange={(e) => handleNotificationChange('quietHours', { ...notificationPrefs?.quietHours, enabled: e.target.checked })}
                             />
-                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                            <div className="w-11 h-6 bg-background-tertiary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
                           </label>
                         </div>
                         
@@ -724,7 +724,7 @@ export default function SettingsPage() {
                       ? 'border-gold-500 bg-gold-50 dark:bg-gold-950/20'
                       : profile?.subscriptionType === 'enterprise'
                       ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/20'
-                      : 'border-gray-300 bg-gray-50 dark:bg-gray-950/20'
+                      : 'border-gray-300 bg-muted dark:bg-muted/20'
                   }`}>
                     <div className="flex items-center justify-between mb-4">
                       <div>
@@ -741,7 +741,7 @@ export default function SettingsPage() {
                         </p>
                       </div>
                       {profile?.isStudent && (
-                        <div className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full text-sm font-medium">
+                        <div className="px-3 py-1 bg-info-light text-info dark:bg-info dark:text-info-light rounded-full text-sm font-medium">
                           {t('settings.studentDiscount', 'Student Discount')}
                         </div>
                       )}
@@ -750,17 +750,17 @@ export default function SettingsPage() {
                     {/* Plan Features */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <CheckCircle className="w-4 h-4 text-success" />
                         <span>{t('settings.basicFeatures', 'All basic features')}</span>
                       </div>
                       {profile?.subscriptionType !== 'free' && (
                         <>
                           <div className="flex items-center space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <CheckCircle className="w-4 h-4 text-success" />
                             <span>{t('settings.premiumFeatures', 'Premium analytics')}</span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <CheckCircle className="w-4 h-4 text-success" />
                             <span>{t('settings.unlimitedSync', 'Unlimited sync')}</span>
                           </div>
                         </>
@@ -778,11 +778,11 @@ export default function SettingsPage() {
                         </div>
                         <ul className="text-sm space-y-1 mb-4">
                           <li className="flex items-center space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <CheckCircle className="w-4 h-4 text-success" />
                             <span>{t('settings.premiumAnalytics', 'Advanced analytics')}</span>
                           </li>
                           <li className="flex items-center space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <CheckCircle className="w-4 h-4 text-success" />
                             <span>{t('settings.prioritySupport', 'Priority support')}</span>
                           </li>
                         </ul>
@@ -798,11 +798,11 @@ export default function SettingsPage() {
                         </div>
                         <ul className="text-sm space-y-1 mb-4">
                           <li className="flex items-center space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <CheckCircle className="w-4 h-4 text-success" />
                             <span>{t('settings.teamFeatures', 'Team collaboration')}</span>
                           </li>
                           <li className="flex items-center space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <CheckCircle className="w-4 h-4 text-success" />
                             <span>{t('settings.apiAccess', 'API access')}</span>
                           </li>
                         </ul>
@@ -835,11 +835,11 @@ export default function SettingsPage() {
                   {/* Subscription Actions */}
                   {profile?.subscriptionType !== 'free' && (
                     <div className="flex space-x-3 pt-4 border-t border-border">
-                      <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                      <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground dark:text-muted-foreground bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-muted dark:hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
                         <CreditCard className="w-4 h-4 mr-2" />
                         {t('settings.manageBilling', 'Manage Billing')}
                       </button>
-                      <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 border border-red-300 dark:border-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                      <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-error dark:text-error-light bg-white dark:bg-muted border border-red-300 dark:border-red-600 rounded-lg hover:bg-error-light dark:hover:bg-error/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
                         <Trash2 className="w-4 h-4 mr-2" />
                         {t('settings.cancelSubscription', 'Cancel Subscription')}
                       </button>
@@ -871,7 +871,7 @@ export default function SettingsPage() {
                       </div>
                       <button
                         onClick={() => setShowPasswordForm(!showPasswordForm)}
-                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground dark:text-muted-foreground bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-muted dark:hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                       >
                         <Key className="w-4 h-4 mr-2" />
                         {t('settings.changePassword', 'Change Password')}
@@ -965,10 +965,10 @@ export default function SettingsPage() {
                         <p className="text-xs text-foreground-secondary">{t('settings.twoFactorAuthDesc', 'Add an extra layer of security to your account')}</p>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-light dark:bg-error/20 text-error dark:text-error-light">
                           {t('settings.disabled', 'Disabled')}
                         </span>
-                        <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg transition-colors duration-200">
+                        <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-info hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg transition-colors duration-200">
                           <Lock className="w-4 h-4 mr-2" />
                           {t('settings.enable2FA', 'Enable 2FA')}
                         </button>
@@ -982,13 +982,13 @@ export default function SettingsPage() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between p-3 bg-background-secondary rounded">
                         <div className="flex items-center space-x-3">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <div className="w-2 h-2 bg-success-light0 rounded-full"></div>
                           <div>
                             <p className="text-sm font-medium">{t('settings.currentSession', 'Current Session')}</p>
                             <p className="text-xs text-foreground-secondary">{t('settings.thisDevice', 'This device')} • {t('settings.now', 'Now')}</p>
                           </div>
                         </div>
-                        <span className="text-xs text-green-600">{t('settings.active', 'Active')}</span>
+                        <span className="text-xs text-success">{t('settings.active', 'Active')}</span>
                       </div>
                     </div>
                   </div>
@@ -1042,17 +1042,17 @@ export default function SettingsPage() {
                   
                   {/* Account Deletion */}
                   <div className="pt-4 border-t border-border">
-                    <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
+                    <div className="p-4 bg-error-light dark:bg-error/20 rounded-lg border border-red-200 dark:border-red-800">
                       <div className="flex items-start space-x-3">
-                        <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+                        <AlertTriangle className="w-5 h-5 text-error mt-0.5" />
                         <div className="flex-1">
-                          <h3 className="text-sm font-medium text-red-800 dark:text-red-200">{t('settings.dangerZone', 'Danger Zone')}</h3>
-                          <p className="text-xs text-red-600 dark:text-red-400 mb-3">
+                          <h3 className="text-sm font-medium text-error dark:text-error-light">{t('settings.dangerZone', 'Danger Zone')}</h3>
+                          <p className="text-xs text-error dark:text-error-light mb-3">
                             {t('settings.accountDeletionDesc', 'Once you delete your account, there is no going back. Please be certain.')}
                           </p>
                           <button
                             onClick={handleAccountDelete}
-                            className="btn-outline text-red-600 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
+                            className="btn-outline text-error border-red-300 hover:bg-error-light dark:text-error-light dark:border-red-800 dark:hover:bg-error"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             {t('settings.deleteAccount', 'Delete Account')}

@@ -120,20 +120,20 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-200';
-      case 'high': return 'text-orange-600 bg-orange-100 dark:bg-orange-900 dark:text-orange-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'low': return 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-200';
-      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-200';
+      case 'critical': return 'text-error bg-error-light dark:bg-error dark:text-error-light';
+      case 'high': return 'text-primary bg-primary-100 dark:bg-primary dark:text-primary-200';
+      case 'medium': return 'text-warning bg-warning-light dark:bg-warning dark:text-warning-light';
+      case 'low': return 'text-success bg-success-light dark:bg-success dark:text-success-light';
+      default: return 'text-muted-foreground bg-muted dark:bg-muted dark:text-muted-foreground';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'success': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'failed': return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      case 'blocked': return <Lock className="w-4 h-4 text-orange-500" />;
-      default: return <Clock className="w-4 h-4 text-gray-500" />;
+      case 'success': return <CheckCircle className="w-4 h-4 text-success" />;
+      case 'failed': return <AlertTriangle className="w-4 h-4 text-error-light0" />;
+      case 'blocked': return <Lock className="w-4 h-4 text-primary" />;
+      default: return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -160,14 +160,14 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
       <div className="space-y-6" role="status" aria-label="Loading security dashboard">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            <div key={i} className="bg-white dark:bg-muted rounded-lg p-6 animate-pulse">
+              <div className="h-4 bg-muted dark:bg-muted rounded w-3/4 mb-2"></div>
+              <div className="h-8 bg-muted dark:bg-muted rounded w-1/2"></div>
             </div>
           ))}
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 animate-pulse">
-          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="bg-white dark:bg-muted rounded-lg p-6 animate-pulse">
+          <div className="h-64 bg-muted dark:bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -175,11 +175,11 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
 
   if (eventsError) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+      <div className="bg-error-light dark:bg-error/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-error dark:text-error-light mb-2">
           {t('security.error.title')}
         </h2>
-        <p className="text-red-600 dark:text-red-300">
+        <p className="text-error dark:text-error-light">
           {t('security.error.message')}
         </p>
       </div>
@@ -191,25 +191,25 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
       {/* Header Controls */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground dark:text-white">
             {t('security.title')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-muted-foreground dark:text-muted-foreground mt-1">
             {t('security.subtitle')}
           </p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Time Range Selector */}
-          <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1">
+          <div className="flex rounded-lg bg-muted dark:bg-muted p-1">
             {(['24h', '7d', '30d', '90d'] as const).map((range) => (
               <button
                 key={range}
                 onClick={() => handleTimeRangeChange(range)}
                 className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                   selectedTimeRange === range
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    ? 'bg-white dark:bg-muted text-foreground dark:text-white shadow-sm'
+                    : 'text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-white'
                 }`}
                 aria-pressed={selectedTimeRange === range}
                 aria-label={`Select ${range} time range`}
@@ -222,7 +222,7 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
           {/* Refresh Button */}
           <button
             onClick={() => refetchEvents()}
-            className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+            className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-muted text-foreground dark:text-white hover:bg-muted dark:hover:bg-muted transition-colors"
             aria-label="Refresh security data"
           >
             <RefreshCw className="w-4 h-4" />
@@ -232,52 +232,52 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
 
       {/* Security Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              <p className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 {t('security.metrics.totalEvents')}
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-foreground dark:text-white">
                 {securityStats?.totalEvents || 0}
               </p>
             </div>
-            <Activity className="w-8 h-8 text-blue-500" />
+            <Activity className="w-8 h-8 text-info-light0" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              <p className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 {t('security.metrics.criticalAlerts')}
               </p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold text-error">
                 {securityStats?.criticalAlerts || 0}
               </p>
             </div>
-            <AlertTriangle className="w-8 h-8 text-red-500" />
+            <AlertTriangle className="w-8 h-8 text-error-light0" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              <p className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 {t('security.metrics.failedLogins')}
               </p>
-              <p className="text-2xl font-bold text-orange-600">
+              <p className="text-2xl font-bold text-primary">
                 {securityStats?.failedLogins || 0}
               </p>
             </div>
-            <Lock className="w-8 h-8 text-orange-500" />
+            <Lock className="w-8 h-8 text-primary" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              <p className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 {t('security.metrics.blockedIPs')}
               </p>
               <p className="text-2xl font-bold text-purple-600">
@@ -290,18 +290,18 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+      <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <input
                 type="text"
                 placeholder={t('security.search.placeholder')}
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 aria-label="Search security events"
               />
             </div>
@@ -311,7 +311,7 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
           <select
             value={selectedSeverity}
             onChange={(e) => handleSeverityFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             aria-label="Filter by severity"
           >
             <option value="all">{t('security.filters.allSeverities')}</option>
@@ -325,7 +325,7 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
           <select
             value={selectedType}
             onChange={(e) => handleTypeFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             aria-label="Filter by event type"
           >
             <option value="all">{t('security.filters.allTypes')}</option>
@@ -342,7 +342,7 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
           {/* Export Button */}
           <button
             onClick={() => {/* Export functionality */}}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-info text-white rounded-md hover:bg-info transition-colors flex items-center gap-2"
             aria-label="Export security events"
           >
             <Download className="w-4 h-4" />
@@ -352,56 +352,56 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
       </div>
 
       {/* Security Events Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-muted rounded-lg shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white">
             {t('security.events.title')}
           </h3>
         </div>
         
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
+            <thead className="bg-muted dark:bg-muted">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                   {t('security.events.type')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                   {t('security.events.user')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                   {t('security.events.severity')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                   {t('security.events.status')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                   {t('security.events.timestamp')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                   {t('security.events.ipAddress')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                   {t('security.events.actions')}
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="bg-white dark:bg-muted divide-y divide-gray-200 dark:divide-gray-700">
               {securityEvents?.events?.map((event: SecurityEvent) => (
-                <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr key={event.id} className="hover:bg-muted dark:hover:bg-muted">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {getEventIcon(event.type)}
-                      <span className="ml-2 text-sm text-gray-900 dark:text-white">
+                      <span className="ml-2 text-sm text-foreground dark:text-white">
                         {t(`security.eventTypes.${event.type}`)}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 dark:text-white">
+                    <div className="text-sm text-foreground dark:text-white">
                       {event.user.name}
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                       {event.user.email}
                     </div>
                   </td>
@@ -413,21 +413,21 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {getStatusIcon(event.status)}
-                      <span className="ml-2 text-sm text-gray-900 dark:text-white">
+                      <span className="ml-2 text-sm text-foreground dark:text-white">
                         {t(`security.status.${event.status}`)}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground dark:text-muted-foreground">
                     {formatTimestamp(event.timestamp)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground dark:text-muted-foreground">
                     {event.ipAddress}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => setSelectedEvent(event)}
-                      className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                      className="text-info hover:text-info dark:text-info dark:hover:text-info-light"
                       aria-label={`View details for ${event.type} event`}
                     >
                       <Eye className="w-4 h-4" />
@@ -443,15 +443,15 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
       {/* Event Details Modal */}
       {selectedEvent && (
         <div className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto">
+          <div className="bg-white dark:bg-muted rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-foreground dark:text-white">
                   {t('security.eventDetails.title')}
                 </h3>
                 <button
                   onClick={() => setSelectedEvent(null)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground"
                   aria-label="Close event details"
                 >
                   ×
@@ -460,31 +460,31 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
             </div>
             <div className="px-6 py-4 space-y-4">
               <div>
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                <h4 className="font-medium text-foreground dark:text-white mb-2">
                   {t('security.eventDetails.basicInfo')}
                 </h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Type:</span>
-                    <span className="ml-2 text-gray-900 dark:text-white">
+                    <span className="text-muted-foreground dark:text-muted-foreground">Type:</span>
+                    <span className="ml-2 text-foreground dark:text-white">
                       {t(`security.eventTypes.${selectedEvent.type}`)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Severity:</span>
+                    <span className="text-muted-foreground dark:text-muted-foreground">Severity:</span>
                     <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${getSeverityColor(selectedEvent.severity)}`}>
                       {t(`security.severity.${selectedEvent.severity}`)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Status:</span>
-                    <span className="ml-2 text-gray-900 dark:text-white">
+                    <span className="text-muted-foreground dark:text-muted-foreground">Status:</span>
+                    <span className="ml-2 text-foreground dark:text-white">
                       {t(`security.status.${selectedEvent.status}`)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Timestamp:</span>
-                    <span className="ml-2 text-gray-900 dark:text-white">
+                    <span className="text-muted-foreground dark:text-muted-foreground">Timestamp:</span>
+                    <span className="ml-2 text-foreground dark:text-white">
                       {formatTimestamp(selectedEvent.timestamp)}
                     </span>
                   </div>
@@ -492,32 +492,32 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
               </div>
               
               <div>
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                <h4 className="font-medium text-foreground dark:text-white mb-2">
                   {t('security.eventDetails.userInfo')}
                 </h4>
                 <div className="text-sm space-y-1">
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Name:</span>
-                    <span className="ml-2 text-gray-900 dark:text-white">
+                    <span className="text-muted-foreground dark:text-muted-foreground">Name:</span>
+                    <span className="ml-2 text-foreground dark:text-white">
                       {selectedEvent.user.name}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Email:</span>
-                    <span className="ml-2 text-gray-900 dark:text-white">
+                    <span className="text-muted-foreground dark:text-muted-foreground">Email:</span>
+                    <span className="ml-2 text-foreground dark:text-white">
                       {selectedEvent.user.email}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">IP Address:</span>
-                    <span className="ml-2 text-gray-900 dark:text-white">
+                    <span className="text-muted-foreground dark:text-muted-foreground">IP Address:</span>
+                    <span className="ml-2 text-foreground dark:text-white">
                       {selectedEvent.ipAddress}
                     </span>
                   </div>
                   {selectedEvent.location && (
                     <div>
-                      <span className="text-gray-500 dark:text-gray-400">Location:</span>
-                      <span className="ml-2 text-gray-900 dark:text-white">
+                      <span className="text-muted-foreground dark:text-muted-foreground">Location:</span>
+                      <span className="ml-2 text-foreground dark:text-white">
                         {selectedEvent.location.city}, {selectedEvent.location.country}
                       </span>
                     </div>
@@ -526,28 +526,28 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                <h4 className="font-medium text-foreground dark:text-white mb-2">
                   {t('security.eventDetails.details')}
                 </h4>
                 <div className="text-sm space-y-1">
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Action:</span>
-                    <span className="ml-2 text-gray-900 dark:text-white">
+                    <span className="text-muted-foreground dark:text-muted-foreground">Action:</span>
+                    <span className="ml-2 text-foreground dark:text-white">
                       {selectedEvent.details.action}
                     </span>
                   </div>
                   {selectedEvent.details.resource && (
                     <div>
-                      <span className="text-gray-500 dark:text-gray-400">Resource:</span>
-                      <span className="ml-2 text-gray-900 dark:text-white">
+                      <span className="text-muted-foreground dark:text-muted-foreground">Resource:</span>
+                      <span className="ml-2 text-foreground dark:text-white">
                         {selectedEvent.details.resource}
                       </span>
                     </div>
                   )}
                   {selectedEvent.details.reason && (
                     <div>
-                      <span className="text-gray-500 dark:text-gray-400">Reason:</span>
-                      <span className="ml-2 text-gray-900 dark:text-white">
+                      <span className="text-muted-foreground dark:text-muted-foreground">Reason:</span>
+                      <span className="ml-2 text-foreground dark:text-white">
                         {selectedEvent.details.reason}
                       </span>
                     </div>

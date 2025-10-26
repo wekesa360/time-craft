@@ -13,6 +13,7 @@ import {
   Trash2,
   AlertCircle
 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '../../ui/Card';
 
 interface CalendarIntegration {
   id: string;
@@ -86,7 +87,7 @@ const CalendarIntegrations: React.FC = () => {
         return (
           <div className="w-5 h-5 flex items-center justify-center">
             <svg viewBox="0 0 24 24" className="w-5 h-5">
-              <path fill="currentColor" className="text-gray-800 dark:text-gray-300" d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              <path fill="currentColor" className="text-muted-foreground dark:text-muted-foreground" d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
             </svg>
           </div>
         );
@@ -101,20 +102,20 @@ const CalendarIntegrations: React.FC = () => {
           </div>
         );
       default:
-        return <Calendar className="w-5 h-5 text-gray-500" />;
+        return <Calendar className="w-5 h-5 text-muted-foreground" />;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'connected':
-        return <Check className="w-4 h-4 text-green-500" />;
+        return <Check className="w-4 h-4 text-success" />;
       case 'syncing':
-        return <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />;
+        return <RefreshCw className="w-4 h-4 text-info-light0 animate-spin" />;
       case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
+        return <AlertCircle className="w-4 h-4 text-error-light0" />;
       default:
-        return <X className="w-4 h-4 text-gray-400" />;
+        return <X className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -227,22 +228,23 @@ const CalendarIntegrations: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto flex items-center justify-center py-12">
         <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-        <span className="ml-3 text-gray-600 dark:text-gray-300">Loading integrations...</span>
+        <span className="ml-3 text-muted-foreground dark:text-muted-foreground">Loading integrations...</span>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Calendar Integrations
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-foreground mb-3">
+          Calendar Integrations
+        </h2>
+        <p className="text-lg text-muted-foreground">
+          Connect your external calendars for seamless scheduling
+        </p>
+        <div className="mt-2">
+          <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
             {integrations.length} connected
           </span>
         </div>
@@ -250,38 +252,40 @@ const CalendarIntegrations: React.FC = () => {
 
       {/* Connected Integrations */}
       {integrations.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold">
               Connected Calendars
-            </h3>
-          </div>
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             {integrations.map((integration) => (
-              <div key={integration.id} className="p-4">
+              <div key={integration.id} className="p-4 bg-muted/50 border border-border/50 rounded-xl">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {getProviderIcon(integration.type)}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-background border border-border flex items-center justify-center">
+                      {getProviderIcon(integration.type)}
+                    </div>
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="font-bold text-foreground text-lg">
                         {integration.name}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-sm text-muted-foreground">
                         {integration.email} • {integration.calendarCount} calendars
                       </div>
                       {integration.lastSync && (
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted-foreground">
                           Last sync: {new Date(integration.lastSync).toLocaleString()}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     {/* Status */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-background border border-border">
                       {getStatusIcon(integration.status)}
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                      <span className="text-sm font-medium text-foreground">
                         {getStatusText(integration.status)}
                       </span>
                     </div>
@@ -292,9 +296,9 @@ const CalendarIntegrations: React.FC = () => {
                         type="checkbox"
                         checked={integration.syncEnabled}
                         onChange={() => toggleSync(integration.id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-border text-primary focus:ring-primary"
                       />
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                      <span className="text-sm font-medium text-foreground">
                         Auto-sync
                       </span>
                     </label>
@@ -304,49 +308,51 @@ const CalendarIntegrations: React.FC = () => {
                       <button
                         onClick={() => handleSync(integration.id)}
                         disabled={integration.status === 'syncing'}
-                        className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                        className="p-2 text-primary hover:bg-primary/10 rounded-xl transition-all hover:scale-110 disabled:opacity-50"
                         title="Sync now"
                       >
-                        <RefreshCw className={`w-4 h-4 ${integration.status === 'syncing' ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`w-5 h-5 ${integration.status === 'syncing' ? 'animate-spin' : ''}`} />
                       </button>
                       <button
                         onClick={() => handleDisconnect(integration.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        className="p-2 text-destructive hover:bg-destructive/10 rounded-xl transition-all hover:scale-110"
                         title="Disconnect"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Available Integrations */}
       {availableToConnect.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold">
               Available Integrations
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            </CardTitle>
+            <p className="text-muted-foreground mt-2">
               Connect additional calendar providers
             </p>
-          </div>
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          </CardHeader>
+          <CardContent className="space-y-4">
             {availableToConnect.map((provider) => (
-              <div key={provider.id} className="p-4">
+              <div key={provider.id} className="p-4 bg-muted/50 border border-border/50 rounded-xl">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {getProviderIcon(provider.id)}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-background border border-border flex items-center justify-center">
+                      {getProviderIcon(provider.id)}
+                    </div>
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="font-bold text-foreground text-lg">
                         {provider.name}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-sm text-muted-foreground">
                         {provider.description}
                       </div>
                     </div>
@@ -355,7 +361,7 @@ const CalendarIntegrations: React.FC = () => {
                   <button
                     onClick={() => handleConnect(provider.id)}
                     disabled={isConnecting === provider.id}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all hover:scale-105 disabled:opacity-50 font-medium shadow-md"
                   >
                     {isConnecting === provider.id ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
@@ -367,29 +373,28 @@ const CalendarIntegrations: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Sync Settings */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Settings className="w-5 h-5" />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">
             Sync Settings
-          </h3>
-        </div>
-        <div className="p-4 space-y-4">
-          <div className="flex items-center justify-between">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between p-4 bg-muted/50 border border-border/50 rounded-xl">
             <div>
-              <div className="font-medium text-gray-900 dark:text-white">
+              <div className="font-bold text-foreground">
                 Sync Frequency
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="text-sm text-muted-foreground">
                 How often to sync with external calendars
               </div>
             </div>
-            <select className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            <select className="border border-border rounded-xl px-4 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
               <option value="5">Every 5 minutes</option>
               <option value="15">Every 15 minutes</option>
               <option value="30">Every 30 minutes</option>
@@ -397,28 +402,28 @@ const CalendarIntegrations: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 bg-muted/50 border border-border/50 rounded-xl">
             <div>
-              <div className="font-medium text-gray-900 dark:text-white">
+              <div className="font-bold text-foreground">
                 Conflict Resolution
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="text-sm text-muted-foreground">
                 How to handle scheduling conflicts
               </div>
             </div>
-            <select className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            <select className="border border-border rounded-xl px-4 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
               <option value="external">Prioritize external calendars</option>
               <option value="timecraft">Prioritize TimeCraft</option>
               <option value="manual">Manual resolution</option>
             </select>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 bg-muted/50 border border-border/50 rounded-xl">
             <div>
-              <div className="font-medium text-gray-900 dark:text-white">
+              <div className="font-bold text-foreground">
                 Two-way Sync
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="text-sm text-muted-foreground">
                 Allow TimeCraft events to sync back to external calendars
               </div>
             </div>
@@ -426,30 +431,14 @@ const CalendarIntegrations: React.FC = () => {
               <input
                 type="checkbox"
                 defaultChecked
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-border text-primary focus:ring-primary w-5 h-5"
               />
             </label>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Help Section */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-          <div>
-            <h4 className="font-medium text-blue-900 dark:text-blue-100">
-              Calendar Integration Help
-            </h4>
-            <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
-              • Connecting a calendar will sync all your existing events to TimeCraft
-              • New events created in external calendars will automatically appear here
-              • Events created in TimeCraft can be synced back to your external calendars
-              • You can temporarily disable sync for any calendar without disconnecting
-            </p>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 };

@@ -23,7 +23,7 @@ const VoiceAnalytics: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full"></div>
-        <span className="ml-3 text-gray-600 dark:text-gray-300">Loading analytics...</span>
+        <span className="ml-3 text-muted-foreground dark:text-muted-foreground">Loading analytics...</span>
       </div>
     );
   }
@@ -31,60 +31,60 @@ const VoiceAnalytics: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-2xl font-bold text-foreground dark:text-white mb-2">
           Voice Analytics
         </h2>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-muted-foreground dark:text-muted-foreground">
           Insights into your voice processing usage and accuracy
         </p>
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            <h3 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
               Total Notes
             </h3>
             <span className="text-2xl">🎤</span>
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="text-2xl font-bold text-foreground dark:text-white">
             {analytics?.totalNotes || 0}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            <h3 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
               Total Duration
             </h3>
             <span className="text-2xl">⏱️</span>
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="text-2xl font-bold text-foreground dark:text-white">
             {formatDuration(analytics?.totalDuration || 0)}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            <h3 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
               Avg Confidence
             </h3>
             <span className="text-2xl">🎯</span>
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="text-2xl font-bold text-foreground dark:text-white">
             {formatPercentage(analytics?.averageConfidence || 0)}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            <h3 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
               Commands Executed
             </h3>
             <span className="text-2xl">⚡</span>
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="text-2xl font-bold text-foreground dark:text-white">
             {analytics?.commandsExecuted || 0}
           </div>
         </div>
@@ -92,8 +92,8 @@ const VoiceAnalytics: React.FC = () => {
 
       <div className="grid lg:grid-cols-2 gap-6 mb-8">
         {/* Top Commands */}
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             Most Used Commands
           </h3>
           
@@ -116,11 +116,11 @@ const VoiceAnalytics: React.FC = () => {
                       <span className="text-lg">
                         {commandIcons[command] || '💬'}
                       </span>
-                      <span className="text-gray-900 dark:text-white font-medium">
+                      <span className="text-foreground dark:text-white font-medium">
                         {command.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </span>
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                       #{index + 1}
                     </div>
                   </div>
@@ -130,7 +130,7 @@ const VoiceAnalytics: React.FC = () => {
           ) : (
             <div className="text-center py-8">
               <div className="text-4xl mb-2">🗣️</div>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-muted-foreground dark:text-muted-foreground">
                 No commands executed yet
               </p>
             </div>
@@ -138,8 +138,8 @@ const VoiceAnalytics: React.FC = () => {
         </div>
 
         {/* Accuracy Trend */}
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             Accuracy Trend
           </h3>
           
@@ -157,13 +157,13 @@ const VoiceAnalytics: React.FC = () => {
                 ))}
               </div>
               
-              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex justify-between text-xs text-muted-foreground dark:text-muted-foreground">
                 <span>7 days ago</span>
                 <span>Today</span>
               </div>
               
               <div className="text-center">
-                <div className="text-sm text-gray-600 dark:text-gray-300">
+                <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                   Current Accuracy
                 </div>
                 <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
@@ -174,7 +174,7 @@ const VoiceAnalytics: React.FC = () => {
           ) : (
             <div className="text-center py-8">
               <div className="text-4xl mb-2">📈</div>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-muted-foreground dark:text-muted-foreground">
                 Not enough data for trend analysis
               </p>
             </div>
@@ -184,16 +184,16 @@ const VoiceAnalytics: React.FC = () => {
 
       {/* Usage Insights */}
       <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-purple-200 dark:border-purple-800">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
           📊 Usage Insights
         </h3>
         
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+            <h4 className="font-medium text-foreground dark:text-white mb-2">
               Recording Habits
             </h4>
-            <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+            <ul className="space-y-1 text-sm text-muted-foreground dark:text-muted-foreground">
               <li>
                 • Average note length: {analytics?.totalNotes ? formatDuration((analytics.totalDuration || 0) / analytics.totalNotes) : '0m'}
               </li>
@@ -208,10 +208,10 @@ const VoiceAnalytics: React.FC = () => {
           </div>
           
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+            <h4 className="font-medium text-foreground dark:text-white mb-2">
               Recommendations
             </h4>
-            <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+            <ul className="space-y-1 text-sm text-muted-foreground dark:text-muted-foreground">
               {(analytics?.averageConfidence || 0) < 0.8 && (
                 <li>• Try speaking more clearly for better accuracy</li>
               )}

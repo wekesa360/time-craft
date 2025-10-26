@@ -25,28 +25,28 @@ interface MetricCardProps {
 
 const colorClasses = {
   blue: {
-    bg: 'bg-blue-50 dark:bg-blue-900/20',
+    bg: 'bg-info-light dark:bg-info/20',
     border: 'border-blue-200 dark:border-blue-800',
-    icon: 'text-blue-600 dark:text-blue-400',
-    iconBg: 'bg-blue-100 dark:bg-blue-900/40',
+    icon: 'text-info dark:text-info',
+    iconBg: 'bg-info-light dark:bg-info/40',
   },
   green: {
-    bg: 'bg-green-50 dark:bg-green-900/20',
+    bg: 'bg-success-light dark:bg-success/20',
     border: 'border-green-200 dark:border-green-800',
-    icon: 'text-green-600 dark:text-green-400',
-    iconBg: 'bg-green-100 dark:bg-green-900/40',
+    icon: 'text-success dark:text-success-light',
+    iconBg: 'bg-success-light dark:bg-success/40',
   },
   yellow: {
-    bg: 'bg-yellow-50 dark:bg-yellow-900/20',
+    bg: 'bg-warning-light dark:bg-warning/20',
     border: 'border-yellow-200 dark:border-yellow-800',
-    icon: 'text-yellow-600 dark:text-yellow-400',
-    iconBg: 'bg-yellow-100 dark:bg-yellow-900/40',
+    icon: 'text-warning dark:text-warning-light',
+    iconBg: 'bg-warning-light dark:bg-warning/40',
   },
   red: {
-    bg: 'bg-red-50 dark:bg-red-900/20',
+    bg: 'bg-error-light dark:bg-error/20',
     border: 'border-red-200 dark:border-red-800',
-    icon: 'text-red-600 dark:text-red-400',
-    iconBg: 'bg-red-100 dark:bg-red-900/40',
+    icon: 'text-error dark:text-error-light',
+    iconBg: 'bg-error-light dark:bg-error/40',
   },
   purple: {
     bg: 'bg-purple-50 dark:bg-purple-900/20',
@@ -55,10 +55,10 @@ const colorClasses = {
     iconBg: 'bg-purple-100 dark:bg-purple-900/40',
   },
   gray: {
-    bg: 'bg-gray-50 dark:bg-gray-800',
+    bg: 'bg-muted dark:bg-muted',
     border: 'border-gray-200 dark:border-gray-700',
-    icon: 'text-gray-600 dark:text-gray-400',
-    iconBg: 'bg-gray-100 dark:bg-gray-700',
+    icon: 'text-muted-foreground dark:text-muted-foreground',
+    iconBg: 'bg-muted dark:bg-muted',
   },
 };
 
@@ -104,11 +104,11 @@ const TrendIndicator: React.FC<{ trend: NonNullable<MetricCardProps['trend']> }>
   return (
     <div className={cn(
       'flex items-center space-x-1 text-xs font-medium',
-      isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+      isPositive ? 'text-success dark:text-success-light' : 'text-error dark:text-error-light'
     )}>
       {TrendIcon}
       <span>{Math.abs(trend.value)}%</span>
-      {trend.label && <span className="text-gray-500 dark:text-gray-400">{trend.label}</span>}
+      {trend.label && <span className="text-muted-foreground dark:text-muted-foreground">{trend.label}</span>}
     </div>
   );
 };
@@ -117,11 +117,11 @@ const MetricCardSkeleton: React.FC<{ size: 'sm' | 'md' | 'lg' }> = ({ size }) =>
   <div className={cn('animate-pulse', sizeClasses[size].container)}>
     <div className="flex items-center justify-between">
       <div className="space-y-2 flex-1">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+        <div className="h-4 bg-muted dark:bg-muted rounded w-3/4"></div>
+        <div className="h-8 bg-muted dark:bg-muted rounded w-1/2"></div>
+        <div className="h-3 bg-muted dark:bg-muted rounded w-2/3"></div>
       </div>
-      <div className={cn('bg-gray-200 dark:bg-gray-700 rounded-lg', sizeClasses[size].icon)}></div>
+      <div className={cn('bg-muted dark:bg-muted rounded-lg', sizeClasses[size].icon)}></div>
     </div>
   </div>
 );
@@ -144,7 +144,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   if (loading) {
     return (
       <div className={cn(
-        'bg-white dark:bg-gray-800 rounded-lg border',
+        'bg-white dark:bg-muted rounded-lg border',
         colorClass.border,
         className
       )}>
@@ -156,7 +156,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   return (
     <div
       className={cn(
-        'bg-white dark:bg-gray-800 rounded-lg border transition-all duration-200',
+        'bg-white dark:bg-muted rounded-lg border transition-all duration-200',
         colorClass.border,
         onClick && 'cursor-pointer hover:shadow-md hover:scale-105',
         className
@@ -167,20 +167,20 @@ const MetricCard: React.FC<MetricCardProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <p className={cn(
-              'font-medium text-gray-600 dark:text-gray-300',
+              'font-medium text-muted-foreground dark:text-muted-foreground',
               sizeClass.title
             )}>
               {title}
             </p>
             <p className={cn(
-              'font-bold text-gray-900 dark:text-white mt-1',
+              'font-bold text-foreground dark:text-white mt-1',
               sizeClass.value
             )}>
               {value}
             </p>
             {subtitle && (
               <p className={cn(
-                'text-gray-500 dark:text-gray-400 mt-1',
+                'text-muted-foreground dark:text-muted-foreground mt-1',
                 sizeClass.subtitle
               )}>
                 {subtitle}

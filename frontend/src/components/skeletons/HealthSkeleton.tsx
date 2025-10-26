@@ -28,7 +28,7 @@ export const HealthDashboardSkeleton: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Vital Signs Chart */}
-        <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+        <div className="bg-white dark:bg-muted border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <Skeleton className="h-6 w-32" />
             <div className="flex space-x-2">
@@ -48,7 +48,7 @@ export const HealthDashboardSkeleton: React.FC = () => {
         </div>
 
         {/* Sleep Tracking */}
-        <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+        <div className="bg-white dark:bg-muted border rounded-lg p-6">
           <Skeleton className="h-6 w-28 mb-4" />
           <div className="space-y-4">
             <div className="text-center">
@@ -77,7 +77,7 @@ export const HealthDashboardSkeleton: React.FC = () => {
         </div>
 
         {/* Activity Summary */}
-        <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+        <div className="bg-white dark:bg-muted border rounded-lg p-6">
           <Skeleton className="h-6 w-32 mb-4" />
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, index) => (
@@ -99,7 +99,7 @@ export const HealthDashboardSkeleton: React.FC = () => {
         </div>
 
         {/* Health Goals */}
-        <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+        <div className="bg-white dark:bg-muted border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <Skeleton className="h-6 w-28" />
             <Skeleton className="h-8 w-20" />
@@ -122,7 +122,7 @@ export const HealthDashboardSkeleton: React.FC = () => {
       </div>
 
       {/* Recent Logs */}
-      <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+      <div className="bg-white dark:bg-muted border rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <Skeleton className="h-6 w-28" />
           <Skeleton className="h-8 w-20" />
@@ -150,7 +150,7 @@ export const HealthDashboardSkeleton: React.FC = () => {
 
 export const HealthMetricSkeleton: React.FC = () => {
   return (
-    <div className="bg-white dark:bg-gray-800 border rounded-lg p-4">
+    <div className="bg-white dark:bg-muted border rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <Skeleton className="h-5 w-5" />

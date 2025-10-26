@@ -180,7 +180,7 @@ export const HydrationLogger: React.FC<HydrationLoggerProps> = ({
           </div>
 
           {errors.amount && (
-            <p className="text-red-500 text-sm text-center">{errors.amount}</p>
+            <p className="text-error-light0 text-sm text-center">{errors.amount}</p>
           )}
         </div>
 
@@ -220,7 +220,7 @@ export const HydrationLogger: React.FC<HydrationLoggerProps> = ({
               </p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-2xl font-bold text-info">
                 +{formatAmount(formData.amount)}
               </p>
               <p className="text-sm text-foreground-secondary">hydration</p>
@@ -229,9 +229,9 @@ export const HydrationLogger: React.FC<HydrationLoggerProps> = ({
         </div>
 
         {/* Hydration Tips */}
-        <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-4">Hydration Tips</h4>
-          <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
+        <div className="bg-info-light dark:bg-info/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+          <h4 className="font-semibold text-info dark:text-info-light mb-4">Hydration Tips</h4>
+          <ul className="text-sm text-info dark:text-info-light space-y-2">
             <li>• Aim for 8-10 glasses (2-2.5L) of water daily</li>
             <li>• Drink more during exercise or hot weather</li>
             <li>• Start your day with a glass of water</li>

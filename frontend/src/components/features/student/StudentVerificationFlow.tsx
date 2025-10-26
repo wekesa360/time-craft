@@ -186,7 +186,7 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
       <div className={`flex items-center justify-center py-12 ${className}`}>
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">{t('student.verification.loading')}</p>
+          <p className="text-muted-foreground dark:text-muted-foreground">{t('student.verification.loading')}</p>
         </div>
       </div>
     );
@@ -205,27 +205,27 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
             <div key={stepKey} className="flex items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                 step === stepKey
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-info text-white'
                   : ['email', 'otp', 'verified'].indexOf(step) > index
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                  ? 'bg-success text-white'
+                  : 'bg-muted dark:bg-muted text-muted-foreground dark:text-muted-foreground'
               }`}>
                 {['email', 'otp', 'verified'].indexOf(step) > index ? '✓' : icon}
               </div>
               <span className={`ml-2 text-sm font-medium ${
                 step === stepKey
-                  ? 'text-blue-600 dark:text-blue-400'
+                  ? 'text-info dark:text-info'
                   : ['email', 'otp', 'verified'].indexOf(step) > index
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-success dark:text-success-light'
+                  : 'text-muted-foreground dark:text-muted-foreground'
               }`}>
                 {label}
               </span>
               {index < 2 && (
                 <div className={`w-8 h-0.5 mx-2 ${
                   ['email', 'otp', 'verified'].indexOf(step) > index
-                    ? 'bg-green-600'
-                    : 'bg-gray-200 dark:bg-gray-700'
+                    ? 'bg-success'
+                    : 'bg-muted dark:bg-muted'
                 }`} />
               )}
             </div>
@@ -235,24 +235,24 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
 
       {/* Error Display */}
       {error && (
-        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div className="mb-6 bg-error-light dark:bg-error/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <div className="flex items-center">
-            <span className="text-red-600 dark:text-red-400 mr-2">⚠️</span>
-            <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
+            <span className="text-error dark:text-error-light mr-2">⚠️</span>
+            <p className="text-error dark:text-error-light text-sm">{error}</p>
           </div>
         </div>
       )}
 
       {/* Step 1: Email Input */}
       {step === 'email' && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             {t('student.verification.enterEmail')}
           </h3>
           
           <form onSubmit={handleSendOTP} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                 {t('student.verification.studentEmail')}
               </label>
               <input
@@ -260,18 +260,18 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
                 value={studentEmail}
                 onChange={(e) => setStudentEmail(e.target.value)}
                 placeholder="your.name@university.edu"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
                 aria-describedby="email-help"
               />
-              <p id="email-help" className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p id="email-help" className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                 {t('student.verification.emailHelp')}
               </p>
             </div>
 
             {studentEmail && !isEducationalEmail(studentEmail) && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              <div className="bg-warning-light dark:bg-warning/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                <p className="text-sm text-warning dark:text-warning-light">
                   ⚠️ {t('student.verification.nonEducationalWarning')}
                 </p>
               </div>
@@ -281,7 +281,7 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
               <button
                 type="submit"
                 disabled={sendOTPMutation.isPending || !studentEmail || !isEducationalEmail(studentEmail)}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                className="flex-1 px-4 py-2 bg-info text-white rounded-lg hover:bg-info disabled:bg-muted transition-colors"
               >
                 {sendOTPMutation.isPending ? t('student.verification.sending') : t('student.verification.sendOtp')}
               </button>
@@ -290,7 +290,7 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
                 <button
                   type="button"
                   onClick={onCancel}
-                  className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                  className="px-4 py-2 bg-muted dark:bg-muted text-muted-foreground dark:text-muted-foreground rounded-lg hover:bg-muted dark:hover:bg-muted transition-colors"
                 >
                   {t('common.cancel')}
                 </button>
@@ -302,20 +302,20 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
 
       {/* Step 2: OTP Verification */}
       {step === 'otp' && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             {t('student.verification.enterOtp')}
           </h3>
           
           <div className="mb-4">
-            <p className="text-gray-600 dark:text-gray-300 mb-2">
+            <p className="text-muted-foreground dark:text-muted-foreground mb-2">
               {t('student.verification.otpSentTo')}
             </p>
-            <p className="font-medium text-gray-900 dark:text-white">
+            <p className="font-medium text-foreground dark:text-white">
               {studentEmail}
             </p>
             {timeRemaining > 0 && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                 {t('student.verification.expiresIn', { time: formatTime(timeRemaining) })}
               </p>
             )}
@@ -323,7 +323,7 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
 
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                 {t('student.verification.verificationCode')}
               </label>
               <input
@@ -331,7 +331,7 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="123456"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center text-lg font-mono focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white text-center text-lg font-mono focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 maxLength={6}
                 required
                 autoComplete="one-time-code"
@@ -342,7 +342,7 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
               <button
                 type="submit"
                 disabled={verifyOTPMutation.isPending || otp.length !== 6}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors"
+                className="flex-1 px-4 py-2 bg-success text-white rounded-lg hover:bg-success disabled:bg-muted transition-colors"
               >
                 {verifyOTPMutation.isPending ? t('student.verification.verifying') : t('student.verification.verifyCode')}
               </button>
@@ -351,7 +351,7 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
                 type="button"
                 onClick={handleResendOTP}
                 disabled={sendOTPMutation.isPending || timeRemaining > 0}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info disabled:bg-muted transition-colors"
               >
                 {sendOTPMutation.isPending ? t('student.verification.resending') : t('student.verification.resend')}
               </button>
@@ -361,7 +361,7 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
           <div className="mt-4 text-center">
             <button
               onClick={handleStartOver}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm"
+              className="text-info dark:text-info hover:text-info dark:hover:text-info-light text-sm"
             >
               {t('student.verification.changeEmail')}
             </button>
@@ -373,34 +373,34 @@ export const StudentVerificationFlow: React.FC<StudentVerificationFlowProps> = (
       {step === 'verified' && (
         <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6 text-center">
           <div className="text-6xl mb-4">🎓</div>
-          <h3 className="text-xl font-bold text-green-900 dark:text-green-100 mb-2">
+          <h3 className="text-xl font-bold text-success dark:text-success-light mb-2">
             {t('student.verification.successTitle')}
           </h3>
-          <p className="text-green-800 dark:text-green-200 mb-4">
+          <p className="text-success dark:text-success-light mb-4">
             {t('student.verification.successMessage')}
           </p>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 inline-block">
-            <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+          <div className="bg-white dark:bg-muted rounded-lg p-4 inline-block">
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground mb-1">
               {t('student.verification.yourDiscount')}
             </div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">50% OFF</div>
+            <div className="text-2xl font-bold text-success dark:text-success-light">50% OFF</div>
           </div>
         </div>
       )}
 
       {/* Error State */}
       {step === 'error' && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
+        <div className="bg-error-light dark:bg-error/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
           <div className="text-6xl mb-4">❌</div>
-          <h3 className="text-xl font-bold text-red-900 dark:text-red-100 mb-2">
+          <h3 className="text-xl font-bold text-error dark:text-error-light mb-2">
             {t('student.verification.errorTitle')}
           </h3>
-          <p className="text-red-800 dark:text-red-200 mb-4">
+          <p className="text-error dark:text-error-light mb-4">
             {t('student.verification.errorMessage')}
           </p>
           <button
             onClick={handleStartOver}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-error text-white rounded-lg hover:bg-error transition-colors"
           >
             {t('student.verification.tryAgain')}
           </button>

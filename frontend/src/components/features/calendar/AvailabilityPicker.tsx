@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { AvailabilitySlot } from '../../../types';
+import { Card, CardHeader, CardTitle, CardContent } from '../../ui/Card';
 
 export const AvailabilityPicker: React.FC = () => {
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([
@@ -127,228 +128,234 @@ export const AvailabilityPicker: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+    <div className="max-w-4xl mx-auto space-y-8">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-foreground mb-3">
           Availability Settings
         </h2>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-lg text-muted-foreground">
           Set your weekly availability for AI-powered meeting scheduling
         </p>
       </div>
 
       {/* Timezone Selection */}
-      <div className="bg-white dark:bg-gray-700 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-600">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Timezone
-        </h3>
-        <select
-          value={selectedTimezone}
-          onChange={(e) => handleTimezoneChange(e.target.value)}
-          className="w-full md:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-        >
-          {timezones.map(tz => (
-            <option key={tz} value={tz}>
-              {tz.replace('_', ' ')}
-            </option>
-          ))}
-        </select>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">
+            Timezone
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <select
+            value={selectedTimezone}
+            onChange={(e) => handleTimezoneChange(e.target.value)}
+            className="w-full md:w-auto px-4 py-3 border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            {timezones.map(tz => (
+              <option key={tz} value={tz}>
+                {tz.replace('_', ' ')}
+              </option>
+            ))}
+          </select>
+        </CardContent>
+      </Card>
 
       {/* Weekly Schedule */}
-      <div className="bg-white dark:bg-gray-700 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-600">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Weekly Schedule
-        </h3>
-        
-        <div className="space-y-4">
-          {daysOfWeek.map(day => {
-            const availability = getAvailabilityForDay(day.value);
-            const isAvailable = !!availability;
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">
+            Weekly Schedule
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {daysOfWeek.map(day => {
+              const availability = getAvailabilityForDay(day.value);
+              const isAvailable = !!availability;
 
-            return (
-              <div key={day.value} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-600 rounded-lg">
-                {/* Day Toggle */}
-                <div className="flex items-center gap-3 w-32">
-                  <button
-                    onClick={() => toggleDayAvailability(day.value)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      isAvailable
-                        ? 'bg-blue-600'
-                        : 'bg-gray-200 dark:bg-gray-500'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        isAvailable ? 'translate-x-6' : 'translate-x-1'
+              return (
+                <div key={day.value} className="flex items-center gap-4 p-4 bg-muted/50 border border-border/50 rounded-xl">
+                  {/* Day Toggle */}
+                  <div className="flex items-center gap-3 w-32">
+                    <button
+                      onClick={() => toggleDayAvailability(day.value)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${
+                        isAvailable
+                          ? 'bg-primary shadow-lg'
+                          : 'bg-muted'
                       }`}
-                    />
-                  </button>
-                  <span className={`font-medium ${
-                    isAvailable 
-                      ? 'text-gray-900 dark:text-white' 
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    {day.label}
-                  </span>
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
+                          isAvailable ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className={`font-medium ${
+                      isAvailable 
+                        ? 'text-foreground' 
+                        : 'text-muted-foreground'
+                    }`}>
+                      {day.label}
+                    </span>
+                  </div>
+
+                  {/* Time Selection */}
+                  {isAvailable && availability && (
+                    <div className="flex items-center gap-6 flex-1">
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-foreground min-w-[40px]">From:</label>
+                        <select
+                          value={availability.startTime}
+                          onChange={(e) => updateAvailability(day.value, 'startTime', e.target.value)}
+                          className="px-3 py-2 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-colors min-w-[120px]"
+                        >
+                          {timeSlots.map(slot => (
+                            <option key={slot.value} value={slot.value}>
+                              {slot.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-foreground min-w-[25px]">To:</label>
+                        <select
+                          value={availability.endTime}
+                          onChange={(e) => updateAvailability(day.value, 'endTime', e.target.value)}
+                          className="px-3 py-2 border border-border rounded-xl bg-background text-foreground text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-colors min-w-[120px]"
+                        >
+                          {timeSlots.map(slot => (
+                            <option key={slot.value} value={slot.value}>
+                              {slot.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="px-3 py-2 bg-primary/10 text-primary text-sm font-bold rounded-xl border border-primary/20">
+                        {(() => {
+                          const start = new Date(`2000-01-01T${availability.startTime}:00`);
+                          const end = new Date(`2000-01-01T${availability.endTime}:00`);
+                          const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                          return `${hours}h`;
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
+                  {!isAvailable && (
+                    <div className="flex-1 text-muted-foreground text-sm">
+                      Not available
+                    </div>
+                  )}
                 </div>
-
-                {/* Time Selection */}
-                {isAvailable && availability && (
-                  <div className="flex items-center gap-6 flex-1">
-                    <div className="flex items-center gap-3">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[40px]">From:</label>
-                      <select
-                        value={availability.startTime}
-                        onChange={(e) => updateAvailability(day.value, 'startTime', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-w-[120px]"
-                      >
-                        {timeSlots.map(slot => (
-                          <option key={slot.value} value={slot.value}>
-                            {slot.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[25px]">To:</label>
-                      <select
-                        value={availability.endTime}
-                        onChange={(e) => updateAvailability(day.value, 'endTime', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-w-[120px]"
-                      >
-                        {timeSlots.map(slot => (
-                          <option key={slot.value} value={slot.value}>
-                            {slot.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-lg border border-blue-200 dark:border-blue-800">
-                      {(() => {
-                        const start = new Date(`2000-01-01T${availability.startTime}:00`);
-                        const end = new Date(`2000-01-01T${availability.endTime}:00`);
-                        const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-                        return `${hours}h`;
-                      })()}
-                    </div>
-                  </div>
-                )}
-
-                {!isAvailable && (
-                  <div className="flex-1 text-gray-500 dark:text-gray-400 text-sm">
-                    Not available
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick Presets */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8 border border-gray-200 dark:border-gray-700">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-          Quick Presets
-        </h3>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">
+            Quick Presets
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <button
+              onClick={() => {
+                setAvailabilitySlots([
+                  { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', timezone: selectedTimezone },
+                  { dayOfWeek: 2, startTime: '09:00', endTime: '17:00', timezone: selectedTimezone },
+                  { dayOfWeek: 3, startTime: '09:00', endTime: '17:00', timezone: selectedTimezone },
+                  { dayOfWeek: 4, startTime: '09:00', endTime: '17:00', timezone: selectedTimezone },
+                  { dayOfWeek: 5, startTime: '09:00', endTime: '17:00', timezone: selectedTimezone },
+                ]);
+                setHasChanges(true);
+              }}
+              className="p-4 border border-border rounded-xl hover:bg-muted hover:border-primary/50 transition-all hover:scale-105 text-left"
+            >
+              <div className="font-bold text-foreground mb-2">Business Hours</div>
+              <div className="text-sm text-muted-foreground">
+                Mon-Fri, 9 AM - 5 PM
+              </div>
+            </button>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          <button
-            onClick={() => {
-              setAvailabilitySlots([
-                { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', timezone: selectedTimezone },
-                { dayOfWeek: 2, startTime: '09:00', endTime: '17:00', timezone: selectedTimezone },
-                { dayOfWeek: 3, startTime: '09:00', endTime: '17:00', timezone: selectedTimezone },
-                { dayOfWeek: 4, startTime: '09:00', endTime: '17:00', timezone: selectedTimezone },
-                { dayOfWeek: 5, startTime: '09:00', endTime: '17:00', timezone: selectedTimezone },
-              ]);
-              setHasChanges(true);
-            }}
-            className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-left"
-          >
-            <div className="font-medium text-gray-900 dark:text-white mb-1">
-              Business Hours
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              Mon-Fri, 9 AM - 5 PM
-            </div>
-          </button>
+            <button
+              onClick={() => {
+                setAvailabilitySlots([
+                  { dayOfWeek: 1, startTime: '10:00', endTime: '14:00', timezone: selectedTimezone },
+                  { dayOfWeek: 2, startTime: '10:00', endTime: '14:00', timezone: selectedTimezone },
+                  { dayOfWeek: 3, startTime: '10:00', endTime: '14:00', timezone: selectedTimezone },
+                  { dayOfWeek: 4, startTime: '10:00', endTime: '14:00', timezone: selectedTimezone },
+                  { dayOfWeek: 5, startTime: '10:00', endTime: '14:00', timezone: selectedTimezone },
+                ]);
+                setHasChanges(true);
+              }}
+              className="p-4 border border-border rounded-xl hover:bg-muted hover:border-primary/50 transition-all hover:scale-105 text-left"
+            >
+              <div className="font-bold text-foreground mb-2">Core Hours</div>
+              <div className="text-sm text-muted-foreground">
+                Mon-Fri, 10 AM - 2 PM
+              </div>
+            </button>
 
-          <button
-            onClick={() => {
-              setAvailabilitySlots([
-                { dayOfWeek: 1, startTime: '10:00', endTime: '14:00', timezone: selectedTimezone },
-                { dayOfWeek: 2, startTime: '10:00', endTime: '14:00', timezone: selectedTimezone },
-                { dayOfWeek: 3, startTime: '10:00', endTime: '14:00', timezone: selectedTimezone },
-                { dayOfWeek: 4, startTime: '10:00', endTime: '14:00', timezone: selectedTimezone },
-                { dayOfWeek: 5, startTime: '10:00', endTime: '14:00', timezone: selectedTimezone },
-              ]);
-              setHasChanges(true);
-            }}
-            className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-left"
-          >
-            <div className="font-medium text-gray-900 dark:text-white mb-1">
-              Core Hours
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              Mon-Fri, 10 AM - 2 PM
-            </div>
-          </button>
-
-          <button
-            onClick={() => {
-              setAvailabilitySlots([
-                { dayOfWeek: 1, startTime: '08:00', endTime: '20:00', timezone: selectedTimezone },
-                { dayOfWeek: 2, startTime: '08:00', endTime: '20:00', timezone: selectedTimezone },
-                { dayOfWeek: 3, startTime: '08:00', endTime: '20:00', timezone: selectedTimezone },
-                { dayOfWeek: 4, startTime: '08:00', endTime: '20:00', timezone: selectedTimezone },
-                { dayOfWeek: 5, startTime: '08:00', endTime: '20:00', timezone: selectedTimezone },
-                { dayOfWeek: 6, startTime: '10:00', endTime: '16:00', timezone: selectedTimezone },
-                { dayOfWeek: 0, startTime: '10:00', endTime: '16:00', timezone: selectedTimezone },
-              ]);
-              setHasChanges(true);
-            }}
-            className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-left"
-          >
-            <div className="font-medium text-gray-900 dark:text-white mb-1">
-              Extended Hours
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              7 days, flexible hours
-            </div>
-          </button>
-        </div>
-      </div>
+            <button
+              onClick={() => {
+                setAvailabilitySlots([
+                  { dayOfWeek: 1, startTime: '08:00', endTime: '20:00', timezone: selectedTimezone },
+                  { dayOfWeek: 2, startTime: '08:00', endTime: '20:00', timezone: selectedTimezone },
+                  { dayOfWeek: 3, startTime: '08:00', endTime: '20:00', timezone: selectedTimezone },
+                  { dayOfWeek: 4, startTime: '08:00', endTime: '20:00', timezone: selectedTimezone },
+                  { dayOfWeek: 5, startTime: '08:00', endTime: '20:00', timezone: selectedTimezone },
+                  { dayOfWeek: 6, startTime: '10:00', endTime: '16:00', timezone: selectedTimezone },
+                  { dayOfWeek: 0, startTime: '10:00', endTime: '16:00', timezone: selectedTimezone },
+                ]);
+                setHasChanges(true);
+              }}
+              className="p-4 border border-border rounded-xl hover:bg-muted hover:border-primary/50 transition-all hover:scale-105 text-left"
+            >
+              <div className="font-bold text-foreground mb-2">Extended Hours</div>
+              <div className="text-sm text-muted-foreground">
+                7 days, flexible hours
+              </div>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Summary */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6">
-        <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">
-          Availability Summary
-        </h3>
-        <div className="grid md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <div className="text-blue-800 dark:text-blue-200 font-medium">Available Days</div>
-            <div className="text-blue-600 dark:text-blue-300">{availabilitySlots.length} days</div>
+      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+        <CardContent className="p-6">
+          <h3 className="font-bold text-primary mb-4 text-lg">
+            Availability Summary
+          </h3>
+          <div className="grid md:grid-cols-3 gap-6 text-sm">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary mb-1">{availabilitySlots.length}</div>
+              <div className="text-primary font-medium">Available Days</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary mb-1">{getTotalHoursPerWeek()}</div>
+              <div className="text-primary font-medium">Total Hours/Week</div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm font-bold text-primary mb-1">{selectedTimezone.replace('_', ' ')}</div>
+              <div className="text-primary font-medium">Timezone</div>
+            </div>
           </div>
-          <div>
-            <div className="text-blue-800 dark:text-blue-200 font-medium">Total Hours/Week</div>
-            <div className="text-blue-600 dark:text-blue-300">{getTotalHoursPerWeek()} hours</div>
-          </div>
-          <div>
-            <div className="text-blue-800 dark:text-blue-200 font-medium">Timezone</div>
-            <div className="text-blue-600 dark:text-blue-300">{selectedTimezone.replace('_', ' ')}</div>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
+      <div className="flex justify-center gap-4">
         <button
           onClick={handleSave}
           disabled={!hasChanges}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+          className="px-8 py-3 bg-primary text-primary-foreground rounded-2xl hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground transition-all hover:scale-105 font-semibold shadow-lg disabled:hover:scale-100"
         >
           Save Availability
         </button>
@@ -356,32 +363,23 @@ export const AvailabilityPicker: React.FC = () => {
         <button
           onClick={handleReset}
           disabled={!hasChanges}
-          className="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 disabled:bg-gray-200 dark:disabled:bg-gray-700 transition-colors"
+          className="px-8 py-3 bg-muted text-muted-foreground rounded-2xl hover:bg-muted/80 disabled:bg-muted/50 transition-all hover:scale-105 font-semibold disabled:hover:scale-100"
         >
           Reset to Default
         </button>
       </div>
 
       {hasChanges && (
-        <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200">
-            You have unsaved changes. Don't forget to save your availability settings!
-          </p>
-        </div>
+        <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+          <CardContent className="p-4">
+            <p className="text-sm text-amber-700">
+              You have unsaved changes. Don't forget to save your availability settings!
+            </p>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Tips */}
-      <div className="mt-8 bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-          Availability Tips
-        </h3>
-        <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-          <li>Set realistic availability windows to avoid scheduling conflicts</li>
-          <li>Consider buffer time between meetings for preparation and breaks</li>
-          <li>Update your availability regularly to reflect schedule changes</li>
-          <li>The AI will use these settings to suggest optimal meeting times</li>
-        </ul>
-      </div>
+
     </div>
   );
 };

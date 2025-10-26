@@ -44,7 +44,7 @@ interface ThemeProviderProps {
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
   defaultMode = 'system',
-  defaultColorScheme = 'blue',
+  defaultColorScheme = 'orange',
 }) => {
   const [mode, setModeState] = useState<ThemeMode>(defaultMode);
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>(defaultColorScheme);
@@ -140,7 +140,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   // Don't render until theme is loaded
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900">
+      <div className="min-h-screen bg-white dark:bg-muted">
         <div className="flex items-center justify-center h-screen">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -179,7 +179,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) 
     <div className={`space-y-4 ${className}`}>
       {/* Mode selector */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
           Theme Mode
         </label>
         <div className="flex space-x-2">
@@ -193,8 +193,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) 
               onClick={() => setMode(value as ThemeMode)}
               className={`px-3 py-2 text-sm rounded-md transition-colors ${
                 mode === value
-                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                  : 'text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
+                  ? 'bg-info-light text-info dark:bg-info dark:text-info-light'
+                  : 'text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-white'
               }`}
             >
               {label}
@@ -205,7 +205,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) 
 
       {/* Color scheme selector */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
           Color Scheme
         </label>
         <div className="grid grid-cols-3 gap-2">
@@ -222,8 +222,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) 
               onClick={() => setColorScheme(value as ColorScheme)}
               className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-md transition-colors ${
                 colorScheme === value
-                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                  : 'text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
+                  ? 'bg-info-light text-info dark:bg-info dark:text-info-light'
+                  : 'text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-white'
               }`}
             >
               <div
@@ -240,7 +240,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) 
       <div>
         <button
           onClick={toggleMode}
-          className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+          className="w-full px-4 py-2 text-sm font-medium text-white bg-info rounded-md hover:bg-info transition-colors"
         >
           Toggle Theme
         </button>

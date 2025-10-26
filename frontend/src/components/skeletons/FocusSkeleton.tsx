@@ -20,7 +20,7 @@ export const FocusSessionSkeleton: React.FC = () => {
       </div>
 
       {/* Timer Display */}
-      <div className="bg-white dark:bg-gray-800 border rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-muted border rounded-lg p-8 text-center">
         <Skeleton className="h-32 w-32 rounded-full mx-auto mb-6" />
         <Skeleton className="h-12 w-40 mx-auto mb-4" />
         <div className="flex justify-center space-x-4 mb-6">
@@ -41,7 +41,7 @@ export const FocusSessionSkeleton: React.FC = () => {
       </div>
 
       {/* Session Settings */}
-      <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+      <div className="bg-white dark:bg-muted border rounded-lg p-6">
         <Skeleton className="h-6 w-32 mb-4" />
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
@@ -64,7 +64,7 @@ export const FocusSessionSkeleton: React.FC = () => {
       </div>
 
       {/* Recent Sessions */}
-      <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+      <div className="bg-white dark:bg-muted border rounded-lg p-6">
         <Skeleton className="h-6 w-36 mb-4" />
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, index) => (
@@ -100,7 +100,7 @@ export const FocusStatsSkeleton: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="bg-white dark:bg-gray-800 border rounded-lg p-4">
+          <div key={index} className="bg-white dark:bg-muted border rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-4 w-4" />
@@ -116,7 +116,7 @@ export const FocusStatsSkeleton: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Weekly Focus Chart */}
-        <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+        <div className="bg-white dark:bg-muted border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <Skeleton className="h-6 w-32" />
             <Skeleton className="h-8 w-24" />
@@ -125,7 +125,7 @@ export const FocusStatsSkeleton: React.FC = () => {
         </div>
 
         {/* Focus Categories */}
-        <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+        <div className="bg-white dark:bg-muted border rounded-lg p-6">
           <Skeleton className="h-6 w-36 mb-4" />
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, index) => (
@@ -144,7 +144,7 @@ export const FocusStatsSkeleton: React.FC = () => {
         </div>
 
         {/* Productivity Trends */}
-        <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+        <div className="bg-white dark:bg-muted border rounded-lg p-6">
           <Skeleton className="h-6 w-40 mb-4" />
           <ChartSkeleton height={180} />
           <div className="flex justify-center space-x-6 mt-4">
@@ -158,7 +158,7 @@ export const FocusStatsSkeleton: React.FC = () => {
         </div>
 
         {/* Focus Goals */}
-        <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+        <div className="bg-white dark:bg-muted border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <Skeleton className="h-6 w-28" />
             <Skeleton className="h-8 w-20" />
@@ -181,7 +181,7 @@ export const FocusStatsSkeleton: React.FC = () => {
       </div>
 
       {/* Session History */}
-      <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+      <div className="bg-white dark:bg-muted border rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <Skeleton className="h-6 w-32" />
           <div className="flex space-x-2">

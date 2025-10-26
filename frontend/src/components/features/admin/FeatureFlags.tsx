@@ -137,28 +137,28 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
   const getEnvironmentColor = (environment: FeatureFlag['environment']) => {
     switch (environment) {
       case 'production':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+        return 'bg-success-light text-success dark:bg-success/20 dark:text-success-light';
       case 'staging':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+        return 'bg-warning-light text-warning dark:bg-warning/20 dark:text-warning-light';
       case 'development':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
+        return 'bg-info-light text-info dark:bg-info/20 dark:text-info-light';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground';
     }
   };
 
   const getAudienceColor = (audience: FeatureFlag['targetAudience']) => {
     switch (audience) {
       case 'all':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
+        return 'bg-info-light text-info dark:bg-info/20 dark:text-info-light';
       case 'beta':
         return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
       case 'premium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+        return 'bg-warning-light text-warning dark:bg-warning/20 dark:text-warning-light';
       case 'admin':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+        return 'bg-error-light text-error dark:bg-error/20 dark:text-error-light';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground';
     }
   };
 
@@ -168,10 +168,10 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-foreground dark:text-white">
               Feature Flags
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-muted-foreground dark:text-muted-foreground mt-1">
               Manage feature rollouts and A/B testing
             </p>
           </div>
@@ -190,12 +190,12 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
 
       {/* Filters */}
       <FadeIn delay={0.1}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
-                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
@@ -203,7 +203,7 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
                   placeholder="Search flags..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -212,7 +212,7 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
             <select
               value={filterEnvironment}
               onChange={(e) => setFilterEnvironment(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">All Environments</option>
               <option value="development">Development</option>
@@ -224,7 +224,7 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">All Status</option>
               <option value="enabled">Enabled</option>
@@ -240,12 +240,12 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
           {filteredFlags.map((flag) => (
             <motion.div
               key={flag.id}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+              className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <h3 className="text-lg font-semibold text-foreground dark:text-white">
                       {flag.name}
                     </h3>
                     
@@ -257,7 +257,7 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
                         onChange={() => toggleFlag(flag.id)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                      <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-muted peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
                     </label>
                     
                     {/* Environment Badge */}
@@ -277,12 +277,12 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
                     </span>
                   </div>
                   
-                  <p className="text-gray-600 dark:text-gray-300 mb-3">
+                  <p className="text-muted-foreground dark:text-muted-foreground mb-3">
                     {flag.description}
                   </p>
                   
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                    <span>Key: <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">{flag.key}</code></span>
+                  <div className="flex items-center space-x-4 text-sm text-muted-foreground dark:text-muted-foreground">
+                    <span>Key: <code className="bg-muted dark:bg-muted px-2 py-1 rounded text-xs">{flag.key}</code></span>
                     <span>Created: {new Date(flag.createdAt).toLocaleDateString()}</span>
                     <span>By: {flag.createdBy}</span>
                   </div>
@@ -293,7 +293,7 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
                       {flag.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                          className="inline-flex items-center px-2 py-1 rounded text-xs bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
                         >
                           #{tag}
                         </span>
@@ -305,7 +305,7 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
                 <div className="ml-6 flex flex-col items-end space-y-3">
                   {/* Rollout Percentage */}
                   <div className="text-right">
-                    <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+                    <div className="text-sm text-muted-foreground dark:text-muted-foreground mb-1">
                       Rollout: {flag.rolloutPercentage}%
                     </div>
                     <div className="w-32">
@@ -315,10 +315,10 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
                         max="100"
                         value={flag.rolloutPercentage}
                         onChange={(e) => updateRollout(flag.id, parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer dark:bg-muted"
                         disabled={!flag.enabled}
                       />
-                      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <div className="flex justify-between text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                         <span>0%</span>
                         <span>100%</span>
                       </div>
@@ -344,7 +344,7 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
                       }}
                       size="sm"
                       variant="outline"
-                      className="text-red-600 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20"
+                      className="text-error border-red-300 hover:bg-error-light dark:text-error-light dark:border-red-700 dark:hover:bg-error/20"
                     >
                       Delete
                     </Button>
@@ -355,7 +355,7 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
               {/* Conditions */}
               {flag.conditions && (
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
+                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                     <strong>Conditions:</strong>
                     {flag.conditions.subscription && (
                       <span className="ml-2">
@@ -384,13 +384,13 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
       {filteredFlags.length === 0 && (
         <FadeIn>
           <div className="text-center py-12">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 text-muted-foreground mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 2H21l-3 6 3 6h-8.5l-1-2H5a2 2 0 00-2 2zm9-13.5V9" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-medium text-foreground dark:text-white mb-2">
               No feature flags found
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-muted-foreground dark:text-muted-foreground">
               Try adjusting your search or filter criteria.
             </p>
           </div>
@@ -410,56 +410,56 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             >
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
                 {editingFlag ? 'Edit Feature Flag' : 'Create New Feature Flag'}
               </h3>
               
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                       Name
                     </label>
                     <input
                       type="text"
                       defaultValue={editingFlag?.name || ''}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                       Key
                     </label>
                     <input
                       type="text"
                       defaultValue={editingFlag?.key || ''}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                     Description
                   </label>
                   <textarea
                     defaultValue={editingFlag?.description || ''}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                       Environment
                     </label>
                     <select
                       defaultValue={editingFlag?.environment || 'development'}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
                       <option value="development">Development</option>
                       <option value="staging">Staging</option>
@@ -468,12 +468,12 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                       Target Audience
                     </label>
                     <select
                       defaultValue={editingFlag?.targetAudience || 'all'}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
                       <option value="all">All Users</option>
                       <option value="beta">Beta Users</option>
@@ -483,7 +483,7 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                       Rollout %
                     </label>
                     <input
@@ -491,20 +491,20 @@ const FeatureFlags: React.FC<FeatureFlagsProps> = ({ className }) => {
                       min="0"
                       max="100"
                       defaultValue={editingFlag?.rolloutPercentage || 0}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                     Tags (comma-separated)
                   </label>
                   <input
                     type="text"
                     defaultValue={editingFlag?.tags.join(', ') || ''}
                     placeholder="ui, experimental, beta"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
               </div>

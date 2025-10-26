@@ -29,8 +29,8 @@ export const BadgeLeaderboard: React.FC<BadgeLeaderboardProps> = ({
   const getRankDisplay = (rank: number) => {
     return (
       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-        rank === 1 ? 'bg-yellow-500 text-white' :
-        rank === 2 ? 'bg-gray-400 text-white' :
+        rank === 1 ? 'bg-warning-light0 text-white' :
+        rank === 2 ? 'bg-muted text-white' :
         rank === 3 ? 'bg-amber-600 text-white' :
         'bg-background-secondary text-foreground'
       }`}>
@@ -224,21 +224,21 @@ export const BadgeLeaderboard: React.FC<BadgeLeaderboardProps> = ({
       {/* Leaderboard Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-yellow-600 mb-1">
+          <div className="text-2xl font-bold text-warning mb-1">
             {leaderboard.length}
           </div>
           <p className="text-sm text-foreground-secondary">Total Participants</p>
         </div>
         
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-green-600 mb-1">
+          <div className="text-2xl font-bold text-success mb-1">
             {leaderboard.length > 0 ? Math.round(leaderboard.reduce((sum, entry) => sum + (entry.badgePoints || entry.score), 0) / leaderboard.length) : 0}
           </div>
           <p className="text-sm text-foreground-secondary">Average Points</p>
         </div>
         
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-blue-600 mb-1">
+          <div className="text-2xl font-bold text-info mb-1">
             {leaderboard.length > 0 ? Math.max(...leaderboard.map(entry => entry.badgePoints || entry.score)) : 0}
           </div>
           <p className="text-sm text-foreground-secondary">Highest Score</p>
@@ -248,9 +248,9 @@ export const BadgeLeaderboard: React.FC<BadgeLeaderboardProps> = ({
       {/* Competition Info */}
       <div className="card p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
         <div className="flex items-center space-x-2 mb-2">
-          <h4 className="font-semibold text-blue-900 dark:text-blue-100">How to Climb the Leaderboard</h4>
+          <h4 className="font-semibold text-info dark:text-info-light">How to Climb the Leaderboard</h4>
         </div>
-        <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+        <ul className="text-sm text-info dark:text-info-light space-y-1">
           <li>• Complete tasks and focus sessions to earn productivity badges</li>
           <li>• Log health activities regularly for wellness badges</li>
           <li>• Maintain streaks for bonus points</li>

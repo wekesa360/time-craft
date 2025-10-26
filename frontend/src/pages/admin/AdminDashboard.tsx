@@ -25,13 +25,13 @@ const AdminDashboard: React.FC = () => {
   // Mock admin verification - in real app, this would check JWT/session
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-muted dark:bg-muted">
         <div className="text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl font-bold text-foreground dark:text-white mb-2">
             Access Denied
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">
+          <p className="text-muted-foreground dark:text-muted-foreground mb-6">
             You don't have permission to access the admin dashboard.
           </p>
           <Button onClick={() => window.history.back()}>
@@ -125,26 +125,26 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-muted dark:bg-muted">
       {/* Header */}
       <FadeIn>
-        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-muted shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-4">
                 <div className="text-2xl">⚙️</div>
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h1 className="text-xl font-semibold text-foreground dark:text-white">
                     Admin Dashboard
                   </h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                     System administration and monitoring
                   </p>
                 </div>
               </div>
               
               <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-600 dark:text-gray-300">
+                <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                   Last updated: {new Date().toLocaleTimeString()}
                 </div>
                 <Button
@@ -177,7 +177,7 @@ const AdminDashboard: React.FC = () => {
                       'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200',
                       activeView === item.id
                         ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        : 'text-muted-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-muted'
                     )}
                   >
                     <div className={cn(
@@ -282,21 +282,21 @@ const AdminOverview: React.FC = () => {
           {stats.map((stat) => (
             <motion.div
               key={stat.name}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+              className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  <p className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                     {stat.name}
                   </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-2xl font-bold text-foreground dark:text-white">
                     {stat.value}
                   </p>
                   <p className={cn(
                     'text-sm',
                     stat.changeType === 'positive' 
-                      ? 'text-green-600 dark:text-green-400' 
-                      : 'text-red-600 dark:text-red-400'
+                      ? 'text-success dark:text-success-light' 
+                      : 'text-error dark:text-error-light'
                   )}>
                     {stat.change} from last month
                   </p>
@@ -310,9 +310,9 @@ const AdminOverview: React.FC = () => {
 
       {/* Recent Activity */}
       <FadeIn delay={0.3}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-foreground dark:text-white">
               Recent Activity
             </h2>
           </div>
@@ -322,15 +322,15 @@ const AdminOverview: React.FC = () => {
                 <div key={activity.id} className="flex items-start space-x-3">
                   <div className={cn(
                     'w-2 h-2 rounded-full mt-2',
-                    activity.severity === 'warning' ? 'bg-yellow-500' :
-                    activity.severity === 'error' ? 'bg-red-500' :
-                    'bg-blue-500'
+                    activity.severity === 'warning' ? 'bg-warning-light0' :
+                    activity.severity === 'error' ? 'bg-error' :
+                    'bg-info-light0'
                   )} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 dark:text-white">
+                    <p className="text-sm text-foreground dark:text-white">
                       {activity.message}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                       {activity.timestamp}
                     </p>
                   </div>
@@ -343,8 +343,8 @@ const AdminOverview: React.FC = () => {
 
       {/* Quick Actions */}
       <FadeIn delay={0.4}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             Quick Actions
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

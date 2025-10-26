@@ -74,7 +74,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               onClick={handleConfirm}
               className={`btn flex-1 ${
                 variant === 'danger' 
-                  ? 'btn-primary bg-red-600 hover:bg-red-700' 
+                  ? 'btn-primary bg-error hover:bg-error' 
                   : 'btn-primary'
               }`}
             >

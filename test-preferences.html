@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preferences API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        .loading { color: blue; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Preferences API Test</h1>
+    
+    <div class="test-section">
+        <h2>Authentication</h2>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="auth-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Preferences API</h2>
+        <button onclick="testGetPreferences()" id="get-btn" disabled>Get Preferences</button>
+        <button onclick="testUpdatePreferences()" id="update-btn" disabled>Update Preferences</button>
+        <div id="preferences-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Theme Test</h2>
+        <button onclick="testThemeChange()" id="theme-btn" disabled>Test Theme Change</button>
+        <div id="theme-result"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+        const API_BASE = 'http://localhost:43421/api';
+        
+        async function testLogin() {
+            const resultDiv = document.getElementById('auth-result');
+            resultDiv.innerHTML = '<div class="loading">Logging in...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'testpassword123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.tokens?.accessToken) {
+                    authToken = data.tokens.accessToken;
+                    resultDiv.innerHTML = '<div class="success">✅ Login successful!</div>';
+                    document.getElementById('get-btn').disabled = false;
+                    document.getElementById('update-btn').disabled = false;
+                    document.getElementById('theme-btn').disabled = false;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Login failed: ${data.error || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testGetPreferences() {
+            const resultDiv = document.getElementById('preferences-result');
+            resultDiv.innerHTML = '<div class="loading">Getting preferences...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/user/preferences`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Preferences retrieved successfully!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to get preferences: ${data.error || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testUpdatePreferences() {
+            const resultDiv = document.getElementById('preferences-result');
+            resultDiv.innerHTML = '<div class="loading">Updating preferences...</div>';
+            
+            try {
+                const newPreferences = {
+                    theme: {
+                        mode: 'dark',
+                        colorTheme: 'blue'
+                    }
+                };
+                
+                const response = await fetch(`${API_BASE}/user/preferences`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newPreferences)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Preferences updated successfully!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to update preferences: ${data.error || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testThemeChange() {
+            const resultDiv = document.getElementById('theme-result');
+            resultDiv.innerHTML = '<div class="loading">Testing theme change...</div>';
+            
+            try {
+                // Test different theme combinations
+                const themes = [
+                    { mode: 'light', colorTheme: 'green' },
+                    { mode: 'dark', colorTheme: 'purple' },
+                    { mode: 'system', colorTheme: 'orange' }
+                ];
+                
+                for (let i = 0; i < themes.length; i++) {
+                    const theme = themes[i];
+                    resultDiv.innerHTML = `<div class="loading">Testing theme ${i + 1}/3: ${theme.mode} + ${theme.colorTheme}</div>`;
+                    
+                    const response = await fetch(`${API_BASE}/user/preferences`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ theme })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to update theme: ${response.status}`);
+                    }
+                    
+                    // Wait a bit between changes
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                resultDiv.innerHTML = '<div class="success">✅ All theme changes tested successfully!</div>';
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Theme test failed: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
+

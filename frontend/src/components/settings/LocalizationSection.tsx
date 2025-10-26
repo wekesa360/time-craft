@@ -47,8 +47,8 @@ const LocalizationSectionComponent: React.FC = () => {
 
         {/* Error Display */}
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm text-red-800 dark:text-red-200">
+          <div className="p-3 bg-error-light dark:bg-error/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-error dark:text-error-light">
               {t('localization.error', 'Failed to update language. Please try again.')}
             </p>
           </div>

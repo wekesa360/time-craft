@@ -82,8 +82,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 text-red-500">
+          <div className="max-w-lg w-full bg-white dark:bg-muted rounded-lg shadow-lg p-6 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 text-error-light0">
               <AlertTriangle className="w-full h-full" />
             </div>
             
@@ -128,7 +128,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   <span>Technical Details</span>
                 </summary>
                 <div className="bg-background-tertiary rounded-lg p-4 text-xs font-mono overflow-auto max-h-40">
-                  <p className="text-red-600 dark:text-red-400 mb-2">
+                  <p className="text-error dark:text-error-light mb-2">
                     {this.state.error.name}: {this.state.error.message}
                   </p>
                   {this.state.error.stack && (
@@ -165,14 +165,14 @@ export const QueryErrorBoundary: React.FC<QueryErrorBoundaryProps> = ({
         console.error('Query error:', error, errorInfo);
       }}
       fallback={
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+        <div className="p-4 bg-error-light dark:bg-error/20 border border-red-200 dark:border-red-800 rounded-lg">
           <div className="flex items-center space-x-2">
-            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
-            <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+            <AlertTriangle className="w-5 h-5 text-error dark:text-error-light" />
+            <h3 className="text-sm font-medium text-error dark:text-error-light">
               Failed to load data
             </h3>
           </div>
-          <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+          <p className="mt-1 text-sm text-error dark:text-error-light">
             There was an error loading the requested data. Please try refreshing the page.
           </p>
         </div>

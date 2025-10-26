@@ -24,7 +24,7 @@ export const TaskListSkeleton: React.FC = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white dark:bg-gray-800 border rounded-lg p-4">
+      <div className="bg-white dark:bg-muted border rounded-lg p-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <Skeleton className="h-10 w-full rounded-md" />
@@ -40,7 +40,7 @@ export const TaskListSkeleton: React.FC = () => {
       {/* Task Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="bg-white dark:bg-gray-800 border rounded-lg p-4">
+          <div key={index} className="bg-white dark:bg-muted border rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <Skeleton className="h-4 w-16" />
               <Skeleton className="h-4 w-4 rounded-full" />
@@ -52,7 +52,7 @@ export const TaskListSkeleton: React.FC = () => {
       </div>
 
       {/* Task List */}
-      <div className="bg-white dark:bg-gray-800 border rounded-lg">
+      <div className="bg-white dark:bg-muted border rounded-lg">
         {/* List Header */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
@@ -149,7 +149,7 @@ export const TaskDetailSkeleton: React.FC = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Task Info */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+          <div className="bg-white dark:bg-muted border rounded-lg p-6">
             <div className="flex items-start space-x-4 mb-6">
               <Skeleton className="h-6 w-6 rounded" />
               <div className="flex-1">
@@ -183,7 +183,7 @@ export const TaskDetailSkeleton: React.FC = () => {
           </div>
 
           {/* Activity/Comments */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-6">
+          <div className="bg-white dark:bg-muted border rounded-lg p-6">
             <Skeleton className="h-6 w-32 mb-4" />
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, index) => (
@@ -205,7 +205,7 @@ export const TaskDetailSkeleton: React.FC = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Task Properties */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-4">
+          <div className="bg-white dark:bg-muted border rounded-lg p-4">
             <Skeleton className="h-5 w-24 mb-4" />
             <div className="space-y-4">
               <FormFieldSkeleton />
@@ -216,7 +216,7 @@ export const TaskDetailSkeleton: React.FC = () => {
           </div>
 
           {/* Attachments */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-4">
+          <div className="bg-white dark:bg-muted border rounded-lg p-4">
             <Skeleton className="h-5 w-24 mb-4" />
             <div className="space-y-3">
               {Array.from({ length: 2 }).map((_, index) => (
@@ -232,7 +232,7 @@ export const TaskDetailSkeleton: React.FC = () => {
           </div>
 
           {/* Time Tracking */}
-          <div className="bg-white dark:bg-gray-800 border rounded-lg p-4">
+          <div className="bg-white dark:bg-muted border rounded-lg p-4">
             <Skeleton className="h-5 w-28 mb-4" />
             <div className="text-center space-y-3">
               <Skeleton className="h-16 w-16 rounded-full mx-auto" />

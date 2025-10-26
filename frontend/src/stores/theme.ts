@@ -80,19 +80,19 @@ export const colorThemes: Record<ColorTheme, any> = {
     },
   },
   orange: {
-    name: 'Sunset Orange',
+    name: 'v0-fitness-app-ui',
     primary: {
-      50: '#fff7ed',
-      100: '#ffedd5',
-      200: '#fed7aa',
-      300: '#fdba74',
-      400: '#fb923c',
-      500: '#f97316',
-      600: '#ea580c',
-      700: '#c2410c',
-      800: '#9a3412',
-      900: '#7c2d12',
-      950: '#431407',
+      50: '#fff3f0',
+      100: '#ffd4c8',
+      200: '#ffb3a1',
+      300: '#ff8a6b',
+      400: '#ff6b35',
+      500: '#e55a2b',
+      600: '#d1491f',
+      700: '#b83d1a',
+      800: '#9f3215',
+      900: '#862a12',
+      950: '#6d220f',
     },
   },
   pink: {
@@ -204,11 +204,11 @@ export const useThemeStore = create<ThemeStore>()(
   createPersistedStore(
     (set, get) => ({
       config: {
-        mode: 'system',
-        colorTheme: 'blue',
+        mode: 'light',
+        colorTheme: 'orange',
         systemTheme: detectSystemTheme(),
       },
-      effectiveTheme: detectSystemTheme(),
+      effectiveTheme: 'light',
       isTransitioning: false,
 
       setThemeMode: (mode) => {
@@ -280,8 +280,19 @@ export const useThemeStore = create<ThemeStore>()(
         // Apply color theme by updating CSS custom properties
         const colorConfig = colorThemes[config.colorTheme];
         if (colorConfig) {
+          // Apply primary colors
           Object.entries(colorConfig.primary).forEach(([shade, color]) => {
             root.style.setProperty(`--color-primary-${shade}`, color as string);
+          });
+          
+          // Apply secondary colors (using primary colors for now)
+          Object.entries(colorConfig.primary).forEach(([shade, color]) => {
+            root.style.setProperty(`--color-secondary-${shade}`, color as string);
+          });
+          
+          // Apply accent colors (using primary colors for now)
+          Object.entries(colorConfig.primary).forEach(([shade, color]) => {
+            root.style.setProperty(`--color-accent-${shade}`, color as string);
           });
           
           // Set theme color meta tag for mobile browsers
@@ -339,6 +350,61 @@ export const useThemeStore = create<ThemeStore>()(
 
       resetPreview: () => {
         get().applyTheme();
+      },
+
+      // Backend integration methods
+      savePreferencesToBackend: async () => {
+        try {
+          const { apiClient } = await import('../lib/api');
+          const { config } = get();
+          
+          await apiClient.updateUserPreferences({
+            theme: {
+              mode: config.mode,
+              colorTheme: config.colorTheme,
+            }
+          });
+          
+          console.log('Theme preferences saved to backend');
+        } catch (error) {
+          console.error('Failed to save theme preferences to backend:', error);
+        }
+      },
+
+      loadPreferencesFromBackend: async () => {
+        try {
+          const { apiClient } = await import('../lib/api');
+          const preferences = await apiClient.getUserPreferences();
+          
+          if (preferences?.theme) {
+            const { setThemeMode, setColorTheme } = get();
+            
+            if (preferences.theme.mode) {
+              setThemeMode(preferences.theme.mode);
+            }
+            
+            if (preferences.theme.colorTheme) {
+              setColorTheme(preferences.theme.colorTheme);
+            }
+            
+            console.log('Theme preferences loaded from backend');
+          }
+        } catch (error) {
+          console.error('Failed to load theme preferences from backend:', error);
+        }
+      },
+
+      // Enhanced methods that save to backend
+      setThemeModeWithBackend: async (mode: ThemeMode) => {
+        const { setThemeMode } = get();
+        setThemeMode(mode);
+        await get().savePreferencesToBackend();
+      },
+
+      setColorThemeWithBackend: async (colorTheme: ColorTheme) => {
+        const { setColorTheme } = get();
+        setColorTheme(colorTheme);
+        await get().savePreferencesToBackend();
       },
     }),
     {

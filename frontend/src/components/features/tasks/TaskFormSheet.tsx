@@ -147,11 +147,11 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
         <div>
           <input
             {...register('title')}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-muted dark:text-white"
             placeholder="Enter task title"
           />
           {errors.title && (
-            <p className="text-red-600 text-sm mt-1">{errors.title.message}</p>
+            <p className="text-error text-sm mt-1">{errors.title.message}</p>
           )}
         </div>
 
@@ -159,11 +159,11 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
         <div>
           <textarea
             {...register('description')}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white h-20 resize-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-muted dark:text-white h-20 resize-none"
             placeholder="Enter task description"
           />
           {errors.description && (
-            <p className="text-red-600 text-sm mt-1">{errors.description.message}</p>
+            <p className="text-error text-sm mt-1">{errors.description.message}</p>
           )}
         </div>
 
@@ -171,7 +171,7 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
         <div>
           <select
             {...register('priority', { valueAsNumber: true })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-muted dark:text-white"
           >
             <option value={1}>Low (1)</option>
             <option value={2}>Medium (2)</option>
@@ -179,7 +179,7 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
             <option value={4}>Urgent (4)</option>
           </select>
           {errors.priority && (
-            <p className="text-red-600 text-sm mt-1">{errors.priority.message}</p>
+            <p className="text-error text-sm mt-1">{errors.priority.message}</p>
           )}
         </div>
 
@@ -193,9 +193,9 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
                 max="5"
                 value={urgency}
                 onChange={(e) => setUrgency(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                className="w-full h-2 bg-muted dark:bg-muted rounded-lg appearance-none cursor-pointer"
               />
-              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="flex justify-between text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                 <span>Low</span>
                 <span className="font-medium">{urgency}</span>
                 <span>High</span>
@@ -208,22 +208,22 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
                 max="5"
                 value={importance}
                 onChange={(e) => setImportance(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                className="w-full h-2 bg-muted dark:bg-muted rounded-lg appearance-none cursor-pointer"
               />
-              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="flex justify-between text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                 <span>Low</span>
                 <span className="font-medium">{importance}</span>
                 <span>High</span>
               </div>
             </div>
           </div>
-          <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Quadrant: </span>
+          <div className="mt-3 p-3 bg-muted dark:bg-muted rounded-lg">
+            <span className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">Quadrant: </span>
             <span className={`px-2 py-1 rounded text-xs font-medium ${
-              currentQuadrant === 'do' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-              currentQuadrant === 'decide' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-              currentQuadrant === 'delegate' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-              'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+              currentQuadrant === 'do' ? 'bg-error-light text-error dark:bg-error dark:text-error-light' :
+              currentQuadrant === 'decide' ? 'bg-warning-light text-warning dark:bg-warning dark:text-warning-light' :
+              currentQuadrant === 'delegate' ? 'bg-info-light text-info dark:bg-info dark:text-info-light' :
+              'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground'
             }`}>
               {currentQuadrant.replace('_', ' ').toUpperCase()}
             </span>
@@ -237,10 +237,10 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
               setValueAs: (value) => value ? new Date(value).getTime() : undefined 
             })}
             type="date"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-muted dark:text-white"
           />
           {errors.dueDate && (
-            <p className="text-red-600 text-sm mt-1">{errors.dueDate.message}</p>
+            <p className="text-error text-sm mt-1">{errors.dueDate.message}</p>
           )}
         </div>
 
@@ -251,11 +251,11 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
             type="number"
             min="1"
             max="1440"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-muted dark:text-white"
             placeholder="Estimated Duration (minutes)"
           />
           {errors.estimatedDuration && (
-            <p className="text-red-600 text-sm mt-1">{errors.estimatedDuration.message}</p>
+            <p className="text-error text-sm mt-1">{errors.estimatedDuration.message}</p>
           )}
         </div>
 
@@ -266,11 +266,11 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
             type="number"
             min="1"
             max="10"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-muted dark:text-white"
             placeholder="Energy Level Required (1-10)"
           />
           {errors.energyLevelRequired && (
-            <p className="text-red-600 text-sm mt-1">{errors.energyLevelRequired.message}</p>
+            <p className="text-error text-sm mt-1">{errors.energyLevelRequired.message}</p>
           )}
         </div>
 
@@ -278,7 +278,7 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
         <div>
           <select
             {...register('contextType')}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-muted dark:text-white"
           >
             <option value="personal">Personal</option>
             <option value="work">Work</option>
@@ -287,7 +287,7 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
             <option value="social">Social</option>
           </select>
           {errors.contextType && (
-            <p className="text-red-600 text-sm mt-1">{errors.contextType.message}</p>
+            <p className="text-error text-sm mt-1">{errors.contextType.message}</p>
           )}
         </div>
 
@@ -296,14 +296,14 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
           <div>
             <select
               {...register('status')}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-muted dark:text-white"
             >
               <option value="pending">Pending</option>
               <option value="done">Completed</option>
               <option value="archived">Archived</option>
             </select>
             {errors.status && (
-              <p className="text-red-600 text-sm mt-1">{errors.status.message}</p>
+              <p className="text-error text-sm mt-1">{errors.status.message}</p>
             )}
           </div>
         )}
@@ -313,7 +313,7 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 flex items-center justify-center px-4 py-2 bg-info text-white rounded-lg hover:bg-info focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Save className="w-4 h-4 mr-2" />
             {isSubmitting ? 'Saving...' : (task ? 'Update Task' : 'Create Task')}
@@ -321,7 +321,7 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-muted-foreground dark:text-muted-foreground rounded-lg hover:bg-muted dark:hover:bg-muted focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
           >
             Cancel
           </button>
@@ -329,7 +329,7 @@ const TaskFormSheet: React.FC<TaskFormSheetProps> = ({
             <button
               type="button"
               onClick={handleDelete}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+              className="px-4 py-2 bg-error text-white rounded-lg hover:bg-error focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
             >
               Delete
             </button>

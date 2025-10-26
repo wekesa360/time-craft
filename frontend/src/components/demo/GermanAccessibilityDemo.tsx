@@ -83,62 +83,62 @@ const GermanAccessibilityDemoContent: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="flex items-center space-x-2">
             {accessibilityStatus.hasScreenReaderSupport ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
+              <CheckCircle className="w-5 h-5 text-success" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-red-500" />
+              <AlertCircle className="w-5 h-5 text-error-light0" />
             )}
             <span className="text-sm">Bildschirmleser-Unterstützung</span>
           </div>
 
           <div className="flex items-center space-x-2">
             {accessibilityStatus.hasKeyboardNavigation ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
+              <CheckCircle className="w-5 h-5 text-success" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-red-500" />
+              <AlertCircle className="w-5 h-5 text-error-light0" />
             )}
             <span className="text-sm">Tastaturnavigation</span>
           </div>
 
           <div className="flex items-center space-x-2">
             {accessibilityStatus.hasHighContrastMode ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
+              <CheckCircle className="w-5 h-5 text-success" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-red-500" />
+              <AlertCircle className="w-5 h-5 text-error-light0" />
             )}
             <span className="text-sm">Hoher Kontrast</span>
           </div>
 
           <div className="flex items-center space-x-2">
             {accessibilityStatus.hasAriaLabels ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
+              <CheckCircle className="w-5 h-5 text-success" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-red-500" />
+              <AlertCircle className="w-5 h-5 text-error-light0" />
             )}
             <span className="text-sm">ARIA-Beschriftungen</span>
           </div>
 
           <div className="flex items-center space-x-2">
             {isHighContrast ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
+              <CheckCircle className="w-5 h-5 text-success" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-gray-400" />
+              <AlertCircle className="w-5 h-5 text-muted-foreground" />
             )}
             <span className="text-sm">Hoher Kontrast aktiv</span>
           </div>
 
           <div className="flex items-center space-x-2">
             {isForcedColors ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
+              <CheckCircle className="w-5 h-5 text-success" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-gray-400" />
+              <AlertCircle className="w-5 h-5 text-muted-foreground" />
             )}
             <span className="text-sm">Erzwungene Farben</span>
           </div>
         </div>
 
         {needsHighContrastSupport && (
-          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
+          <div className="mt-4 p-3 bg-info-light dark:bg-info rounded-lg">
+            <p className="text-sm text-info dark:text-info-light">
               <Monitor className="w-4 h-4 inline mr-2" />
               Ihr System verwendet Hochkontrast- oder erzwungene Farbmodi. 
               Die Benutzeroberfläche wurde entsprechend angepasst.
@@ -210,11 +210,11 @@ const GermanAccessibilityDemoContent: React.FC = () => {
             Die folgenden Tastenkombinationen sind verfügbar:
           </p>
 
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+          <div className="bg-muted dark:bg-muted p-4 rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
               {Object.entries(keyboardShortcuts).map(([key, description]) => (
                 <div key={key} className="flex justify-between">
-                  <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-xs">
+                  <code className="bg-muted dark:bg-muted px-2 py-1 rounded text-xs">
                     {key}
                   </code>
                   <span className="ml-2">{description}</span>
@@ -242,7 +242,7 @@ const GermanAccessibilityDemoContent: React.FC = () => {
           </div>
 
           {showKeyboardShortcuts && (
-            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+            <div className="mt-4 p-4 bg-info-light dark:bg-info rounded-lg">
               <h4 className="font-medium mb-2">Zusätzliche Tastenkombinationen:</h4>
               <ul className="text-sm space-y-1">
                 <li><code>Tab</code> - Zum nächsten Element</li>
@@ -384,7 +384,7 @@ const GermanAccessibilityDemoContent: React.FC = () => {
         <h3 className="text-lg font-semibold mb-4">Barrierefreie Navigation</h3>
         
         <GermanAccessibleNavigation 
-          className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg"
+          className="bg-muted dark:bg-muted p-4 rounded-lg"
           ariaLabel="Beispiel-Navigation"
         >
           <ul className="flex flex-wrap gap-4">

@@ -103,15 +103,15 @@ const AuditLog: React.FC<AuditLogProps> = ({ className }) => {
   const getSeverityColor = (severity: AuditLogEntry['severity']) => {
     switch (severity) {
       case 'critical':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+        return 'bg-error-light text-error dark:bg-error/20 dark:text-error-light';
       case 'high':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300';
+        return 'bg-primary-100 text-primary dark:bg-primary/20 dark:text-primary-300';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+        return 'bg-warning-light text-warning dark:bg-warning/20 dark:text-warning-light';
       case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+        return 'bg-success-light text-success dark:bg-success/20 dark:text-success-light';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground';
     }
   };
 
@@ -121,10 +121,10 @@ const AuditLog: React.FC<AuditLogProps> = ({ className }) => {
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-foreground dark:text-white">
               Audit Log
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-muted-foreground dark:text-muted-foreground mt-1">
               Track admin actions and system events
             </p>
           </div>
@@ -140,7 +140,7 @@ const AuditLog: React.FC<AuditLogProps> = ({ className }) => {
 
       {/* Filters */}
       <FadeIn delay={0.1}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="flex-1">
               <input
@@ -148,14 +148,14 @@ const AuditLog: React.FC<AuditLogProps> = ({ className }) => {
                 placeholder="Search audit log..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
             
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">All Categories</option>
               <option value="user">User</option>
@@ -170,12 +170,12 @@ const AuditLog: React.FC<AuditLogProps> = ({ className }) => {
 
       {/* Audit Entries */}
       <Stagger stagger={0.05} direction="up">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredEntries.map((entry) => (
               <motion.div
                 key={entry.id}
-                className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="p-6 hover:bg-muted dark:hover:bg-muted transition-colors"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">
@@ -187,11 +187,11 @@ const AuditLog: React.FC<AuditLogProps> = ({ className }) => {
                     </span>
                     
                     <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                      <h3 className="text-sm font-semibold text-foreground dark:text-white mb-1">
                         {entry.action} on {entry.resource}
                       </h3>
                       
-                      <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300">
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground dark:text-muted-foreground">
                         <span>{entry.user.name}</span>
                         <span>•</span>
                         <span>{new Date(entry.timestamp).toLocaleString()}</span>
@@ -211,10 +211,10 @@ const AuditLog: React.FC<AuditLogProps> = ({ className }) => {
       {filteredEntries.length === 0 && (
         <FadeIn>
           <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-medium text-foreground dark:text-white mb-2">
               No audit entries found
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-muted-foreground dark:text-muted-foreground">
               Try adjusting your search or filter criteria.
             </p>
           </div>

@@ -24,21 +24,21 @@ const socialPlatforms = [
     key: 'twitter',
     name: 'Twitter',
     icon: Twitter,
-    color: 'bg-blue-500 hover:bg-blue-600 text-white',
+    color: 'bg-info-light0 hover:bg-info text-white',
     maxLength: 280
   },
   {
     key: 'facebook',
     name: 'Facebook',
     icon: Facebook,
-    color: 'bg-blue-600 hover:bg-blue-700 text-white',
+    color: 'bg-info hover:bg-info text-white',
     maxLength: 500
   },
   {
     key: 'linkedin',
     name: 'LinkedIn',
     icon: Linkedin,
-    color: 'bg-blue-700 hover:bg-blue-800 text-white',
+    color: 'bg-info hover:bg-info text-white',
     maxLength: 300
   },
   {
@@ -192,12 +192,12 @@ export const BadgeShare: React.FC<BadgeShareProps> = ({
             />
             <div className="flex items-center justify-between mt-2 text-sm">
               <span className={`${
-                isMessageTooLong ? 'text-red-600' : 'text-foreground-secondary'
+                isMessageTooLong ? 'text-error' : 'text-foreground-secondary'
               }`}>
                 {messageLength}/{maxLength} characters
               </span>
               {isMessageTooLong && (
-                <span className="text-red-600">Message too long for {selectedPlatformData?.name}</span>
+                <span className="text-error">Message too long for {selectedPlatformData?.name}</span>
               )}
             </div>
           </div>
@@ -265,11 +265,11 @@ export const BadgeShare: React.FC<BadgeShareProps> = ({
           </div>
 
           {/* Tips */}
-          <div className="card p-4 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+          <div className="card p-4 bg-info-light dark:bg-info/20 border-blue-200 dark:border-blue-800">
+            <h4 className="font-medium text-info dark:text-info-light mb-2">
               💡 Sharing Tips
             </h4>
-            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+            <ul className="text-sm text-info dark:text-info-light space-y-1">
               <li>• Add relevant hashtags to increase visibility</li>
               <li>• Tag friends who might be interested in productivity</li>
               <li>• Share your journey and inspire others</li>

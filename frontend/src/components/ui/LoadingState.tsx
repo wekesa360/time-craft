@@ -71,7 +71,7 @@ export const LoadingBar: React.FC<{
   animated?: boolean;
 }> = ({ progress, className, animated = true }) => {
   return (
-    <div className={cn('w-full bg-gray-200 rounded-full h-2', className)}>
+    <div className={cn('w-full bg-muted rounded-full h-2', className)}>
       <div
         className={cn(
           'h-2 bg-primary-600 rounded-full transition-all duration-300',
@@ -102,10 +102,10 @@ export const LoadingOverlay: React.FC<{
           {children}
         </div>
       )}
-      <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-white/80 dark:bg-muted/80 backdrop-blur-sm flex items-center justify-center z-50">
         <div className="flex flex-col items-center space-y-4">
           <Spinner size="lg" />
-          <p className="text-gray-600 dark:text-gray-300 font-medium">{message}</p>
+          <p className="text-muted-foreground dark:text-muted-foreground font-medium">{message}</p>
         </div>
       </div>
     </div>
@@ -121,7 +121,7 @@ export const InlineLoader: React.FC<{
   return (
     <div className={cn('flex items-center space-x-3', className)}>
       <Spinner size={size} />
-      <span className="text-gray-600 dark:text-gray-300">{message}</span>
+      <span className="text-muted-foreground">{message}</span>
     </div>
   );
 };
@@ -147,9 +147,9 @@ export const LoadingButton: React.FC<{
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
   
   const variantClasses = {
-    primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500',
-    secondary: 'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50 focus:ring-primary-500',
-    ghost: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-500'
+    primary: 'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary',
+    secondary: 'bg-card text-card-foreground border border-border hover:bg-accent hover:text-accent-foreground focus:ring-primary',
+    ghost: 'text-muted-foreground hover:text-foreground hover:bg-accent focus:ring-muted-foreground'
   };
 
   const sizeClasses = {
@@ -189,14 +189,14 @@ export const LoadingCard: React.FC<{
 }) => {
   return (
     <div className={cn(
-      'bg-white dark:bg-gray-800 border rounded-lg p-8 text-center',
+      'bg-white dark:bg-muted border rounded-lg p-8 text-center',
       className
     )}>
       <Spinner size="lg" className="mx-auto mb-4" />
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+      <h3 className="text-lg font-medium text-foreground dark:text-white mb-2">
         {title}
       </h3>
-      <p className="text-gray-600 dark:text-gray-300">
+      <p className="text-muted-foreground dark:text-muted-foreground">
         {message}
       </p>
     </div>
@@ -214,11 +214,11 @@ export const LoadingList: React.FC<{
       {Array.from({ length: items }).map((_, index) => (
         <div key={index} className="flex items-center space-x-3 p-3 animate-pulse">
           {showAvatar && (
-            <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0" />
+            <div className="w-10 h-10 bg-muted rounded-full flex-shrink-0" />
           )}
           <div className="flex-1 space-y-2">
-            <div className="h-4 bg-gray-300 rounded w-3/4" />
-            <div className="h-3 bg-gray-300 rounded w-1/2" />
+            <div className="h-4 bg-muted rounded w-3/4" />
+            <div className="h-3 bg-muted rounded w-1/2" />
           </div>
         </div>
       ))}
@@ -239,7 +239,7 @@ export const EmptyState: React.FC<{
     return (
       <div className={cn('text-center py-12', className)}>
         <Spinner size="lg" className="mx-auto mb-4" />
-        <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        <p className="text-muted-foreground dark:text-muted-foreground">Loading...</p>
       </div>
     );
   }
@@ -247,15 +247,15 @@ export const EmptyState: React.FC<{
   return (
     <div className={cn('text-center py-12', className)}>
       {icon && (
-        <div className="mx-auto mb-4 text-gray-400">
+        <div className="mx-auto mb-4 text-muted-foreground">
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+      <h3 className="text-lg font-medium text-foreground dark:text-white mb-2">
         {title}
       </h3>
       {description && (
-        <p className="text-gray-600 dark:text-gray-300 mb-4">
+        <p className="text-muted-foreground dark:text-muted-foreground mb-4">
           {description}
         </p>
       )}

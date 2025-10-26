@@ -1,118 +1,157 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-hot-toast';
-import { 
-  Grid3X3, 
-  List, 
-  BarChart3
-} from 'lucide-react';
-
-// Components
-import EisenhowerMatrix from '../components/features/tasks/EisenhowerMatrix';
+import { useQuery } from '@tanstack/react-query';
+import { Plus, Search, Clock, Flag, CalendarIcon, Sparkles, X, Filter, MoreHorizontal } from "lucide-react";
 import { TaskCard } from '../components/features/tasks/TaskCard';
-import TaskFormSheet from '../components/features/tasks/TaskFormSheet';
+import TaskForm from '../components/features/tasks/TaskForm';
+import { TaskFilters } from '../components/features/tasks/TaskFilters';
 import { TaskListSkeleton } from '../components/skeletons/TaskListSkeleton';
-
-// Hooks and API
-import { useTaskQueries } from '../hooks/queries/useTaskQueries';
-import type { Task, TaskForm as TaskFormData } from '../types';
-
-type ViewMode = 'matrix' | 'list' | 'stats';
+import { useTasksQuery, useCreateTaskMutation, useUpdateTaskMutation, useDeleteTaskMutation } from '../hooks/queries/useTaskQueries';
+import { useTaskStore } from '../stores/tasks';
+import type { Task, TaskForm as TaskFormType } from '../types';
 
 export default function TasksPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  
-  // State
-  const [viewMode, setViewMode] = useState<ViewMode>('matrix');
-  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [showAddTask, setShowAddTask] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [defaultQuadrant, setDefaultQuadrant] = useState<string>('');
-  // Queries
-  const {
-    useTasksQuery,
-    useTaskStatsQuery,
-    useEisenhowerMatrixQuery,
-    useCreateTaskMutation,
-    useUpdateTaskMutation,
-    useCompleteTaskMutation,
-    useDeleteTaskMutation
-  } = useTaskQueries();
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  
+  const { filters, setFilters } = useTaskStore();
 
-  const { data: tasks = [], isLoading: tasksLoading } = useTasksQuery({});
-  const { data: taskStats } = useTaskStatsQuery();
-  const { data: matrixData, isLoading: matrixLoading, error: matrixError } = useEisenhowerMatrixQuery();
+  // Fetch tasks with current filters
+  const { data: tasks = [], isLoading, error } = useTasksQuery({
+    status: filters.status,
+    priority: filters.priority,
+    contextType: filters.contextType,
+    search: searchQuery,
+    ...filters
+  });
 
   // Mutations
   const createTaskMutation = useCreateTaskMutation();
   const updateTaskMutation = useUpdateTaskMutation();
-  const completeTaskMutation = useCompleteTaskMutation();
   const deleteTaskMutation = useDeleteTaskMutation();
 
-  // Handlers
-  const handleCreateTask = (quadrant?: string) => {
-    setDefaultQuadrant(quadrant || '');
-    setEditingTask(null);
-    setIsTaskFormOpen(true);
-  };
+  // Group tasks by priority
+  const groupedTasks = useMemo(() => {
+    const grouped = {
+      high: [] as Task[],
+      medium: [] as Task[],
+      low: [] as Task[],
+      completed: [] as Task[]
+    };
 
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task);
-    setDefaultQuadrant('');
-    setIsTaskFormOpen(true);
-  };
-
-  const handleSaveTask = async (formData: TaskFormData) => {
-    try {
-      if (editingTask) {
-        await updateTaskMutation.mutateAsync({
-          id: editingTask.id,
-          data: formData
-        });
-        toast.success('Task updated successfully');
+    tasks.forEach(task => {
+      if (task.status === 'done') {
+        grouped.completed.push(task);
       } else {
-        await createTaskMutation.mutateAsync(formData);
-        toast.success('Task created successfully');
+        switch (task.priority) {
+          case 4:
+            grouped.high.push(task);
+            break;
+          case 3:
+            grouped.medium.push(task);
+            break;
+          case 2:
+          case 1:
+            grouped.low.push(task);
+            break;
+        }
       }
-      setIsTaskFormOpen(false);
-      setEditingTask(null);
+    });
+
+    return grouped;
+  }, [tasks]);
+
+  // Filter tasks based on selected filter
+  const filteredTasks = useMemo(() => {
+    if (selectedFilter === "all") {
+      return groupedTasks;
+    }
+    
+    return {
+      ...groupedTasks,
+      [selectedFilter]: groupedTasks[selectedFilter as keyof typeof groupedTasks] || []
+    };
+  }, [groupedTasks, selectedFilter]);
+
+  const handleCreateTask = async (data: TaskFormType) => {
+    try {
+      await createTaskMutation.mutateAsync(data);
+      setShowAddTask(false);
     } catch (error) {
-      toast.error('Failed to save task');
+      console.error('Failed to create task:', error);
     }
   };
 
-  const handleCompleteTask = async (id: string) => {
+  const handleUpdateTask = async (data: TaskFormType) => {
+    if (!editingTask) return;
+    
     try {
-      await completeTaskMutation.mutateAsync(id);
-      toast.success('Task completed!');
+      await updateTaskMutation.mutateAsync({ id: editingTask.id, data });
+      setEditingTask(null);
     } catch (error) {
-      toast.error('Failed to complete task');
+      console.error('Failed to update task:', error);
     }
   };
 
   const handleDeleteTask = async (id: string) => {
     try {
       await deleteTaskMutation.mutateAsync(id);
-      toast.success('Task deleted');
-      setIsTaskFormOpen(false);
-      setEditingTask(null);
     } catch (error) {
-      toast.error('Failed to delete task');
+      console.error('Failed to delete task:', error);
     }
   };
 
-  const taskCounts = {
-    total: tasks.length,
-    pending: tasks.filter(t => t.status === 'pending').length,
-    completed: tasks.filter(t => t.status === 'done').length,
-    overdue: tasks.filter(t => t.due_date && t.due_date < Date.now() && t.status !== 'done').length
+  const handleCompleteTask = async (id: string) => {
+    try {
+      await updateTaskMutation.mutateAsync({ 
+        id, 
+        data: { status: 'done' } 
+      });
+    } catch (error) {
+      console.error('Failed to complete task:', error);
+    }
   };
 
-  if (tasksLoading) {
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+  };
+
+  const handleViewTask = (task: Task) => {
+    setViewingTask(task);
+  };
+
+  const getPriorityLabel = (priority: number) => {
+    switch (priority) {
+      case 4: return 'Urgent';
+      case 3: return 'High';
+      case 2: return 'Medium';
+      case 1: return 'Low';
+      default: return 'Unknown';
+    }
+  };
+
+  const getPriorityColor = (priority: number) => {
+    switch (priority) {
+      case 4: return 'text-error-light0';
+      case 3: return 'text-primary';
+      case 2: return 'text-warning';
+      case 1: return 'text-success';
+      default: return 'text-muted-foreground';
+    }
+  };
+
+  if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Error Loading Tasks</h2>
+          <p className="text-muted-foreground">Failed to load tasks. Please try again.</p>
+        </div>
       </div>
     );
   }
@@ -120,203 +159,344 @@ export default function TasksPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            {t('navigation.tasks')}
-          </h1>
-          <p className="text-foreground-secondary mt-1">
-            Organize and prioritize your tasks using the Eisenhower Matrix
-          </p>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Tasks</h1>
+          <p className="text-muted-foreground mt-1">Manage your tasks and stay organized</p>
         </div>
-        
-        <div className="flex items-center space-x-3">
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-background-secondary rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('matrix')}
-              className={`p-2 rounded transition-colors ${
-                viewMode === 'matrix' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
-              title="Matrix View"
-            >
-              <Grid3X3 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded transition-colors ${
-                viewMode === 'list' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
-              title="List View"
-            >
-              <List className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('stats')}
-              className={`p-2 rounded transition-colors ${
-                viewMode === 'stats' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
-              title="Statistics View"
-            >
-              <BarChart3 className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Actions */}
-          <button 
-            onClick={() => handleCreateTask()}
-            className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 active:scale-95"
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-4 py-3 bg-card border border-border rounded-xl font-medium hover:bg-card/80 transition-colors"
           >
-            <span>Create Task</span>
+            <Filter className="w-4 h-4" />
+            Filters
           </button>
-          
+          <button
+            onClick={() => setShowAddTask(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors shadow-md"
+          >
+            <Plus className="w-5 h-5" />
+            Add Task
+          </button>
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+          />
+        </div>
+        <div className="flex gap-2">
+          {["all", "high", "medium", "low"].map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setSelectedFilter(filter)}
+              className={`px-4 py-3 rounded-xl font-medium transition-colors ${
+                selectedFilter === filter
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card border border-border text-foreground hover:bg-card/80"
+              }`}
+            >
+              {filter.charAt(0).toUpperCase() + filter.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* Content based on view mode */}
-      {tasksLoading ? (
-        <TaskListSkeleton />
-      ) : (
-        <>
-          {viewMode === 'matrix' && (
-            <EisenhowerMatrix
-              tasks={tasks}
-              onTaskComplete={handleCompleteTask}
-              onTaskEdit={handleEditTask}
-              onTaskDelete={handleDeleteTask}
-              onCreateTask={handleCreateTask}
-            />
-          )}
+      {/* Advanced Filters */}
+      {showFilters && (
+        <div className="bg-card rounded-2xl p-6 border border-border">
+          <TaskFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onClose={() => setShowFilters(false)}
+          />
+        </div>
+      )}
 
-          {viewMode === 'list' && (
-            <div className="card p-6">
-              <div className="space-y-4">
-                {tasks.length === 0 ? (
-                  <div className="text-center py-12">
-                    <h3 className="text-lg font-medium text-foreground mb-2">No tasks found</h3>
-                    <p className="text-foreground-secondary">
-                      Get started by creating your first task
-                    </p>
+      {/* Loading State */}
+      {isLoading && <TaskListSkeleton />}
+
+      {/* Task Lists */}
+      {!isLoading && (
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* High Priority */}
+          {(selectedFilter === "all" || selectedFilter === "high") && (
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Flag className="w-5 h-5 text-error-light0" />
+                  High Priority
+                </h2>
+                <span className="text-sm text-muted-foreground">{filteredTasks.high.length} tasks</span>
+              </div>
+
+              <div className="space-y-3">
+                {filteredTasks.high.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onComplete={handleCompleteTask}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteTask}
+                    onView={handleViewTask}
+                  />
+                ))}
+                {filteredTasks.high.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No high priority tasks
                   </div>
-                ) : (
-                  tasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onComplete={handleCompleteTask}
-                      onEdit={handleEditTask}
-                      onDelete={handleDeleteTask}
-                    />
-                  ))
                 )}
               </div>
             </div>
           )}
-        </>
-      )}
 
-      {viewMode === 'stats' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Task Statistics */}
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Task Overview</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-foreground-secondary">Total Tasks</span>
-                <span className="font-medium text-foreground">{taskStats?.total || 0}</span>
+          {/* Medium Priority */}
+          {(selectedFilter === "all" || selectedFilter === "medium") && (
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Flag className="w-5 h-5 text-warning" />
+                  Medium Priority
+                </h2>
+                <span className="text-sm text-muted-foreground">{filteredTasks.medium.length} tasks</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-foreground-secondary">Completed</span>
-                <span className="font-medium text-green-600">{taskStats?.completed || 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-foreground-secondary">Pending</span>
-                <span className="font-medium text-blue-600">{taskStats?.pending || 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-foreground-secondary">Overdue</span>
-                <span className="font-medium text-red-600">{taskStats?.overdue || 0}</span>
+
+              <div className="space-y-3">
+                {filteredTasks.medium.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onComplete={handleCompleteTask}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteTask}
+                    onView={handleViewTask}
+                  />
+                ))}
+                {filteredTasks.medium.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No medium priority tasks
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Matrix Distribution */}
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Matrix Distribution</h3>
-            {matrixLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          {/* Low Priority */}
+          {(selectedFilter === "all" || selectedFilter === "low") && (
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Flag className="w-5 h-5 text-success" />
+                  Low Priority
+                </h2>
+                <span className="text-sm text-muted-foreground">{filteredTasks.low.length} tasks</span>
               </div>
-            ) : matrixError ? (
-              <div className="text-center py-8 text-red-600">
-                <p>Failed to load matrix data</p>
-              </div>
-            ) : (
+
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-foreground-secondary">Do First</span>
-                  <span className="font-medium text-red-600">{matrixData?.stats?.do || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground-secondary">Schedule</span>
-                  <span className="font-medium text-yellow-600">{matrixData?.stats?.decide || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground-secondary">Delegate</span>
-                  <span className="font-medium text-blue-600">{matrixData?.stats?.delegate || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground-secondary">Eliminate</span>
-                  <span className="font-medium text-gray-600">{matrixData?.stats?.delete || 0}</span>
-                </div>
+                {filteredTasks.low.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onComplete={handleCompleteTask}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteTask}
+                    onView={handleViewTask}
+                  />
+                ))}
+                {filteredTasks.low.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No low priority tasks
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Productivity Insights */}
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Insights</h3>
-            <div className="space-y-3 text-sm">
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                <p className="text-blue-800 dark:text-blue-200">
-                  Focus on completing "Do First" tasks to reduce stress
-                </p>
+          {/* Completed Tasks */}
+          {filteredTasks.completed.length > 0 && (
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Completed
+                </h2>
+                <span className="text-sm text-muted-foreground">{filteredTasks.completed.length} tasks</span>
               </div>
-              <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                <p className="text-green-800 dark:text-green-200">
-                  Schedule time for "Decide" tasks to prevent them from becoming urgent
-                </p>
+
+              <div className="space-y-3">
+                {filteredTasks.completed.map((task) => (
+                  <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-primary/10">
+                    <div className="w-5 h-5 rounded bg-primary flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-foreground line-through opacity-70">{task.title}</p>
+                      {task.description && (
+                        <p className="text-xs text-muted-foreground line-through opacity-50">{task.description}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded ${getPriorityColor(task.priority)} bg-current/10`}>
+                        {getPriorityLabel(task.priority)}
+                      </span>
+                      {task.completed_at && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(task.completed_at).toLocaleTimeString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                <p className="text-yellow-800 dark:text-yellow-200">
-                  Consider eliminating tasks in the "Delete" quadrant
-                </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && tasks.length === 0 && (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+            <Flag className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">No tasks yet</h2>
+          <p className="text-muted-foreground mb-6">Get started by creating your first task</p>
+          <button
+            onClick={() => setShowAddTask(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Create Task
+          </button>
+        </div>
+      )}
+
+      {/* Add Task Modal */}
+      <TaskForm
+        isOpen={showAddTask}
+        onClose={() => setShowAddTask(false)}
+        onSave={handleCreateTask}
+      />
+
+      {/* Edit Task Modal */}
+      <TaskForm
+        task={editingTask}
+        isOpen={!!editingTask}
+        onClose={() => setEditingTask(null)}
+        onSave={handleUpdateTask}
+        onDelete={editingTask ? () => handleDeleteTask(editingTask.id) : undefined}
+      />
+
+      {/* View Task Modal */}
+      {viewingTask && (
+        <div className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-foreground">Task Details</h2>
+                <button
+                  onClick={() => setViewingTask(null)}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Title */}
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{viewingTask.title}</h3>
+                  {viewingTask.description && (
+                    <p className="text-muted-foreground">{viewingTask.description}</p>
+                  )}
+                </div>
+
+                {/* Priority and Status */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                      viewingTask.priority === 4 ? 'bg-error' :
+                      viewingTask.priority === 3 ? 'bg-primary-500' :
+                      viewingTask.priority === 2 ? 'bg-warning-light0' :
+                      'bg-success-light0'
+                    }`}></div>
+                    <span className="text-sm font-medium text-foreground">
+                      {getPriorityLabel(viewingTask.priority)} Priority
+                    </span>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    viewingTask.status === 'done' ? 'bg-success-light text-success dark:bg-success dark:text-success-light' :
+                    viewingTask.status === 'pending' ? 'bg-warning-light text-warning dark:bg-warning dark:text-warning-light' :
+                    'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground'
+                  }`}>
+                    {viewingTask.status.charAt(0).toUpperCase() + viewingTask.status.slice(1)}
+                  </span>
+                </div>
+
+                {/* Additional Details */}
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  {viewingTask.due_date && (
+                    <div>
+                      <span className="font-medium text-foreground">Due Date:</span>
+                      <p className="text-muted-foreground">{new Date(viewingTask.due_date).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                  {viewingTask.estimated_duration && (
+                    <div>
+                      <span className="font-medium text-foreground">Duration:</span>
+                      <p className="text-muted-foreground">{viewingTask.estimated_duration} minutes</p>
+                    </div>
+                  )}
+                  {viewingTask.context_type && (
+                    <div>
+                      <span className="font-medium text-foreground">Context:</span>
+                      <p className="text-muted-foreground">{viewingTask.context_type}</p>
+                    </div>
+                  )}
+                  {viewingTask.energy_level_required && (
+                    <div>
+                      <span className="font-medium text-foreground">Energy Level:</span>
+                      <p className="text-muted-foreground">{viewingTask.energy_level_required}/10</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-3 pt-4 border-t border-border">
+                  <button
+                    onClick={() => {
+                      setViewingTask(null);
+                      setEditingTask(viewingTask);
+                    }}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    Edit Task
+                  </button>
+                  <button
+                    onClick={() => setViewingTask(null)}
+                    className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Task Form Sheet */}
-      <TaskFormSheet
-        task={editingTask}
-        isOpen={isTaskFormOpen}
-        onClose={() => {
-          setIsTaskFormOpen(false);
-          setEditingTask(null);
-          setDefaultQuadrant('');
-        }}
-        onSave={(data) => handleSaveTask(data as TaskFormData)}
-        onDelete={handleDeleteTask}
-        defaultQuadrant={defaultQuadrant}
-      />
     </div>
   );
 }

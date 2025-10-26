@@ -194,10 +194,10 @@ export const VirtualTaskList: React.FC<VirtualTaskListProps> = ({
       <div className="flex items-center space-x-2">
         {task.priority && (
           <span className={`px-2 py-1 text-xs rounded-full ${
-            task.priority === 4 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
-            task.priority === 3 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
-            task.priority === 2 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
-            'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+            task.priority === 4 ? 'bg-error-light text-error dark:bg-error dark:text-error-light' :
+            task.priority === 3 ? 'bg-primary-100 text-primary dark:bg-primary dark:text-primary-300' :
+            task.priority === 2 ? 'bg-warning-light text-warning dark:bg-warning dark:text-warning-light' :
+            'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground'
           }`}>
             P{task.priority}
           </span>
@@ -265,8 +265,8 @@ export const VirtualHealthLog: React.FC<VirtualHealthLogProps> = ({
       onClick={() => onLogClick?.(log)}
     >
       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-        log.type === 'exercise' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' :
-        log.type === 'nutrition' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300' :
+        log.type === 'exercise' ? 'bg-info-light text-info dark:bg-info dark:text-info-light' :
+        log.type === 'nutrition' ? 'bg-success-light text-success dark:bg-success dark:text-success-light' :
         log.type === 'mood' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300' :
         'bg-cyan-100 text-cyan-600 dark:bg-cyan-900 dark:text-cyan-300'
       }`}>
@@ -387,9 +387,9 @@ export const VirtualVoiceNotes: React.FC<VirtualVoiceNotesProps> = ({
         <div className="flex items-center space-x-2">
           {note.confidence && (
             <span className={`px-2 py-1 text-xs rounded-full ${
-              note.confidence > 0.8 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-              note.confidence > 0.6 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
-              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+              note.confidence > 0.8 ? 'bg-success-light text-success dark:bg-success dark:text-success-light' :
+              note.confidence > 0.6 ? 'bg-warning-light text-warning dark:bg-warning dark:text-warning-light' :
+              'bg-error-light text-error dark:bg-error dark:text-error-light'
             }`}>
               {Math.round(note.confidence * 100)}% confident
             </span>
@@ -397,9 +397,9 @@ export const VirtualVoiceNotes: React.FC<VirtualVoiceNotesProps> = ({
           
           {note.analysis?.sentiment && (
             <span className={`px-2 py-1 text-xs rounded-full ${
-              note.analysis.sentiment === 'positive' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-              note.analysis.sentiment === 'neutral' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' :
-              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+              note.analysis.sentiment === 'positive' ? 'bg-success-light text-success dark:bg-success dark:text-success-light' :
+              note.analysis.sentiment === 'neutral' ? 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground' :
+              'bg-error-light text-error dark:bg-error dark:text-error-light'
             }`}>
               {note.analysis.sentiment}
             </span>

@@ -4,6 +4,7 @@ import {
   Coffee,
   Clock
 } from 'lucide-react';
+import { Button } from '../../ui/Button';
 
 interface FocusTimerProps {
   activeSession: FocusSession | null;
@@ -148,12 +149,12 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
 
             {/* Controls */}
             <div className="flex items-center justify-center space-x-4">
-              <button onClick={onPauseSession} className="btn btn-secondary">
+              <Button onClick={onPauseSession} variant="outline">
                 Pause
-              </button>
-              <button onClick={onCancelSession} className="btn btn-secondary text-red-600 hover:text-red-700">
+              </Button>
+              <Button onClick={onCancelSession} variant="outline" className="text-muted-foreground hover:text-foreground">
                 Stop
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -191,13 +192,14 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
             )}
 
             {/* Start Button */}
-            <button 
+            <Button 
               onClick={handleStartSession}
               disabled={!selectedTemplate}
-              className="btn btn-primary text-lg px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              size="lg"
+              className="text-lg px-8 py-3"
             >
               Start Focus Session
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -260,18 +262,19 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
 
               {/* Actions */}
               <div className="flex space-x-4">
-                <button
+                <Button
                   onClick={() => setShowCompletionModal(false)}
-                  className="btn btn-secondary flex-1 py-3 text-base"
+                  variant="outline"
+                  className="flex-1 py-3 text-base"
                 >
                   Skip
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleCompleteSession}
-                  className="btn btn-primary flex-1 py-3 text-base"
+                  className="flex-1 py-3 text-base"
                 >
                   Complete Session
-                </button>
+                </Button>
               </div>
             </div>
           </div>

@@ -140,7 +140,7 @@ const generateBreadcrumbs = (pathname: string): BreadcrumbItem[] => {
 };
 
 const DefaultSeparator = () => (
-  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
   </svg>
 );
@@ -182,14 +182,14 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
               )}
               
               {isLast ? (
-                <span className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 font-medium">
+                <span className="flex items-center space-x-1 text-muted-foreground dark:text-muted-foreground font-medium">
                   {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
                   <span>{item.label}</span>
                 </span>
               ) : (
                 <Link
                   to={item.path}
-                  className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                  className="flex items-center space-x-1 text-muted-foreground dark:text-muted-foreground hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                 >
                   {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
                   <span>{item.label}</span>

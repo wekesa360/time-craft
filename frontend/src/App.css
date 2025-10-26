@@ -1,42 +1,75 @@
+/* v0-fitness-app-ui Design System - App Styles */
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  min-height: 100vh;
+  background: var(--background);
+  font-family: 'Inter', 'Poppins', system-ui, sans-serif;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Ensure the app takes full height */
+.App {
+  min-height: 100vh;
+  background: var(--background);
 }
 
-@keyframes logo-spin {
+/* Glass morphism effect for cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass-card {
+  background: rgba(45, 45, 45, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient backgrounds */
+.gradient-primary {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, #ffd4c8 0%, #ffe8e0 100%);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, #64b5f6 0%, #90caf9 100%);
+}
+
+/* Smooth animations */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.card {
-  padding: 2em;
+::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: var(--radius);
 }
 
-.read-the-docs {
-  color: #888;
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: var(--radius);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover);
 }

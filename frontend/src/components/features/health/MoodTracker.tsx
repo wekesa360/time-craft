@@ -9,15 +9,15 @@ interface MoodTrackerProps {
 }
 
 const moodLevels = [
-  { value: 1, label: 'Terrible', color: 'text-red-600' },
-  { value: 2, label: 'Bad', color: 'text-red-500' },
-  { value: 3, label: 'Poor', color: 'text-orange-500' },
-  { value: 4, label: 'Okay', color: 'text-yellow-500' },
-  { value: 5, label: 'Fine', color: 'text-yellow-400' },
-  { value: 6, label: 'Good', color: 'text-green-400' },
-  { value: 7, label: 'Great', color: 'text-green-500' },
-  { value: 8, label: 'Excellent', color: 'text-green-600' },
-  { value: 9, label: 'Amazing', color: 'text-blue-500' },
+  { value: 1, label: 'Terrible', color: 'text-error' },
+  { value: 2, label: 'Bad', color: 'text-error-light0' },
+  { value: 3, label: 'Poor', color: 'text-primary' },
+  { value: 4, label: 'Okay', color: 'text-warning' },
+  { value: 5, label: 'Fine', color: 'text-warning-light' },
+  { value: 6, label: 'Good', color: 'text-success-light' },
+  { value: 7, label: 'Great', color: 'text-success' },
+  { value: 8, label: 'Excellent', color: 'text-success' },
+  { value: 9, label: 'Amazing', color: 'text-info-light0' },
   { value: 10, label: 'Fantastic', color: 'text-purple-500' }
 ];
 
@@ -35,16 +35,16 @@ const energyLevels = [
 ];
 
 const stressLevels = [
-  { value: 1, label: 'Completely Calm', color: 'bg-green-100 text-green-800' },
-  { value: 2, label: 'Very Relaxed', color: 'bg-green-100 text-green-800' },
-  { value: 3, label: 'Relaxed', color: 'bg-green-100 text-green-800' },
-  { value: 4, label: 'Slightly Tense', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 5, label: 'Moderate Stress', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 6, label: 'Stressed', color: 'bg-orange-100 text-orange-800' },
-  { value: 7, label: 'Very Stressed', color: 'bg-orange-100 text-orange-800' },
-  { value: 8, label: 'Highly Stressed', color: 'bg-red-100 text-red-800' },
-  { value: 9, label: 'Extremely Stressed', color: 'bg-red-100 text-red-800' },
-  { value: 10, label: 'Overwhelmed', color: 'bg-red-100 text-red-800' }
+  { value: 1, label: 'Completely Calm', color: 'bg-success-light text-success' },
+  { value: 2, label: 'Very Relaxed', color: 'bg-success-light text-success' },
+  { value: 3, label: 'Relaxed', color: 'bg-success-light text-success' },
+  { value: 4, label: 'Slightly Tense', color: 'bg-warning-light text-warning' },
+  { value: 5, label: 'Moderate Stress', color: 'bg-warning-light text-warning' },
+  { value: 6, label: 'Stressed', color: 'bg-primary-100 text-primary' },
+  { value: 7, label: 'Very Stressed', color: 'bg-primary-100 text-primary' },
+  { value: 8, label: 'Highly Stressed', color: 'bg-error-light text-error' },
+  { value: 9, label: 'Extremely Stressed', color: 'bg-error-light text-error' },
+  { value: 10, label: 'Overwhelmed', color: 'bg-error-light text-error' }
 ];
 
 const sleepQuality = [
@@ -208,7 +208,7 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
               max="10"
               value={formData.energy}
               onChange={(e) => setFormData({ ...formData, energy: Number(e.target.value) })}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+              className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer dark:bg-muted"
             />
             {selectedEnergy && (
               <div className="mt-2 flex items-center justify-between text-sm">
@@ -233,7 +233,7 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
               max="10"
               value={formData.stress}
               onChange={(e) => setFormData({ ...formData, stress: Number(e.target.value) })}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+              className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer dark:bg-muted"
             />
             {selectedStress && (
               <div className="mt-2">
@@ -255,7 +255,7 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
               max="10"
               value={formData.sleep || 5}
               onChange={(e) => setFormData({ ...formData, sleep: Number(e.target.value) })}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+              className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer dark:bg-muted"
             />
             {selectedSleep && (
               <div className="mt-2 flex items-center justify-between text-sm">

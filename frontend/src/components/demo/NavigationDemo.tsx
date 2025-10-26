@@ -58,7 +58,7 @@ export const NavigationDemo: React.FC = () => {
           </p>
 
           {/* Navigation Preview */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+          <div className="bg-muted dark:bg-muted rounded-lg p-4">
             <h3 className="text-sm font-medium mb-3 text-foreground-secondary">Navigationsvorschau:</h3>
             <nav className="space-y-2" aria-label="Beispiel-Navigation">
               {navigationItems.map((item, index) => (

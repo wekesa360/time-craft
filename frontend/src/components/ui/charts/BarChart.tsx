@@ -109,7 +109,7 @@ const BarChart: React.FC<BarChartProps> = ({
                     x={x + actualBarWidth / 2}
                     y={y - 2}
                     textAnchor="middle"
-                    className="text-xs fill-current text-gray-600 dark:text-gray-300"
+                    className="text-xs fill-current text-muted-foreground dark:text-muted-foreground"
                     fontSize="3"
                   >
                     {formatValue(bar.value)}
@@ -125,7 +125,7 @@ const BarChart: React.FC<BarChartProps> = ({
           {bars.map((bar, index) => (
             <div
               key={index}
-              className="flex-1 text-center text-xs text-gray-600 dark:text-gray-300 px-1"
+              className="flex-1 text-center text-xs text-muted-foreground dark:text-muted-foreground px-1"
             >
               {bar.label}
             </div>
@@ -147,7 +147,7 @@ const BarChart: React.FC<BarChartProps> = ({
           {bars.map((bar, index) => (
             <div
               key={index}
-              className="text-xs text-gray-600 dark:text-gray-300 text-right flex items-center justify-end"
+              className="text-xs text-muted-foreground dark:text-muted-foreground text-right flex items-center justify-end"
               style={{ height: `${barHeight}%` }}
             >
               {bar.label}
@@ -200,7 +200,7 @@ const BarChart: React.FC<BarChartProps> = ({
                       x={barWidth + 2}
                       y={y + actualBarHeight / 2}
                       dominantBaseline="middle"
-                      className="text-xs fill-current text-gray-600 dark:text-gray-300"
+                      className="text-xs fill-current text-muted-foreground dark:text-muted-foreground"
                       fontSize="3"
                     >
                       {formatValue(bar.value)}
@@ -218,7 +218,7 @@ const BarChart: React.FC<BarChartProps> = ({
   const renderChart = () => {
     if (!data || data.length === 0) {
       return (
-        <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-center h-full text-muted-foreground dark:text-muted-foreground">
           No data available
         </div>
       );

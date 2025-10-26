@@ -152,25 +152,25 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
-      case 'moderator': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+      case 'admin': return 'bg-error-light text-error dark:bg-error/20 dark:text-error-light';
+      case 'moderator': return 'bg-info-light text-info dark:bg-info/20 dark:text-info-light';
+      default: return 'bg-muted text-muted-foreground dark:bg-muted/20 dark:text-muted-foreground';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
-      case 'suspended': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+      case 'active': return 'bg-success-light text-success dark:bg-success/20 dark:text-success-light';
+      case 'suspended': return 'bg-error-light text-error dark:bg-error/20 dark:text-error-light';
+      default: return 'bg-muted text-muted-foreground dark:bg-muted/20 dark:text-muted-foreground';
     }
   };
 
   const getSubscriptionColor = (subscription: string) => {
     switch (subscription) {
       case 'premium': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
-      case 'student': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+      case 'student': return 'bg-info-light text-info dark:bg-info/20 dark:text-info-light';
+      default: return 'bg-muted text-muted-foreground dark:bg-muted/20 dark:text-muted-foreground';
     }
   };
 
@@ -180,8 +180,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
       <FadeIn>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <h2 className="text-2xl font-bold text-foreground dark:text-white">User Management</h2>
+            <p className="text-muted-foreground dark:text-muted-foreground mt-1">
               Manage users, roles, and permissions
             </p>
           </div>
@@ -202,11 +202,11 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
 
       {/* Filters and Search */}
       <FadeIn delay={0.1}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                 Search Users
               </label>
               <input
@@ -214,19 +214,19 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by name or email..."
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
               />
             </div>
 
             {/* Role Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                 Role
               </label>
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
               >
                 <option value="all">All Roles</option>
                 <option value="user">User</option>
@@ -237,13 +237,13 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                 Status
               </label>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -258,30 +258,30 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
       {/* Bulk Actions */}
       {selectedUsers.size > 0 && (
         <FadeIn delay={0.2}>
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="bg-info-light dark:bg-info/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
-              <span className="text-blue-800 dark:text-blue-200">
+              <span className="text-info dark:text-info-light">
                 {selectedUsers.size} user{selectedUsers.size !== 1 ? 's' : ''} selected
               </span>
               <div className="flex items-center space-x-2">
                 <Button
                   onClick={() => handleBulkAction('activate')}
                   size="sm"
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-success hover:bg-success text-white"
                 >
                   Activate
                 </Button>
                 <Button
                   onClick={() => handleBulkAction('suspend')}
                   size="sm"
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                  className="bg-warning hover:bg-warning text-white"
                 >
                   Suspend
                 </Button>
                 <Button
                   onClick={() => handleBulkAction('delete')}
                   size="sm"
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="bg-error hover:bg-error text-white"
                 >
                   Delete
                 </Button>
@@ -293,10 +293,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
 
       {/* Users Table */}
       <FadeIn delay={0.3}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+              <thead className="bg-muted dark:bg-muted">
                 <tr>
                   <th className="px-6 py-3 text-left">
                     <input
@@ -306,22 +306,22 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
                       className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                     Subscription
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                     Last Login
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -335,7 +335,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ delay: index * 0.05 }}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className="hover:bg-muted dark:hover:bg-muted"
                     >
                       <td className="px-6 py-4">
                         <input
@@ -353,15 +353,15 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
                             </span>
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-white">
+                            <div className="font-medium text-foreground dark:text-white">
                               {user.name}
                               {user.isVerified && (
-                                <svg className="w-4 h-4 inline ml-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="w-4 h-4 inline ml-1 text-success" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
                               )}
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                               {user.email}
                             </div>
                           </div>
@@ -391,7 +391,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
                           {user.subscription}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-6 py-4 text-sm text-muted-foreground dark:text-muted-foreground">
                         {new Date(user.lastLogin).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
@@ -407,7 +407,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
                             onClick={() => handleBulkAction('suspend')}
                             size="sm"
                             variant="outline"
-                            className="text-red-600 hover:text-red-700"
+                            className="text-error hover:text-error"
                           >
                             Suspend
                           </Button>
@@ -436,44 +436,44 @@ const UserManagement: React.FC<UserManagementProps> = ({ className }) => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full"
+              className="bg-white dark:bg-muted rounded-lg shadow-2xl max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
                   {editingUser ? 'Edit User' : 'Add New User'}
                 </h3>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-1">
                       Name
                     </label>
                     <input
                       type="text"
                       defaultValue={editingUser?.name || ''}
-                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-1">
                       Email
                     </label>
                     <input
                       type="email"
                       defaultValue={editingUser?.email || ''}
-                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-1">
                       Role
                     </label>
                     <select
                       defaultValue={editingUser?.role || 'user'}
-                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
                     >
                       <option value="user">User</option>
                       <option value="moderator">Moderator</option>

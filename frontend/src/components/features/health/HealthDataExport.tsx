@@ -262,7 +262,7 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
     <div className={cn('', className)}>
       <Button
         onClick={() => setIsOpen(true)}
-        className="bg-blue-600 hover:bg-blue-700 text-white"
+        className="bg-info hover:bg-info text-white"
       >
         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -283,13 +283,13 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-muted rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6 space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-2xl font-bold text-foreground dark:text-white">
                     Export Health Data
                   </h2>
                   <Button
@@ -306,7 +306,7 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
 
                 {/* Format Selection */}
                 <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Export Format</h3>
+                  <h3 className="font-semibold text-foreground dark:text-white">Export Format</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {exportFormats.map((format) => (
                       <button
@@ -315,7 +315,7 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
                         className={cn(
                           'p-4 rounded-lg border text-left transition-all duration-200',
                           selectedFormat === format.id
-                            ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                            ? 'border-blue-500 bg-info-light text-info dark:bg-info/20 dark:text-info-light'
                             : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
                         )}
                       >
@@ -333,7 +333,7 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
 
                 {/* Date Range */}
                 <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Date Range</h3>
+                  <h3 className="font-semibold text-foreground dark:text-white">Date Range</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {dateRangeOptions.map((option) => (
                       <button
@@ -342,7 +342,7 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
                         className={cn(
                           'p-2 rounded-lg border text-sm transition-all duration-200',
                           dateRange === option.id
-                            ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                            ? 'border-blue-500 bg-info-light text-info dark:bg-info/20 dark:text-info-light'
                             : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
                         )}
                       >
@@ -358,25 +358,25 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
                       className="grid grid-cols-2 gap-4"
                     >
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-1">
                           Start Date
                         </label>
                         <input
                           type="date"
                           value={customStartDate}
                           onChange={(e) => setCustomStartDate(e.target.value)}
-                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-1">
                           End Date
                         </label>
                         <input
                           type="date"
                           value={customEndDate}
                           onChange={(e) => setCustomEndDate(e.target.value)}
-                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
                         />
                       </div>
                     </motion.div>
@@ -385,7 +385,7 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
 
                 {/* Metrics Selection */}
                 <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Include Metrics</h3>
+                  <h3 className="font-semibold text-foreground dark:text-white">Include Metrics</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {availableMetrics.map((metric) => (
                       <button
@@ -394,7 +394,7 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
                         className={cn(
                           'p-2 rounded-lg border text-sm transition-all duration-200',
                           selectedMetrics.includes(metric.id)
-                            ? 'border-green-500 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+                            ? 'border-green-500 bg-success-light text-success dark:bg-success/20 dark:text-success-light'
                             : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
                         )}
                       >
@@ -409,16 +409,16 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
 
                 {/* Additional Options */}
                 <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Additional Options</h3>
+                  <h3 className="font-semibold text-foreground dark:text-white">Additional Options</h3>
                   <div className="space-y-2">
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         checked={includeNotes}
                         onChange={(e) => setIncludeNotes(e.target.checked)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-300 text-info focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">Include notes</span>
+                      <span className="text-sm text-muted-foreground dark:text-muted-foreground">Include notes</span>
                     </label>
                     
                     {(selectedFormat === 'pdf' || selectedFormat === 'xlsx') && (
@@ -427,18 +427,18 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
                           type="checkbox"
                           checked={includeCharts}
                           onChange={(e) => setIncludeCharts(e.target.checked)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-gray-300 text-info focus:ring-blue-500"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">Include charts and visualizations</span>
+                        <span className="text-sm text-muted-foreground dark:text-muted-foreground">Include charts and visualizations</span>
                       </label>
                     )}
                   </div>
                 </div>
 
                 {/* Preview */}
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Export Preview</h4>
-                  <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                <div className="bg-muted dark:bg-muted rounded-lg p-4">
+                  <h4 className="font-medium text-foreground dark:text-white mb-2">Export Preview</h4>
+                  <div className="text-sm text-muted-foreground dark:text-muted-foreground space-y-1">
                     <p>Format: {selectedFormatConfig.name} ({selectedFormatConfig.extension})</p>
                     <p>Records: {filteredData.length} entries</p>
                     <p>Metrics: {selectedMetrics.length} selected</p>
@@ -457,7 +457,7 @@ const HealthDataExport: React.FC<HealthDataExportProps> = ({
                   <Button
                     onClick={handleExport}
                     disabled={isExporting || selectedMetrics.length === 0 || filteredData.length === 0}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-info hover:bg-info text-white"
                   >
                     {isExporting ? (
                       <>

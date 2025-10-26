@@ -16,9 +16,9 @@ export const SSEStatus: React.FC<SSEStatusProps> = ({
   const { connectionState, reconnect, isConnected } = useSSE();
 
   const getStatusColor = () => {
-    if (isConnected) return 'text-green-500';
-    if (connectionState.reconnectAttempts > 0) return 'text-yellow-500';
-    return 'text-red-500';
+    if (isConnected) return 'text-success';
+    if (connectionState.reconnectAttempts > 0) return 'text-warning';
+    return 'text-error-light0';
   };
 
   const getStatusText = () => {

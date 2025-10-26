@@ -103,7 +103,7 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
           >
             Pending ({pendingRequests.length})
             {pendingRequests.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full"></span>
             )}
           </button>
           <button
@@ -214,8 +214,8 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
               {pendingRequests.map((request) => (
                 <div key={request.id} className="flex items-center justify-between p-4 bg-background-secondary rounded-lg">
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-950 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold">
+                    <div className="w-12 h-12 bg-info-light dark:bg-info rounded-full flex items-center justify-center">
+                      <span className="text-info font-semibold">
                         {request.firstName.charAt(0)}{request.lastName.charAt(0)}
                       </span>
                     </div>
@@ -243,7 +243,7 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
                     </button>
                     <button
                       onClick={() => onDeclineRequest(request.id)}
-                      className="btn btn-secondary text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 py-1 text-sm"
+                      className="btn btn-secondary text-error border-red-300 hover:bg-error-light dark:hover:bg-error/20 px-3 py-1 text-sm"
                     >
                       Decline
                     </button>
@@ -307,11 +307,11 @@ const ConnectionsList: React.FC<ConnectionsListProps> = ({
             </form>
 
             {/* Tips */}
-            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+            <div className="mt-6 p-4 bg-info-light dark:bg-info/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h4 className="font-medium text-info dark:text-info-light mb-2">
                 Connection Tips
               </h4>
-              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+              <ul className="text-sm text-info dark:text-info-light space-y-1">
                 <li>• Connect with friends, family, and colleagues</li>
                 <li>• Add a personal message to increase acceptance</li>
                 <li>• Share your productivity journey together</li>

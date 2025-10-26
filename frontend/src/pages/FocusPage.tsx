@@ -13,6 +13,7 @@ import {
   type SessionTemplate 
 } from '../components/features/focus';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { Button } from '../components/ui/Button';
 
 // Hooks and API
 import { useFocusQueries } from '../hooks/queries/useFocusQueries';
@@ -167,191 +168,198 @@ export default function FocusPage() {
   if (templatesLoading || sessionsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            {t('navigation.focus')}
-          </h1>
-          <p className="text-foreground-secondary mt-1">
-            Boost your productivity with focused work sessions
-          </p>
-        </div>
-        
-        <div className="flex items-center space-x-3">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Focus</h1>
+            <p className="text-muted-foreground mt-1">
+              Boost your productivity with focused work sessions
+            </p>
+          </div>
+          
           {/* View Mode Toggle */}
-          <div className="flex items-center bg-background-secondary rounded-lg p-1">
-            <button
+          <div className="flex items-center bg-card border border-border rounded-xl p-1">
+            <Button
               onClick={() => setViewMode('timer')}
-              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-                viewMode === 'timer'
-                  ? 'bg-primary-600 text-white'
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
+              variant={viewMode === 'timer' ? 'default' : 'ghost'}
+              size="sm"
+              className={viewMode === 'timer' ? '' : 'text-muted-foreground hover:text-foreground'}
             >
               Timer
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setViewMode('pomodoro')}
-              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-                viewMode === 'pomodoro'
-                  ? 'bg-primary-600 text-white'
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
+              variant={viewMode === 'pomodoro' ? 'default' : 'ghost'}
+              size="sm"
+              className={viewMode === 'pomodoro' ? '' : 'text-muted-foreground hover:text-foreground'}
             >
               Pomodoro
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setViewMode('templates')}
-              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-                viewMode === 'templates'
-                  ? 'bg-primary-600 text-white'
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
+              variant={viewMode === 'templates' ? 'default' : 'ghost'}
+              size="sm"
+              className={viewMode === 'templates' ? '' : 'text-muted-foreground hover:text-foreground'}
             >
               Templates
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setViewMode('analytics')}
-              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-                viewMode === 'analytics'
-                  ? 'bg-primary-600 text-white'
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
+              variant={viewMode === 'analytics' ? 'default' : 'ghost'}
+              size="sm"
+              className={viewMode === 'analytics' ? '' : 'text-muted-foreground hover:text-foreground'}
             >
               Analytics
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setViewMode('distractions')}
-              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-                viewMode === 'distractions'
-                  ? 'bg-primary-600 text-white'
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
+              variant={viewMode === 'distractions' ? 'default' : 'ghost'}
+              size="sm"
+              className={viewMode === 'distractions' ? '' : 'text-muted-foreground hover:text-foreground'}
             >
               Distractions
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
 
-      {/* Active Session Status */}
-      {activeSession && (
-        <div className="card p-4 border-l-4 border-l-primary-500">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-              <div>
-                <p className="font-medium text-foreground">
-                  Focus Session Active
-                </p>
-                <p className="text-sm text-foreground-secondary">
-                  Session: {activeSession.session_name || activeSession.session_type}
-                </p>
+        {/* Active Session Status */}
+        {activeSession && (
+          <div className="bg-card rounded-2xl p-6 border border-border border-l-4 border-l-primary">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
+                <div>
+                  <p className="font-semibold text-foreground">
+                    Focus Session Active
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Session: {activeSession.session_name || activeSession.session_type}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Button 
+                  onClick={handlePauseSession} 
+                  variant="outline"
+                  size="sm"
+                >
+                  Pause
+                </Button>
+                <Button 
+                  onClick={handleCancelSession} 
+                  variant="outline"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Cancel
+                </Button>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-2">
-              <button onClick={handlePauseSession} className="btn btn-secondary">
-                Pause
-              </button>
-              <button onClick={handleCancelSession} className="btn btn-secondary text-red-600 hover:text-red-700">
-                Cancel
-              </button>
+          </div>
+        )}
+
+        {/* Content based on view mode */}
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+        {viewMode === 'timer' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+            <div className="lg:col-span-2">
+              <FocusTimer
+                duration={selectedTemplate?.duration_minutes ? selectedTemplate.duration_minutes * 60 : 1500}
+                onComplete={() => handleCompleteSession(5, 'Session completed')}
+                autoStart={false}
+                size="lg"
+              />
+            </div>
+            <div className="lg:border-l lg:border-border lg:pl-6">
+              <SessionTemplates
+                onSelectTemplate={setSelectedTemplate}
+                selectedTemplate={selectedTemplate}
+                onCreateCustom={() => setViewMode('templates')}
+              />
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Content based on view mode */}
-      {viewMode === 'timer' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <FocusTimer
-              duration={selectedTemplate?.duration_minutes ? selectedTemplate.duration_minutes * 60 : 1500}
-              onComplete={() => handleCompleteSession(5, 'Session completed')}
-              autoStart={false}
-              size="lg"
-            />
+        {viewMode === 'pomodoro' && (
+          <div className="p-6">
+            <div className="max-w-2xl mx-auto">
+              <PomodoroTimer
+                settings={{
+                  focusDuration: 25,
+                  shortBreakDuration: 5,
+                  longBreakDuration: 15,
+                  sessionsUntilLongBreak: 4,
+                  autoStartBreaks: false,
+                  autoStartFocus: false,
+                }}
+                onSessionComplete={(type, sessionCount) => {
+                  toast.success(`${type} session completed! Session ${sessionCount}`);
+                }}
+                onCycleComplete={(cycleCount) => {
+                  toast.success(`🎉 Cycle ${cycleCount} completed!`);
+                }}
+              />
+            </div>
           </div>
-          <div>
+        )}
+
+        {viewMode === 'templates' && (
+          <div className="p-6">
             <SessionTemplates
               onSelectTemplate={setSelectedTemplate}
               selectedTemplate={selectedTemplate}
-              onCreateCustom={() => setViewMode('templates')}
+              onCreateCustom={() => {
+                // TODO: Implement custom template creation
+                toast.info('Custom template creation coming soon!');
+              }}
             />
           </div>
+        )}
+
+        {viewMode === 'analytics' && (
+          <div className="p-6">
+            <FocusAnalytics 
+              sessions={sessions.map(session => ({
+                id: session.id,
+                date: new Date(session.started_at).toISOString(),
+                duration: session.actual_duration || session.planned_duration,
+                type: session.session_type === 'pomodoro' ? 'pomodoro' : 'focus',
+                templateName: session.session_name || session.session_type,
+                completed: !!session.completed_at,
+                interruptions: sessionDistractions.filter(d => d.sessionId === session.id).length,
+                productivity: session.productivity_rating || 3,
+              }))}
+            />
+          </div>
+        )}
+
+        {viewMode === 'distractions' && (
+          <div className="p-6">
+            <DistractionLogger
+              sessionId={activeSession?.id || 'no-session'}
+              isSessionActive={!!activeSession}
+              onDistractionLogged={(distraction) => {
+                setSessionDistractions(prev => [...prev, { ...distraction, sessionId: activeSession?.id }]);
+                toast.info('Distraction logged');
+              }}
+              onDistractionAnalysis={(distractions) => {
+                // TODO: Send distraction analysis to backend
+                console.log('Distraction analysis:', distractions);
+              }}
+            />
+          </div>
+        )}
         </div>
-      )}
-
-      {viewMode === 'pomodoro' && (
-        <div className="max-w-2xl mx-auto">
-          <PomodoroTimer
-            settings={{
-              focusDuration: 25,
-              shortBreakDuration: 5,
-              longBreakDuration: 15,
-              sessionsUntilLongBreak: 4,
-              autoStartBreaks: false,
-              autoStartFocus: false,
-            }}
-            onSessionComplete={(type, sessionCount) => {
-              toast.success(`${type} session completed! Session ${sessionCount}`);
-            }}
-            onCycleComplete={(cycleCount) => {
-              toast.success(`🎉 Cycle ${cycleCount} completed!`);
-            }}
-          />
-        </div>
-      )}
-
-      {viewMode === 'templates' && (
-        <SessionTemplates
-          onSelectTemplate={setSelectedTemplate}
-          selectedTemplate={selectedTemplate}
-          onCreateCustom={() => {
-            // TODO: Implement custom template creation
-            toast.info('Custom template creation coming soon!');
-          }}
-        />
-      )}
-
-      {viewMode === 'analytics' && (
-        <FocusAnalytics 
-          sessions={sessions.map(session => ({
-            id: session.id,
-            date: new Date(session.started_at).toISOString(),
-            duration: session.actual_duration || session.planned_duration,
-            type: session.session_type === 'pomodoro' ? 'pomodoro' : 'focus',
-            templateName: session.session_name || session.session_type,
-            completed: !!session.completed_at,
-            interruptions: sessionDistractions.filter(d => d.sessionId === session.id).length,
-            productivity: session.productivity_rating || 3,
-          }))}
-        />
-      )}
-
-      {viewMode === 'distractions' && (
-        <DistractionLogger
-          sessionId={activeSession?.id || 'no-session'}
-          isSessionActive={!!activeSession}
-          onDistractionLogged={(distraction) => {
-            setSessionDistractions(prev => [...prev, { ...distraction, sessionId: activeSession?.id }]);
-            toast.info('Distraction logged');
-          }}
-          onDistractionAnalysis={(distractions) => {
-            // TODO: Send distraction analysis to backend
-            console.log('Distraction analysis:', distractions);
-          }}
-        />
-      )}
+      </div>
 
       {/* Cancel Session Dialog */}
       <ConfirmDialog

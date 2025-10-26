@@ -9,7 +9,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   const { t, i18n } = useTranslation();
-  const { config, setColorTheme, toggleTheme } = useThemeStore();
+  const { config, setColorThemeWithBackend, toggleTheme } = useThemeStore();
 
 
 
@@ -22,7 +22,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   const ThemeIcon = themeIcons[config.mode];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       {/* Header with theme and language controls */}
       <header className="absolute top-0 right-0 p-4 sm:p-6 z-10">
         <div className="flex items-center gap-2 sm:gap-3">
@@ -35,22 +35,22 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors shadow-sm"
+            className="p-2 bg-card backdrop-blur-sm border border-border rounded-lg hover:bg-accent transition-colors shadow-sm"
             title={`${t('settings.themeSettings.modes.' + config.mode)} theme`}
           >
-            <ThemeIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <ThemeIcon className="h-4 w-4 text-muted-foreground" />
           </button>
 
           {/* Color Theme Selector */}
-          <div className="flex items-center gap-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg p-1 shadow-sm">
+          <div className="flex items-center gap-1 bg-card backdrop-blur-sm border border-border rounded-lg p-1 shadow-sm">
             {Object.entries(colorThemes).map(([key, theme]) => (
               <button
                 key={key}
-                onClick={() => setColorTheme(key as any)}
+                onClick={() => setColorThemeWithBackend(key as any)}
                 className={`w-5 h-5 rounded-full border-2 transition-all ${
                   config.colorTheme === key
-                    ? 'border-gray-900 dark:border-gray-100 scale-110'
-                    : 'border-gray-300 dark:border-gray-600 hover:scale-105'
+                    ? 'border-foreground scale-110'
+                    : 'border-border hover:scale-105'
                 }`}
                 style={{ backgroundColor: theme.primary[500] }}
                 title={theme.name}
@@ -63,7 +63,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       {/* Centered Auth Card */}
       <div className="w-full max-w-md">
         {/* Auth card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
+        <div className="bg-card rounded-xl shadow-xl border border-border p-6 sm:p-8">
           {children}
         </div>
       </div>

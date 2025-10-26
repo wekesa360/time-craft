@@ -136,18 +136,18 @@ export const CommandProcessor: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-2xl font-bold text-foreground dark:text-white mb-4">
           Voice Command Processor
         </h2>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-muted-foreground dark:text-muted-foreground">
           Test voice commands by typing them or use the examples below
         </p>
       </div>
 
       {/* Command Input */}
-      <div className="bg-white dark:bg-gray-700 rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-600">
+      <div className="bg-white dark:bg-muted rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-600">
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
             Context
           </label>
           <div className="flex flex-wrap gap-2">
@@ -158,7 +158,7 @@ export const CommandProcessor: React.FC = () => {
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedContext === context.id
                     ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
+                    : 'bg-muted dark:bg-muted text-muted-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-muted'
                 }`}
               >
                 <span className="mr-1">{context.icon}</span>
@@ -169,14 +169,14 @@ export const CommandProcessor: React.FC = () => {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
             Command Text
           </label>
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Type a voice command to test..."
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white resize-none"
             rows={3}
           />
         </div>
@@ -185,7 +185,7 @@ export const CommandProcessor: React.FC = () => {
           <button
             onClick={handleInterpret}
             disabled={!inputText.trim() || interpretMutation.isPending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+            className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info disabled:bg-muted transition-colors"
           >
             {interpretMutation.isPending ? 'Interpreting...' : '🧠 Interpret'}
           </button>
@@ -194,7 +194,7 @@ export const CommandProcessor: React.FC = () => {
             <button
               onClick={handleExecute}
               disabled={executeMutation.isPending}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors"
+              className="px-4 py-2 bg-success text-white rounded-lg hover:bg-success disabled:bg-muted transition-colors"
             >
               {executeMutation.isPending ? 'Executing...' : '⚡ Execute'}
             </button>
@@ -204,28 +204,28 @@ export const CommandProcessor: React.FC = () => {
 
       {/* Current Interpretation */}
       {lastInterpretation && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">
+        <div className="bg-info-light dark:bg-info/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-info dark:text-info-light mb-3">
             Interpretation Result
           </h3>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="text-lg">{getIntentIcon(lastInterpretation.intent)}</span>
-              <span className="font-medium text-blue-800 dark:text-blue-200">
+              <span className="font-medium text-info dark:text-info-light">
                 Intent: {lastInterpretation.intent}
               </span>
-              <span className="text-sm text-blue-600 dark:text-blue-300">
+              <span className="text-sm text-info dark:text-info-light">
                 (Confidence: {Math.round(lastInterpretation.confidence * 100)}%)
               </span>
             </div>
             
             {Object.keys(lastInterpretation.parameters).length > 0 && (
               <div>
-                <div className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                <div className="text-sm font-medium text-info dark:text-info-light mb-1">
                   Parameters:
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded p-2 text-sm">
-                  <pre className="text-gray-900 dark:text-white">
+                <div className="bg-white dark:bg-muted rounded p-2 text-sm">
+                  <pre className="text-foreground dark:text-white">
                     {JSON.stringify(lastInterpretation.parameters, null, 2)}
                   </pre>
                 </div>
@@ -237,8 +237,8 @@ export const CommandProcessor: React.FC = () => {
 
       {/* Example Commands */}
       <div className="grid md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+        <div className="bg-white dark:bg-muted rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+          <h3 className="font-semibold text-foreground dark:text-white mb-3">
             Example Commands
           </h3>
           <div className="space-y-2">
@@ -246,7 +246,7 @@ export const CommandProcessor: React.FC = () => {
               <button
                 key={index}
                 onClick={() => handleExampleCommand(command)}
-                className="w-full text-left px-3 py-2 text-sm bg-gray-50 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-500 rounded transition-colors text-gray-700 dark:text-gray-300"
+                className="w-full text-left px-3 py-2 text-sm bg-muted dark:bg-muted hover:bg-muted dark:hover:bg-muted rounded transition-colors text-muted-foreground dark:text-muted-foreground"
               >
                 "{command}"
               </button>
@@ -255,13 +255,13 @@ export const CommandProcessor: React.FC = () => {
         </div>
 
         {/* Command History */}
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+        <div className="bg-white dark:bg-muted rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+          <h3 className="font-semibold text-foreground dark:text-white mb-3">
             Recent Commands
           </h3>
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {commandHistory.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+              <p className="text-muted-foreground dark:text-muted-foreground text-sm">
                 No commands executed yet
               </p>
             ) : (
@@ -269,22 +269,22 @@ export const CommandProcessor: React.FC = () => {
                 <div key={index} className="border-l-2 border-gray-200 dark:border-gray-600 pl-3">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm">{getIntentIcon(item.interpretation.intent)}</span>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-medium text-foreground dark:text-white">
                       {item.interpretation.intent}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-muted-foreground dark:text-muted-foreground">
                       {formatTimestamp(item.timestamp)}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">
                     "{item.input}"
                   </p>
                   {item.result && (
                     <div className="text-xs">
                       <span className={`px-2 py-1 rounded ${
                         item.result.success 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                          ? 'bg-success-light text-success dark:bg-success/20 dark:text-success-light'
+                          : 'bg-error-light text-error dark:bg-error/20 dark:text-error-light'
                       }`}>
                         {item.result.success ? '✅ Success' : '❌ Failed'}
                       </span>
@@ -298,11 +298,11 @@ export const CommandProcessor: React.FC = () => {
       </div>
 
       {/* Tips */}
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-        <h3 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
+      <div className="bg-warning-light dark:bg-warning/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+        <h3 className="font-semibold text-warning dark:text-warning-light mb-2">
           💡 Tips for Better Voice Commands
         </h3>
-        <ul className="text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
+        <ul className="text-sm text-warning dark:text-warning-light space-y-1">
           <li>• Be specific with your requests (e.g., "Create a high priority task" instead of "Add task")</li>
           <li>• Include context when possible (e.g., "Schedule a 30-minute meeting with John next Tuesday")</li>
           <li>• Use natural language - the AI understands conversational commands</li>

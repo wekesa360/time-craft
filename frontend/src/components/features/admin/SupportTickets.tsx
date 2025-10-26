@@ -138,30 +138,30 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
   const getStatusColor = (status: SupportTicket['status']) => {
     switch (status) {
       case 'open':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+        return 'bg-error-light text-error dark:bg-error/20 dark:text-error-light';
       case 'in_progress':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+        return 'bg-warning-light text-warning dark:bg-warning/20 dark:text-warning-light';
       case 'resolved':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+        return 'bg-success-light text-success dark:bg-success/20 dark:text-success-light';
       case 'closed':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground';
     }
   };
 
   const getPriorityColor = (priority: SupportTicket['priority']) => {
     switch (priority) {
       case 'critical':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+        return 'bg-error-light text-error dark:bg-error/20 dark:text-error-light';
       case 'high':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300';
+        return 'bg-primary-100 text-primary dark:bg-primary/20 dark:text-primary-300';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+        return 'bg-warning-light text-warning dark:bg-warning/20 dark:text-warning-light';
       case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+        return 'bg-success-light text-success dark:bg-success/20 dark:text-success-light';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground';
     }
   };
 
@@ -211,16 +211,16 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-foreground dark:text-white">
               Support Tickets
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-muted-foreground dark:text-muted-foreground mt-1">
               Manage customer support requests and issues
             </p>
           </div>
           
           <div className="flex items-center space-x-3">
-            <div className="text-sm text-gray-600 dark:text-gray-300">
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground">
               {tickets.filter(t => t.status === 'open').length} open tickets
             </div>
           </div>
@@ -229,12 +229,12 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
 
       {/* Filters */}
       <FadeIn delay={0.1}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
-                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
@@ -242,7 +242,7 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
                   placeholder="Search tickets..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -251,7 +251,7 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">All Status</option>
               <option value="open">Open</option>
@@ -264,7 +264,7 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">All Priority</option>
               <option value="critical">Critical</option>
@@ -282,7 +282,7 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
           {filteredTickets.map((ticket) => (
             <motion.div
               key={ticket.id}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => {
                 setSelectedTicket(ticket);
                 setShowTicketModal(true);
@@ -293,7 +293,7 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
                   <div className="flex items-center space-x-3 mb-2">
                     <div className="flex items-center space-x-2">
                       {getCategoryIcon(ticket.category)}
-                      <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">
+                      <span className="text-xs text-muted-foreground dark:text-muted-foreground uppercase">
                         #{ticket.id}
                       </span>
                     </div>
@@ -313,16 +313,16 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
                     </span>
                   </div>
                   
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-semibold text-foreground dark:text-white mb-2">
                     {ticket.subject}
                   </h3>
                   
-                  <p className="text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
+                  <p className="text-muted-foreground dark:text-muted-foreground mb-3 line-clamp-2">
                     {ticket.description}
                   </p>
                   
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground dark:text-muted-foreground">
                       <div className="flex items-center space-x-2">
                         <div className="w-6 h-6 bg-primary-100 dark:bg-primary-900/20 rounded-full flex items-center justify-center">
                           <span className="text-xs font-medium text-primary-600 dark:text-primary-400">
@@ -344,7 +344,7 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
                     </div>
                     
                     {ticket.assignedTo && (
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                         Assigned to: {ticket.assignedTo.name}
                       </div>
                     )}
@@ -356,7 +356,7 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
                       {ticket.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                          className="inline-flex items-center px-2 py-1 rounded text-xs bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
                         >
                           #{tag}
                         </span>
@@ -384,7 +384,7 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
                         updateTicketStatus(ticket.id, 'resolved');
                       }}
                       size="sm"
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="bg-success hover:bg-success text-white"
                       disabled={ticket.status === 'resolved' || ticket.status === 'closed'}
                     >
                       Resolve
@@ -401,13 +401,13 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
       {filteredTickets.length === 0 && (
         <FadeIn>
           <div className="text-center py-12">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 text-muted-foreground mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-medium text-foreground dark:text-white mb-2">
               No tickets found
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-muted-foreground dark:text-muted-foreground">
               Try adjusting your search or filter criteria.
             </p>
           </div>
@@ -427,14 +427,14 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-foreground dark:text-white">
                     Ticket #{selectedTicket.id}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
+                  <p className="text-muted-foreground dark:text-muted-foreground">
                     {selectedTicket.subject}
                   </p>
                 </div>
@@ -469,51 +469,51 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
                     {selectedTicket.priority}
                   </span>
                   
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                  <span className="text-sm text-muted-foreground dark:text-muted-foreground">
                     {selectedTicket.category}
                   </span>
                 </div>
                 
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                     Description
                   </h4>
-                  <p className="text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                  <p className="text-muted-foreground dark:text-muted-foreground bg-muted dark:bg-muted p-3 rounded-lg">
                     {selectedTicket.description}
                   </p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                       Customer
                     </h4>
                     <div className="text-sm">
-                      <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="font-medium text-foreground dark:text-white">
                         {selectedTicket.user.name}
                       </div>
-                      <div className="text-gray-600 dark:text-gray-300">
+                      <div className="text-muted-foreground dark:text-muted-foreground">
                         {selectedTicket.user.email}
                       </div>
                     </div>
                   </div>
                   
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                       Assigned To
                     </h4>
                     <div className="text-sm">
                       {selectedTicket.assignedTo ? (
                         <>
-                          <div className="font-medium text-gray-900 dark:text-white">
+                          <div className="font-medium text-foreground dark:text-white">
                             {selectedTicket.assignedTo.name}
                           </div>
-                          <div className="text-gray-600 dark:text-gray-300">
+                          <div className="text-muted-foreground dark:text-muted-foreground">
                             {selectedTicket.assignedTo.email}
                           </div>
                         </>
                       ) : (
-                        <div className="text-gray-500 dark:text-gray-400">
+                        <div className="text-muted-foreground dark:text-muted-foreground">
                           Unassigned
                         </div>
                       )}
@@ -522,7 +522,7 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
                 </div>
                 
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                     Timeline
                   </h4>
                   <div className="text-sm space-y-1">
@@ -542,7 +542,7 @@ const SupportTickets: React.FC<SupportTicketsProps> = ({ className }) => {
                 </Button>
                 <Button
                   onClick={() => updateTicketStatus(selectedTicket.id, 'resolved')}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-success hover:bg-success text-white"
                   disabled={selectedTicket.status === 'resolved' || selectedTicket.status === 'closed'}
                 >
                   Mark Resolved

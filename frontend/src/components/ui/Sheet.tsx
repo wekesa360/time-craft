@@ -27,16 +27,16 @@ export const Sheet: React.FC<SheetProps> = ({
       />
       
       {/* Sheet */}
-      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-gray-800 shadow-xl transform transition-transform">
+      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-muted shadow-xl transform transition-transform">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-foreground dark:text-white">
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              className="p-2 text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

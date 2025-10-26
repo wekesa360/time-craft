@@ -160,9 +160,9 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
   };
 
   const colorClasses = {
-    green: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
-    yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800',
-    red: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800',
+    green: 'bg-success-light text-success border-green-200 dark:bg-success/20 dark:text-success-light dark:border-green-800',
+    yellow: 'bg-warning-light text-warning border-yellow-200 dark:bg-warning/20 dark:text-warning-light dark:border-yellow-800',
+    red: 'bg-error-light text-error border-red-200 dark:bg-error/20 dark:text-error-light dark:border-red-800',
   };
 
   return (
@@ -171,10 +171,10 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-foreground dark:text-white">
               Environment Tracker
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               Track your workspace conditions for optimal focus
             </p>
           </div>
@@ -198,13 +198,13 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-6"
+            className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-6"
           >
-            <h4 className="font-medium text-gray-900 dark:text-white">Current Environment</h4>
+            <h4 className="font-medium text-foreground dark:text-white">Current Environment</h4>
             
             {/* Location Selection */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Location
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -235,7 +235,7 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
                   value={customLocation}
                   onChange={(e) => setCustomLocation(e.target.value)}
                   placeholder="Enter custom location"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
                 />
               )}
             </div>
@@ -244,11 +244,11 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {Object.entries(scaleLabels).map(([scale, labels]) => (
                 <div key={scale} className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+                  <label className="text-sm font-medium text-muted-foreground dark:text-muted-foreground capitalize">
                     {scale.replace(/([A-Z])/g, ' $1').trim()}
                   </label>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex justify-between text-xs text-muted-foreground dark:text-muted-foreground">
                       <span>{labels[0]}</span>
                       <span>{labels[4]}</span>
                     </div>
@@ -269,7 +269,7 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
                         else if (scale === 'temperature') setTemperature(value);
                         else setComfort(value);
                       }}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                      className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer dark:bg-muted"
                     />
                     <div className={cn(
                       'text-center text-sm px-2 py-1 rounded border',
@@ -295,7 +295,7 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
 
             {/* Distractions */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Current Distractions
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -306,7 +306,7 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
                     className={cn(
                       'p-2 rounded-lg border text-sm transition-all duration-200',
                       selectedDistractions.includes(distraction.id)
-                        ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300'
+                        ? 'border-red-500 bg-error-light text-error dark:bg-error/20 dark:text-error-light'
                         : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
                     )}
                   >
@@ -318,14 +318,14 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
 
             {/* Notes */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Additional Notes
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Any other environmental factors or observations..."
-                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white resize-none"
                 rows={3}
               />
             </div>
@@ -341,7 +341,7 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
               <Button
                 onClick={logEnvironment}
                 disabled={!selectedLocation || (selectedLocation === 'other' && !customLocation)}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-success hover:bg-success text-white"
               >
                 Log Environment
               </Button>
@@ -353,28 +353,28 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
       {/* Environment Insights */}
       {environments.length > 0 && (
         <FadeIn delay={0.2}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h4 className="font-medium text-foreground dark:text-white mb-4">
               Environment Insights
             </h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Recent Environments */}
               <div className="space-y-3">
-                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <h5 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                   Recent Environments
                 </h5>
                 <div className="space-y-2">
                   {environments.slice(-3).reverse().map((env) => (
                     <div
                       key={env.id}
-                      className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                      className="p-3 bg-muted dark:bg-muted rounded-lg"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-900 dark:text-white">
+                        <span className="font-medium text-foreground dark:text-white">
                           {env.location}
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                        <span className="text-xs text-muted-foreground dark:text-muted-foreground">
                           {new Date(env.timestamp).toLocaleDateString()}
                         </span>
                       </div>
@@ -393,7 +393,7 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
                         </span>
                       </div>
                       {env.distractions.length > 0 && (
-                        <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                        <p className="text-xs text-error dark:text-error-light mt-1">
                           {env.distractions.length} distraction{env.distractions.length > 1 ? 's' : ''}
                         </p>
                       )}
@@ -404,27 +404,27 @@ const EnvironmentTracker: React.FC<EnvironmentTrackerProps> = ({
 
               {/* Best Environments */}
               <div className="space-y-3">
-                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <h5 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                   Optimization Tips
                 </h5>
-                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <p className="text-blue-800 dark:text-blue-200">
+                <div className="space-y-2 text-sm text-muted-foreground dark:text-muted-foreground">
+                  <div className="p-3 bg-info-light dark:bg-info/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-info dark:text-info-light">
                       💡 Track your environment before each session to identify patterns that boost your productivity.
                     </p>
                   </div>
                   
                   {environments.some(env => env.noiseLevel >= 4) && (
-                    <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                      <p className="text-yellow-800 dark:text-yellow-200">
+                    <div className="p-3 bg-warning-light dark:bg-warning/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                      <p className="text-warning dark:text-warning-light">
                         🔇 Consider noise-canceling headphones or finding a quieter space.
                       </p>
                     </div>
                   )}
                   
                   {environments.some(env => env.distractions.length > 3) && (
-                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                      <p className="text-orange-800 dark:text-orange-200">
+                    <div className="p-3 bg-primary-50 dark:bg-primary/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                      <p className="text-primary dark:text-primary-200">
                         🚫 Try to minimize distractions by preparing your space before starting.
                       </p>
                     </div>

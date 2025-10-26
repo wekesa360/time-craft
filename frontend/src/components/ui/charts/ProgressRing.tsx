@@ -79,17 +79,17 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
         {showPercentage && (
-          <span className="text-lg font-bold text-gray-900 dark:text-white">
+          <span className="text-lg font-bold text-foreground dark:text-white">
             {Math.round(progress)}%
           </span>
         )}
         {showValue && value !== undefined && (
-          <span className="text-lg font-bold text-gray-900 dark:text-white">
+          <span className="text-lg font-bold text-foreground dark:text-white">
             {value}
           </span>
         )}
         {label && (
-          <span className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+          <span className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
             {label}
           </span>
         )}

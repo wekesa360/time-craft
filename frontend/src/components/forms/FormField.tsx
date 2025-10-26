@@ -62,8 +62,8 @@ export const FormField = <T,>({
       {label && (
         <label
           htmlFor={fieldId}
-          className={`block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ${
-            required ? 'after:content-["*"] after:text-red-500 after:ml-1' : ''
+          className={`block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-1 ${
+            required ? 'after:content-["*"] after:text-error-light0 after:ml-1' : ''
           }`}
         >
           {label}
@@ -71,7 +71,7 @@ export const FormField = <T,>({
       )}
       
       {description && (
-        <p id={descriptionId} className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+        <p id={descriptionId} className="text-sm text-muted-foreground dark:text-muted-foreground mb-2">
           {description}
         </p>
       )}
@@ -82,7 +82,7 @@ export const FormField = <T,>({
         {fieldProps.error && fieldProps.touched && (
           <div
             id={errorId}
-            className="mt-1 text-sm text-red-600 dark:text-red-400"
+            className="mt-1 text-sm text-error dark:text-error-light"
             role="alert"
             aria-live="polite"
           >
@@ -126,10 +126,10 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
         className={`
           block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          disabled:bg-gray-100 disabled:cursor-not-allowed
+          disabled:bg-muted disabled:cursor-not-allowed
           ${error && touched ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600'}
           ${isKeyboardUser ? 'focus:ring-2 focus:ring-blue-500' : ''}
-          dark:bg-gray-700 dark:text-white dark:placeholder-gray-500
+          dark:bg-muted dark:text-white dark:placeholder-gray-500
           ${className}
         `}
         {...props}
@@ -172,10 +172,10 @@ export const TextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldProps>
         className={`
           block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          disabled:bg-gray-100 disabled:cursor-not-allowed
+          disabled:bg-muted disabled:cursor-not-allowed
           ${error && touched ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600'}
           ${isKeyboardUser ? 'focus:ring-2 focus:ring-blue-500' : ''}
-          dark:bg-gray-700 dark:text-white dark:placeholder-gray-500
+          dark:bg-muted dark:text-white dark:placeholder-gray-500
           ${className}
         `}
         {...props}
@@ -220,10 +220,10 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
         className={`
           block w-full px-3 py-2 border rounded-md shadow-sm
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          disabled:bg-gray-100 disabled:cursor-not-allowed
+          disabled:bg-muted disabled:cursor-not-allowed
           ${error && touched ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600'}
           ${isKeyboardUser ? 'focus:ring-2 focus:ring-blue-500' : ''}
-          dark:bg-gray-700 dark:text-white
+          dark:bg-muted dark:text-white
           ${className}
         `}
         {...props}
@@ -282,16 +282,16 @@ export const CheckboxField = forwardRef<HTMLInputElement, CheckboxFieldProps>(
           aria-describedby={ariaDescribedBy}
           aria-invalid={error ? 'true' : 'false'}
           className={`
-            h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded
-            disabled:bg-gray-100 disabled:cursor-not-allowed
+            h-4 w-4 text-info focus:ring-blue-500 border-gray-300 rounded
+            disabled:bg-muted disabled:cursor-not-allowed
             ${error && touched ? 'border-red-500' : ''}
             ${isKeyboardUser ? 'focus:ring-2' : ''}
-            dark:bg-gray-700 dark:border-gray-600
+            dark:bg-muted dark:border-gray-600
           `}
           {...props}
         />
         {label && (
-          <label htmlFor={id} className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+          <label htmlFor={id} className="ml-2 block text-sm text-muted-foreground dark:text-muted-foreground">
             {label}
           </label>
         )}
@@ -340,17 +340,17 @@ export const RadioField = forwardRef<HTMLInputElement, RadioFieldProps>(
               aria-describedby={ariaDescribedBy}
               aria-invalid={error ? 'true' : 'false'}
               className={`
-                h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300
-                disabled:bg-gray-100 disabled:cursor-not-allowed
+                h-4 w-4 text-info focus:ring-blue-500 border-gray-300
+                disabled:bg-muted disabled:cursor-not-allowed
                 ${error && touched ? 'border-red-500' : ''}
                 ${isKeyboardUser ? 'focus:ring-2' : ''}
-                dark:bg-gray-700 dark:border-gray-600
+                dark:bg-muted dark:border-gray-600
               `}
               {...props}
             />
             <label
               htmlFor={`${id}-${option.value}`}
-              className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+              className="ml-2 block text-sm text-muted-foreground dark:text-muted-foreground"
             >
               {option.label}
             </label>

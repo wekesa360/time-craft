@@ -22,6 +22,7 @@ initDb.post('/', async (c) => {
         stripe_customer_id TEXT,
         is_student BOOLEAN DEFAULT 0,
         student_verification_status TEXT CHECK(student_verification_status IN ('none','pending','verified','rejected')) DEFAULT 'none',
+        preferences TEXT DEFAULT '{}',
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )`,

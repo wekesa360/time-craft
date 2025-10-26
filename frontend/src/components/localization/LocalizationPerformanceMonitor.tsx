@@ -145,10 +145,10 @@ export const LocalizationPerformanceMonitor: React.FC<LocalizationPerformanceMon
 
   const performanceStatus = getPerformanceStatus();
   const statusColors = {
-    excellent: 'text-green-600 bg-green-50 border-green-200',
-    good: 'text-blue-600 bg-blue-50 border-blue-200',
-    fair: 'text-yellow-600 bg-yellow-50 border-yellow-200',
-    poor: 'text-red-600 bg-red-50 border-red-200'
+    excellent: 'text-success bg-success-light border-green-200',
+    good: 'text-info bg-info-light border-blue-200',
+    fair: 'text-warning bg-warning-light border-yellow-200',
+    poor: 'text-error bg-error-light border-red-200'
   };
 
   if (!showDetails) {
@@ -166,7 +166,7 @@ export const LocalizationPerformanceMonitor: React.FC<LocalizationPerformanceMon
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${className}`}>
+    <div className={`bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
@@ -180,7 +180,7 @@ export const LocalizationPerformanceMonitor: React.FC<LocalizationPerformanceMon
           <button
             onClick={handleRefresh}
             disabled={isCollecting}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
+            className="p-2 text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-muted-foreground transition-colors disabled:opacity-50"
             title={t('performance.refresh', 'Refresh metrics')}
           >
             <RefreshCw className={`w-4 h-4 ${isCollecting ? 'animate-spin' : ''}`} />
@@ -188,7 +188,7 @@ export const LocalizationPerformanceMonitor: React.FC<LocalizationPerformanceMon
           
           <button
             onClick={handleReset}
-            className="p-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200 transition-colors"
+            className="p-2 text-error-light0 hover:text-error dark:text-error-light dark:hover:text-error-light transition-colors"
             title={t('performance.reset', 'Reset metrics')}
           >
             <Trash2 className="w-4 h-4" />
@@ -210,31 +210,31 @@ export const LocalizationPerformanceMonitor: React.FC<LocalizationPerformanceMon
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+        <div className="bg-muted dark:bg-muted p-3 rounded-lg">
           <div className="flex items-center space-x-2 mb-1">
-            <Clock className="w-4 h-4 text-blue-500" />
+            <Clock className="w-4 h-4 text-info-light0" />
             <span className="text-sm font-medium text-foreground">
               {t('performance.renderTime', 'Render Time')}
             </span>
           </div>
-          <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+          <div className="text-lg font-bold text-info dark:text-info">
             {formatTime(metrics.renderTime)}
           </div>
         </div>
 
-        <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+        <div className="bg-muted dark:bg-muted p-3 rounded-lg">
           <div className="flex items-center space-x-2 mb-1">
-            <Zap className="w-4 h-4 text-green-500" />
+            <Zap className="w-4 h-4 text-success" />
             <span className="text-sm font-medium text-foreground">
               {t('performance.cacheHitRate', 'Cache Hit Rate')}
             </span>
           </div>
-          <div className="text-lg font-bold text-green-600 dark:text-green-400">
+          <div className="text-lg font-bold text-success dark:text-success-light">
             {formatPercentage(metrics.cacheHitRate)}
           </div>
         </div>
 
-        <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+        <div className="bg-muted dark:bg-muted p-3 rounded-lg">
           <div className="flex items-center space-x-2 mb-1">
             <Database className="w-4 h-4 text-purple-500" />
             <span className="text-sm font-medium text-foreground">
@@ -246,14 +246,14 @@ export const LocalizationPerformanceMonitor: React.FC<LocalizationPerformanceMon
           </div>
         </div>
 
-        <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+        <div className="bg-muted dark:bg-muted p-3 rounded-lg">
           <div className="flex items-center space-x-2 mb-1">
-            <BarChart3 className="w-4 h-4 text-orange-500" />
+            <BarChart3 className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
               {t('performance.bundleLoadTime', 'Bundle Load')}
             </span>
           </div>
-          <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+          <div className="text-lg font-bold text-primary dark:text-primary-400">
             {formatTime(metrics.bundleLoadTime)}
           </div>
         </div>
@@ -261,11 +261,11 @@ export const LocalizationPerformanceMonitor: React.FC<LocalizationPerformanceMon
 
       {/* Performance Tips */}
       {performanceStatus === 'poor' && (
-        <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-          <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+        <div className="bg-warning-light dark:bg-warning border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+          <h4 className="text-sm font-medium text-warning dark:text-warning-light mb-2">
             {t('performance.improvementTips', 'Performance Improvement Tips')}:
           </h4>
-          <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
+          <ul className="text-xs text-warning dark:text-warning-light space-y-1">
             <li>• {t('performance.tip1', 'Enable translation caching in settings')}</li>
             <li>• {t('performance.tip2', 'Preload frequently used translations')}</li>
             <li>• {t('performance.tip3', 'Clear cache if experiencing issues')}</li>
@@ -278,7 +278,7 @@ export const LocalizationPerformanceMonitor: React.FC<LocalizationPerformanceMon
       {autoRefresh && (
         <div className="flex items-center justify-center mt-3 text-xs text-foreground-secondary">
           <div className="flex items-center space-x-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-success-light0 rounded-full animate-pulse"></div>
             <span>
               {t('performance.autoRefresh', 'Auto-refreshing every {{interval}}s', { 
                 interval: refreshInterval / 1000 

@@ -118,26 +118,26 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   const getStateColor = () => {
     switch (timerState) {
       case 'work':
-        return 'text-red-600 dark:text-red-400';
+        return 'text-primary';
       case 'shortBreak':
-        return 'text-green-600 dark:text-green-400';
+        return 'text-primary';
       case 'longBreak':
-        return 'text-blue-600 dark:text-blue-400';
+        return 'text-primary';
       default:
-        return 'text-gray-600 dark:text-gray-400';
+        return 'text-muted-foreground';
     }
   };
 
   const getStateBgColor = () => {
     switch (timerState) {
       case 'work':
-        return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+        return 'bg-primary/10 border-primary/20';
       case 'shortBreak':
-        return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
+        return 'bg-primary/10 border-primary/20';
       case 'longBreak':
-        return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800';
+        return 'bg-primary/10 border-primary/20';
       default:
-        return 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
+        return 'bg-muted border-border';
     }
   };
 
@@ -147,17 +147,17 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   };
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}>
+    <div className={`bg-card rounded-lg border border-border ${className}`}>
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-6 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <Clock className="w-6 h-6 text-primary-600" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Pomodoro Timer</h3>
+            <Clock className="w-6 h-6 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground">Pomodoro Timer</h3>
           </div>
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted"
           >
             <Settings className="w-5 h-5" />
           </button>
@@ -177,7 +177,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
                 stroke="currentColor"
                 strokeWidth="8"
                 fill="none"
-                className="text-gray-200 dark:text-gray-700"
+                className="text-muted-foreground"
               />
               <circle
                 cx="50"
@@ -209,7 +209,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
           <div className="flex items-center justify-center space-x-4">
             <button
               onClick={isRunning ? pauseTimer : startTimer}
-              className="flex items-center space-x-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+              className="flex items-center space-x-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors"
             >
               {isRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
               <span>{isRunning ? 'Pause' : 'Start'}</span>
@@ -217,7 +217,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             
             <button
               onClick={resetTimer}
-              className="flex items-center space-x-2 px-4 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg font-medium transition-colors"
+              className="flex items-center space-x-2 px-4 py-3 text-muted-foreground hover:text-foreground border border-border rounded-lg font-medium transition-colors"
             >
               <RotateCcw className="w-5 h-5" />
               <span>Reset</span>
@@ -233,8 +233,8 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             onClick={switchToWork}
             className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
               timerState === 'work'
-                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
           >
             Work ({workDuration}m)
@@ -243,8 +243,8 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             onClick={switchToShortBreak}
             className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
               timerState === 'shortBreak'
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
           >
             Break ({breakDuration}m)
@@ -253,8 +253,8 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             onClick={switchToLongBreak}
             className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
               timerState === 'longBreak'
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
           >
             Long Break ({longBreakDuration}m)
@@ -262,8 +262,8 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
         </div>
 
         {/* Stats */}
-        <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-          Completed Pomodoros: <span className="font-semibold text-primary-600">{completedPomodoros}</span>
+        <div className="text-center text-sm text-muted-foreground">
+          Completed Pomodoros: <span className="font-semibold text-primary">{completedPomodoros}</span>
         </div>
       </div>
     </div>

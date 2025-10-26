@@ -1,18 +1,6 @@
-/**
- * UI Components Index
- * Centralized exports for all UI components
- */
-
-// Basic UI Components
-export { Button } from './Button';
-export { ThemeSelector } from './ThemeSelector';
-export * from './ThemeAwareComponents';
-
-// Charts and Data Visualization
-export * from './charts';
-
-// Animations
-export * from './animations';
-
-// Layout Components
-export * from './layout';
+// v0-fitness-app-ui Design System Components
+export { Button, buttonVariants } from './Button';
+export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent } from './Card';
+export { Avatar, AvatarImage, AvatarFallback } from './Avatar';
+export { Badge, badgeVariants } from './Badge';
+export { Progress, CircularProgress } from './Progress';

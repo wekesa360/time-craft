@@ -14,6 +14,7 @@ import { initializePerformanceMonitoring } from './utils/performance';
 // Error Boundary
 import { ErrorBoundary } from './components/error/ErrorBoundary';
 
+
 // Providers
 import { QueryProvider } from './providers/QueryProvider';
 import { ThemeProvider } from './components/providers/ThemeProvider';
@@ -28,6 +29,7 @@ import { AdminGuard, StudentGuard } from './components/auth/RoleGuard';
 import AuthLayout from './components/layout/AuthLayout';
 import AppLayout from './components/layout/AppLayout';
 import LegalLayout from './components/layout/LegalLayout';
+import { PreferencesTest } from './components/PreferencesTest';
 
 // Lazy-loaded pages for better performance
 import {
@@ -150,9 +152,7 @@ function App() {
               path="/login"
               element={
                 <PublicRoute>
-                  <AuthLayout>
-                    <LazyLoginPage />
-                  </AuthLayout>
+                  <LazyLoginPage />
                 </PublicRoute>
               }
             />
@@ -160,9 +160,7 @@ function App() {
               path="/register"
               element={
                 <PublicRoute>
-                  <AuthLayout>
-                    <LazyRegisterPage />
-                  </AuthLayout>
+                  <LazyRegisterPage />
                 </PublicRoute>
               }
             />
@@ -170,9 +168,7 @@ function App() {
               path="/forgot-password"
               element={
                 <PublicRoute>
-                  <AuthLayout>
-                    <LazyForgotPasswordPage />
-                  </AuthLayout>
+                  <LazyForgotPasswordPage />
                 </PublicRoute>
               }
             />
@@ -367,6 +363,40 @@ function App() {
               }
             />
 
+            {/* Demo and Test Routes */}
+            <Route
+              path="/test-preferences"
+              element={
+                <ProtectedRoute>
+                  <PreferencesTest />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/design-demo"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <div className="p-0">
+                      <div className="min-h-screen bg-background">
+                        <div className="p-3 sm:p-4 md:p-6 lg:p-8">
+                          <div className="max-w-[1600px] mx-auto">
+                            <div className="mb-6">
+                              <h1 className="text-2xl font-bold text-foreground mb-2">Design System Demo</h1>
+                              <p className="text-muted-foreground">v0-fitness-app-ui components showcase</p>
+                            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+                              {/* Component demos would go here */}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            
             {/* 404 fallback */}
             <Route
               path="*"

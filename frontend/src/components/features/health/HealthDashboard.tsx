@@ -84,22 +84,22 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'improving':
-        return <TrendingUp className="w-4 h-4 text-green-600" />;
+        return <TrendingUp className="w-4 h-4 text-success" />;
       case 'declining':
-        return <TrendingUp className="w-4 h-4 text-red-600 rotate-180" />;
+        return <TrendingUp className="w-4 h-4 text-error rotate-180" />;
       default:
-        return <TrendingUp className="w-4 h-4 text-gray-600 rotate-90" />;
+        return <TrendingUp className="w-4 h-4 text-muted-foreground rotate-90" />;
     }
   };
 
   const getTrendColor = (trend: string) => {
     switch (trend) {
       case 'improving':
-        return 'text-green-600';
+        return 'text-success';
       case 'declining':
-        return 'text-red-600';
+        return 'text-error';
       default:
-        return 'text-gray-600';
+        return 'text-muted-foreground';
     }
   };
 
@@ -120,11 +120,11 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({
             <p className="text-foreground-secondary">Your overall wellness rating</p>
           </div>
           <div className="text-center">
-            <div className="text-4xl font-bold text-blue-600 mb-1">
+            <div className="text-4xl font-bold text-info mb-1">
               {safeInsights.overallScore}/10
             </div>
             <div className="flex items-center justify-center space-x-1">
-              <Heart className="w-4 h-4 text-red-500" />
+              <Heart className="w-4 h-4 text-error-light0" />
               <span className="text-sm text-foreground-secondary">
                 {safeInsights.overallScore >= 8 ? 'Excellent' : 
                  safeInsights.overallScore >= 6 ? 'Good' : 
@@ -144,8 +144,8 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({
               <p className="text-sm font-medium text-foreground-secondary">Exercise Sessions</p>
               <p className="text-2xl font-bold text-foreground">{safeSummary.exerciseCount}</p>
             </div>
-            <div className="p-3 bg-orange-100 dark:bg-orange-950 rounded-lg">
-              <Activity className="w-6 h-6 text-orange-600" />
+            <div className="p-3 bg-primary-100 dark:bg-primary rounded-lg">
+              <Activity className="w-6 h-6 text-primary" />
             </div>
           </div>
         </div>
@@ -163,8 +163,8 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({
                 </span>
               </div>
             </div>
-            <div className="p-3 bg-green-100 dark:bg-green-950 rounded-lg">
-              <Heart className="w-6 h-6 text-green-600" />
+            <div className="p-3 bg-success-light dark:bg-success rounded-lg">
+              <Heart className="w-6 h-6 text-success" />
             </div>
           </div>
         </div>
@@ -175,10 +175,10 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({
             <div>
               <p className="text-sm font-medium text-foreground-secondary">Hydration</p>
               <p className="text-2xl font-bold text-foreground">{formatHydration(safeSummary.hydrationTotal)}</p>
-              <p className="text-xs text-blue-600">This week</p>
+              <p className="text-xs text-info">This week</p>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-950 rounded-lg">
-              <Droplets className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-info-light dark:bg-info rounded-lg">
+              <Droplets className="w-6 h-6 text-info" />
             </div>
           </div>
         </div>
@@ -239,14 +239,14 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <button 
           onClick={onLogExercise}
-          className="group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-left transition-all duration-200 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          className="group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-muted p-4 text-left transition-all duration-200 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         >
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-orange-100 dark:bg-orange-950 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-900 transition-colors">
-              <Activity className="w-5 h-5 text-orange-600" />
+            <div className="p-2 bg-primary-100 dark:bg-primary rounded-lg group-hover:bg-primary-200 dark:group-hover:bg-primary transition-colors">
+              <Activity className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="font-medium text-foreground group-hover:text-orange-700 dark:group-hover:text-orange-300 transition-colors">Log Exercise</p>
+              <p className="font-medium text-foreground group-hover:text-primary dark:group-hover:text-primary-300 transition-colors">Log Exercise</p>
               <p className="text-xs text-foreground-secondary">Track your workout</p>
             </div>
           </div>
@@ -254,14 +254,14 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({
 
         <button 
           onClick={onLogNutrition}
-          className="group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-left transition-all duration-200 hover:border-green-300 dark:hover:border-green-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          className="group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-muted p-4 text-left transition-all duration-200 hover:border-green-300 dark:hover:border-green-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         >
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-green-100 dark:bg-green-950 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-900 transition-colors">
-              <Heart className="w-5 h-5 text-green-600" />
+            <div className="p-2 bg-success-light dark:bg-success rounded-lg group-hover:bg-success-light dark:group-hover:bg-success transition-colors">
+              <Heart className="w-5 h-5 text-success" />
             </div>
             <div>
-              <p className="font-medium text-foreground group-hover:text-green-700 dark:group-hover:text-green-300 transition-colors">Log Meal</p>
+              <p className="font-medium text-foreground group-hover:text-success dark:group-hover:text-success-light transition-colors">Log Meal</p>
               <p className="text-xs text-foreground-secondary">Record nutrition</p>
             </div>
           </div>
@@ -269,14 +269,14 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({
 
         <button 
           onClick={onLogHydration}
-          className="group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-left transition-all duration-200 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          className="group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-muted p-4 text-left transition-all duration-200 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         >
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-950 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-900 transition-colors">
-              <Droplets className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-info-light dark:bg-info rounded-lg group-hover:bg-info-light dark:group-hover:bg-info transition-colors">
+              <Droplets className="w-5 h-5 text-info" />
             </div>
             <div>
-              <p className="font-medium text-foreground group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">Log Water</p>
+              <p className="font-medium text-foreground group-hover:text-info dark:group-hover:text-info-light transition-colors">Log Water</p>
               <p className="text-xs text-foreground-secondary">Track hydration</p>
             </div>
           </div>
@@ -284,7 +284,7 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({
 
         <button 
           onClick={onLogMood}
-          className="group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-left transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          className="group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-muted p-4 text-left transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         >
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-purple-100 dark:bg-purple-950 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-900 transition-colors">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCreateMeetingRequestMutation } from '../../../hooks/queries/useCalendarQueries';
 import type { MeetingRequest, TimeSlot } from '../../../types';
+import { Card, CardHeader, CardTitle, CardContent } from '../../ui/Card';
 
 const MeetingScheduler: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -9,7 +10,7 @@ const MeetingScheduler: React.FC = () => {
     duration: 60,
     participants: [] as string[],
     preferredTimeSlots: [] as TimeSlot[],
-    meetingType: 'video_call' as const,
+    meetingType: 'default' as const,
   });
   const [participantEmail, setParticipantEmail] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -80,7 +81,7 @@ const MeetingScheduler: React.FC = () => {
         duration: 60,
         participants: [],
         preferredTimeSlots: [],
-        meetingType: 'video_call',
+        meetingType: 'default',
       });
     } catch (error) {
       console.error('Error creating meeting request:', error);
@@ -107,231 +108,243 @@ const MeetingScheduler: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="mb-8 text-center">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
-          AI Meeting Scheduler
+    <div className="space-y-8">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-foreground mb-3">
+          Schedule Meeting
         </h2>
-        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          Create smart meeting requests with AI-powered time slot suggestions
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Create meeting requests and find the best time for everyone
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         {/* Meeting Details */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Meeting Details
-          </h3>
-          
-          <div className="grid md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold">Meeting Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Meeting Title *
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="e.g., Project Review Meeting"
+                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Duration
+                </label>
+                <select
+                  value={formData.duration}
+                  onChange={(e) => setFormData(prev => ({ ...prev, duration: Number(e.target.value) }))}
+                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                >
+                  {getDurationOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Meeting Title *
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Description
               </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="e.g., Project Review Meeting"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                required
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Meeting agenda and details..."
+                rows={4}
+                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground resize-none"
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Duration
+              <label className="block text-sm font-medium text-foreground mb-3">
+                Meeting Type
               </label>
-              <select
-                value={formData.duration}
-                onChange={(e) => setFormData(prev => ({ ...prev, duration: Number(e.target.value) }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              >
-                {getDurationOptions().map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+              <div className="grid grid-cols-4 gap-4">
+                {[
+                  { value: 'default', label: 'Meeting' },
+                  { value: 'video_conference', label: 'Video Conference' },
+                  { value: 'phone_conference', label: 'Phone Conference' },
+                  { value: 'appointment', label: 'Appointment' },
+                ].map(type => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, meetingType: type.value as any }))}
+                    className={`px-4 py-3 rounded-xl border font-medium transition-all hover:scale-105 ${
+                      formData.meetingType === type.value
+                        ? 'bg-primary text-primary-foreground border-primary shadow-lg ring-2 ring-primary/20'
+                        : 'bg-card text-foreground border-border hover:bg-muted hover:border-primary/50'
+                    }`}
+                  >
+                    <span className="text-sm">{type.label}</span>
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Meeting agenda and details..."
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
-            />
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Meeting Type
-            </label>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { value: 'video_call', label: 'Video Call' },
-                { value: 'phone_call', label: 'Phone Call' },
-                { value: 'in_person', label: 'In Person' },
-              ].map(type => (
-                <button
-                  key={type.value}
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, meetingType: type.value as any }))}
-                  className={`px-4 py-2 rounded-lg border transition-colors ${
-                    formData.meetingType === type.value
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  {type.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Participants */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Participants
-          </h3>
-          
-          <div className="flex gap-2 mb-4">
-            <input
-              type="email"
-              value={participantEmail}
-              onChange={(e) => setParticipantEmail(e.target.value)}
-              placeholder="Enter participant email"
-              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-            <button
-              type="button"
-              onClick={handleAddParticipant}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Add
-            </button>
-          </div>
-
-          {formData.participants.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Added Participants:
-              </div>
-              {formData.participants.map((email, index) => (
-                <div key={index} className="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded-lg">
-                  <span className="text-gray-900 dark:text-white">{email}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveParticipant(email)}
-                    className="text-red-600 hover:text-red-700 transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Preferred Time Slots */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Preferred Time Slots
-          </h3>
-          
-          <div className="grid md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Date
-              </label>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold">Participants</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex gap-3">
               <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                type="email"
+                value={participantEmail}
+                onChange={(e) => setParticipantEmail(e.target.value)}
+                placeholder="Enter participant email"
+                className="flex-1 px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
               />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Time
-              </label>
-              <input
-                type="time"
-                value={selectedTime}
-                onChange={(e) => setSelectedTime(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              />
-            </div>
-            
-            <div className="flex items-end">
               <button
                 type="button"
-                onClick={handleAddTimeSlot}
-                disabled={!selectedDate || !selectedTime}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors"
+                onClick={handleAddParticipant}
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:scale-105 shadow-md"
               >
-                Add Slot
+                Add
               </button>
             </div>
-          </div>
 
-          {formData.preferredTimeSlots.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Preferred Time Slots:
-              </div>
-              {formData.preferredTimeSlots.map((slot, index) => (
-                <div key={index} className="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded-lg">
-                  <span className="text-gray-900 dark:text-white">
-                    {formatDateTime(slot.start)} - {formatDateTime(slot.end)}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTimeSlot(index)}
-                    className="text-red-600 hover:text-red-700 transition-colors"
-                  >
-                    ✕
-                  </button>
+            {formData.participants.length > 0 && (
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-foreground">
+                  Added Participants ({formData.participants.length}):
                 </div>
-              ))}
+                {formData.participants.map((email, index) => (
+                  <div key={index} className="flex items-center justify-between bg-muted/50 p-4 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-primary font-medium text-sm">
+                          {email.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <span className="text-foreground font-medium">{email}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveParticipant(email)}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all hover:scale-110"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Preferred Time Slots */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold">Preferred Time Slots</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Time
+                </label>
+                <input
+                  type="time"
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                />
+              </div>
+              
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={handleAddTimeSlot}
+                  disabled={!selectedDate || !selectedTime}
+                  className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground transition-all hover:scale-105 shadow-md disabled:hover:scale-100"
+                >
+                  Add Slot
+                </button>
+              </div>
             </div>
-          )}
-        </div>
+
+            {formData.preferredTimeSlots.length > 0 && (
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-foreground">
+                  Preferred Time Slots ({formData.preferredTimeSlots.length}):
+                </div>
+                {formData.preferredTimeSlots.map((slot, index) => (
+                  <div key={index} className="flex items-center justify-between bg-muted/50 p-4 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-primary font-bold text-sm">{index + 1}</span>
+                      </div>
+                      <span className="text-foreground font-medium">
+                        {formatDateTime(slot.start)} - {formatDateTime(slot.end)}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTimeSlot(index)}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all hover:scale-110"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Submit Button */}
-        <div className="flex justify-end">
+        <div className="flex justify-center">
           <button
             type="submit"
             disabled={createMeetingMutation.isPending || !formData.title || formData.participants.length === 0 || formData.preferredTimeSlots.length === 0}
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-semibold"
+            className="px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-semibold text-lg hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground transition-all hover:scale-105 shadow-lg disabled:hover:scale-100"
           >
-            {createMeetingMutation.isPending ? 'Creating...' : 'Create Meeting Request'}
+            {createMeetingMutation.isPending ? (
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                Creating...
+              </div>
+            ) : (
+              'Create Meeting Request'
+            )}
           </button>
         </div>
       </form>
 
-      {/* AI Tips */}
-      <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-        <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">
-          AI Scheduling Tips
-        </h3>
-        <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-          <li>• Provide multiple time slot options for better AI optimization</li>
-          <li>• The AI will analyze all participants' availability and suggest the best times</li>
-          <li>• Conflict detection helps avoid scheduling overlaps</li>
-          <li>• Meeting type affects suggested locations and preparation time</li>
-        </ul>
-      </div>
+
     </div>
   );
 };

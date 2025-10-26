@@ -86,18 +86,18 @@ export const NotificationTester: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-2xl font-bold text-foreground dark:text-white mb-2">
           Notification Tester
         </h2>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-muted-foreground dark:text-muted-foreground">
           Test different types of notifications to ensure they're working correctly
         </p>
       </div>
 
       <div className="space-y-6">
         {/* Notification Type Selection */}
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             📋 Notification Type
           </h3>
           
@@ -108,8 +108,8 @@ export const NotificationTester: React.FC = () => {
                 onClick={() => handleTypeChange(type.value)}
                 className={`p-4 rounded-lg border text-left transition-colors ${
                   testData.type === type.value
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-900 dark:text-blue-100'
-                    : 'bg-gray-50 dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500'
+                    ? 'bg-info-light dark:bg-info/20 border-blue-500 text-info dark:text-info-light'
+                    : 'bg-muted dark:bg-muted border-gray-300 dark:border-gray-500 text-muted-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-muted'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -122,40 +122,40 @@ export const NotificationTester: React.FC = () => {
         </div>
 
         {/* Notification Content */}
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             ✏️ Notification Content
           </h3>
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                 Title
               </label>
               <input
                 type="text"
                 value={testData.title}
                 onChange={(e) => setTestData(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
                 placeholder="Notification title"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                 Message
               </label>
               <textarea
                 value={testData.message}
                 onChange={(e) => setTestData(prev => ({ ...prev, message: e.target.value }))}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white resize-none"
                 placeholder="Notification message"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
                 Additional Data (JSON)
               </label>
               <textarea
@@ -169,7 +169,7 @@ export const NotificationTester: React.FC = () => {
                   }
                 }}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono text-sm resize-none"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white font-mono text-sm resize-none"
                 placeholder='{"key": "value"}'
               />
             </div>
@@ -177,24 +177,24 @@ export const NotificationTester: React.FC = () => {
         </div>
 
         {/* Preview */}
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             👀 Preview
           </h3>
           
-          <div className="bg-gray-50 dark:bg-gray-600 rounded-lg p-4 border border-gray-200 dark:border-gray-500">
+          <div className="bg-muted dark:bg-muted rounded-lg p-4 border border-gray-200 dark:border-gray-500">
             <div className="flex items-start gap-3">
               <span className="text-xl">
                 {notificationTypes.find(t => t.value === testData.type)?.icon || '📢'}
               </span>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-1">
+                <h4 className="font-medium text-foreground dark:text-white mb-1">
                   {testData.title}
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                   {testData.message}
                 </p>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-2">
                   Type: {testData.type} • Just now
                 </div>
               </div>
@@ -203,8 +203,8 @@ export const NotificationTester: React.FC = () => {
         </div>
 
         {/* Test Actions */}
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             🧪 Test Actions
           </h3>
           
@@ -212,7 +212,7 @@ export const NotificationTester: React.FC = () => {
             <button
               onClick={handleSendTest}
               disabled={sendMutation.isPending || !testData.title || !testData.message}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
+              className="px-6 py-3 bg-info text-white rounded-lg hover:bg-info disabled:bg-muted transition-colors font-medium"
             >
               {sendMutation.isPending ? 'Sending...' : '📤 Send Push Notification'}
             </button>
@@ -220,13 +220,13 @@ export const NotificationTester: React.FC = () => {
             <button
               onClick={sendBrowserNotification}
               disabled={!testData.title || !testData.message}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors font-medium"
+              className="px-6 py-3 bg-success text-white rounded-lg hover:bg-success disabled:bg-muted transition-colors font-medium"
             >
               🌐 Test Browser Notification
             </button>
           </div>
 
-          <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
+          <div className="mt-4 text-sm text-muted-foreground dark:text-muted-foreground">
             <p className="mb-2">
               <strong>Push Notification:</strong> Sends through the app's notification system and appears in your notification history.
             </p>
@@ -237,8 +237,8 @@ export const NotificationTester: React.FC = () => {
         </div>
 
         {/* Quick Tests */}
-        <div className="bg-white dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             ⚡ Quick Tests
           </h3>
           
@@ -253,15 +253,15 @@ export const NotificationTester: React.FC = () => {
                     setTimeout(() => handleSendTest(), 100);
                   }}
                   disabled={sendMutation.isPending}
-                  className="p-3 text-left bg-gray-50 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-500 rounded-lg border border-gray-300 dark:border-gray-500 transition-colors disabled:opacity-50"
+                  className="p-3 text-left bg-muted dark:bg-muted hover:bg-muted dark:hover:bg-muted rounded-lg border border-gray-300 dark:border-gray-500 transition-colors disabled:opacity-50"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span>{typeInfo?.icon}</span>
-                    <span className="font-medium text-gray-900 dark:text-white text-sm">
+                    <span className="font-medium text-foreground dark:text-white text-sm">
                       {typeInfo?.label}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground line-clamp-2">
                     {template.message}
                   </p>
                 </button>
@@ -272,11 +272,11 @@ export const NotificationTester: React.FC = () => {
       </div>
 
       {/* Tips */}
-      <div className="mt-8 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
-        <h3 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-3">
+      <div className="mt-8 bg-warning-light dark:bg-warning/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+        <h3 className="font-semibold text-warning dark:text-warning-light mb-3">
           💡 Testing Tips
         </h3>
-        <ul className="text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
+        <ul className="text-sm text-warning dark:text-warning-light space-y-1">
           <li>• Make sure browser notifications are enabled for the best testing experience</li>
           <li>• Check your notification preferences to ensure the test type is enabled</li>
           <li>• Test during and outside of quiet hours to verify the settings work</li>

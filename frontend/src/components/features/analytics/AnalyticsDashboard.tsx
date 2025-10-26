@@ -71,14 +71,14 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <div className="space-y-6" role="status" aria-label="Loading analytics dashboard">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            <div key={i} className="bg-white dark:bg-muted rounded-lg p-6 animate-pulse">
+              <div className="h-4 bg-muted dark:bg-muted rounded w-3/4 mb-2"></div>
+              <div className="h-8 bg-muted dark:bg-muted rounded w-1/2"></div>
             </div>
           ))}
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 animate-pulse">
-          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="bg-white dark:bg-muted rounded-lg p-6 animate-pulse">
+          <div className="h-64 bg-muted dark:bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -86,11 +86,11 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
   if (dashboardError) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+      <div className="bg-error-light dark:bg-error/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-error dark:text-error-light mb-2">
           {t('analytics.error.title')}
         </h2>
-        <p className="text-red-600 dark:text-red-300">
+        <p className="text-error dark:text-error-light">
           {t('analytics.error.message')}
         </p>
       </div>
@@ -102,25 +102,25 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {/* Header Controls */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground dark:text-white">
             {t('analytics.title')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-muted-foreground dark:text-muted-foreground mt-1">
             {t('analytics.subtitle')}
           </p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Time Range Selector */}
-          <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1">
+          <div className="flex rounded-lg bg-muted dark:bg-muted p-1">
             {(['7d', '30d', '90d', '1y'] as const).map((range) => (
               <button
                 key={range}
                 onClick={() => handleTimeRangeChange(range)}
                 className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                   selectedTimeRange === range
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    ? 'bg-white dark:bg-muted text-foreground dark:text-white shadow-sm'
+                    : 'text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-white'
                 }`}
                 aria-pressed={selectedTimeRange === range}
                 aria-label={`Select ${range} time range`}
@@ -134,7 +134,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           <select
             value={selectedCategory}
             onChange={(e) => handleCategoryChange(e.target.value as any)}
-            className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-muted text-foreground dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             aria-label="Select analytics category"
           >
             <option value="all">{t('analytics.categories.all')}</option>
@@ -193,8 +193,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Task Completion Trend */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             {t('analytics.charts.taskCompletion.title')}
           </h3>
           <LineChart
@@ -208,8 +208,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         </div>
 
         {/* Health Metrics Distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             {t('analytics.charts.healthDistribution.title')}
           </h3>
           <PieChart
@@ -222,8 +222,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         </div>
 
         {/* Focus Session Duration */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             {t('analytics.charts.focusDuration.title')}
           </h3>
           <BarChart
@@ -237,8 +237,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         </div>
 
         {/* Social Activity */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             {t('analytics.charts.socialActivity.title')}
           </h3>
           <BarChart
@@ -255,14 +255,14 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {/* Detailed Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Productivity Score Breakdown */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             {t('analytics.charts.productivityBreakdown.title')}
           </h3>
           <div className="space-y-4">
             {dashboardData?.productivityBreakdown?.map((item, index) => (
               <div key={index} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
+                <span className="text-sm text-muted-foreground dark:text-muted-foreground">
                   {item.category}
                 </span>
                 <div className="flex items-center gap-2">
@@ -273,7 +273,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     color={item.color}
                     aria-label={`${item.category} productivity score: ${item.score}%`}
                   />
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <span className="text-sm font-medium text-foreground dark:text-white">
                     {item.score}%
                   </span>
                 </div>
@@ -283,8 +283,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         </div>
 
         {/* Time Distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             {t('analytics.charts.timeDistribution.title')}
           </h3>
           <PieChart
@@ -297,24 +297,24 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         </div>
 
         {/* Goal Progress */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-muted rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white mb-4">
             {t('analytics.charts.goalProgress.title')}
           </h3>
           <div className="space-y-4">
             {dashboardData?.goalProgress?.map((goal, index) => (
               <div key={index} className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-300">
+                  <span className="text-muted-foreground dark:text-muted-foreground">
                     {goal.name}
                   </span>
-                  <span className="text-gray-900 dark:text-white font-medium">
+                  <span className="text-foreground dark:text-white font-medium">
                     {goal.progress}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div className="w-full bg-muted dark:bg-muted rounded-full h-2">
                   <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    className="bg-info h-2 rounded-full transition-all duration-300"
                     style={{ width: `${goal.progress}%` }}
                     aria-label={`${goal.name} progress: ${goal.progress}%`}
                   />

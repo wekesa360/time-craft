@@ -120,7 +120,7 @@ const LineChart: React.FC<LineChartProps> = ({
   const renderChart = () => {
     if (!data || data.length === 0) {
       return (
-        <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-center h-full text-muted-foreground dark:text-muted-foreground">
           No data available
         </div>
       );
@@ -196,7 +196,7 @@ const LineChart: React.FC<LineChartProps> = ({
                 top: `${point.y}%`,
               }}
             >
-              <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded px-2 py-1 mb-1">
+              <div className="bg-muted dark:bg-muted text-white dark:text-foreground text-xs rounded px-2 py-1 mb-1">
                 {point.label || formatLabel(point.originalX ?? '')}: {formatValue(point.originalY ?? 0)}
               </div>
             </div>

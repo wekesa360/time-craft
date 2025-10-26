@@ -170,7 +170,7 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
           exit={{ scale: 0.8, opacity: 0, y: 20 }}
           transition={{ type: "spring", duration: 0.5 }}
           className={cn(
-            'bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto',
+            'bg-white dark:bg-muted rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto',
             className
           )}
           onClick={(e) => e.stopPropagation()}
@@ -190,7 +190,7 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-2xl font-bold text-gray-900 dark:text-white mb-2"
+              className="text-2xl font-bold text-foreground dark:text-white mb-2"
             >
               {getRandomMessage()}
             </motion.h2>
@@ -199,7 +199,7 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="text-gray-600 dark:text-gray-300"
+              className="text-muted-foreground dark:text-muted-foreground"
             >
               {sessionData.type === 'focus' ? 'Focus session' : 'Break'} completed: {formatDuration(sessionData.duration)}
             </motion.p>
@@ -208,7 +208,7 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="text-sm text-gray-500 dark:text-gray-400 mt-1"
+              className="text-sm text-muted-foreground dark:text-muted-foreground mt-1"
             >
               {sessionData.templateName}
             </motion.p>
@@ -224,7 +224,7 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
                 className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 p-4 text-center"
               >
                 <div className="text-3xl mb-2">{achievement.icon}</div>
-                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
+                <h3 className="font-semibold text-warning dark:text-warning-light">
                   {achievement.message}
                 </h3>
               </motion.div>
@@ -238,20 +238,20 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
                 transition={{ delay: 1.0 }}
                 className={cn(
                   'rounded-lg border p-4',
-                  productivityFeedback.color === 'green' && 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800',
-                  productivityFeedback.color === 'blue' && 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800',
-                  productivityFeedback.color === 'yellow' && 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800',
-                  productivityFeedback.color === 'orange' && 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800'
+                  productivityFeedback.color === 'green' && 'bg-success-light border-green-200 dark:bg-success/20 dark:border-green-800',
+                  productivityFeedback.color === 'blue' && 'bg-info-light border-blue-200 dark:bg-info/20 dark:border-blue-800',
+                  productivityFeedback.color === 'yellow' && 'bg-warning-light border-yellow-200 dark:bg-warning/20 dark:border-yellow-800',
+                  productivityFeedback.color === 'orange' && 'bg-primary-50 border-orange-200 dark:bg-primary/20 dark:border-orange-800'
                 )}
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-xl">{productivityFeedback.icon}</span>
                   <p className={cn(
                     'text-sm font-medium',
-                    productivityFeedback.color === 'green' && 'text-green-800 dark:text-green-200',
-                    productivityFeedback.color === 'blue' && 'text-blue-800 dark:text-blue-200',
-                    productivityFeedback.color === 'yellow' && 'text-yellow-800 dark:text-yellow-200',
-                    productivityFeedback.color === 'orange' && 'text-orange-800 dark:text-orange-200'
+                    productivityFeedback.color === 'green' && 'text-success dark:text-success-light',
+                    productivityFeedback.color === 'blue' && 'text-info dark:text-info-light',
+                    productivityFeedback.color === 'yellow' && 'text-warning dark:text-warning-light',
+                    productivityFeedback.color === 'orange' && 'text-primary dark:text-primary-200'
                   )}>
                     {productivityFeedback.message}
                   </p>
@@ -268,7 +268,7 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
                   exit={{ opacity: 0, y: -20 }}
                   className="space-y-4"
                 >
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-foreground dark:text-white">
                     How productive was this session?
                   </h3>
                   
@@ -280,7 +280,7 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
                         onClick={() => setRating(i + 1)}
                         className={cn(
                           'w-8 h-8 transition-all duration-200 hover:scale-110',
-                          i < rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'
+                          i < rating ? 'text-warning-light' : 'text-muted-foreground dark:text-muted-foreground'
                         )}
                       >
                         <svg fill="currentColor" viewBox="0 0 20 20">
@@ -292,14 +292,14 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
                   
                   {/* Notes */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                       Notes (Optional)
                     </label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="How did the session go? Any insights?"
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white resize-none"
                       rows={3}
                     />
                   </div>
@@ -313,7 +313,7 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
                 <Button
                   onClick={handleRateSession}
                   disabled={rating === 0}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-success hover:bg-success text-white"
                 >
                   {rating > 0 ? `Rate Session (${rating}/5)` : 'Select Rating First'}
                 </Button>
@@ -325,7 +325,7 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
                     onStartBreak();
                     onClose();
                   }}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  className="w-full bg-info hover:bg-info text-white"
                 >
                   Take a Break
                 </Button>
@@ -337,7 +337,7 @@ const SessionCompletionModal: React.FC<SessionCompletionModalProps> = ({
                     onStartNextSession();
                     onClose();
                   }}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-success hover:bg-success text-white"
                 >
                   Start Next Session
                 </Button>

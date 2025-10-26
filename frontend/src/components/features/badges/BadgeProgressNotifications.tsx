@@ -66,10 +66,10 @@ const notificationTypes = {
 };
 
 const colorClasses = {
-  blue: 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200',
-  orange: 'bg-orange-50 border-orange-200 text-orange-800 dark:bg-orange-900/20 dark:border-orange-800 dark:text-orange-200',
-  yellow: 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200',
-  green: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200',
+  blue: 'bg-info-light border-blue-200 text-info dark:bg-info/20 dark:border-blue-800 dark:text-info-light',
+  orange: 'bg-primary-50 border-orange-200 text-primary dark:bg-primary/20 dark:border-orange-800 dark:text-primary-200',
+  yellow: 'bg-warning-light border-yellow-200 text-warning dark:bg-warning/20 dark:border-yellow-800 dark:text-warning-light',
+  green: 'bg-success-light border-green-200 text-success dark:bg-success/20 dark:border-green-800 dark:text-success-light',
   purple: 'bg-purple-50 border-purple-200 text-purple-800 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-200',
 };
 
@@ -204,10 +204,10 @@ const BadgeProgressNotifications: React.FC<BadgeProgressNotificationsProps> = ({
   return (
     <div className={cn('space-y-3', className)}>
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-foreground dark:text-white">
           Badge Progress
         </h3>
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-muted-foreground dark:text-muted-foreground">
           {notifications.length} update{notifications.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -232,7 +232,7 @@ const BadgeProgressNotifications: React.FC<BadgeProgressNotificationsProps> = ({
               <div className="flex items-start space-x-3">
                 {/* Badge Icon */}
                 <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-white/50 dark:bg-gray-800/50 flex items-center justify-center text-lg">
+                  <div className="w-10 h-10 rounded-full bg-white/50 dark:bg-muted/50 flex items-center justify-center text-lg">
                     {notification.badge.icon}
                   </div>
                 </div>
@@ -259,17 +259,17 @@ const BadgeProgressNotifications: React.FC<BadgeProgressNotificationsProps> = ({
                       <span>Progress</span>
                       <span className="font-medium">{notification.badge.progress}%</span>
                     </div>
-                    <div className="w-full bg-white/30 dark:bg-gray-800/30 rounded-full h-2">
+                    <div className="w-full bg-white/30 dark:bg-muted/30 rounded-full h-2">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${notification.badge.progress}%` }}
                         transition={{ duration: 1, delay: 0.5 }}
                         className={cn(
                           'h-2 rounded-full',
-                          progressColor === 'green' ? 'bg-green-500' :
-                          progressColor === 'orange' ? 'bg-orange-500' :
-                          progressColor === 'yellow' ? 'bg-yellow-500' :
-                          'bg-blue-500'
+                          progressColor === 'green' ? 'bg-success-light0' :
+                          progressColor === 'orange' ? 'bg-primary-500' :
+                          progressColor === 'yellow' ? 'bg-warning-light0' :
+                          'bg-info-light0'
                         )}
                       />
                     </div>
@@ -302,7 +302,7 @@ const BadgeProgressNotifications: React.FC<BadgeProgressNotificationsProps> = ({
                   
                   <button
                     onClick={() => handleDismiss(notification.id)}
-                    className="p-1 rounded-full hover:bg-white/20 dark:hover:bg-gray-800/20 transition-colors"
+                    className="p-1 rounded-full hover:bg-white/20 dark:hover:bg-muted/20 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -320,37 +320,37 @@ const BadgeProgressNotifications: React.FC<BadgeProgressNotificationsProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+        className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 p-4"
       >
-        <h4 className="font-medium text-gray-900 dark:text-white mb-3">Badge Progress Summary</h4>
+        <h4 className="font-medium text-foreground dark:text-white mb-3">Badge Progress Summary</h4>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-2xl font-bold text-success dark:text-success-light">
               {badges.filter(b => b.isUnlocked).length}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-300">Unlocked</div>
+            <div className="text-xs text-muted-foreground dark:text-muted-foreground">Unlocked</div>
           </div>
           
           <div>
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+            <div className="text-2xl font-bold text-primary dark:text-primary-400">
               {badges.filter(b => !b.isUnlocked && b.progress >= 75).length}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-300">Almost There</div>
+            <div className="text-xs text-muted-foreground dark:text-muted-foreground">Almost There</div>
           </div>
           
           <div>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-2xl font-bold text-info dark:text-info">
               {badges.filter(b => !b.isUnlocked && b.progress > 0 && b.progress < 75).length}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-300">In Progress</div>
+            <div className="text-xs text-muted-foreground dark:text-muted-foreground">In Progress</div>
           </div>
           
           <div>
-            <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
+            <div className="text-2xl font-bold text-muted-foreground dark:text-muted-foreground">
               {badges.filter(b => !b.isUnlocked && b.progress === 0).length}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-300">Not Started</div>
+            <div className="text-xs text-muted-foreground dark:text-muted-foreground">Not Started</div>
           </div>
         </div>
       </motion.div>

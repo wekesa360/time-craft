@@ -9,6 +9,7 @@ import {
   Users,
   Target
 } from 'lucide-react';
+import { TabSwitcher, TabItem } from '../components/ui/TabSwitcher';
 
 // Components
 import ConnectionsList from '../components/features/social/ConnectionsList';
@@ -133,6 +134,13 @@ export default function SocialPage() {
 
   const isLoading = connectionsLoading || challengesLoading || activitiesLoading;
 
+  // Tab configuration
+  const socialTabs: TabItem[] = [
+    { id: 'feed', label: 'Activity Feed' },
+    { id: 'challenges', label: 'Challenges' },
+    { id: 'connections', label: 'Connections' },
+  ];
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -144,50 +152,21 @@ export default function SocialPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Social Hub</h1>
-          <p className="text-foreground-secondary mt-1">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Social Hub</h1>
+          <p className="text-muted-foreground mt-1">
             Connect with others and participate in challenges together
           </p>
         </div>
-        
-        <div className="flex items-center space-x-3">
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-background-secondary rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('feed')}
-              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
-                viewMode === 'feed' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
-            >
-              Activity Feed
-            </button>
-            <button
-              onClick={() => setViewMode('challenges')}
-              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
-                viewMode === 'challenges' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
-            >
-              Challenges
-            </button>
-            <button
-              onClick={() => setViewMode('connections')}
-              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
-                viewMode === 'connections' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
-            >
-              Connections
-            </button>
-          </div>
-        </div>
       </div>
+
+      {/* View Navigation */}
+      <TabSwitcher
+        tabs={socialTabs}
+        activeTab={viewMode}
+        onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
+      />
 
       {/* Social Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -196,10 +175,10 @@ export default function SocialPage() {
             <div>
               <p className="text-sm font-medium text-foreground-secondary">Connections</p>
               <p className="text-2xl font-bold text-foreground">{connections.length}</p>
-              <p className="text-xs text-blue-600">Active friends</p>
+              <p className="text-xs text-info">Active friends</p>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-950 rounded-lg">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-info-light dark:bg-info rounded-lg">
+              <Users className="w-6 h-6 text-info" />
             </div>
           </div>
         </div>
@@ -211,10 +190,10 @@ export default function SocialPage() {
               <p className="text-2xl font-bold text-foreground">
                 {challenges.filter(c => c.isActive && c.participants.some(p => p.userId === 'current-user')).length}
               </p>
-              <p className="text-xs text-green-600">Participating</p>
+              <p className="text-xs text-success">Participating</p>
             </div>
-            <div className="p-3 bg-green-100 dark:bg-green-950 rounded-lg">
-              <Target className="w-6 h-6 text-green-600" />
+            <div className="p-3 bg-success-light dark:bg-success rounded-lg">
+              <Target className="w-6 h-6 text-success" />
             </div>
           </div>
         </div>
@@ -239,10 +218,10 @@ export default function SocialPage() {
             <div>
               <p className="text-sm font-medium text-foreground-secondary">Pending Requests</p>
               <p className="text-2xl font-bold text-foreground">{pendingRequests.length}</p>
-              <p className="text-xs text-orange-600">Awaiting response</p>
+              <p className="text-xs text-primary">Awaiting response</p>
             </div>
-            <div className="p-3 bg-orange-100 dark:bg-orange-950 rounded-lg">
-              <MessageCircle className="w-6 h-6 text-orange-600" />
+            <div className="p-3 bg-primary-100 dark:bg-primary rounded-lg">
+              <MessageCircle className="w-6 h-6 text-primary" />
             </div>
           </div>
         </div>

@@ -4,11 +4,12 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '../../stores/auth';
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Invalid email format')
+  email: z.string().email('Invalid email address')
 });
 
 type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
@@ -37,81 +38,113 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  if (emailSent) {
-    return (
-      <div className="text-center">
-        <div className="mb-6">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900">
-            <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-          Check your email
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
-          We've sent a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.
-        </p>
-        <div className="space-y-4">
-          <Link
-            to="/login"
-            className="w-full btn btn-primary"
-          >
-            Back to Login
-          </Link>
-          <button
-            onClick={() => setEmailSent(false)}
-            className="w-full text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-          >
-            Didn't receive the email? Try again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <div className="text-center mb-6">
-        <p className="text-gray-600 dark:text-gray-400">
-          Enter your email address and we'll send you a link to reset your password.
-        </p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo/Brand */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 mx-auto mb-4 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
+            <span className="text-2xl font-bold text-primary-foreground">TC</span>
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {emailSent ? 'Check Your Email' : 'Reset Password'}
+          </h1>
+          <p className="text-muted-foreground">
+            {emailSent 
+              ? 'We\'ve sent a password reset link to your email address'
+              : 'Enter your email address to reset your password'
+            }
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            className={`input ${errors.email ? 'border-red-300 focus:ring-red-500' : ''}`}
-            placeholder="Enter your email"
-            {...register('email')}
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-              {errors.email.message}
-            </p>
+        {/* Form */}
+        <div className="space-y-6">
+          {emailSent ? (
+            <div className="space-y-6">
+              <div className="text-center">
+                <CheckCircle className="w-16 h-16 mx-auto mb-4 text-primary" />
+                <p className="text-muted-foreground mb-6">
+                  Please check your inbox and follow the instructions to reset your password.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <Link
+                  to="/login"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md"
+                >
+                  <span>Back to Sign In</span>
+                </Link>
+                
+                <button
+                  onClick={() => setEmailSent(false)}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
+                >
+                  Didn't receive the email? Try again
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  className={`w-full px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground ${
+                    errors.email ? 'border-red-500 focus:ring-red-500' : ''
+                  }`}
+                  {...register('email')}
+                />
+                {errors.email && (
+                  <p className="mt-2 text-sm text-error">
+                    {errors.email.message}
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full flex items-center justify-center gap-2 px-6 py-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Sending Reset Link...
+                  </>
+                ) : (
+                  <span>Send Reset Link</span>
+                )}
+              </button>
+
+              <Link
+                to="/login"
+                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors text-center block"
+              >
+                Back to Sign In
+              </Link>
+            </form>
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Sending...' : 'Send Reset Link'}
-        </button>
-      </form>
-
-      <div className="mt-6 text-center">
-        <Link
-          to="/login"
-          className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
-        >
-          Back to Login
-        </Link>
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-sm text-muted-foreground">
+            Remember your password?{' '}
+            <Link
+              to="/login"
+              className="text-primary hover:text-primary/80 font-medium transition-colors"
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

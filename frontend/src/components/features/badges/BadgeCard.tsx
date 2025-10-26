@@ -36,16 +36,16 @@ const tierColors = {
     icon: 'text-amber-600'
   },
   silver: {
-    bg: 'bg-gray-100 dark:bg-gray-950/20',
+    bg: 'bg-muted dark:bg-muted/20',
     border: 'border-gray-300 dark:border-gray-700',
-    text: 'text-gray-800 dark:text-gray-200',
-    icon: 'text-gray-600'
+    text: 'text-muted-foreground dark:text-muted-foreground',
+    icon: 'text-muted-foreground'
   },
   gold: {
-    bg: 'bg-yellow-100 dark:bg-yellow-950/20',
+    bg: 'bg-warning-light dark:bg-warning/20',
     border: 'border-yellow-300 dark:border-yellow-700',
-    text: 'text-yellow-800 dark:text-yellow-200',
-    icon: 'text-yellow-600'
+    text: 'text-warning dark:text-warning-light',
+    icon: 'text-warning'
   },
   platinum: {
     bg: 'bg-purple-100 dark:bg-purple-950/20',
@@ -82,9 +82,9 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({
   };
 
   const getProgressColor = (percentage: number) => {
-    if (percentage >= 80) return 'bg-green-500';
-    if (percentage >= 50) return 'bg-yellow-500';
-    return 'bg-blue-500';
+    if (percentage >= 80) return 'bg-success-light0';
+    if (percentage >= 50) return 'bg-warning-light0';
+    return 'bg-info-light0';
   };
 
   return (

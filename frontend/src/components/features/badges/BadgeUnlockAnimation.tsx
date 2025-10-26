@@ -37,19 +37,19 @@ const tierColors = {
   silver: {
     bg: 'from-gray-100 to-slate-100 dark:from-gray-900/20 dark:to-slate-900/20',
     border: 'border-gray-300 dark:border-gray-700',
-    text: 'text-gray-800 dark:text-gray-200',
+    text: 'text-muted-foreground dark:text-muted-foreground',
     glow: 'shadow-gray-500/50',
   },
   gold: {
     bg: 'from-yellow-100 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/20',
     border: 'border-yellow-300 dark:border-yellow-700',
-    text: 'text-yellow-800 dark:text-yellow-200',
+    text: 'text-warning dark:text-warning-light',
     glow: 'shadow-yellow-500/50',
   },
   platinum: {
     bg: 'from-blue-100 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20',
     border: 'border-blue-300 dark:border-blue-700',
-    text: 'text-blue-800 dark:text-blue-200',
+    text: 'text-info dark:text-info-light',
     glow: 'shadow-blue-500/50',
   },
   diamond: {
@@ -173,7 +173,7 @@ const BadgeUnlockAnimation: React.FC<BadgeUnlockAnimationProps> = ({
             delay: 0.2 
           }}
           className={cn(
-            'bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden',
+            'bg-white dark:bg-muted rounded-2xl shadow-2xl max-w-md w-full overflow-hidden',
             className
           )}
           onClick={(e) => e.stopPropagation()}
@@ -273,10 +273,10 @@ const BadgeUnlockAnimation: React.FC<BadgeUnlockAnimationProps> = ({
               transition={{ delay: 1.3 }}
               className="space-y-2"
             >
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xl font-bold text-foreground dark:text-white">
                 {badge.name}
               </h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-muted-foreground dark:text-muted-foreground">
                 {badge.description}
               </p>
               
@@ -294,9 +294,9 @@ const BadgeUnlockAnimation: React.FC<BadgeUnlockAnimationProps> = ({
                 <span className={cn(
                   'px-2 py-1 rounded-full font-medium',
                   badge.rarity === 'legendary' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800' :
-                  badge.rarity === 'epic' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800' :
-                  badge.rarity === 'rare' ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800' :
-                  'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-300 dark:border-gray-800',
+                  badge.rarity === 'epic' ? 'bg-info-light text-info border-blue-200 dark:bg-info/20 dark:text-info-light dark:border-blue-800' :
+                  badge.rarity === 'rare' ? 'bg-success-light text-success border-green-200 dark:bg-success/20 dark:text-success-light dark:border-green-800' :
+                  'bg-muted text-muted-foreground border-gray-200 dark:bg-muted/20 dark:text-muted-foreground dark:border-gray-800',
                   'border'
                 )}>
                   {badge.rarity}
@@ -310,7 +310,7 @@ const BadgeUnlockAnimation: React.FC<BadgeUnlockAnimationProps> = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.5 }}
-                className="text-xs text-gray-500 dark:text-gray-400"
+                className="text-xs text-muted-foreground dark:text-muted-foreground"
               >
                 Unlocked on {new Date(badge.unlockedAt).toLocaleDateString()}
               </motion.p>
@@ -322,12 +322,12 @@ const BadgeUnlockAnimation: React.FC<BadgeUnlockAnimationProps> = ({
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 1.6 }}
-            className="p-6 bg-gray-50 dark:bg-gray-700 flex flex-col sm:flex-row gap-3"
+            className="p-6 bg-muted dark:bg-muted flex flex-col sm:flex-row gap-3"
           >
             {onShare && (
               <Button
                 onClick={() => onShare(badge)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                className="flex-1 bg-info hover:bg-info text-white"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
@@ -355,9 +355,9 @@ const BadgeUnlockAnimation: React.FC<BadgeUnlockAnimationProps> = ({
           className={cn(
             'absolute inset-0 rounded-full blur-3xl pointer-events-none',
             badge.rarity === 'legendary' ? 'bg-purple-500' :
-            badge.rarity === 'epic' ? 'bg-blue-500' :
-            badge.rarity === 'rare' ? 'bg-green-500' :
-            'bg-yellow-500'
+            badge.rarity === 'epic' ? 'bg-info-light0' :
+            badge.rarity === 'rare' ? 'bg-success-light0' :
+            'bg-warning-light0'
           )}
         />
       </motion.div>

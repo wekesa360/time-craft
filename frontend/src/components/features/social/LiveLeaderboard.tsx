@@ -98,7 +98,7 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
-          className="text-green-500"
+          className="text-success"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
@@ -110,7 +110,7 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
         <motion.div
           initial={{ scale: 0, rotate: 180 }}
           animate={{ scale: 1, rotate: 0 }}
-          className="text-red-500"
+          className="text-error-light0"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
@@ -123,26 +123,26 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
   const getRankDisplay = (rank: number) => {
     if (rank === 1) {
       return (
-        <div className="flex items-center justify-center w-8 h-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
-          <span className="text-yellow-600 dark:text-yellow-400 font-bold">👑</span>
+        <div className="flex items-center justify-center w-8 h-8 bg-warning-light dark:bg-warning/20 rounded-full">
+          <span className="text-warning dark:text-warning-light font-bold">👑</span>
         </div>
       );
     } else if (rank === 2) {
       return (
-        <div className="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full">
-          <span className="text-gray-600 dark:text-gray-300 font-bold">🥈</span>
+        <div className="flex items-center justify-center w-8 h-8 bg-muted dark:bg-muted rounded-full">
+          <span className="text-muted-foreground dark:text-muted-foreground font-bold">🥈</span>
         </div>
       );
     } else if (rank === 3) {
       return (
-        <div className="flex items-center justify-center w-8 h-8 bg-orange-100 dark:bg-orange-900/20 rounded-full">
-          <span className="text-orange-600 dark:text-orange-400 font-bold">🥉</span>
+        <div className="flex items-center justify-center w-8 h-8 bg-primary-100 dark:bg-primary/20 rounded-full">
+          <span className="text-primary dark:text-primary-400 font-bold">🥉</span>
         </div>
       );
     } else {
       return (
-        <div className="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full">
-          <span className="text-gray-600 dark:text-gray-300 font-bold text-sm">#{rank}</span>
+        <div className="flex items-center justify-center w-8 h-8 bg-muted dark:bg-muted rounded-full">
+          <span className="text-muted-foreground dark:text-muted-foreground font-bold text-sm">#{rank}</span>
         </div>
       );
     }
@@ -153,11 +153,11 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
       {/* Header */}
       <FadeIn>
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-foreground dark:text-white">
             Live Leaderboard
           </h3>
-          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-muted-foreground">
+            <div className="w-2 h-2 bg-success-light0 rounded-full animate-pulse" />
             <span>Live</span>
             <span>•</span>
             <span>Updated {lastUpdateTime.toLocaleTimeString()}</span>
@@ -166,7 +166,7 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
       </FadeIn>
 
       {/* Leaderboard */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-muted rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         <AnimatePresence mode="popLayout">
           {entries.map((entry, index) => (
             <motion.div
@@ -189,7 +189,7 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
               }}
               className={cn(
                 'p-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0',
-                entry.isCurrentUser && 'bg-blue-50 dark:bg-blue-900/20'
+                entry.isCurrentUser && 'bg-info-light dark:bg-info/20'
               )}
             >
               <div className="flex items-center justify-between">
@@ -217,16 +217,16 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
                     </div>
                     
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="font-medium text-foreground dark:text-white">
                         {entry.userName}
                         {entry.isCurrentUser && (
-                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 px-2 py-1 rounded-full">
+                          <span className="ml-2 text-xs bg-info-light text-info dark:bg-info/20 dark:text-info-light px-2 py-1 rounded-full">
                             You
                           </span>
                         )}
                       </div>
                       {showProgress && (
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                        <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                           {entry.progress}% complete
                         </div>
                       )}
@@ -236,10 +236,10 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
                 
                 {/* Score */}
                 <div className="text-right">
-                  <div className="text-lg font-bold text-gray-900 dark:text-white">
+                  <div className="text-lg font-bold text-foreground dark:text-white">
                     {entry.score.toLocaleString()}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
+                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                     points
                   </div>
                 </div>
@@ -248,7 +248,7 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
               {/* Progress Bar */}
               {showProgress && (
                 <div className="mt-3">
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div className="w-full bg-muted dark:bg-muted rounded-full h-2">
                     <motion.div
                       className="bg-primary-600 h-2 rounded-full"
                       initial={{ width: 0 }}
@@ -265,7 +265,7 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
         {/* Empty State */}
         {entries.length === 0 && (
           <div className="p-8 text-center">
-            <div className="text-gray-500 dark:text-gray-400">
+            <div className="text-muted-foreground dark:text-muted-foreground">
               <svg className="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>

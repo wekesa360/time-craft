@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { 
   Share2
 } from 'lucide-react';
+import { TabSwitcher, TabItem } from '../components/ui/TabSwitcher';
 
 // Components
 import { BadgeGrid } from '../components/features/badges/BadgeGrid';
@@ -66,6 +67,13 @@ export default function BadgesPage() {
 
   const isLoading = badgesLoading || leaderboardLoading;
 
+  // Tab configuration
+  const badgeTabs: TabItem[] = [
+    { id: 'badges', label: 'My Badges' },
+    { id: 'leaderboard', label: 'Leaderboard' },
+    { id: 'achievements', label: 'Achievements' },
+  ];
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -77,52 +85,23 @@ export default function BadgesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
             {t('navigation.badges')}
           </h1>
-          <p className="text-foreground-secondary mt-1">
+          <p className="text-muted-foreground mt-1">
             Earn badges by completing activities and reaching milestones
           </p>
         </div>
-        
-        <div className="flex items-center space-x-3">
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-background-secondary rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('badges')}
-              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
-                viewMode === 'badges' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
-            >
-              My Badges
-            </button>
-            <button
-              onClick={() => setViewMode('leaderboard')}
-              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
-                viewMode === 'leaderboard' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
-            >
-              Leaderboard
-            </button>
-            <button
-              onClick={() => setViewMode('achievements')}
-              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
-                viewMode === 'achievements' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'text-foreground-secondary hover:text-foreground'
-              }`}
-            >
-              Achievements
-            </button>
-          </div>
-        </div>
       </div>
+
+      {/* View Navigation */}
+      <TabSwitcher
+        tabs={badgeTabs}
+        activeTab={viewMode}
+        onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
+      />
 
       {/* Progress Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

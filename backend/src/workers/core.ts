@@ -1307,4 +1307,178 @@ core.get('/habits/:id/logs', async (c) => {
   }
 });
 
+// Test endpoint to add preferences column
+core.post('/test/add-preferences-column', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const db = new DatabaseService(c.env);
+    await db.execute('ALTER TABLE users ADD COLUMN preferences TEXT DEFAULT "{}"');
+    return c.json({ success: true, message: 'Preferences column added successfully' });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message });
+  }
+});
+
+// ========== USER PREFERENCES ==========
+
+// Validation schema for user preferences
+const userPreferencesSchema = z.object({
+  theme: z.object({
+    mode: z.enum(['light', 'dark', 'system']).optional(),
+    colorTheme: z.string().optional(),
+  }).optional(),
+  appearance: z.object({
+    fontSize: z.string().optional(),
+    compactMode: z.boolean().optional(),
+    animations: z.boolean().optional(),
+  }).optional(),
+  notifications: z.object({
+    email: z.boolean().optional(),
+    push: z.boolean().optional(),
+    desktop: z.boolean().optional(),
+  }).optional(),
+  privacy: z.object({
+    profileVisibility: z.enum(['public', 'private', 'friends']).optional(),
+    dataSharing: z.boolean().optional(),
+  }).optional(),
+  general: z.object({
+    timezone: z.string().optional(),
+    language: z.string().optional(),
+    dateFormat: z.string().optional(),
+    timeFormat: z.enum(['12h', '24h']).optional(),
+  }).optional(),
+});
+
+// GET /user/preferences - Get user preferences
+core.get('/user/preferences', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    console.log('Getting preferences for user:', auth.userId);
+    const db = new DatabaseService(c.env);
+    const result = await db.query(
+      'SELECT * FROM users WHERE id = ?',
+      [auth.userId]
+    );
+    
+    console.log('Database query result:', result);
+    
+    const user = result.results?.[0];
+    if (!user) {
+      console.log('User not found');
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    console.log('User found:', user);
+    console.log('User preferences field:', user.preferences);
+
+    // Parse existing preferences or return defaults
+    const preferences = user.preferences ? JSON.parse(user.preferences) : {};
+    
+    // Default preferences
+    const defaultPreferences = {
+      theme: {
+        mode: 'system',
+        colorTheme: 'orange',
+      },
+      appearance: {
+        fontSize: 'medium',
+        compactMode: false,
+        animations: true,
+      },
+      notifications: {
+        email: true,
+        push: true,
+        desktop: true,
+      },
+      privacy: {
+        profileVisibility: 'private',
+        dataSharing: false,
+      },
+      general: {
+        timezone: 'UTC',
+        language: 'en',
+        dateFormat: 'MM/dd/yyyy',
+        timeFormat: '12h',
+      },
+    };
+
+    // Merge with defaults
+    const mergedPreferences = {
+      theme: { ...defaultPreferences.theme, ...preferences.theme },
+      appearance: { ...defaultPreferences.appearance, ...preferences.appearance },
+      notifications: { ...defaultPreferences.notifications, ...preferences.notifications },
+      privacy: { ...defaultPreferences.privacy, ...preferences.privacy },
+      general: { ...defaultPreferences.general, ...preferences.general },
+    };
+
+    console.log('Returning preferences:', mergedPreferences);
+
+    return c.json({ 
+      success: true,
+      preferences: mergedPreferences 
+    });
+  } catch (error) {
+    console.error('Get user preferences error:', error);
+    return c.json({ error: 'Failed to get preferences' }, 500);
+  }
+});
+
+// PUT /user/preferences - Update user preferences
+core.put('/user/preferences', zValidator('json', userPreferencesSchema), async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const newPreferences = c.req.valid('json');
+    const db = new DatabaseService(c.env);
+    
+    // Get current user and preferences
+    const result = await db.query(
+      'SELECT * FROM users WHERE id = ?',
+      [auth.userId]
+    );
+    
+    const user = result.results?.[0];
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // Parse existing preferences
+    const currentPreferences = user.preferences ? JSON.parse(user.preferences) : {};
+    
+    // Merge new preferences with existing ones
+    const updatedPreferences = {
+      ...currentPreferences,
+      ...newPreferences,
+    };
+
+    // Update user preferences
+    await db.execute(
+      'UPDATE users SET preferences = ?, updated_at = ? WHERE id = ?',
+      [JSON.stringify(updatedPreferences), Date.now(), auth.userId]
+    );
+
+    console.log(`Preferences updated for user: ${auth.userId}`);
+
+    return c.json({ 
+      success: true,
+      message: 'Preferences updated successfully',
+      preferences: updatedPreferences 
+    });
+  } catch (error) {
+    console.error('Update user preferences error:', error);
+    return c.json({ error: 'Failed to update preferences' }, 500);
+  }
+});
+
 export default core;

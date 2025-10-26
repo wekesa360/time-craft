@@ -11,14 +11,14 @@ interface State {
 }
 
 const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> = ({ resetError }) => (
-  <div className="flex flex-col items-center justify-center p-8 bg-red-50 border border-red-200 rounded-lg">
-    <h2 className="text-lg font-semibold text-red-800 mb-2">Something went wrong</h2>
-    <p className="text-red-600 mb-4 text-center">
+  <div className="flex flex-col items-center justify-center p-8 bg-error-light border border-red-200 rounded-lg">
+    <h2 className="text-lg font-semibold text-error mb-2">Something went wrong</h2>
+    <p className="text-error mb-4 text-center">
       An error occurred while loading this feature. Please try refreshing or contact support if the problem persists.
     </p>
     <button
       onClick={resetError}
-      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+      className="px-4 py-2 bg-error text-white rounded hover:bg-error transition-colors"
     >
       Try again
     </button>

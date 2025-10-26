@@ -6,6 +6,7 @@ import {
   useCancelMeetingMutation 
 } from '../../../hooks/queries/useCalendarQueries';
 import type { MeetingRequest, TimeSlot } from '../../../types';
+import { Card, CardHeader, CardTitle, CardContent } from '../../ui/Card';
 
 export const MeetingRequests: React.FC = () => {
   const { data: requests, isLoading } = useMeetingRequestsQuery();
@@ -81,39 +82,41 @@ export const MeetingRequests: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending_responses':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+        return 'bg-warning-light text-warning dark:bg-warning/20 dark:text-warning-light';
       case 'confirmed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+        return 'bg-success-light text-success dark:bg-success/20 dark:text-success-light';
       case 'cancelled':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+        return 'bg-error-light text-error dark:bg-error/20 dark:text-error-light';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground';
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusText = (status: string) => {
     switch (status) {
       case 'pending_responses':
-        return '⏳';
+        return 'Pending';
       case 'confirmed':
-        return '✅';
+        return 'Confirmed';
       case 'cancelled':
-        return '❌';
+        return 'Cancelled';
       default:
-        return '📅';
+        return 'Unknown';
     }
   };
 
-  const getMeetingTypeIcon = (type: string) => {
+  const getMeetingTypeText = (type: string) => {
     switch (type) {
-      case 'video_call':
-        return '📹';
-      case 'phone_call':
-        return '📞';
-      case 'in_person':
-        return '🏢';
+      case 'video_conference':
+        return 'Video Conference';
+      case 'phone_conference':
+        return 'Phone Conference';
+      case 'appointment':
+        return 'Appointment';
+      case 'default':
+        return 'Meeting';
       default:
-        return '🤝';
+        return 'Meeting';
     }
   };
 
@@ -121,216 +124,221 @@ export const MeetingRequests: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-        <span className="ml-3 text-gray-600 dark:text-gray-300">Loading meeting requests...</span>
+        <span className="ml-3 text-muted-foreground dark:text-muted-foreground">Loading meeting requests...</span>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+    <div className="max-w-6xl mx-auto space-y-8">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-foreground mb-3">
           Meeting Requests
         </h2>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-lg text-muted-foreground">
           Manage your incoming and outgoing meeting requests
         </p>
       </div>
 
       {/* Requests List */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {requests && requests.length > 0 ? (
           requests.map((request) => (
-            <div
-              key={request.id}
-              className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-6 hover:shadow-lg transition-shadow"
-            >
-              {/* Request Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {request.title}
-                    </h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                      {getStatusIcon(request.status)} {request.status.replace('_', ' ')}
-                    </span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {getMeetingTypeIcon(request.meetingType)} {request.meetingType.replace('_', ' ')}
-                    </span>
+            <Card key={request.id} className="hover:shadow-lg transition-all hover:scale-[1.02]">
+              <CardContent className="p-6">
+                {/* Request Header */}
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <h3 className="text-xl font-bold text-foreground">
+                        {request.title}
+                      </h3>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                        {getStatusText(request.status)}
+                      </span>
+                      <span className="px-3 py-1 bg-muted rounded-full text-sm text-muted-foreground">
+                        {getMeetingTypeText(request.meetingType)}
+                      </span>
+                    </div>
+                    
+                    {request.description && (
+                      <p className="text-muted-foreground mb-3">
+                        {request.description}
+                      </p>
+                    )}
+                    
+                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                      <span>{request.duration} minutes</span>
+                      <span>{request.participants.length} participants</span>
+                      <span>Created {formatDateTime(request.createdAt)}</span>
+                    </div>
                   </div>
-                  
-                  {request.description && (
-                    <p className="text-gray-600 dark:text-gray-300 mb-2">
-                      {request.description}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                    <span>⏱️ {request.duration} minutes</span>
-                    <span>👥 {request.participants.length} participants</span>
-                    <span>📅 Created {formatDateTime(request.createdAt)}</span>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 ml-4">
+                    {request.status === 'pending_responses' && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setShowRescheduleModal(true);
+                          }}
+                          className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl transition-all hover:scale-105 text-sm font-medium"
+                        >
+                          Reschedule
+                        </button>
+                        <button
+                          onClick={() => handleCancel(request.id)}
+                          disabled={cancelMutation.isPending}
+                          className="px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-xl transition-all hover:scale-105 text-sm font-medium disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2 ml-4">
-                  {request.status === 'pending_responses' && (
-                    <>
-                      <button
-                        onClick={() => {
-                          setSelectedRequest(request);
-                          setShowRescheduleModal(true);
-                        }}
-                        className="px-3 py-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors text-sm"
-                      >
-                        📅 Reschedule
-                      </button>
-                      <button
-                        onClick={() => handleCancel(request.id)}
-                        disabled={cancelMutation.isPending}
-                        className="px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm"
-                      >
-                        ❌ Cancel
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Participants */}
-              <div className="mb-4">
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Participants:
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {request.participants.map((participant, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-sm"
-                    >
-                      {participant}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Suggested Time Slots */}
-              {request.suggestedSlots && request.suggestedSlots.length > 0 && (
-                <div className="mb-4">
-                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    AI Suggested Time Slots:
+                {/* Participants */}
+                <div className="mb-6">
+                  <div className="text-sm font-medium text-foreground mb-3">
+                    Participants ({request.participants.length}):
                   </div>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {request.suggestedSlots.map((slot, index) => (
+                  <div className="flex flex-wrap gap-2">
+                    {request.participants.map((participant, index) => (
                       <div
                         key={index}
-                        className="bg-gray-50 dark:bg-gray-600 rounded-lg p-3 border border-gray-200 dark:border-gray-500"
+                        className="flex items-center gap-2 px-3 py-2 bg-muted/50 border border-border/50 rounded-xl text-sm"
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            Option {index + 1}
-                          </span>
-                          <span className="text-xs bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 px-2 py-1 rounded">
-                            {Math.round(slot.score * 100)}% match
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-primary font-medium text-xs">
+                            {participant.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        
-                        <div className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                          {formatDateTime(slot.start)} - {formatDateTime(slot.end)}
-                        </div>
-                        
-                        {slot.conflicts.length > 0 && (
-                          <div className="text-xs text-red-600 dark:text-red-400">
-                            ⚠️ {slot.conflicts.length} conflict(s)
-                          </div>
-                        )}
-
-                        {request.status === 'pending_responses' && (
-                          <div className="flex gap-2 mt-3">
-                            <button
-                              onClick={() => handleRespond(request.id, 'accept', slot)}
-                              disabled={respondMutation.isPending}
-                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors"
-                            >
-                              ✅ Accept
-                            </button>
-                            <button
-                              onClick={() => handleRespond(request.id, 'decline')}
-                              disabled={respondMutation.isPending}
-                              className="flex-1 px-3 py-2 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors"
-                            >
-                              ❌ Decline
-                            </button>
-                          </div>
-                        )}
+                        <span className="text-foreground">{participant}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
 
-              {/* Preferred Time Slots */}
-              {request.preferredTimeSlots && request.preferredTimeSlots.length > 0 && (
-                <div>
-                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Preferred Time Slots:
+                {/* Suggested Time Slots */}
+                {request.suggestedSlots && request.suggestedSlots.length > 0 && (
+                  <div className="mb-6">
+                    <div className="text-sm font-medium text-foreground mb-3">
+                      Suggested Time Slots:
+                    </div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {request.suggestedSlots.map((slot, index) => (
+                        <Card
+                          key={index}
+                          className="p-4 hover:shadow-md transition-all hover:scale-105"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-bold text-foreground">
+                              Option {index + 1}
+                            </span>
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
+                              {Math.round(slot.score * 100)}% match
+                            </span>
+                          </div>
+                          
+                          <div className="text-sm text-muted-foreground mb-3">
+                            {formatDateTime(slot.start)} - {formatDateTime(slot.end)}
+                          </div>
+                          
+                          {slot.conflicts.length > 0 && (
+                            <div className="text-xs text-destructive mb-3">
+                              {slot.conflicts.length} conflict(s)
+                            </div>
+                          )}
+
+                          {request.status === 'pending_responses' && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleRespond(request.id, 'accept', slot)}
+                                disabled={respondMutation.isPending}
+                                className="flex-1 px-3 py-2 bg-primary text-primary-foreground rounded-xl text-xs hover:bg-primary/90 transition-all hover:scale-105 font-medium"
+                              >
+                                Accept
+                              </button>
+                              <button
+                                onClick={() => handleRespond(request.id, 'decline')}
+                                disabled={respondMutation.isPending}
+                                className="flex-1 px-3 py-2 bg-destructive text-destructive-foreground rounded-xl text-xs hover:bg-destructive/90 transition-all hover:scale-105 font-medium"
+                              >
+                                Decline
+                              </button>
+                            </div>
+                          )}
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {request.preferredTimeSlots.map((slot, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded text-sm"
-                      >
-                        {formatDateTime(slot.start)} - {formatDateTime(slot.end)}
-                      </span>
-                    ))}
+                )}
+
+                {/* Preferred Time Slots */}
+                {request.preferredTimeSlots && request.preferredTimeSlots.length > 0 && (
+                  <div>
+                    <div className="text-sm font-medium text-foreground mb-3">
+                      Preferred Time Slots:
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {request.preferredTimeSlots.map((slot, index) => (
+                        <div
+                          key={index}
+                          className="px-4 py-2 bg-primary/10 text-primary rounded-xl text-sm font-medium border border-primary/20"
+                        >
+                          {formatDateTime(slot.start)} - {formatDateTime(slot.end)}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </CardContent>
+            </Card>
           ))
         ) : (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📬</div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              No meeting requests
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              Create a new meeting request to get started
-            </p>
-          </div>
+          <Card className="text-center py-12">
+            <CardContent>
+              <h3 className="text-2xl font-bold text-foreground mb-3">
+                No meeting requests
+              </h3>
+              <p className="text-muted-foreground text-lg">
+                Create a new meeting request to get started
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
 
       {/* Reschedule Modal */}
       {showRescheduleModal && selectedRequest && (
-        <div className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                Reschedule Meeting
-              </h3>
-              <button
-                onClick={() => {
-                  setShowRescheduleModal(false);
-                  setSelectedRequest(null);
-                  setNewTimeSlot({ date: '', time: '' });
-                }}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                ✕
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-xl font-bold">Reschedule Meeting</CardTitle>
+                <button
+                  onClick={() => {
+                    setShowRescheduleModal(false);
+                    setSelectedRequest(null);
+                    setNewTimeSlot({ date: '', time: '' });
+                  }}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            </CardHeader>
 
-            <div className="mb-4">
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
+            <CardContent className="space-y-6">
+              <p className="text-muted-foreground">
                 Reschedule "{selectedRequest.title}"
               </p>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     New Date
                   </label>
                   <input
@@ -338,44 +346,51 @@ export const MeetingRequests: React.FC = () => {
                     value={newTimeSlot.date}
                     onChange={(e) => setNewTimeSlot(prev => ({ ...prev, date: e.target.value }))}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     New Time
                   </label>
                   <input
                     type="time"
                     value={newTimeSlot.time}
                     onChange={(e) => setNewTimeSlot(prev => ({ ...prev, time: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleReschedule(selectedRequest.id)}
-                disabled={rescheduleMutation.isPending || !newTimeSlot.date || !newTimeSlot.time}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
-              >
-                {rescheduleMutation.isPending ? 'Rescheduling...' : 'Reschedule'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowRescheduleModal(false);
-                  setSelectedRequest(null);
-                  setNewTimeSlot({ date: '', time: '' });
-                }}
-                className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleReschedule(selectedRequest.id)}
+                  disabled={rescheduleMutation.isPending || !newTimeSlot.date || !newTimeSlot.time}
+                  className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground transition-all hover:scale-105 font-medium"
+                >
+                  {rescheduleMutation.isPending ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                      Rescheduling...
+                    </div>
+                  ) : (
+                    'Reschedule'
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowRescheduleModal(false);
+                    setSelectedRequest(null);
+                    setNewTimeSlot({ date: '', time: '' });
+                  }}
+                  className="px-4 py-3 bg-muted text-muted-foreground rounded-xl hover:bg-muted/80 transition-all hover:scale-105 font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
