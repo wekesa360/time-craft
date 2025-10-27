@@ -151,98 +151,105 @@ export default function SocialPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Social Hub</h1>
-            <p className="text-muted-foreground mt-1">
-              Connect with others and participate in challenges together
-            </p>
-          </div>
-        </div>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Social</h1>
+        <p className="text-muted-foreground mt-1">Connect with friends and share your wellness journey</p>
+      </div>
 
-        {/* View Navigation */}
-        <TabSwitcher
-          tabs={socialTabs}
-          activeTab={viewMode}
-          onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
-        />
+      {/* View Navigation */}
+      <TabSwitcher
+        tabs={socialTabs}
+        activeTab={viewMode}
+        onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
+      />
 
       {/* Social Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card p-6 border-l-4 border-l-blue-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground-secondary">Connections</p>
-              <p className="text-2xl font-bold text-foreground">{connections.length}</p>
-              <p className="text-xs text-info">Active friends</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-card rounded-2xl p-4 md:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Users className="w-6 h-6 text-blue-600" />
             </div>
-            <div className="p-3 bg-info-light dark:bg-info rounded-lg">
-              <Users className="w-6 h-6 text-info" />
-            </div>
+          </div>
+          <p className="text-2xl md:text-3xl font-bold text-card-foreground">{connections.length}</p>
+          <p className="text-sm text-muted-foreground mt-1">Connections</p>
+          <div className="mt-2 flex items-center gap-1 text-xs text-blue-600 font-medium">
+            <span>Active friends</span>
           </div>
         </div>
 
-        <div className="card p-6 border-l-4 border-l-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground-secondary">Active Challenges</p>
-              <p className="text-2xl font-bold text-foreground">
-                {challenges.filter(c => c.isActive && c.participants.some(p => p.userId === 'current-user')).length}
-              </p>
-              <p className="text-xs text-success">Participating</p>
+        <div className="bg-card rounded-2xl p-4 md:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+              <Target className="w-6 h-6 text-green-600" />
             </div>
-            <div className="p-3 bg-success-light dark:bg-success rounded-lg">
-              <Target className="w-6 h-6 text-success" />
-            </div>
+          </div>
+          <p className="text-2xl md:text-3xl font-bold text-card-foreground">
+            {challenges.filter(c => c.isActive && c.participants.some(p => p.userId === 'current-user')).length}
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">Active Challenges</p>
+          <div className="mt-2 flex items-center gap-1 text-xs text-green-600 font-medium">
+            <span>Participating</span>
           </div>
         </div>
 
-        <div className="card p-6 border-l-4 border-l-purple-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground-secondary">Completed Challenges</p>
-              <p className="text-2xl font-bold text-foreground">
-                {challenges.filter(c => !c.isActive && c.participants.some(p => p.userId === 'current-user')).length}
-              </p>
-              <p className="text-xs text-purple-600">Finished</p>
-            </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-950 rounded-lg">
+        <div className="bg-card rounded-2xl p-4 md:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
               <Trophy className="w-6 h-6 text-purple-600" />
             </div>
           </div>
+          <p className="text-2xl md:text-3xl font-bold text-card-foreground">
+            {challenges.filter(c => !c.isActive && c.participants.some(p => p.userId === 'current-user')).length}
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">Completed</p>
+          <div className="mt-2 flex items-center gap-1 text-xs text-purple-600 font-medium">
+            <span>Finished</span>
+          </div>
         </div>
 
-        <div className="card p-6 border-l-4 border-l-orange-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground-secondary">Pending Requests</p>
-              <p className="text-2xl font-bold text-foreground">{pendingRequests.length}</p>
-              <p className="text-xs text-primary">Awaiting response</p>
+        <div className="bg-card rounded-2xl p-4 md:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-orange-600" />
             </div>
-            <div className="p-3 bg-primary-100 dark:bg-primary rounded-lg">
-              <MessageCircle className="w-6 h-6 text-primary" />
-            </div>
+          </div>
+          <p className="text-2xl md:text-3xl font-bold text-card-foreground">{pendingRequests.length}</p>
+          <p className="text-sm text-muted-foreground mt-1">Pending Requests</p>
+          <div className="mt-2 flex items-center gap-1 text-xs text-orange-600 font-medium">
+            <span>Awaiting response</span>
           </div>
         </div>
       </div>
 
       {/* Content based on view mode */}
       {viewMode === 'feed' && (
-        <ActivityFeed
-          activities={activities}
-          isLoading={activitiesLoading}
-        />
+        <div className="bg-card rounded-2xl p-6 border border-border">
+          <h2 className="text-xl font-bold text-foreground mb-6">Activity Feed</h2>
+          <ActivityFeed
+            activities={activities}
+            isLoading={activitiesLoading}
+          />
+        </div>
       )}
 
       {viewMode === 'challenges' && (
         <div className="space-y-6">
           {/* Challenge Filters */}
-          <div className="flex items-center space-x-4">
-            <span className="text-sm font-medium text-foreground">Filter:</span>
-            <div className="flex items-center space-x-2">
+          <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <h2 className="text-xl font-bold text-foreground">Challenges</h2>
+              <button 
+                onClick={() => setChallengeCreatorOpen(true)}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+              >
+                Create Challenge
+              </button>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-2">
               {[
                 { key: 'all', label: 'All Challenges' },
                 { key: 'active', label: 'Active' },
@@ -252,10 +259,10 @@ export default function SocialPage() {
                 <button
                   key={filter.key}
                   onClick={() => setChallengeFilter(filter.key as any)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                     challengeFilter === filter.key
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-background-secondary text-foreground-secondary hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-white dark:bg-slate-800 border border-border text-foreground hover:border-primary'
                   }`}
                 >
                   {filter.label}
@@ -266,29 +273,32 @@ export default function SocialPage() {
 
           {/* Challenges Grid */}
           {filteredChallenges.length === 0 ? (
-            <div className="card p-12 text-center">
+            <div className="bg-card rounded-2xl p-12 border border-border text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                <Trophy className="w-8 h-8 text-primary" />
+              </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">
                 {challengeFilter === 'all' ? 'No challenges available' : 
                  challengeFilter === 'my' ? 'You haven\'t joined any challenges yet' :
                  challengeFilter === 'active' ? 'No active challenges' :
                  'No completed challenges'}
               </h3>
-              <p className="text-foreground-secondary mb-6">
+              <p className="text-muted-foreground mb-6">
                 {challengeFilter === 'all' ? 'Be the first to create a challenge and motivate others!' :
                  challengeFilter === 'my' ? 'Join a challenge or create your own to get started' :
                  'Check back later for new challenges'}
               </p>
-              <div className="flex items-center justify-center space-x-3">
+              <div className="flex items-center justify-center gap-3">
                 <button 
                   onClick={() => setChallengeCreatorOpen(true)}
-                  className="btn btn-primary"
+                  className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
                 >
                   Create Challenge
                 </button>
                 {challengeFilter !== 'all' && (
                   <button 
                     onClick={() => setChallengeFilter('all')}
-                    className="btn btn-secondary"
+                    className="px-6 py-3 bg-muted text-foreground rounded-xl font-medium hover:bg-muted/80 transition-colors"
                   >
                     View All Challenges
                   </button>
@@ -313,15 +323,18 @@ export default function SocialPage() {
       )}
 
       {viewMode === 'connections' && (
-        <ConnectionsList
-          connections={connections}
-          pendingRequests={pendingRequests}
-          onSendRequest={handleSendConnectionRequest}
-          onAcceptRequest={handleAcceptConnectionRequest}
-          onDeclineRequest={handleDeclineConnectionRequest}
-          onRemoveConnection={() => {}} // TODO: Implement
-          isLoading={connectionsLoading}
-        />
+        <div className="bg-card rounded-2xl p-6 border border-border">
+          <h2 className="text-xl font-bold text-foreground mb-6">Connections</h2>
+          <ConnectionsList
+            connections={connections}
+            pendingRequests={pendingRequests}
+            onSendRequest={handleSendConnectionRequest}
+            onAcceptRequest={handleAcceptConnectionRequest}
+            onDeclineRequest={handleDeclineConnectionRequest}
+            onRemoveConnection={() => {}} // TODO: Implement
+            isLoading={connectionsLoading}
+          />
+        </div>
       )}
 
       {/* Challenge Creator Modal */}
@@ -330,7 +343,6 @@ export default function SocialPage() {
         onClose={() => setChallengeCreatorOpen(false)}
         onSave={handleCreateChallenge}
       />
-      </div>
     </div>
   );
 }

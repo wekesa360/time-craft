@@ -157,14 +157,13 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Tasks</h1>
-            <p className="text-muted-foreground mt-1">Manage your tasks and stay organized</p>
-          </div>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Tasks</h1>
+          <p className="text-muted-foreground mt-1">Manage your tasks with AI-powered prioritization</p>
+        </div>
         <div className="flex gap-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -180,6 +179,22 @@ export default function TasksPage() {
             <Plus className="w-5 h-5" />
             Add Task
           </button>
+        </div>
+      </div>
+
+      {/* AI Suggestion Banner */}
+      <div className="bg-primary/10 rounded-2xl p-6 border border-primary/20">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-foreground mb-1">AI Recommendation</h3>
+            <p className="text-sm text-foreground leading-relaxed">
+              Based on your deadlines and energy patterns, I recommend starting with high-priority tasks during your peak focus hours. 
+              Consider breaking larger tasks into smaller, manageable chunks for better completion rates.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -234,7 +249,7 @@ export default function TasksPage() {
             <div className="bg-card rounded-2xl p-6 border border-border">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Flag className="w-5 h-5 text-error-light0" />
+                  <Flag className="w-5 h-5 text-red-500" />
                   High Priority
                 </h2>
                 <span className="text-sm text-muted-foreground">{filteredTasks.high.length} tasks</span>
@@ -265,7 +280,7 @@ export default function TasksPage() {
             <div className="bg-card rounded-2xl p-6 border border-border">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Flag className="w-5 h-5 text-warning" />
+                  <Flag className="w-5 h-5 text-yellow-500" />
                   Medium Priority
                 </h2>
                 <span className="text-sm text-muted-foreground">{filteredTasks.medium.length} tasks</span>
@@ -296,7 +311,7 @@ export default function TasksPage() {
             <div className="bg-card rounded-2xl p-6 border border-border">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Flag className="w-5 h-5 text-success" />
+                  <Flag className="w-5 h-5 text-green-500" />
                   Low Priority
                 </h2>
                 <span className="text-sm text-muted-foreground">{filteredTasks.low.length} tasks</span>
@@ -322,48 +337,38 @@ export default function TasksPage() {
             </div>
           )}
 
-          {/* Completed Tasks */}
-          {filteredTasks.completed.length > 0 && (
-            <div className="bg-card rounded-2xl p-6 border border-border">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Completed
-                </h2>
-                <span className="text-sm text-muted-foreground">{filteredTasks.completed.length} tasks</span>
-              </div>
+      {/* Completed Tasks */}
+      {filteredTasks.completed.length > 0 && (
+        <div className="bg-card rounded-2xl p-6 border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-foreground">Completed Today</h2>
+            <span className="text-sm text-primary font-medium">{filteredTasks.completed.length} tasks</span>
+          </div>
 
-              <div className="space-y-3">
-                {filteredTasks.completed.map((task) => (
-                  <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-primary/10">
-                    <div className="w-5 h-5 rounded bg-primary flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-foreground line-through opacity-70">{task.title}</p>
-                      {task.description && (
-                        <p className="text-xs text-muted-foreground line-through opacity-50">{task.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-1 rounded ${getPriorityColor(task.priority)} bg-current/10`}>
-                        {getPriorityLabel(task.priority)}
-                      </span>
-                      {task.completed_at && (
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(task.completed_at).toLocaleTimeString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+          <div className="space-y-2">
+            {filteredTasks.completed.map((task) => (
+              <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-primary/10">
+                <div className="w-5 h-5 rounded bg-primary flex items-center justify-center flex-shrink-0">
+                  <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-foreground line-through opacity-70">{task.title}</p>
+                  {task.description && (
+                    <p className="text-xs text-muted-foreground line-through opacity-50">{task.description}</p>
+                  )}
+                </div>
+                {task.completed_at && (
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(task.completed_at).toLocaleTimeString()}
+                  </span>
+                )}
               </div>
-            </div>
-          )}
+            ))}
+          </div>
+        </div>
+      )}
         </div>
       )}
 
@@ -403,7 +408,7 @@ export default function TasksPage() {
 
       {/* View Task Modal */}
       {viewingTask && (
-        <div className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -429,19 +434,19 @@ export default function TasksPage() {
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <div className={`w-3 h-3 rounded-full ${
-                      viewingTask.priority === 4 ? 'bg-error' :
-                      viewingTask.priority === 3 ? 'bg-primary-500' :
-                      viewingTask.priority === 2 ? 'bg-warning-light0' :
-                      'bg-success-light0'
+                      viewingTask.priority === 4 ? 'bg-red-500' :
+                      viewingTask.priority === 3 ? 'bg-yellow-500' :
+                      viewingTask.priority === 2 ? 'bg-green-500' :
+                      'bg-blue-500'
                     }`}></div>
                     <span className="text-sm font-medium text-foreground">
                       {getPriorityLabel(viewingTask.priority)} Priority
                     </span>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    viewingTask.status === 'done' ? 'bg-success-light text-success dark:bg-success dark:text-success-light' :
-                    viewingTask.status === 'pending' ? 'bg-warning-light text-warning dark:bg-warning dark:text-warning-light' :
-                    'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground'
+                    viewingTask.status === 'done' ? 'bg-green-100 text-green-700' :
+                    viewingTask.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-gray-100 text-gray-700'
                   }`}>
                     {viewingTask.status.charAt(0).toUpperCase() + viewingTask.status.slice(1)}
                   </span>
@@ -498,7 +503,6 @@ export default function TasksPage() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
