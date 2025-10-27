@@ -61,6 +61,17 @@ export default function HealthPage() {
   const logMoodMutation = useLogMoodMutation();
   const logHydrationMutation = useLogHydrationMutation();
 
+  // Debug logging for health data
+  React.useEffect(() => {
+    console.log('HealthPage loaded data:', {
+      summary,
+      insights,
+      logsCount: logs.length,
+      goalsCount: goals.length,
+      logs: logs.slice(0, 3) // First 3 logs
+    });
+  }, [summary, insights, logs, goals]);
+
   // Handlers
   const handleLogExercise = async (data: ExerciseData) => {
     try {
@@ -211,62 +222,99 @@ export default function HealthPage() {
       {viewMode === 'dashboard' && (
         <div className="space-y-6">
           {/* Nutrition Overview */}
-          <div className="bg-card rounded-2xl p-6 border border-border">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-foreground">Today's Nutrition</h2>
-              <span className="text-sm text-muted-foreground">
-                {summary?.nutritionCount || 0} / 2,300 kcal
-              </span>
-            </div>
+          {(() => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayLogs = logs.filter(log => log.type === 'nutrition' && log.recordedAt >= today.getTime());
+            const totalCalories = todayLogs.reduce((sum, log) => {
+              const payload = log.payload as any;
+              return sum + (payload?.calories || payload?.total_calories || 0);
+            }, 0);
+            const calorieTarget = 2300;
 
-            {/* Calorie Progress */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-foreground">Calories</span>
-                <span className="text-sm text-primary font-medium">
-                  {Math.round(((summary?.nutritionCount || 0) / 2300) * 100)}%
-                </span>
-              </div>
-              <div className="h-3 bg-muted rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary rounded-full" 
-                  style={{ width: `${Math.min(100, ((summary?.nutritionCount || 0) / 2300) * 100)}%` }} 
-                />
-              </div>
-            </div>
+            return (
+              <div className="bg-card rounded-2xl p-6 border border-border">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-foreground">Today's Nutrition</h2>
+                  <span className="text-sm text-muted-foreground">
+                    {totalCalories} / {calorieTarget.toLocaleString()} kcal
+                  </span>
+                </div>
 
-            {/* Macros */}
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Carbs</span>
-                  <span className="text-xs text-muted-foreground">112 / 240g</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-orange-400 rounded-full" style={{ width: "47%" }} />
+                {/* Calorie Progress */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-foreground">Calories</span>
+                    <span className="text-sm text-primary font-medium">
+                      {Math.round((totalCalories / calorieTarget) * 100)}%
+                    </span>
+                  </div>
+                  <div className="h-3 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary rounded-full" 
+                      style={{ width: `${Math.min(100, (totalCalories / calorieTarget) * 100)}%` }} 
+                    />
+                  </div>
                 </div>
               </div>
+            );
+          })()}
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Protein</span>
-                  <span className="text-xs text-muted-foreground">48 / 140g</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-purple-400 rounded-full" style={{ width: "34%" }} />
-                </div>
-              </div>
+            {/* Macros - Calculate from nutrition logs */}
+            {(() => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const todayLogs = logs.filter(log => log.type === 'nutrition' && log.recordedAt >= today.getTime());
+              const totalMacros = todayLogs.reduce((acc, log) => {
+                const payload = log.payload as any;
+                return {
+                  carbs: acc.carbs + (payload?.carbs || payload?.carb || 0),
+                  protein: acc.protein + (payload?.protein || 0),
+                  fat: acc.fat + (payload?.fat || 0),
+                };
+              }, { carbs: 0, protein: 0, fat: 0 });
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Fats</span>
-                  <span className="text-xs text-muted-foreground">32 / 110g</span>
+              const macroTargets = { carbs: 240, protein: 140, fat: 110 };
+              const macroPercentages = {
+                carbs: Math.min(100, (totalMacros.carbs / macroTargets.carbs) * 100),
+                protein: Math.min(100, (totalMacros.protein / macroTargets.protein) * 100),
+                fat: Math.min(100, (totalMacros.fat / macroTargets.fat) * 100),
+              };
+
+              return (
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">Carbs</span>
+                      <span className="text-xs text-muted-foreground">{Math.round(totalMacros.carbs)} / {macroTargets.carbs}g</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-orange-400 rounded-full" style={{ width: `${macroPercentages.carbs}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">Protein</span>
+                      <span className="text-xs text-muted-foreground">{Math.round(totalMacros.protein)} / {macroTargets.protein}g</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-purple-400 rounded-full" style={{ width: `${macroPercentages.protein}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">Fats</span>
+                      <span className="text-xs text-muted-foreground">{Math.round(totalMacros.fat)} / {macroTargets.fat}g</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-teal-400 rounded-full" style={{ width: `${macroPercentages.fat}%` }} />
+                    </div>
+                  </div>
                 </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-teal-400 rounded-full" style={{ width: "29%" }} />
-                </div>
-              </div>
-            </div>
+              );
+            })()}
           </div>
 
           {/* Recent Activity Grid */}
@@ -285,26 +333,32 @@ export default function HealthPage() {
               </div>
 
               <div className="space-y-3">
-                {logs.filter(log => log.type === 'nutrition').slice(0, 3).map((log) => (
-                  <div
-                    key={log.id}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border"
-                  >
-                    <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                      <Heart className="w-6 h-6 text-orange-600" />
+                {logs.filter(log => log.type === 'nutrition').slice(0, 3).map((log) => {
+                  const payload = log.payload as NutritionData;
+                  const calories = payload?.calories || payload?.total_calories || 0;
+                  return (
+                    <div
+                      key={log.id}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border"
+                    >
+                      <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                        <Heart className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">
+                          {payload?.mealType ? `${payload.mealType.charAt(0).toUpperCase() + payload.mealType.slice(1)}` : 'Nutrition Entry'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(log.recordedAt).toLocaleDateString()} at {new Date(log.recordedAt).toLocaleTimeString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-foreground">{calories}</p>
+                        <p className="text-xs text-muted-foreground">kcal</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground">Nutrition Entry</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(log.recordedAt).toLocaleDateString()} at {new Date(log.recordedAt).toLocaleTimeString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-foreground">--</p>
-                      <p className="text-xs text-muted-foreground">kcal</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {logs.filter(log => log.type === 'nutrition').length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     No nutrition logs yet
@@ -327,26 +381,35 @@ export default function HealthPage() {
               </div>
 
               <div className="space-y-3">
-                {logs.filter(log => log.type === 'exercise').slice(0, 3).map((log) => (
-                  <div
-                    key={log.id}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border"
-                  >
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Activity className="w-6 h-6 text-primary" />
+                {logs.filter(log => log.type === 'exercise').slice(0, 3).map((log) => {
+                  const payload = log.payload as ExerciseData | any;
+                  const calories = payload?.calories_burned || payload?.caloriesBurned || 0;
+                  const activity = payload?.activity || 'Exercise';
+                  const duration = payload?.duration_minutes || payload?.durationMinutes || 0;
+                  return (
+                    <div
+                      key={log.id}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border"
+                    >
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Activity className="w-6 h-6 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate capitalize">
+                          {activity}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {duration ? `${duration} min • ` : ''}
+                          {new Date(log.recordedAt).toLocaleDateString()} at {new Date(log.recordedAt).toLocaleTimeString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-foreground">{calories}</p>
+                        <p className="text-xs text-muted-foreground">kcal</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground">Exercise Session</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(log.recordedAt).toLocaleDateString()} at {new Date(log.recordedAt).toLocaleTimeString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-foreground">--</p>
-                      <p className="text-xs text-muted-foreground">-- kcal</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {logs.filter(log => log.type === 'exercise').length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     No exercise logs yet
