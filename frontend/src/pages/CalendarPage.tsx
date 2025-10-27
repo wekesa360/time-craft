@@ -45,6 +45,16 @@ export default function CalendarPage() {
     return eventDate > today;
   }).slice(0, 6) || [];
 
+  // Debug logging for calendar data
+  React.useEffect(() => {
+    console.log('CalendarPage loaded data:', {
+      todayEventsCount: todayEvents.length,
+      upcomingEventsCount: upcomingEvents.length,
+      todayEvents,
+      upcomingEvents
+    });
+  }, [todayEvents, upcomingEvents]);
+
   const getEventColor = (eventType: string) => {
     const colors = {
       meeting: 'bg-red-500',

@@ -49,6 +49,17 @@ const CalendarView: React.FC = () => {
   const deleteEventMutation = useDeleteEventMutation();
   const updateEventMutation = useUpdateEventMutation();
 
+  // Debug logging for calendar events
+  React.useEffect(() => {
+    console.log('CalendarView loaded events:', {
+      viewMode,
+      currentDate: currentDate.toISOString(),
+      dateRange: getDateRange(),
+      eventsCount: eventsData?.data?.length || 0,
+      events: eventsData?.data
+    });
+  }, [eventsData, viewMode, currentDate]);
+
   // Helper functions for event management
   const handleEditEvent = (event: CalendarEvent) => {
     setEditForm({
