@@ -18,6 +18,9 @@
     "test:auth": "vitest run tests/integration/auth.test.ts",
     "test:core": "vitest run tests/integration/core.test.ts",
     "test:health": "vitest run tests/integration/health.test.ts",
+    "seed:info": "tsx seeders/run-seeder.ts",
+    "seed:init-local": "wrangler d1 execute DB --local --env local --file=init-db.sql",
+    "seed:init-remote": "wrangler d1 execute DB --env production --file=init-db.sql",
     "test:ai": "vitest run tests/integration/ai.test.ts",
     "test:notifications": "vitest run tests/integration/notifications.test.ts",
     "test:badges": "vitest run tests/integration/badges.test.ts",
@@ -36,6 +39,7 @@
     "eslint": "^8.57.0",
     "miniflare": "^3.20250718.1",
     "prettier": "^3.3.2",
+    "tsx": "^4.20.6",
     "typescript": "^5.5.2",
     "vitest": "^1.6.0",
     "wrangler": "^3.60.3"

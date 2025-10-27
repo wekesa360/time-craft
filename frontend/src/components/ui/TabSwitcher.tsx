@@ -26,7 +26,7 @@ export const TabSwitcher: React.FC<TabSwitcherProps> = ({
           key={tab.id}
           onClick={() => !tab.disabled && onTabChange(tab.id)}
           disabled={tab.disabled}
-          className={`px-4 py-3 rounded-xl font-medium transition-all hover:scale-105 ${
+          className={`px-4 py-3 rounded-xl font-medium transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2 ${
             activeTab === tab.id
               ? 'bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/20'
               : 'bg-card border border-border text-foreground hover:bg-muted hover:border-primary/50'
@@ -35,6 +35,7 @@ export const TabSwitcher: React.FC<TabSwitcherProps> = ({
               ? 'opacity-50 cursor-not-allowed hover:scale-100' 
               : ''
           }`}
+          style={{ outline: 'none' }}
         >
           {tab.label}
         </button>

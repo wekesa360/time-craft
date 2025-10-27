@@ -443,4 +443,111 @@ app.get('/system-health', authenticateUser, adminMiddleware('system_monitoring')
   }
 });
 
+/**
+ * POST /api/admin/seed-database
+ * Seed database with development data (development only)
+ */
+app.post('/seed-database', authenticateUser, adminMiddleware('system_monitoring'), async (c) => {
+  try {
+    // Only allow in development environment
+    if (c.env.ENVIRONMENT !== 'development' && c.env.ENVIRONMENT !== 'local') {
+      return c.json({ error: 'Database seeding is only allowed in development environments' }, 403);
+    }
+
+    const admin = c.get('admin');
+    const { clearExisting = true, verbose = false } = await c.req.json().catch(() => ({}));
+    
+    // Import the seeder
+    const { DatabaseSeeder } = await import('../../seeders/seeder');
+    const seeder = new DatabaseSeeder(c.env);
+    
+    console.log(`🌱 Admin ${admin.id} initiated database seeding`);
+    
+    // Run the seeder
+    const result = await seeder.seedDevelopmentData({
+      clearExisting,
+      verbose: true // Always verbose for admin logs
+    });
+    
+    // Log admin action
+    await adminService.logAdminAction(
+      admin.id, 
+      'seed_database', 
+      'system', 
+      'database', 
+      { clearExisting, verbose },
+      result
+    );
+
+    console.log(`✅ Database seeding completed by admin ${admin.id}`);
+
+    return c.json({
+      success: true,
+      data: {
+        ...result,
+        seeded_by: admin.id,
+        seeded_at: Date.now(),
+        options: { clearExisting, verbose }
+      }
+    });
+  } catch (error) {
+    console.error('Error seeding database:', error);
+    return c.json({ 
+      error: 'Failed to seed database', 
+      details: error.message 
+    }, 500);
+  }
+});
+
+/**
+ * GET /api/admin/seed-info
+ * Get information about the database seeder
+ */
+app.get('/seed-info', authenticateUser, adminMiddleware('system_monitoring'), async (c) => {
+  try {
+    const seedInfo = {
+      environment: c.env.ENVIRONMENT,
+      seeding_allowed: c.env.ENVIRONMENT === 'development' || c.env.ENVIRONMENT === 'local',
+      tables_seeded: 20,
+      total_records: 65,
+      coverage: '50%',
+      tables: [
+        'users (3 records)',
+        'achievement_definitions (4 records)',
+        'user_achievements (4 records)',
+        'tasks (6 records)',
+        'health_logs (5 records)',
+        'calendar_events (4 records)',
+        'habits (4 records)',
+        'goals (2 records)',
+        'gratitude_entries (4 records)',
+        'focus_sessions (3 records)',
+        'focus_templates (3 records)',
+        'reflection_entries (3 records)',
+        'social_connections (3 records)',
+        'user_badges (3 records)',
+        'challenges (2 records)',
+        'challenge_participants (4 records)',
+        'notification_preferences (3 records)',
+        'external_tokens (2 records)',
+        'file_assets (3 records)',
+        'calendar_connections (2 records)'
+      ],
+      test_users: [
+        'john.doe@example.com (Premium user)',
+        'jane.student@university.edu (Student user)',
+        'mike.wilson@example.com (Free user)'
+      ]
+    };
+
+    return c.json({
+      success: true,
+      data: seedInfo
+    });
+  } catch (error) {
+    console.error('Error getting seed info:', error);
+    return c.json({ error: 'Failed to get seed information' }, 500);
+  }
+});
+
 export default app;
