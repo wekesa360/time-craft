@@ -124,7 +124,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
       {/* Header with avatar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -537,6 +538,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

@@ -6,6 +6,8 @@ import { ThemeSelector } from '../components/ui/ThemeSelector';
 import { LocalizationSection } from '../components/settings/LocalizationSection';
 import { LanguagePreferencesSectionWithSuspense as LanguagePreferencesSection } from '../components/localization/LazyLocalizationComponents';
 import { GermanTextOptimizer, GermanTitle } from '../components/common/GermanTextOptimizer';
+import TabSwitcher from '../components/ui/TabSwitcher';
+import type { TabItem } from '../components/ui/TabSwitcher';
 import { 
   User, Bell, Shield, Globe, Palette, Database, 
   Camera, CreditCard, Key, Trash2, Download, 
@@ -40,6 +42,8 @@ interface SecurityForm {
   enable2FA: boolean;
 }
 
+type SettingsTab = 'profile' | 'appearance' | 'notifications' | 'subscription' | 'security' | 'language' | 'privacy';
+
 export default function SettingsPage() {
   const { t, i18n } = useTranslation();
   const { user, updateProfile } = useAuthStore();
@@ -47,7 +51,7 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // State management
-  const [activeSection, setActiveSection] = useState('profile');
+  const [activeSection, setActiveSection] = useState<SettingsTab>('profile');
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -210,17 +214,21 @@ export default function SettingsPage() {
     }
   }, [t]);
   
+  // Tab configuration
+  const settingsTabs: TabItem[] = [
+    { id: 'profile', label: t('settings.profile', 'Profile') },
+    { id: 'appearance', label: t('settings.themeSettings.appearance', 'Appearance') },
+    { id: 'notifications', label: t('settings.notifications', 'Notifications') },
+    { id: 'subscription', label: t('settings.subscription', 'Subscription') },
+    { id: 'security', label: t('settings.security', 'Security') },
+    { id: 'language', label: t('settings.language', 'Language') },
+    { id: 'privacy', label: t('settings.privacy', 'Privacy & Data') },
+  ];
+
   if (profileLoading) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-background-tertiary rounded w-1/4 mb-4"></div>
-          <div className="h-4 bg-background-tertiary rounded w-1/2 mb-8"></div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="h-64 bg-background-tertiary rounded"></div>
-            <div className="lg:col-span-2 h-96 bg-background-tertiary rounded"></div>
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       </div>
     );
   }
@@ -228,117 +236,33 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-[1600px] mx-auto space-y-6">
-        {/* Header */}
-        <GermanTextOptimizer className="mb-8">
-          <GermanTitle level={1} className="text-3xl font-bold text-foreground mb-2">
-            {t('settings.title')}
-          </GermanTitle>
-          <p className="text-foreground-secondary">
-            {t('settings.description', 'Manage your account preferences and application settings')}
-          </p>
-        </GermanTextOptimizer>
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Settings</h1>
+        <p className="text-muted-foreground mt-1">Manage your account preferences and application settings</p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Settings Navigation */}
-        <div className="lg:col-span-1">
-          <div className="card p-4 sticky top-6">
-            <nav className="space-y-2" aria-label={t('settings.navigation', 'Settings navigation')}>
-              <button
-                onClick={() => setActiveSection('profile')}
-                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeSection === 'profile'
-                    ? 'text-primary-600 bg-primary-50 dark:bg-primary-950 dark:text-primary-400'
-                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
-                }`}
-              >
-                <User className="w-4 h-4" aria-hidden="true" />
-                <span>{t('settings.profile', 'Profile')}</span>
-              </button>
-              <button
-                onClick={() => setActiveSection('appearance')}
-                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeSection === 'appearance'
-                    ? 'text-primary-600 bg-primary-50 dark:bg-primary-950 dark:text-primary-400'
-                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
-                }`}
-              >
-                <Palette className="w-4 h-4" aria-hidden="true" />
-                <span>{t('settings.themeSettings.appearance', 'Appearance')}</span>
-              </button>
-              <button
-                onClick={() => setActiveSection('notifications')}
-                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeSection === 'notifications'
-                    ? 'text-primary-600 bg-primary-50 dark:bg-primary-950 dark:text-primary-400'
-                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
-                }`}
-              >
-                <Bell className="w-4 h-4" aria-hidden="true" />
-                <span>{t('settings.notifications', 'Notifications')}</span>
-              </button>
-              <button
-                onClick={() => setActiveSection('subscription')}
-                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeSection === 'subscription'
-                    ? 'text-primary-600 bg-primary-50 dark:bg-primary-950 dark:text-primary-400'
-                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
-                }`}
-              >
-                <CreditCard className="w-4 h-4" aria-hidden="true" />
-                <span>{t('settings.subscription', 'Subscription')}</span>
-              </button>
-              <button
-                onClick={() => setActiveSection('security')}
-                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeSection === 'security'
-                    ? 'text-primary-600 bg-primary-50 dark:bg-primary-950 dark:text-primary-400'
-                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
-                }`}
-              >
-                <Shield className="w-4 h-4" aria-hidden="true" />
-                <span>{t('settings.security', 'Security')}</span>
-              </button>
-              <button
-                onClick={() => setActiveSection('language')}
-                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeSection === 'language'
-                    ? 'text-primary-600 bg-primary-50 dark:bg-primary-950 dark:text-primary-400'
-                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
-                }`}
-              >
-                <Globe className="w-4 h-4" aria-hidden="true" />
-                <span>{t('settings.language', 'Language')}</span>
-              </button>
-              <button
-                onClick={() => setActiveSection('privacy')}
-                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeSection === 'privacy'
-                    ? 'text-primary-600 bg-primary-50 dark:bg-primary-950 dark:text-primary-400'
-                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
-                }`}
-              >
-                <span>{t('settings.privacy', 'Privacy & Data')}</span>
-              </button>
-            </nav>
-          </div>
-        </div>
+      {/* Tab Navigation */}
+      <TabSwitcher
+        tabs={settingsTabs}
+        activeTab={activeSection}
+        onTabChange={(tabId) => setActiveSection(tabId as SettingsTab)}
+      />
 
-        {/* Settings Content */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Profile Settings */}
-          {activeSection === 'profile' && (
-            <section className="space-y-6">
-              {/* Profile Header */}
-              <div className="card p-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <User className="w-5 h-5 text-primary-500" />
-                  <GermanTitle level={2} className="text-xl font-semibold text-foreground">
-                    {t('settings.profile', 'Profile')}
-                  </GermanTitle>
-                </div>
-                
-                {/* Avatar Section */}
-                <div className="flex items-center space-x-6 mb-6 p-4 bg-background-secondary rounded-lg">
+      {/* Settings Content */}
+      <div className="space-y-6">
+        {/* Profile Settings */}
+        {activeSection === 'profile' && (
+          <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="flex items-center space-x-3 mb-6">
+              <User className="w-5 h-5 text-primary-500" />
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('settings.profile', 'Profile')}
+              </h2>
+            </div>
+            
+            {/* Avatar Section */}
+            <div className="flex items-center space-x-6 mb-6 p-4 bg-background-secondary rounded-lg">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-950 flex items-center justify-center overflow-hidden">
                       {avatarPreview || profile?.avatar ? (
@@ -508,36 +432,33 @@ export default function SettingsPage() {
                       )}
                     </button>
                   </div>
-                </form>
-              </div>
-            </section>
-          )}
-          
-          {/* Appearance Settings */}
-          {activeSection === 'appearance' && (
-            <section className="card p-6">
-              <div className="flex items-center space-x-3 mb-6">
-                <Palette className="w-5 h-5 text-primary-500" aria-hidden="true" />
-                <GermanTitle level={2} className="text-xl font-semibold text-foreground">
-                  {t('settings.themeSettings.appearance', 'Appearance')}
-                </GermanTitle>
-              </div>
-              
-              <ThemeSelector />
-            </section>
-          )}
+            </form>
+          </div>
+        )}
+        
+        {/* Appearance Settings */}
+        {activeSection === 'appearance' && (
+          <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="flex items-center space-x-3 mb-6">
+              <Palette className="w-5 h-5 text-primary-500" aria-hidden="true" />
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('settings.themeSettings.appearance', 'Appearance')}
+              </h2>
+            </div>
+            
+            <ThemeSelector />
+          </div>
+        )}
 
-
-          {/* Notifications Settings */}
-          {activeSection === 'notifications' && (
-            <section className="space-y-6">
-              <div className="card p-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <Bell className="w-5 h-5 text-primary-500" />
-                  <GermanTitle level={2} className="text-xl font-semibold text-foreground">
-                    {t('settings.notifications', 'Notifications')}
-                  </GermanTitle>
-                </div>
+        {/* Notifications Settings */}
+        {activeSection === 'notifications' && (
+          <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="flex items-center space-x-3 mb-6">
+              <Bell className="w-5 h-5 text-primary-500" />
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('settings.notifications', 'Notifications')}
+              </h2>
+            </div>
                 
                 {notificationLoading ? (
                   <div className="space-y-4">
@@ -696,21 +617,19 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
-            </section>
-          )}
+            )}
+          </div>
+        )}
 
-
-          {/* Subscription Settings */}
-          {activeSection === 'subscription' && (
-            <section className="card p-6">
-              <div className="flex items-center space-x-3 mb-6">
-                <CreditCard className="w-5 h-5 text-primary-500" />
-                <GermanTitle level={2} className="text-xl font-semibold text-foreground">
-                  {t('settings.subscription', 'Subscription')}
-                </GermanTitle>
-              </div>
+        {/* Subscription Settings */}
+        {activeSection === 'subscription' && (
+          <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="flex items-center space-x-3 mb-6">
+              <CreditCard className="w-5 h-5 text-primary-500" />
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('settings.subscription', 'Subscription')}
+              </h2>
+            </div>
               
               {subscriptionLoading ? (
                 <div className="space-y-4 animate-pulse">
@@ -847,37 +766,36 @@ export default function SettingsPage() {
                     </div>
                   )}
                 </div>
-              )}
-            </section>
-          )}
-          
-          {/* Security Settings */}
-          {activeSection === 'security' && (
-            <section className="space-y-6">
-              <div className="card p-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <Shield className="w-5 h-5 text-primary-500" />
-                  <GermanTitle level={2} className="text-xl font-semibold text-foreground">
-                    {t('settings.security', 'Security')}
-                  </GermanTitle>
-                </div>
-                
-                <div className="space-y-6">
-                  {/* Password Change */}
+            )}
+          </div>
+        )}
+        
+        {/* Security Settings */}
+        {activeSection === 'security' && (
+          <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="flex items-center space-x-3 mb-6">
+              <Shield className="w-5 h-5 text-primary-500" />
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('settings.security', 'Security')}
+              </h2>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Password Change */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-foreground">{t('settings.changePassword', 'Change Password')}</h3>
-                        <p className="text-xs text-foreground-secondary">{t('settings.passwordLastChanged', 'Last changed 30 days ago')}</p>
-                      </div>
-                      <button
-                        onClick={() => setShowPasswordForm(!showPasswordForm)}
-                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground dark:text-muted-foreground bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-muted dark:hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                      >
-                        <Key className="w-4 h-4 mr-2" />
-                        {t('settings.changePassword', 'Change Password')}
-                      </button>
-                    </div>
+                    <h3 className="text-sm font-medium text-foreground">{t('settings.changePassword', 'Change Password')}</h3>
+                    <p className="text-xs text-foreground-secondary">{t('settings.passwordLastChanged', 'Last changed 30 days ago')}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowPasswordForm(!showPasswordForm)}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground dark:text-muted-foreground bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-muted dark:hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                  >
+                    <Key className="w-4 h-4 mr-2" />
+                    {t('settings.changePassword', 'Change Password')}
+                  </button>
+                </div>
                     
                     {showPasswordForm && (
                       <form onSubmit={securityForm.handleSubmit(handleSecuritySubmit)} className="space-y-4 p-4 bg-background-secondary rounded-lg">
@@ -993,25 +911,23 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </section>
-          )}
-          
-          {/* Privacy & Data Settings */}
-          {activeSection === 'privacy' && (
-            <section className="space-y-6">
-              <div className="card p-6">
-                <div className="mb-6">
-                  <GermanTitle level={2} className="text-xl font-semibold text-foreground">
-                    {t('settings.privacy', 'Privacy & Data')}
-                  </GermanTitle>
-                </div>
-                
-                <div className="space-y-6">
-                  {/* Data Collection */}
-                  <div>
-                    <h3 className="text-sm font-medium text-foreground mb-4">{t('settings.dataCollection', 'Data Collection')}</h3>
+            </div>
+          </div>
+        )}
+        
+        {/* Privacy & Data Settings */}
+        {activeSection === 'privacy' && (
+          <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('settings.privacy', 'Privacy & Data')}
+              </h2>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Data Collection */}
+              <div>
+                <h3 className="text-sm font-medium text-foreground mb-4">{t('settings.dataCollection', 'Data Collection')}</h3>
                     <p className="text-xs text-foreground-secondary mb-4">
                       {t('settings.dataCollectionDesc', 'Control what data is collected to improve your experience')}
                     </p>
@@ -1062,19 +978,23 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </section>
-          )}
+            </div>
+          </div>
+        )}
 
-          {/* Language Section */}
-          {activeSection === 'language' && (
+        {/* Language Section */}
+        {activeSection === 'language' && (
+          <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('settings.language', 'Language')}
+              </h2>
+            </div>
             <LanguagePreferencesSection />
-          )}
-
-        </div>
+          </div>
+        )}
       </div>
-      </div>
+    </div>
     </div>
   );
 }

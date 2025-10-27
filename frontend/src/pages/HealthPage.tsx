@@ -152,7 +152,8 @@ export default function HealthPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground">Health & Fitness</h1>
@@ -560,6 +561,7 @@ export default function HealthPage() {
         onClose={() => setActiveLogger(null)}
         onSave={handleCreateGoal}
       />
+      </div>
     </div>
   );
 }
