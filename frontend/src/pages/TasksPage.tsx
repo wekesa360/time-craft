@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, Clock, Flag, CalendarIcon, Sparkles, X, Filter, MoreHorizontal } from "lucide-react";
@@ -29,6 +29,19 @@ export default function TasksPage() {
     search: searchQuery,
     ...filters
   });
+
+  // Log fetched tasks
+  useEffect(() => {
+    if (tasks.length > 0) {
+      console.log('📋 TasksPage: Loaded', tasks.length, 'tasks from backend');
+      console.log('Tasks breakdown:', {
+        high: tasks.filter(t => t.priority === 4).length,
+        medium: tasks.filter(t => t.priority === 3).length,
+        low: tasks.filter(t => t.priority <= 2).length,
+        completed: tasks.filter(t => t.status === 'done').length,
+      });
+    }
+  }, [tasks]);
 
   // Mutations
   const createTaskMutation = useCreateTaskMutation();
@@ -80,10 +93,12 @@ export default function TasksPage() {
 
   const handleCreateTask = async (data: TaskFormType) => {
     try {
+      console.log('📝 Creating task:', data);
       await createTaskMutation.mutateAsync(data);
+      console.log('✅ Task created successfully');
       setShowAddTask(false);
     } catch (error) {
-      console.error('Failed to create task:', error);
+      console.error('❌ Failed to create task:', error);
     }
   };
 
@@ -91,29 +106,35 @@ export default function TasksPage() {
     if (!editingTask) return;
     
     try {
+      console.log('✏️ Updating task:', editingTask.id, data);
       await updateTaskMutation.mutateAsync({ id: editingTask.id, data });
+      console.log('✅ Task updated successfully');
       setEditingTask(null);
     } catch (error) {
-      console.error('Failed to update task:', error);
+      console.error('❌ Failed to update task:', error);
     }
   };
 
   const handleDeleteTask = async (id: string) => {
     try {
+      console.log('🗑️ Deleting task:', id);
       await deleteTaskMutation.mutateAsync(id);
+      console.log('✅ Task deleted successfully');
     } catch (error) {
-      console.error('Failed to delete task:', error);
+      console.error('❌ Failed to delete task:', error);
     }
   };
 
   const handleCompleteTask = async (id: string) => {
     try {
+      console.log('✓ Completing task:', id);
       await updateTaskMutation.mutateAsync({ 
         id, 
         data: { status: 'done' } 
       });
+      console.log('✅ Task completed successfully');
     } catch (error) {
-      console.error('Failed to complete task:', error);
+      console.error('❌ Failed to complete task:', error);
     }
   };
 
