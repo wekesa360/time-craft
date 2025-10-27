@@ -232,6 +232,22 @@ export default function HealthPage() {
             }, 0);
             const calorieTarget = 2300;
 
+            const totalMacros = todayLogs.reduce((acc, log) => {
+              const payload = log.payload as any;
+              return {
+                carbs: acc.carbs + (payload?.carbs || payload?.carb || 0),
+                protein: acc.protein + (payload?.protein || 0),
+                fat: acc.fat + (payload?.fat || 0),
+              };
+            }, { carbs: 0, protein: 0, fat: 0 });
+
+            const macroTargets = { carbs: 240, protein: 140, fat: 110 };
+            const macroPercentages = {
+              carbs: Math.min(100, (totalMacros.carbs / macroTargets.carbs) * 100),
+              protein: Math.min(100, (totalMacros.protein / macroTargets.protein) * 100),
+              fat: Math.min(100, (totalMacros.fat / macroTargets.fat) * 100),
+            };
+
             return (
               <div className="bg-card rounded-2xl p-6 border border-border">
                 <div className="flex items-center justify-between mb-6">
@@ -256,32 +272,8 @@ export default function HealthPage() {
                     />
                   </div>
                 </div>
-              </div>
-            );
-          })()}
 
-            {/* Macros - Calculate from nutrition logs */}
-            {(() => {
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              const todayLogs = logs.filter(log => log.type === 'nutrition' && log.recordedAt >= today.getTime());
-              const totalMacros = todayLogs.reduce((acc, log) => {
-                const payload = log.payload as any;
-                return {
-                  carbs: acc.carbs + (payload?.carbs || payload?.carb || 0),
-                  protein: acc.protein + (payload?.protein || 0),
-                  fat: acc.fat + (payload?.fat || 0),
-                };
-              }, { carbs: 0, protein: 0, fat: 0 });
-
-              const macroTargets = { carbs: 240, protein: 140, fat: 110 };
-              const macroPercentages = {
-                carbs: Math.min(100, (totalMacros.carbs / macroTargets.carbs) * 100),
-                protein: Math.min(100, (totalMacros.protein / macroTargets.protein) * 100),
-                fat: Math.min(100, (totalMacros.fat / macroTargets.fat) * 100),
-              };
-
-              return (
+                {/* Macros - Calculate from nutrition logs */}
                 <div className="grid md:grid-cols-3 gap-4">
                   <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
                     <div className="flex items-center justify-between mb-2">
@@ -313,9 +305,9 @@ export default function HealthPage() {
                     </div>
                   </div>
                 </div>
-              );
-            })()}
-          </div>
+              </div>
+            );
+          })()}
 
           {/* Recent Activity Grid */}
           <div className="grid lg:grid-cols-2 gap-6">
