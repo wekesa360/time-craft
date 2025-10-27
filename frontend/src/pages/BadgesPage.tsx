@@ -78,6 +78,18 @@ export default function BadgesPage() {
 
   const isLoading = badgesLoading || leaderboardLoading;
 
+  // Debug logging for badges data
+  React.useEffect(() => {
+    console.log('BadgesPage loaded data:', {
+      badgeData,
+      badgesCount: badges.length,
+      totalBadges,
+      unlockedBadges,
+      leaderboardCount: leaderboard.length,
+      leaderboard
+    });
+  }, [badgeData, badges, totalBadges, unlockedBadges, leaderboard]);
+
   // Tab configuration
   const badgeTabs: TabItem[] = [
     { id: "badges", label: "My Badges" },

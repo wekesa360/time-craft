@@ -15,7 +15,16 @@ export const badgeKeys = {
 export const useBadgesQuery = () => {
   return useQuery({
     queryKey: badgeKeys.user(),
-    queryFn: () => apiClient.getBadges(),
+    queryFn: async () => {
+      const data = await apiClient.getBadges();
+      console.log('useBadgesQuery - fetched badges:', {
+        badgesCount: data?.badges?.length || 0,
+        totalBadges: data?.totalBadges,
+        unlockedBadges: data?.unlockedBadges,
+        data
+      });
+      return data;
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes
   });
@@ -25,7 +34,14 @@ export const useBadgesQuery = () => {
 export const useBadgeLeaderboardQuery = () => {
   return useQuery({
     queryKey: badgeKeys.leaderboard(),
-    queryFn: () => apiClient.getBadgeLeaderboard(),
+    queryFn: async () => {
+      const data = await apiClient.getBadgeLeaderboard();
+      console.log('useBadgeLeaderboardQuery - fetched leaderboard:', {
+        leaderboardCount: data?.length || 0,
+        data
+      });
+      return data;
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
