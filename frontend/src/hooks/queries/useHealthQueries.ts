@@ -75,8 +75,12 @@ export const useLogExerciseMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ExerciseData) => apiClient.logExercise(data),
+    mutationFn: (data: ExerciseData) => {
+      console.log('📝 useLogExerciseMutation called with data:', data);
+      return apiClient.logExercise(data);
+    },
     onMutate: async (newExercise) => {
+      console.log('🔄 Optimistically updating exercise log');
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: healthKeys.logs() });
 
@@ -108,15 +112,18 @@ export const useLogExerciseMutation = () => {
       return { previousLogs };
     },
     onError: (err, newExercise, context) => {
+      console.error('❌ Exercise log mutation error:', err);
       if (context?.previousLogs) {
         queryClient.setQueriesData({ queryKey: healthKeys.logs() }, context.previousLogs);
       }
-      toast.error('Failed to log exercise');
+      toast.error('Failed to log exercise. Please try again.');
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Exercise logged successfully, data:', data);
       toast.success('💪 Exercise logged successfully!');
     },
     onSettled: () => {
+      console.log('🔄 Exercise log settled, invalidating queries');
       queryClient.invalidateQueries({ queryKey: healthKeys.logs() });
       queryClient.invalidateQueries({ queryKey: healthKeys.summary() });
       queryClient.invalidateQueries({ queryKey: healthKeys.insights() });

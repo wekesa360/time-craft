@@ -1230,8 +1230,21 @@ class ApiClient {
   }
 
   async logExercise(data: ExerciseData): Promise<HealthLog> {
-    const response = await this.client.post<{ log: HealthLog }>('/api/health/exercise', data);
-    return response.data.log;
+    console.log('🚀 Sending exercise log to backend:', data);
+    
+    try {
+      const response = await this.client.post<{ log: HealthLog }>('/api/health/exercise', data);
+      console.log('✅ Exercise log response received:', response.data);
+      return response.data.log;
+    } catch (error: any) {
+      console.error('❌ Exercise log failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
+    }
   }
 
   async logNutrition(data: NutritionData): Promise<HealthLog> {

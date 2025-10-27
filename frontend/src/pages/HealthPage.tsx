@@ -65,10 +65,9 @@ export default function HealthPage() {
   const handleLogExercise = async (data: ExerciseData) => {
     try {
       await logExerciseMutation.mutateAsync(data);
-      toast.success('Exercise logged successfully!');
-      setActiveLogger(null);
+      setActiveLogger(null); // Close the logger sheet on success
     } catch (error) {
-      toast.error('Failed to log exercise');
+      // Error toast is already shown by the mutation
     }
   };
 

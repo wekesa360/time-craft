@@ -43,6 +43,8 @@ const exerciseLogSchema = z.object({
   intensity: z.number().int().min(1).max(10),
   caloriesBurned: z.number().int().min(1).optional(),
   distance: z.number().min(0).optional(),
+  heartRateAvg: z.number().int().min(40).max(220).optional(),
+  heartRateMax: z.number().int().min(40).max(220).optional(),
   notes: z.string().max(500).optional(),
   recordedAt: z.number().optional(),
   source: z.enum(['manual', 'auto', 'device']).default('manual'),
@@ -116,6 +118,13 @@ health.post('/exercise', zValidator('json', exerciseLogSchema), async (c) => {
 
   try {
     const data = c.req.valid('json');
+    console.log('📝 Exercise log request received:', { 
+      activity: data.activity, 
+      duration: data.durationMinutes,
+      intensity: data.intensity,
+      userId: auth.userId 
+    });
+    
     const healthRepo = new HealthRepository(c.env);
 
     const exercisePayload: ExercisePayload = {
@@ -127,6 +136,8 @@ health.post('/exercise', zValidator('json', exerciseLogSchema), async (c) => {
       notes: data.notes || undefined
     };
 
+    console.log('✅ Exercise payload created:', exercisePayload);
+
     const healthLog = await healthRepo.logHealthData({
       user_id: auth.userId,
       type: 'exercise',
@@ -136,6 +147,8 @@ health.post('/exercise', zValidator('json', exerciseLogSchema), async (c) => {
       device_type: data.deviceType || null
     });
 
+    console.log('✅ Exercise log saved to database:', healthLog.id);
+
     // Log activity for analytics
     c.env.ANALYTICS?.writeDataPoint({
       blobs: [auth.userId, 'exercise_logged', data.activity],
@@ -143,13 +156,16 @@ health.post('/exercise', zValidator('json', exerciseLogSchema), async (c) => {
       indexes: ['health_activities']
     });
 
+    // Return response matching frontend expectation
     return c.json({
-      message: 'Exercise logged successfully',
       log: healthLog
     }, 201);
   } catch (error) {
-    console.error('Log exercise error:', error);
-    return c.json({ error: 'Internal server error' }, 500);
+    console.error('❌ Log exercise error:', error);
+    return c.json({ 
+      error: 'Failed to log exercise',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, 500);
   }
 });
 
