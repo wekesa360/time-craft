@@ -14,6 +14,7 @@ interface AuthStore extends AuthState {
   
   // Actions
   login: (credentials: LoginForm) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   loginWithBiometric: () => Promise<void>;
   register: (data: RegisterForm) => Promise<void>;
   logout: () => Promise<void>;
@@ -105,7 +106,7 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
           });
           
-          await apiClient.setTokens(response.tokens);
+          await apiClient.setTokens(response.tokens.accessToken, response.tokens.refreshToken);
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -133,9 +134,9 @@ export const useAuthStore = create<AuthStore>()(
         if (!tokens?.refreshToken) return;
 
         try {
-          const newTokens = await apiClient.refreshTokens(tokens.refreshToken);
-          set({ tokens: newTokens });
-          await apiClient.setTokens(newTokens);
+          // The refresh is handled automatically by the API client interceptors
+          // This method is kept for compatibility but the actual refresh
+          // happens in the API client's response interceptor
         } catch (error) {
           console.error('Token refresh failed:', error);
           get().logout();
@@ -232,14 +233,13 @@ export const useAuthStore = create<AuthStore>()(
           await get().initializeBiometric();
           
           if (tokens?.accessToken) {
-            // Validate the token
-            const validation = await apiClient.validateToken();
-            if (validation.valid) {
-              // Get fresh user data
+            try {
+              // Try to get fresh user data to validate the token
               const user = await apiClient.getProfile();
               set({ user, isAuthenticated: true });
-            } else {
+            } catch (error) {
               // Token is invalid, clear auth state
+              console.log('Token validation failed, clearing auth state');
               get().logout();
             }
           }
