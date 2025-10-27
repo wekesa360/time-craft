@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -57,10 +57,54 @@ import {
 
 // React Query is now configured in QueryProvider
 
-// Protected Route wrapper
+// Protected Route wrapper with middleware to handle auth initialization
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
+  // Wait for auth initialization to complete
+  useEffect(() => {
+    // If still loading from store, wait
+    if (isLoading) {
+      setIsCheckingAuth(true);
+      return;
+    }
+
+    // Check if we have tokens in localStorage
+    // If we do, wait a bit for the store to authenticate
+    const checkStoredAuth = () => {
+      try {
+        const authData = localStorage.getItem('timecraft-auth');
+        if (authData) {
+          const parsed = JSON.parse(authData);
+          const hasTokens = parsed?.state?.tokens?.accessToken || parsed?.tokens?.accessToken;
+          
+          if (hasTokens && !isAuthenticated) {
+            console.log('Tokens found in storage, waiting for auth to complete...');
+            // Give store time to finish initialization
+            setTimeout(() => {
+              setIsCheckingAuth(false);
+            }, 1500);
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to check auth storage:', error);
+      }
+      
+      // No tokens or already authenticated - proceed with check
+      setIsCheckingAuth(false);
+    };
+
+    checkStoredAuth();
+  }, [isAuthenticated, isLoading]);
+
+  // Wait while checking authentication
+  if (isCheckingAuth || isLoading) {
+    return null; // or a loading spinner
+  }
+
+  // Now make authentication decision
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -87,12 +131,11 @@ function UnprotectedRoute({ children }: { children: React.ReactNode }) {
 function App() {
   const { i18n } = useTranslation();
   const { applyTheme } = useThemeStore();
-  const { initialize } = useAuthStore();
 
   useEffect(() => {
-    // Always initialize authentication to check token validity
-    initialize();
-
+    // Auth initialization is handled by the rehydration callback in storePersistence.ts
+    // No need to call it here to avoid duplicate initialization
+    
     // Apply theme on mount
     applyTheme();
 
@@ -116,7 +159,7 @@ function App() {
     return () => {
       performanceMonitor?.destroy();
     };
-  }, [applyTheme, i18n.language, initialize]);
+  }, [applyTheme, i18n.language]);
 
   // Listen for language changes
   useEffect(() => {

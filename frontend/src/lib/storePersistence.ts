@@ -258,18 +258,53 @@ export const persistenceConfigs = {
         return null;
       }
     },
-    onRehydrateStorage: (state) => {
+    onRehydrateStorage: (initialState) => {
       return (state, error) => {
         if (error) {
           console.error('Auth store rehydration failed:', error);
           return;
         }
+        
+        // Log the rehydrated state from localStorage
+        const storedData = localStorage.getItem('timecraft-auth');
+        let hasStoredTokens = false;
+        if (storedData) {
+          try {
+            const parsed = JSON.parse(storedData);
+            hasStoredTokens = !!(parsed?.state?.tokens?.accessToken || parsed?.tokens?.accessToken);
+            console.log('Rehydrated from localStorage - storedTokens:', hasStoredTokens);
+            console.log('Stored data structure:', { hasState: !!parsed?.state, hasTokens: !!parsed?.state?.tokens });
+            
+            // If we have tokens in storage but not in state, manually sync them
+            if (hasStoredTokens && !state?.tokens?.accessToken) {
+              console.log('⚠️ Tokens in storage but not in rehydrated state, manually syncing...');
+              const tokens = parsed?.state?.tokens || parsed?.tokens;
+              const user = parsed?.state?.user || parsed?.user;
+              
+              if (tokens && user) {
+                // The state object passed here will be used by Zustand
+                // We need to mutate it to set the tokens
+                Object.assign(state, {
+                  user,
+                  tokens,
+                  isAuthenticated: true,
+                  isLoading: false
+                });
+                console.log('✅ Manually synced tokens to rehydrated state');
+              }
+            }
+          } catch (e) {
+            console.error('Failed to parse stored auth data:', e);
+          }
+        }
+        
         console.log('Auth store rehydrated with state:', { hasTokens: !!state?.tokens?.accessToken, isAuthenticated: state?.isAuthenticated });
 
         // Always initialize after rehydration to validate tokens
         if (state?.initialize) {
           // Delay initialization slightly to ensure store is fully setup
           setTimeout(() => {
+            console.log('Calling initialize from rehydration callback...');
             state.initialize();
           }, 100);
         }

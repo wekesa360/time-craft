@@ -77,21 +77,8 @@ class ApiClient {
     this.setupInterceptors();
     this.setupOfflineHandling();
     this.loadOfflineQueue();
-    this.initializeAuth();
-  }
-
-  private async initializeAuth() {
-    // Check if we have tokens and validate them
-    const token = this.getStoredToken();
-    if (token) {
-      try {
-        await this.ensureValidToken();
-        // SSE connection will be handled by auth store after successful authentication
-      } catch (error) {
-        console.error('Auth initialization failed:', error);
-        this.clearTokens();
-      }
-    }
+    // Note: Auth initialization is handled by the auth store's initialize() method
+    // to avoid race conditions with Zustand persistence rehydration
   }
 
   private loadOfflineQueue() {
@@ -1035,21 +1022,27 @@ class ApiClient {
             console.log('Token refreshed successfully');
           } catch (error) {
             console.error('Token refresh failed:', error);
-            this.clearTokens();
-            this.redirectToLogin();
+            // Don't clear tokens here - let the auth interceptor handle 401 errors
+            // This prevents race conditions during initialization
+            throw error;
           }
         } else {
           console.log('No refresh token available');
-          this.clearTokens();
-          this.redirectToLogin();
+          // Don't clear tokens here - let the auth store handle this
+          throw new Error('No refresh token available');
         }
       } else {
         console.log('Token is still valid');
       }
     } catch (error) {
-      console.error('Failed to parse token:', error);
-      // If we can't parse the token, it's probably invalid
-      this.clearTokens();
+      // If we can't parse the token, don't immediately clear it
+      // This could be a temporary issue or corrupted data that will be handled elsewhere
+      console.error('Failed to validate token:', error);
+      // Only throw if there's a real parsing error and token might be invalid
+      if (error instanceof TypeError || error instanceof SyntaxError) {
+        throw error;
+      }
+      // Otherwise, let the token be used and let API calls fail with 401 if needed
     }
   }
 
