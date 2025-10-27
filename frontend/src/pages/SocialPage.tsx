@@ -135,6 +135,19 @@ export default function SocialPage() {
 
   const isLoading = connectionsLoading || challengesLoading || activitiesLoading;
 
+  // Debug logging for social data
+  React.useEffect(() => {
+    console.log('SocialPage loaded data:', {
+      connectionsCount: connections.length,
+      pendingRequestsCount: pendingRequests.length,
+      challengesCount: challenges.length,
+      activitiesCount: activities.length,
+      connectionsData,
+      challenges: challenges.slice(0, 3),
+      activities: activities.slice(0, 3)
+    });
+  }, [connectionsData, connections, pendingRequests, challenges, activities]);
+
   // Tab configuration
   const socialTabs: TabItem[] = [
     { id: 'feed', label: 'Activity Feed' },

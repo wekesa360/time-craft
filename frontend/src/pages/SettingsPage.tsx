@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { ThemeSelector } from '../components/ui/ThemeSelector';
 import { LocalizationSection } from '../components/settings/LocalizationSection';
@@ -87,6 +87,16 @@ export default function SettingsPage() {
     queryFn: () => apiClient.getUserSubscription(),
     enabled: user?.subscriptionType !== 'free'
   });
+  
+  // Debug logging for settings data
+  useEffect(() => {
+    console.log('SettingsPage loaded data:', {
+      profile,
+      notificationPrefs,
+      subscription,
+      user
+    });
+  }, [profile, notificationPrefs, subscription, user]);
   
   // Mutations
   const updateProfileMutation = useMutation({
