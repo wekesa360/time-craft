@@ -97,14 +97,14 @@ export function rateLimit(opts: RateLimitOptions): MiddlewareHandler {
 
 // Preset rate limiters for different endpoints
 export const authRateLimit = () => rateLimit({
-  max: 20, // 20 attempts per 5 minutes
-  windowMs: 5 * 60 * 1000, // 5 minutes (reduced from 15)
+  max: 100, // 100 attempts per 5 minutes (increased from 20)
+  windowMs: 5 * 60 * 1000, // 5 minutes
   message: 'Too many authentication attempts. Please try again in 5 minutes.',
   skipSuccessfulRequests: true
 });
 
 export const apiRateLimit = () => rateLimit({
-  max: 1000, // 1000 requests per hour for authenticated users
+  max: 5000, // 5000 requests per hour for authenticated users (increased from 1000)
   windowMs: 60 * 60 * 1000,
   message: 'API rate limit exceeded. Please slow down.'
 });
