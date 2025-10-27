@@ -2,10 +2,27 @@
 
 import { useState, useEffect } from "react"
 import { Play, Pause, RotateCcw, TrendingUp, Clock, Target } from "lucide-react"
+import { useFocusDashboardQuery, useFocusAnalyticsQuery, useFocusSessionsQuery } from "../hooks/queries/useFocusQueries"
 
 export default function FocusPage() {
   const [isRunning, setIsRunning] = useState(false)
   const [time, setTime] = useState(25 * 60)
+
+  // Fetch real data from backend
+  const { data: dashboardData } = useFocusDashboardQuery()
+  const { data: analyticsData } = useFocusAnalyticsQuery('7d')
+  
+  // Get today's sessions for quick start tasks
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  
+  const { data: todaySessions } = useFocusSessionsQuery({
+    startDate: today.getTime(),
+    endDate: tomorrow.getTime(),
+    limit: 5
+  })
 
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -19,6 +36,16 @@ export default function FocusPage() {
 
   const minutes = Math.floor(time / 60)
   const seconds = time % 60
+
+  // Debug logging
+  useEffect(() => {
+    console.log('FocusPage loaded data:', {
+      dashboardData,
+      analyticsData,
+      todaySessions,
+      todaySessionsCount: todaySessions?.length || 0
+    })
+  }, [dashboardData, analyticsData, todaySessions])
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
@@ -91,53 +118,79 @@ export default function FocusPage() {
         {/* Stats & Tasks */}
         <div className="space-y-6">
           {/* Today's Focus */}
+          {(() => {
+            const sessions = dashboardData?.total_sessions || 0
+            const totalMinutes = dashboardData?.total_focus_minutes || 0
+            const hours = Math.floor(totalMinutes / 60)
+            const minutes = totalMinutes % 60
+            const displayTime = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
+            
+            return (
+              <div className="bg-card rounded-2xl p-6 border border-border">
+                <h2 className="text-lg font-bold text-foreground mb-4">Today's Focus</h2>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Sessions</span>
+                    <span className="text-2xl font-bold text-foreground">{sessions}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Total Time</span>
+                    <span className="text-2xl font-bold text-foreground">{displayTime}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Goal Progress</span>
+                    <span className="text-2xl font-bold text-primary">
+                      {dashboardData?.goal_progress || 0}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex items-center gap-2 text-sm text-primary">
+                    <TrendingUp className="w-4 h-4" />
+                    <span>
+                      {dashboardData?.trend ? `+${dashboardData.trend}% from yesterday` : 'No data yet'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* Recent Sessions */}
           <div className="bg-card rounded-2xl p-6 border border-border">
-            <h2 className="text-lg font-bold text-foreground mb-4">Today's Focus</h2>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Sessions</span>
-                <span className="text-2xl font-bold text-foreground">3</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total Time</span>
-                <span className="text-2xl font-bold text-foreground">2h 15m</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Goal Progress</span>
-                <span className="text-2xl font-bold text-primary">75%</span>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-border">
-              <div className="flex items-center gap-2 text-sm text-primary">
-                <TrendingUp className="w-4 h-4" />
-                <span>+30% from yesterday</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Start Tasks */}
-          <div className="bg-card rounded-2xl p-6 border border-border">
-            <h2 className="text-lg font-bold text-foreground mb-4">Quick Start</h2>
+            <h2 className="text-lg font-bold text-foreground mb-4">Recent Sessions</h2>
 
             <div className="space-y-2">
-              {[
-                { title: "Quarterly Report", time: "2h" },
-                { title: "Budget Review", time: "1.5h" },
-                { title: "Email Responses", time: "30m" },
-              ].map((task, i) => (
-                <button
-                  key={i}
-                  className="w-full flex items-center justify-between p-3 rounded-lg bg-white dark:bg-slate-800 border border-border hover:border-primary transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <Target className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">{task.title}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{task.time}</span>
-                </button>
-              ))}
+              {todaySessions && todaySessions.length > 0 ? (
+                todaySessions.slice(0, 3).map((session: any) => {
+                  const durationMinutes = Math.floor((session.duration || 0) / 60)
+                  const durationHours = Math.floor(durationMinutes / 60)
+                  const durationText = durationHours > 0 
+                    ? `${durationHours}h ${durationMinutes % 60}m`
+                    : `${durationMinutes}m`
+                  
+                  return (
+                    <button
+                      key={session.id}
+                      className="w-full flex items-center justify-between p-3 rounded-lg bg-white dark:bg-slate-800 border border-border hover:border-primary transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Target className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-foreground">
+                          {session.template_key || 'Focus Session'}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{durationText}</span>
+                    </button>
+                  )
+                })
+              ) : (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  No focus sessions today
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -147,52 +200,86 @@ export default function FocusPage() {
       <div className="bg-card rounded-2xl p-6 border border-border">
         <h2 className="text-xl font-bold text-foreground mb-6">Weekly Focus Analytics</h2>
 
-        <div className="grid md:grid-cols-7 gap-3">
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => {
-            const hours = [2.5, 3.2, 1.8, 2.9, 3.5, 1.2, 0.5][i]
-            const maxHeight = 4
-            const heightPercent = (hours / maxHeight) * 100
-
-            return (
-              <div key={day} className="flex flex-col items-center">
-                <div className="w-full h-32 bg-muted rounded-lg relative overflow-hidden mb-2">
-                  <div
-                    className="absolute bottom-0 left-0 right-0 bg-primary rounded-t-lg transition-all"
-                    style={{ height: `${heightPercent}%` }}
-                  />
-                </div>
-                <span className="text-xs font-medium text-muted-foreground">{day}</span>
-                <span className="text-xs text-foreground font-bold">{hours}h</span>
+        {(() => {
+          // Calculate weekly data from analytics
+          const weeklyHours = [0, 0, 0, 0, 0, 0, 0] // Sunday = 0, Monday = 1, etc.
+          const weeklySessions = [0, 0, 0, 0, 0, 0, 0]
+          
+          if (analyticsData?.focus_sessions) {
+            analyticsData.focus_sessions.forEach((session: any) => {
+              const sessionDate = new Date(session.started_at || session.created_at)
+              const dayOfWeek = sessionDate.getDay()
+              const hours = session.actual_duration ? session.actual_duration / 60 : 0
+              
+              weeklyHours[dayOfWeek] += hours
+              weeklySessions[dayOfWeek] += 1
+            })
+          }
+          
+          const maxHours = Math.max(...weeklyHours, 1)
+          
+          // Calculate weekly stats
+          const totalSessions = weeklySessions.reduce((a, b) => a + b, 0)
+          const totalHours = weeklyHours.reduce((a, b) => a + b, 0)
+          const avgSessionMinutes = totalSessions > 0 
+            ? Math.round((totalHours * 60) / totalSessions) 
+            : 0
+          const avgSessionHours = Math.floor(avgSessionMinutes / 60)
+          const avgSessionMins = avgSessionMinutes % 60
+          const avgSessionText = avgSessionHours > 0 
+            ? `${avgSessionHours}h ${avgSessionMins}m`
+            : `${avgSessionMins}m`
+          
+          return (
+            <>
+              <div className="grid md:grid-cols-7 gap-3">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => {
+                  const hours = weeklyHours[i]
+                  const heightPercent = maxHours > 0 ? (hours / maxHours) * 100 : 0
+                  
+                  return (
+                    <div key={day} className="flex flex-col items-center">
+                      <div className="w-full h-32 bg-muted rounded-lg relative overflow-hidden mb-2">
+                        <div
+                          className="absolute bottom-0 left-0 right-0 bg-primary rounded-t-lg transition-all"
+                          style={{ height: `${heightPercent}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium text-muted-foreground">{day}</span>
+                      <span className="text-xs text-foreground font-bold">{hours.toFixed(1)}h</span>
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
-        </div>
 
-        <div className="mt-6 grid md:grid-cols-3 gap-4">
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
-            <Clock className="w-8 h-8 text-primary" />
-            <div>
-              <p className="text-sm text-muted-foreground">Avg Session</p>
-              <p className="text-xl font-bold text-foreground">45 min</p>
-            </div>
-          </div>
+              <div className="mt-6 grid md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
+                  <Clock className="w-8 h-8 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Avg Session</p>
+                    <p className="text-xl font-bold text-foreground">{avgSessionText}</p>
+                  </div>
+                </div>
 
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
-            <Target className="w-8 h-8 text-orange-500" />
-            <div>
-              <p className="text-sm text-muted-foreground">Total Sessions</p>
-              <p className="text-xl font-bold text-foreground">18</p>
-            </div>
-          </div>
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
+                  <Target className="w-8 h-8 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Sessions</p>
+                    <p className="text-xl font-bold text-foreground">{totalSessions}</p>
+                  </div>
+                </div>
 
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
-            <TrendingUp className="w-8 h-8 text-primary" />
-            <div>
-              <p className="text-sm text-muted-foreground">Weekly Total</p>
-              <p className="text-xl font-bold text-foreground">15.6h</p>
-            </div>
-          </div>
-        </div>
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
+                  <TrendingUp className="w-8 h-8 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Weekly Total</p>
+                    <p className="text-xl font-bold text-foreground">{totalHours.toFixed(1)}h</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )
+        })()}
       </div>
       </div>
     </div>
