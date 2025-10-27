@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiClient } from '../lib/api';
+import { apiClient } from '../lib/api-client';
 import { biometricAuth, type BiometricCapabilities } from '../lib/biometric-auth';
 import type { User, AuthTokens, LoginForm, RegisterForm, AuthState } from '../types';
 
@@ -52,7 +52,7 @@ export const useAuthStore = create<AuthStore>()(
       setTokens: (tokens) => {
         set({ tokens });
         if (tokens) {
-          apiClient.setTokens(tokens);
+          apiClient.setTokens(tokens.accessToken, tokens.refreshToken);
         } else {
           apiClient.clearTokens();
         }
@@ -65,7 +65,7 @@ export const useAuthStore = create<AuthStore>()(
       login: async (credentials) => {
         try {
           set({ isLoading: true });
-          const response = await apiClient.login(credentials);
+          const response = await apiClient.login(credentials.email, credentials.password);
           
           set({
             user: response.user,
@@ -74,7 +74,19 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
           });
           
-          await apiClient.setTokens(response.tokens);
+          await apiClient.setTokens(response.tokens.accessToken, response.tokens.refreshToken);
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      loginWithGoogle: async () => {
+        try {
+          set({ isLoading: true });
+          // This would need Google Sign-In implementation
+          // For now, throw an error to indicate it's not implemented
+          throw new Error('Google Sign-In not implemented yet');
         } catch (error) {
           set({ isLoading: false });
           throw error;
