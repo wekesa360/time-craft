@@ -36,18 +36,25 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded && !isLoading) {
       if (isAuthenticated) {
-        // User is authenticated, initialize notifications and redirect to tabs
+        // User is authenticated, initialize notifications
         initializeNotifications();
-        
-        if (!router.canGoBack()) {
-          router.replace('/(tabs)/dashboard');
-        }
-      } else {
-        // User is not authenticated, redirect to login
-        router.replace('/auth/login');
       }
     }
   }, [loaded, isAuthenticated, isLoading, initializeNotifications]);
+
+  // Handle navigation separately to avoid timing issues
+  useEffect(() => {
+    if (loaded && !isLoading) {
+      // Use setTimeout to ensure the Root Layout is mounted first
+      setTimeout(() => {
+        if (isAuthenticated) {
+          router.replace('/(tabs)/dashboard');
+        } else {
+          router.replace('/auth/login');
+        }
+      }, 100);
+    }
+  }, [loaded, isAuthenticated, isLoading]);
 
   if (!loaded || isLoading) {
     return null;

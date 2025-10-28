@@ -1,9 +1,19 @@
 // Push notifications service for React Native
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import * as Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { apiClient } from './api';
+
+// Conditional import for Expo Go compatibility
+let Notifications: any = null;
+try {
+  // Only import notifications if not in Expo Go or if supported
+  if (Constants.default.appOwnership !== 'expo') {
+    Notifications = require('expo-notifications');
+  }
+} catch (error) {
+  console.warn('expo-notifications not available in this environment');
+}
 
 export interface PushNotificationSettings {
   taskReminders: boolean;
@@ -34,6 +44,13 @@ class NotificationService {
     if (this.isInitialized) return this.pushToken;
 
     try {
+      // Check if notifications are available
+      if (!Notifications) {
+        console.warn('Push notifications not available in Expo Go. Use a development build for full functionality.');
+        this.isInitialized = true;
+        return null;
+      }
+
       // Check if device supports push notifications
       if (!Device.isDevice) {
         console.warn('Push notifications require a physical device');
@@ -70,6 +87,7 @@ class NotificationService {
       return token;
     } catch (error) {
       console.error('Failed to initialize push notifications:', error);
+      this.isInitialized = true; // Mark as initialized to prevent retries
       return null;
     }
   }
@@ -78,6 +96,8 @@ class NotificationService {
    * Get Expo push token
    */
   private async getPushToken(): Promise<string | null> {
+    if (!Notifications) return null;
+    
     try {
       const projectId = Constants.default.expoConfig?.extra?.eas?.projectId ?? Constants.default.easConfig?.projectId;
       
@@ -115,6 +135,8 @@ class NotificationService {
    * Set up notification handlers
    */
   private setupNotificationHandler(): void {
+    if (!Notifications) return;
+    
     // Handle incoming notifications when app is in foreground
     Notifications.setNotificationHandler({
       handleNotification: async (notification) => {
@@ -140,6 +162,8 @@ class NotificationService {
    * Set up interactive notification categories
    */
   private async setupNotificationCategories(): Promise<void> {
+    if (!Notifications) return;
+    
     try {
       await Notifications.setNotificationCategoryAsync('task_reminder', [
         {
@@ -191,8 +215,13 @@ class NotificationService {
     title: string,
     body: string,
     data: any = {},
-    trigger: Notifications.NotificationTriggerInput
+    trigger: any
   ): Promise<string | null> {
+    if (!Notifications) {
+      console.warn('Notifications not available - skipping local notification');
+      return null;
+    }
+    
     try {
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
@@ -216,7 +245,7 @@ class NotificationService {
    * Schedule task reminder notification
    */
   async scheduleTaskReminder(taskId: string, title: string, dueDate: Date): Promise<string | null> {
-    const trigger: Notifications.TimeIntervalTriggerInput = {
+    const trigger = {
       type: 'timeInterval',
       seconds: Math.floor((dueDate.getTime() - Date.now()) / 1000),
     };
@@ -243,7 +272,7 @@ class NotificationService {
       exercise: { title: 'Move Your Body 🏃', body: 'Time for some activity!' },
     };
 
-    const trigger: Notifications.TimeIntervalTriggerInput = {
+    const trigger = {
       type: 'timeInterval',
       seconds: Math.floor((time.getTime() - Date.now()) / 1000),
     };
@@ -270,7 +299,7 @@ class NotificationService {
     nextSunday.setDate(now.getDate() + (7 - now.getDay()));
     nextSunday.setHours(9, 0, 0, 0);
 
-    const trigger: Notifications.WeeklyTriggerInput = {
+    const trigger = {
       type: 'weekly',
       weekday: 1, // Sunday
       hour: 9,
@@ -293,6 +322,8 @@ class NotificationService {
    * Cancel notification
    */
   async cancelNotification(notificationId: string): Promise<void> {
+    if (!Notifications) return;
+    
     try {
       await Notifications.cancelScheduledNotificationAsync(notificationId);
     } catch (error) {
@@ -304,6 +335,8 @@ class NotificationService {
    * Cancel all notifications
    */
   async cancelAllNotifications(): Promise<void> {
+    if (!Notifications) return;
+    
     try {
       await Notifications.cancelAllScheduledNotificationsAsync();
     } catch (error) {
@@ -315,6 +348,8 @@ class NotificationService {
    * Get badge count
    */
   private async getBadgeCount(): Promise<number> {
+    if (!Notifications) return 0;
+    
     try {
       return await Notifications.getBadgeCountAsync();
     } catch (error) {
@@ -327,6 +362,8 @@ class NotificationService {
    * Set badge count
    */
   async setBadgeCount(count: number): Promise<void> {
+    if (!Notifications) return;
+    
     try {
       await Notifications.setBadgeCountAsync(count);
     } catch (error) {
@@ -375,6 +412,8 @@ class NotificationService {
    * Handle notification responses (when user taps notification actions)
    */
   setupNotificationResponseHandler(): void {
+    if (!Notifications) return;
+    
     Notifications.addNotificationResponseReceivedListener((response) => {
       const { actionIdentifier, notification } = response;
       const data = notification.request.content.data;
