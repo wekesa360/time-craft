@@ -10,6 +10,8 @@ export default function ModalLayout() {
       }}
     >
       <Stack.Screen name="create-task" />
+      <Stack.Screen name="add-event" />
+      <Stack.Screen name="calendar-integrations" />
       <Stack.Screen name="log-nutrition" />
       <Stack.Screen name="log-exercise" />
       <Stack.Screen name="log-mood" />

@@ -54,7 +54,15 @@ export default function LoginScreen() {
       await loginWithGoogle();
       router.replace('/(tabs)/dashboard');
     } catch (error) {
-      Alert.alert('Google Login Failed', 'Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Please try again.';
+      Alert.alert(
+        'Google Sign-In Not Available', 
+        errorMessage,
+        [
+          { text: 'Use Email Instead', onPress: () => setLoginMethod('otp') },
+          { text: 'OK' }
+        ]
+      );
     }
   };
 

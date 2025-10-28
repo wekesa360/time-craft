@@ -355,6 +355,34 @@ class ApiClient {
     await this.client.delete(`/calendar/events/${id}`);
   }
 
+  // Calendar Integration endpoints
+  async getCalendarIntegrations(): Promise<any[]> {
+    const response = await this.client.get('/calendar/connections');
+    return response.data.connections || [];
+  }
+
+  async connectCalendar(provider: string, authData: any): Promise<any> {
+    const response = await this.client.post('/calendar/connect', {
+      provider,
+      ...authData
+    });
+    return response.data;
+  }
+
+  async disconnectCalendar(connectionId: string): Promise<void> {
+    await this.client.delete(`/calendar/connections/${connectionId}`);
+  }
+
+  async syncCalendars(): Promise<{ imported: number; exported: number; errors: string[] }> {
+    const response = await this.client.post('/calendar/sync');
+    return response.data.result;
+  }
+
+  async getGoogleAuthUrl(): Promise<{ authUrl: string; state: string }> {
+    const response = await this.client.get('/calendar/google/auth');
+    return response.data;
+  }
+
   // Notification endpoints
   async getNotifications(): Promise<Notification[]> {
     const response = await this.client.get<{ notifications: Notification[] }>('/notifications');

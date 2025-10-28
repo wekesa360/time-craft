@@ -85,9 +85,23 @@ export const useAuthStore = create<AuthStore>()(
       loginWithGoogle: async () => {
         try {
           set({ isLoading: true });
-          // This would need Google Sign-In implementation
-          // For now, throw an error to indicate it's not implemented
-          throw new Error('Google Sign-In not implemented yet');
+          
+          // Get Google OAuth URL from backend
+          const response = await fetch(`${apiClient.baseURL}/auth/google`);
+          if (!response.ok) {
+            throw new Error('Failed to get Google OAuth URL');
+          }
+          
+          const { authUrl } = await response.json();
+          
+          // For now, show an alert with instructions
+          // In a full implementation, you would use:
+          // - @react-native-google-signin/google-signin for native Google Sign-In
+          // - Or WebBrowser.openAuthSessionAsync for web-based OAuth
+          throw new Error(
+            'Google Sign-In requires additional setup. Please use the web version or contact support for mobile authentication setup.'
+          );
+          
         } catch (error) {
           set({ isLoading: false });
           throw error;
