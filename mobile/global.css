@@ -1,3 +1,204 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Frontend Design System - Exact Match for Mobile */
+:root {
+  /* Soft pink/beige gradient background */
+  --background: #f5e6e8;
+  --foreground: #2d2d2d;
+
+  /* White cards with subtle shadows */
+  --card: #ffffff;
+  --card-foreground: #2d2d2d;
+  --card-hover: #fafafa;
+
+  --popover: #ffffff;
+  --popover-foreground: #2d2d2d;
+
+  /* Orange primary color from frontend */
+  --primary: #ff6b35;
+  --primary-foreground: #ffffff;
+  --primary-light: #fff3f0;
+  --primary-hover: #e55a2b;
+
+  /* Soft peach secondary */
+  --secondary: #ffd4c8;
+  --secondary-foreground: #2d2d2d;
+
+  /* Muted colors */
+  --muted: #f0f0f0;
+  --muted-foreground: #6b6b6b;
+
+  /* Accent colors */
+  --accent: #ff6b35;
+  --accent-foreground: #ffffff;
+
+  /* Status colors */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #81c784;
+  --success-foreground: #ffffff;
+  --warning: #ffb74d;
+  --warning-foreground: #2d2d2d;
+  --info: #64b5f6;
+  --info-foreground: #ffffff;
+
+  /* Borders */
+  --border: #e8e8e8;
+  --input: #f5f5f5;
+  --ring: #ff6b35;
+
+  /* Chart colors - playful palette */
+  --chart-1: #ff6b35; /* Orange */
+  --chart-2: #81c784; /* Green */
+  --chart-3: #64b5f6; /* Blue */
+  --chart-4: #ba68c8; /* Purple */
+  --chart-5: #ffb74d; /* Yellow */
+
+  /* Radius - more rounded for playful feel */
+  --radius: 1.25rem;
+}
+
+/* Gradient utilities */
+.gradient-primary {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, #ffd4c8 0%, #ffe8e0 100%);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, #64b5f6 0%, #90caf9 100%);
+}
+
+/* Shadow utilities for React Native */
+.shadow-sm {
+  shadow-color: #000;
+  shadow-offset: 0 1px;
+  shadow-opacity: 0.05;
+  shadow-radius: 2px;
+  elevation: 1;
+}
+
+.shadow-md {
+  shadow-color: #000;
+  shadow-offset: 0 4px;
+  shadow-opacity: 0.1;
+  shadow-radius: 6px;
+  elevation: 3;
+}
+
+.shadow-lg {
+  shadow-color: #000;
+  shadow-offset: 0 10px;
+  shadow-opacity: 0.15;
+  shadow-radius: 15px;
+  elevation: 5;
+}
+
+/* Card styles */
+.card {
+  background-color: var(--card);
+  border-radius: var(--radius);
+  border-width: 1px;
+  border-color: var(--border);
+}
+
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+/* Button styles */
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: var(--radius);
+  padding: 12px 24px;
+  font-weight: 600;
+}
+
+.btn-secondary {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border-width: 1px;
+  border-color: var(--border);
+  border-radius: var(--radius);
+  padding: 12px 24px;
+  font-weight: 600;
+}
+
+/* Input styles */
+.input {
+  background-color: var(--input);
+  color: var(--foreground);
+  border-width: 1px;
+  border-color: var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+}
+
+/* Text styles */
+.text-primary {
+  color: var(--foreground);
+}
+
+.text-secondary {
+  color: var(--muted-foreground);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+/* Background styles */
+.bg-background {
+  background-color: var(--background);
+}
+
+.bg-card {
+  background-color: var(--card);
+}
+
+.bg-muted {
+  background-color: var(--muted);
+}
+
+/* Border styles */
+.border-border {
+  border-color: var(--border);
+}
+
+/* Status colors */
+.text-success {
+  color: var(--success);
+}
+
+.text-warning {
+  color: var(--warning);
+}
+
+.text-error {
+  color: var(--destructive);
+}
+
+.text-info {
+  color: var(--info);
+}
+
+.bg-success-light {
+  background-color: #e8f5e8;
+}
+
+.bg-warning-light {
+  background-color: #fff8e1;
+}
+
+.bg-error-light {
+  background-color: #fee2e2;
+}
+
+.bg-info-light {
+  background-color: #e3f2fd;
+}

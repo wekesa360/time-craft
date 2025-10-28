@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, router } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '../../stores/auth';
 import { EyeIcon, EyeSlashIcon } from 'react-native-heroicons/outline';
+import GoogleIcon from '../../components/icons/GoogleIcon';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -96,16 +98,17 @@ export default function LoginScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View className="flex-1 justify-center px-6 py-12 min-h-screen">
-        {/* Logo/Brand */}
-        <View className="items-center mb-8">
-          <View className="w-20 h-20 bg-blue-600 rounded-3xl items-center justify-center mb-4 shadow-lg">
-            <Text className="text-3xl font-bold text-white">TC</Text>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: '#f5e6e8' }}>
+      <ScrollView className="flex-1" style={{ backgroundColor: '#f5e6e8' }}>
+        <View className="flex-1 justify-center px-6 py-12 min-h-screen">
+          {/* Logo/Brand */}
+          <View className="items-center mb-8">
+            <View className="w-20 h-20 rounded-3xl items-center justify-center mb-4 shadow-lg" style={{ backgroundColor: '#ff6b35' }}>
+              <Text className="text-3xl font-bold text-white">TC</Text>
+            </View>
+            <Text className="text-3xl font-bold mb-2" style={{ color: '#2d2d2d' }}>Welcome Back</Text>
+            <Text className="text-center" style={{ color: '#6b6b6b' }}>Sign in to your TimeCraft account</Text>
           </View>
-          <Text className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</Text>
-          <Text className="text-gray-600 text-center">Sign in to your TimeCraft account</Text>
-        </View>
 
         {/* Login Options */}
         <View className="space-y-6">
@@ -116,25 +119,27 @@ export default function LoginScreen() {
               <TouchableOpacity
                 onPress={handleGoogleLogin}
                 disabled={isLoading}
-                className="w-full flex-row items-center justify-center bg-white border border-gray-200 rounded-2xl py-4 px-6 shadow-sm"
+                className="w-full flex-row items-center justify-center bg-white rounded-2xl py-4 px-6 shadow-sm"
+                style={{ borderWidth: 1, borderColor: '#e8e8e8' }}
               >
-                <View className="w-6 h-6 mr-3">
-                  <Text className="text-lg">🔍</Text>
+                <View className="mr-3">
+                  <GoogleIcon size={24} />
                 </View>
-                <Text className="text-gray-700 font-semibold text-lg">Continue with Google</Text>
+                <Text className="font-semibold text-lg" style={{ color: '#2d2d2d' }}>Continue with Google</Text>
               </TouchableOpacity>
 
               {/* Divider */}
               <View className="flex-row items-center my-6">
-                <View className="flex-1 h-px bg-gray-300" />
-                <Text className="px-4 text-gray-500 text-sm">or</Text>
-                <View className="flex-1 h-px bg-gray-300" />
+                <View className="flex-1 h-px" style={{ backgroundColor: '#e8e8e8' }} />
+                <Text className="px-4 text-sm" style={{ color: '#6b6b6b' }}>or</Text>
+                <View className="flex-1 h-px" style={{ backgroundColor: '#e8e8e8' }} />
               </View>
 
               {/* Email OTP Option */}
               <TouchableOpacity
                 onPress={() => setLoginMethod('otp')}
-                className="w-full bg-blue-600 rounded-2xl py-4 px-6 shadow-sm"
+                className="w-full rounded-2xl py-4 px-6 shadow-sm"
+                style={{ backgroundColor: '#ff6b35' }}
               >
                 <Text className="text-white font-semibold text-lg text-center">Continue with Email</Text>
               </TouchableOpacity>
@@ -142,12 +147,13 @@ export default function LoginScreen() {
               {/* Biometric Login Option */}
               {showBiometric && (
                 <TouchableOpacity
-                  className="w-full border-2 border-blue-200 rounded-2xl py-4 px-6 flex-row items-center justify-center"
+                  className="w-full rounded-2xl py-4 px-6 flex-row items-center justify-center"
+                  style={{ borderWidth: 2, borderColor: '#ffd4c8' }}
                   onPress={handleBiometricLogin}
                   disabled={isLoading}
                 >
                   <Text className="text-2xl mr-3">{getBiometricIcon()}</Text>
-                  <Text className="text-blue-600 font-semibold text-lg">
+                  <Text className="font-semibold text-lg" style={{ color: '#ff6b35' }}>
                     Sign in with {getBiometricText()}
                   </Text>
                 </TouchableOpacity>
@@ -159,7 +165,7 @@ export default function LoginScreen() {
                   onPress={() => setLoginMethod('password')}
                   className="py-2"
                 >
-                  <Text className="text-gray-500 text-sm">Continue with password instead</Text>
+                  <Text className="text-sm" style={{ color: '#6b6b6b' }}>Continue with password instead</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -169,16 +175,21 @@ export default function LoginScreen() {
           {loginMethod === 'password' && (
             <View className="bg-white rounded-2xl p-6 shadow-lg space-y-4">
               <View>
-                <Text className="text-sm font-medium text-gray-700 mb-2">Email Address</Text>
+                <Text className="text-sm font-medium mb-2" style={{ color: '#2d2d2d' }}>Email Address</Text>
                 <Controller
                   control={control}
                   name="email"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                      className={`border rounded-xl px-4 py-3 text-base ${
-                        errors.email ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className="rounded-xl px-4 py-3 text-base"
+                      style={{
+                        borderWidth: 1,
+                        borderColor: errors.email ? '#ef4444' : '#e8e8e8',
+                        backgroundColor: '#f5f5f5',
+                        color: '#2d2d2d'
+                      }}
                       placeholder="Enter your email"
+                      placeholderTextColor="#6b6b6b"
                       keyboardType="email-address"
                       autoCapitalize="none"
                       autoCorrect={false}
@@ -189,24 +200,29 @@ export default function LoginScreen() {
                   )}
                 />
                 {errors.email && (
-                  <Text className="text-red-500 text-sm mt-1">
+                  <Text className="text-sm mt-1" style={{ color: '#ef4444' }}>
                     {errors.email.message}
                   </Text>
                 )}
               </View>
               
               <View>
-                <Text className="text-sm font-medium text-gray-700 mb-2">Password</Text>
+                <Text className="text-sm font-medium mb-2" style={{ color: '#2d2d2d' }}>Password</Text>
                 <View className="relative">
                   <Controller
                     control={control}
                     name="password"
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextInput
-                        className={`border rounded-xl px-4 py-3 pr-12 text-base ${
-                          errors.password ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                        className="rounded-xl px-4 py-3 pr-12 text-base"
+                        style={{
+                          borderWidth: 1,
+                          borderColor: errors.password ? '#ef4444' : '#e8e8e8',
+                          backgroundColor: '#f5f5f5',
+                          color: '#2d2d2d'
+                        }}
                         placeholder="Enter your password"
+                        placeholderTextColor="#6b6b6b"
                         secureTextEntry={!showPassword}
                         onBlur={onBlur}
                         onChangeText={onChange}
@@ -219,14 +235,14 @@ export default function LoginScreen() {
                     onPress={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeSlashIcon size={20} color="#6B7280" />
+                      <EyeSlashIcon size={20} color="#6b6b6b" />
                     ) : (
-                      <EyeIcon size={20} color="#6B7280" />
+                      <EyeIcon size={20} color="#6b6b6b" />
                     )}
                   </TouchableOpacity>
                 </View>
                 {errors.password && (
-                  <Text className="text-red-500 text-sm mt-1">
+                  <Text className="text-sm mt-1" style={{ color: '#ef4444' }}>
                     {errors.password.message}
                   </Text>
                 )}
@@ -235,14 +251,13 @@ export default function LoginScreen() {
               {/* Forgot Password Link */}
               <View className="items-end">
                 <TouchableOpacity>
-                  <Text className="text-blue-600 text-sm font-medium">Forgot password?</Text>
+                  <Text className="text-sm font-medium" style={{ color: '#ff6b35' }}>Forgot password?</Text>
                 </TouchableOpacity>
               </View>
               
               <TouchableOpacity 
-                className={`rounded-xl py-4 mt-6 ${
-                  isLoading ? 'bg-blue-400' : 'bg-blue-600'
-                }`}
+                className="rounded-xl py-4 mt-6"
+                style={{ backgroundColor: isLoading ? '#ffb3a1' : '#ff6b35' }}
                 onPress={handleSubmit(onSubmit)}
                 disabled={isLoading}
               >
@@ -259,7 +274,7 @@ export default function LoginScreen() {
                 onPress={() => setLoginMethod('google')}
                 className="py-2"
               >
-                <Text className="text-gray-500 text-sm text-center">Back to other options</Text>
+                <Text className="text-sm text-center" style={{ color: '#6b6b6b' }}>Back to other options</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -267,14 +282,15 @@ export default function LoginScreen() {
 
         {/* Footer */}
         <View className="items-center mt-8">
-          <Text className="text-gray-600 text-sm">
+          <Text className="text-sm" style={{ color: '#6b6b6b' }}>
             Don't have an account?{' '}
             <Link href="/auth/register">
-              <Text className="text-blue-600 font-semibold">Sign Up</Text>
+              <Text className="font-semibold" style={{ color: '#ff6b35' }}>Sign Up</Text>
             </Link>
           </Text>
         </View>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
