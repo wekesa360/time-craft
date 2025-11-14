@@ -53,6 +53,7 @@ import {
   LazySettingsPage,
   LazyLocalizationPage,
   LazyAdminDashboard,
+  LazyAppearanceDemoPage,
 } from './pages/LazyPages';
 
 // React Query is now configured in QueryProvider
@@ -412,6 +413,16 @@ function App() {
               element={
                 <ProtectedRoute>
                   <PreferencesTest />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/appearance-demo"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <LazyAppearanceDemoPage />
+                  </AppLayout>
                 </ProtectedRoute>
               }
             />

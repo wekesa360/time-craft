@@ -11,6 +11,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useHealthStore } from '../../stores/health';
+import { useAppTheme } from '../../constants/dynamicTheme';
 
 const hydrationSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
@@ -26,7 +27,8 @@ interface HydrationFormProps {
 }
 
 const HydrationForm: React.FC<HydrationFormProps> = ({ onSuccess, onCancel }) => {
-  const { logHydration, isLoading } = useHealthStore();
+  const theme = useAppTheme();
+  const { logHydration, isMutating } = useHealthStore();
 
   const {
     control,
@@ -76,16 +78,16 @@ const HydrationForm: React.FC<HydrationFormProps> = ({ onSuccess, onCancel }) =>
   ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1" style={{ backgroundColor: theme.colors.card }}>
       <View className="p-6">
-        <View className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-          <Text className="text-2xl font-bold text-gray-900 mb-6">
+        <View className="mb-6">
+          <Text className="text-2xl font-bold mb-6" style={{ color: theme.colors.foreground }}>
             Log Hydration
           </Text>
 
           {/* Drink Type Selection */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-3">
+            <Text className="text-sm font-medium mb-3" style={{ color: theme.colors.muted }}>
               What did you drink?
             </Text>
             <Controller
@@ -96,23 +98,17 @@ const HydrationForm: React.FC<HydrationFormProps> = ({ onSuccess, onCancel }) =>
                   {drinkTypes.map((drink) => (
                     <TouchableOpacity
                       key={drink.value}
-                      className={`px-4 py-3 rounded-xl border flex-row items-center ${
-                        value === drink.value
-                          ? `${drink.color} border-current`
-                          : 'bg-gray-100 border-gray-300'
-                      }`}
+                      className="px-4 py-3 rounded-xl flex-row items-center"
+                      style={{
+                        backgroundColor: value === drink.value ? theme.colors.primaryLight : theme.colors.surface,
+                        borderWidth: 1,
+                        borderColor: value === drink.value ? theme.colors.primary : theme.colors.border,
+                        borderRadius: theme.radii.xl,
+                      }}
                       onPress={() => onChange(drink.value)}
                     >
                       <Text className="mr-2 text-lg">{drink.emoji}</Text>
-                      <Text
-                        className={`font-medium ${
-                          value === drink.value
-                            ? drink.textColor
-                            : 'text-gray-600'
-                        }`}
-                      >
-                        {drink.label}
-                      </Text>
+                      <Text className="font-medium" style={{ color: value === drink.value ? theme.colors.primary : theme.colors.foreground }}>{drink.label}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -122,7 +118,7 @@ const HydrationForm: React.FC<HydrationFormProps> = ({ onSuccess, onCancel }) =>
 
           {/* Amount Selection */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-3">
+            <Text className="text-sm font-medium mb-3" style={{ color: theme.colors.muted }}>
               How much did you drink?
             </Text>
             
@@ -131,33 +127,27 @@ const HydrationForm: React.FC<HydrationFormProps> = ({ onSuccess, onCancel }) =>
               {quickAmounts.map((amount) => (
                 <TouchableOpacity
                   key={amount}
-                  className={`px-4 py-2 rounded-xl border ${
-                    selectedAmount === amount
-                      ? 'bg-primary-100 border-primary-300'
-                      : 'bg-gray-100 border-gray-300'
-                  }`}
+                  className="px-4 py-2 rounded-xl"
+                  style={{
+                    backgroundColor: selectedAmount === amount ? theme.colors.primaryLight : theme.colors.surface,
+                    borderWidth: 1,
+                    borderColor: selectedAmount === amount ? theme.colors.primary : theme.colors.border,
+                    borderRadius: theme.radii.xl,
+                  }}
                   onPress={() => setValue('amount', amount)}
                 >
-                  <Text
-                    className={`font-medium ${
-                      selectedAmount === amount
-                        ? 'text-primary-700'
-                        : 'text-gray-600'
-                    }`}
-                  >
-                    {amount}ml
-                  </Text>
+                  <Text className="font-medium" style={{ color: selectedAmount === amount ? theme.colors.primary : theme.colors.foreground }}>{amount}ml</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
             {/* Visual Amount Display */}
-            <View className="bg-gray-50 rounded-xl p-4 items-center">
+            <View className="rounded-xl p-4 items-center" style={{ backgroundColor: theme.colors.primaryLight, borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.radii.xl }}>
               <Text className="text-4xl mb-2">🥤</Text>
-              <Text className="text-2xl font-bold text-primary-600">
+              <Text className="text-2xl font-bold" style={{ color: theme.colors.primary }}>
                 {selectedAmount}ml
               </Text>
-              <Text className="text-gray-600 text-sm">
+              <Text className="text-sm" style={{ color: theme.colors.primary }}>
                 {selectedAmount >= 1000 
                   ? `${(selectedAmount / 1000).toFixed(1)} liters`
                   : `${Math.round(selectedAmount / 29.5735)} fl oz`
@@ -169,7 +159,7 @@ const HydrationForm: React.FC<HydrationFormProps> = ({ onSuccess, onCancel }) =>
           {/* Temperature (Optional for certain drinks) */}
           {(selectedDrinkType === 'coffee' || selectedDrinkType === 'tea' || selectedDrinkType === 'water') && (
             <View className="mb-6">
-              <Text className="text-sm font-medium text-gray-700 mb-3">
+              <Text className="text-sm font-medium mb-3" style={{ color: theme.colors.muted }}>
                 Temperature (Optional)
               </Text>
               <Controller
@@ -180,23 +170,17 @@ const HydrationForm: React.FC<HydrationFormProps> = ({ onSuccess, onCancel }) =>
                     {temperatures.map((temp) => (
                       <TouchableOpacity
                         key={temp.value}
-                        className={`px-3 py-2 rounded-xl border flex-row items-center ${
-                          value === temp.value
-                            ? 'bg-primary-100 border-primary-300'
-                            : 'bg-gray-100 border-gray-300'
-                        }`}
+                        className="px-3 py-2 rounded-xl flex-row items-center"
+                        style={{
+                          backgroundColor: value === temp.value ? theme.colors.primaryLight : theme.colors.surface,
+                          borderWidth: 1,
+                          borderColor: value === temp.value ? theme.colors.primary : theme.colors.border,
+                          borderRadius: theme.radii.xl,
+                        }}
                         onPress={() => onChange(temp.value)}
                       >
                         <Text className="mr-1">{temp.emoji}</Text>
-                        <Text
-                          className={`font-medium text-sm ${
-                            value === temp.value
-                              ? 'text-primary-700'
-                              : 'text-gray-600'
-                          }`}
-                        >
-                          {temp.label}
-                        </Text>
+                        <Text className="font-medium text-sm" style={{ color: value === temp.value ? theme.colors.primary : theme.colors.foreground }}>{temp.label}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -206,48 +190,43 @@ const HydrationForm: React.FC<HydrationFormProps> = ({ onSuccess, onCancel }) =>
           )}
 
           {/* Daily Progress Indicator */}
-          <View className="bg-blue-50 rounded-xl p-4 mb-6">
-            <Text className="font-semibold text-blue-900 mb-2">
+          <View className="rounded-xl p-4 mb-6" style={{ backgroundColor: theme.colors.infoBg, borderWidth: 1, borderColor: theme.colors.infoBg, borderRadius: theme.radii.xl }}>
+            <Text className="font-semibold mb-2" style={{ color: theme.colors.info }}>
               💧 Daily Hydration Goal
             </Text>
-            <Text className="text-blue-800 text-sm mb-3">
+            <Text className="text-sm mb-3" style={{ color: theme.colors.info }}>
               Recommended: 2000ml (8 glasses) per day
             </Text>
             
             {/* Progress bar would go here - simplified for now */}
-            <View className="bg-blue-200 rounded-full h-3 overflow-hidden">
-              <View 
-                className="bg-blue-500 h-full rounded-full" 
-                style={{ width: '45%' }} // This would be calculated based on daily total
-              />
+            <View className="rounded-full h-3 overflow-hidden" style={{ backgroundColor: theme.colors.info + '55' }}>
+              <View className="h-full rounded-full" style={{ width: '45%', backgroundColor: theme.colors.info }} />
             </View>
-            <Text className="text-blue-700 text-xs mt-2">
-              900ml / 2000ml today (45%)
-            </Text>
+            <Text className="text-xs mt-2" style={{ color: theme.colors.info }}>900ml / 2000ml today (45%)</Text>
           </View>
 
           {/* Action Buttons */}
           <View className="flex-row gap-3">
             {onCancel && (
               <TouchableOpacity
-                className="flex-1 bg-gray-200 rounded-xl py-4"
+                className="flex-1 rounded-2xl py-4"
+                style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}
                 onPress={onCancel}
-                disabled={isLoading}
+                disabled={isMutating}
               >
-                <Text className="text-gray-700 font-semibold text-center">
+                <Text className="font-semibold text-center" style={{ color: theme.colors.foreground }}>
                   Cancel
                 </Text>
               </TouchableOpacity>
             )}
 
             <TouchableOpacity
-              className={`flex-1 rounded-xl py-4 ${
-                isLoading ? 'bg-primary-400' : 'bg-primary-600'
-              }`}
+              className="flex-1 rounded-2xl py-4"
+              style={{ backgroundColor: theme.colors.primary, opacity: isMutating ? 0.7 : 1, borderRadius: theme.radii.xl }}
               onPress={handleSubmit(onSubmit)}
-              disabled={isLoading}
+              disabled={isMutating}
             >
-              {isLoading ? (
+              {isMutating ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text className="text-white font-semibold text-center">

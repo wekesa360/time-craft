@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    // setupFiles: ['./tests/utils/test-setup.ts'],
+    setupFiles: ['./tests/utils/test-setup.ts'],
     include: ['tests/**/*.{test,spec}.{js,ts}'],
     exclude: ['node_modules', 'dist', '.wrangler'],
     testTimeout: 10000, // 10 seconds

@@ -19,9 +19,23 @@ import {
   UserGroupIcon,
 } from 'react-native-heroicons/outline';
 import { apiClient } from '../lib/api';
-import type { CalendarEvent } from '../types';
+import { useAppTheme } from '../constants/dynamicTheme';
+
+// Local CalendarEvent shape to satisfy usage in this screen
+interface CalendarEvent {
+  id: string;
+  title: string;
+  description?: string;
+  eventType?: string;
+  startTime?: string | number;
+  endTime?: string | number;
+  isAllDay?: boolean;
+  allDay?: boolean;
+  location?: string;
+}
 
 export default function CalendarScreen() {
+  const theme = useAppTheme();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -45,7 +59,9 @@ export default function CalendarScreen() {
         end: endOfDay.getTime(),
       });
       
-      setEvents(response.data || []);
+      // Backend returns { data: CalendarEvent[] } or { events: CalendarEvent[] }
+      const eventsData = response.data || response.events || [];
+      setEvents(Array.isArray(eventsData) ? eventsData : []);
     } catch (error) {
       console.error('Failed to load events:', error);
       Alert.alert('Error', 'Failed to load calendar events');
@@ -60,8 +76,10 @@ export default function CalendarScreen() {
     setIsRefreshing(false);
   };
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
+  const formatTime = (timestamp: string | number | undefined) => {
+    if (!timestamp) return 'N/A';
+    const date = typeof timestamp === 'number' ? new Date(timestamp) : new Date(timestamp);
+    return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
@@ -77,27 +95,35 @@ export default function CalendarScreen() {
     });
   };
 
-  const getEventTypeColor = (source: string) => {
-    switch (source) {
-      case 'google':
+  const getEventTypeColor = (eventType?: string) => {
+    switch (eventType) {
+      case 'meeting':
+        return 'bg-red-100 border-red-300';
+      case 'appointment':
         return 'bg-blue-100 border-blue-300';
-      case 'outlook':
+      case 'task':
         return 'bg-orange-100 border-orange-300';
-      case 'manual':
-        return 'bg-green-100 border-green-300';
+      case 'reminder':
+        return 'bg-yellow-100 border-yellow-300';
+      case 'break':
+        return 'bg-purple-100 border-purple-300';
       default:
         return 'bg-gray-100 border-gray-300';
     }
   };
 
-  const getEventTypeIcon = (source: string) => {
-    switch (source) {
-      case 'google':
+  const getEventTypeIcon = (eventType?: string) => {
+    switch (eventType) {
+      case 'meeting':
+        return '🤝';
+      case 'appointment':
         return '📅';
-      case 'outlook':
-        return '📧';
-      case 'manual':
-        return '✏️';
+      case 'task':
+        return '✅';
+      case 'reminder':
+        return '🔔';
+      case 'break':
+        return '☕';
       default:
         return '📋';
     }
@@ -119,55 +145,107 @@ export default function CalendarScreen() {
     setSelectedDate(new Date());
   };
 
+  // Month helpers
+  const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+  const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+  const startWeekday = startOfMonth.getDay(); // 0=Sun
+  const daysInMonth = endOfMonth.getDate();
+
+  const weeks: Array<Array<Date | null>> = (() => {
+    const cells: Array<Date | null> = [];
+    for (let i = 0; i < startWeekday; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) {
+      cells.push(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), d));
+    }
+    while (cells.length % 7 !== 0) cells.push(null);
+    const rows: Array<Array<Date | null>> = [];
+    for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
+    return rows;
+  })();
+
+  const goPrevMonth = () => {
+    const prev = new Date(selectedDate);
+    prev.setMonth(prev.getMonth() - 1);
+    setSelectedDate(prev);
+  };
+
+  const goNextMonth = () => {
+    const next = new Date(selectedDate);
+    next.setMonth(next.getMonth() + 1);
+    setSelectedDate(next);
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.colors.card }}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200">
+      <View className="flex-row items-center justify-between px-6 py-4" style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
         <TouchableOpacity
           onPress={() => router.back()}
-          className="p-2 rounded-full bg-gray-100"
+          className="p-2 rounded-2xl"
+          style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}
         >
-          <ArrowLeftIcon size={20} color="#374151" />
+          <ArrowLeftIcon size={20} color={theme.colors.muted} />
         </TouchableOpacity>
         
-        <Text className="text-xl font-bold text-gray-900">Calendar</Text>
+        <Text className="text-xl font-bold" style={{ color: theme.colors.foreground }}>Calendar</Text>
         
         <TouchableOpacity
           onPress={() => router.push('/modals/add-event')}
-          className="p-2 rounded-full bg-blue-500"
+          className="p-2 rounded-2xl"
+          style={{ backgroundColor: theme.colors.primaryLight, borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.radii.xl }}
         >
-          <PlusIcon size={20} color="white" />
+          <PlusIcon size={20} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
 
-      {/* Date Navigation */}
-      <View className="px-6 py-4 bg-gray-50">
-        <View className="flex-row items-center justify-between mb-3">
-          <TouchableOpacity
-            onPress={navigateToPreviousDay}
-            className="p-2 rounded-lg bg-white border border-gray-200"
-          >
-            <Text className="text-gray-600">←</Text>
+      {/* Month Header + Controls */}
+      <View className="px-6 py-4" style={{ backgroundColor: theme.colors.card, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity onPress={goPrevMonth} className="px-3 py-2 rounded-2xl" style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}>
+            <Text style={{ color: theme.colors.muted }}>←</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity
-            onPress={navigateToToday}
-            className="px-4 py-2 rounded-lg bg-blue-500"
-          >
-            <Text className="text-white font-medium">Today</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            onPress={navigateToNextDay}
-            className="p-2 rounded-lg bg-white border border-gray-200"
-          >
-            <Text className="text-gray-600">→</Text>
+          <Text className="text-lg font-semibold" style={{ color: theme.colors.foreground }}>
+            {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </Text>
+          <TouchableOpacity onPress={goNextMonth} className="px-3 py-2 rounded-2xl" style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}>
+            <Text style={{ color: theme.colors.muted }}>→</Text>
           </TouchableOpacity>
         </View>
-        
-        <Text className="text-lg font-semibold text-gray-900 text-center">
-          {formatDate(selectedDate)}
-        </Text>
+        <View className="flex-row justify-between mt-4">
+          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d) => (
+            <Text key={d} className="flex-1 text-center text-xs font-medium" style={{ color: theme.colors.muted }}>{d}</Text>
+          ))}
+        </View>
+        {/* Month Grid */}
+        <View className="mt-2">
+          {weeks.map((row, rIdx) => (
+            <View key={rIdx} className="flex-row">
+              {row.map((date, cIdx) => {
+                const isSelected = !!date && date.toDateString() === selectedDate.toDateString();
+                return (
+                  <View key={cIdx} className="flex-1 p-1">
+                    {date ? (
+                      <TouchableOpacity
+                        className="items-center justify-center px-3 py-3 rounded-2xl"
+                        style={{
+                          borderWidth: 1,
+                          borderColor: isSelected ? theme.colors.primary : theme.colors.border,
+                          backgroundColor: isSelected ? theme.colors.primaryLight : theme.colors.card,
+                          borderRadius: theme.radii.xl,
+                        }}
+                        onPress={() => setSelectedDate(date)}
+                      >
+                        <Text className="text-sm" style={{ color: isSelected ? theme.colors.primary : theme.colors.foreground }}>{date.getDate()}</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <View className="px-3 py-3" />
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          ))}
+        </View>
       </View>
 
       {/* Events List */}
@@ -179,23 +257,24 @@ export default function CalendarScreen() {
       >
         {isLoading ? (
           <View className="flex-1 justify-center items-center py-12">
-            <ActivityIndicator size="large" color="#3B82F6" />
-            <Text className="text-gray-500 mt-2">Loading events...</Text>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text className="mt-2" style={{ color: theme.colors.muted }}>Loading events...</Text>
           </View>
         ) : events.length === 0 ? (
           <View className="flex-1 justify-center items-center py-12">
-            <CalendarIcon size={64} color="#9CA3AF" />
-            <Text className="text-xl font-semibold text-gray-900 mt-4">
+            <CalendarIcon size={64} color={theme.colors.muted} />
+            <Text className="text-xl font-semibold mt-4" style={{ color: theme.colors.foreground }}>
               No events today
             </Text>
-            <Text className="text-gray-500 mt-2 text-center">
+            <Text className="mt-2 text-center" style={{ color: theme.colors.muted }}>
               Your calendar is clear for {formatDate(selectedDate)}
             </Text>
             <TouchableOpacity
               onPress={() => router.push('/modals/add-event')}
-              className="mt-6 px-6 py-3 bg-blue-500 rounded-xl"
+              className="mt-6 px-6 py-3 rounded-2xl"
+              style={{ backgroundColor: theme.colors.primaryLight, borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.radii.xl }}
             >
-              <Text className="text-white font-medium">Add Event</Text>
+              <Text className="font-medium text-center" style={{ color: theme.colors.primary }}>Add Event</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -203,48 +282,56 @@ export default function CalendarScreen() {
             {events.map((event) => (
               <TouchableOpacity
                 key={event.id}
-                className={`p-4 rounded-xl border-2 ${getEventTypeColor(event.source)}`}
+                className={`p-4 rounded-xl border-2 ${getEventTypeColor(event.eventType)}`}
                 onPress={() => {
                   // Navigate to event details
-                  Alert.alert('Event Details', `Title: ${event.title}\nTime: ${formatTime(event.start)} - ${formatTime(event.end)}`);
+                  Alert.alert('Event Details', `Title: ${event.title}\nTime: ${formatTime(event.startTime)} - ${formatTime(event.endTime)}`);
                 }}
               >
                 <View className="flex-row items-start justify-between">
                   <View className="flex-1">
                     <View className="flex-row items-center mb-2">
                       <Text className="text-lg mr-2">
-                        {getEventTypeIcon(event.source)}
+                        {getEventTypeIcon(event.eventType)}
                       </Text>
-                      <Text className="text-lg font-semibold text-gray-900 flex-1">
+                      <Text className="text-lg font-semibold flex-1" style={{ color: theme.colors.foreground }}>
                         {event.title}
                       </Text>
                     </View>
                     
                     {event.description && (
-                      <Text className="text-gray-600 mb-2" numberOfLines={2}>
+                      <Text className="mb-2" numberOfLines={2} style={{ color: theme.colors.muted }}>
                         {event.description}
                       </Text>
                     )}
                     
                     <View className="flex-row items-center space-x-4">
                       <View className="flex-row items-center">
-                        <ClockIcon size={16} color="#6B7280" />
-                        <Text className="text-gray-600 ml-1">
-                          {event.allDay 
+                        <ClockIcon size={16} color={theme.colors.muted} />
+                        <Text className="ml-1" style={{ color: theme.colors.muted }}>
+                          {event.isAllDay 
                             ? 'All day' 
-                            : `${formatTime(event.start)} - ${formatTime(event.end)}`
+                            : `${formatTime(event.startTime)} - ${formatTime(event.endTime)}`
                           }
                         </Text>
                       </View>
+                      {event.location && (
+                        <View className="flex-row items-center">
+                          <MapPinIcon size={16} color={theme.colors.muted} />
+                          <Text className="ml-1" numberOfLines={1} style={{ color: theme.colors.muted }}>
+                            {event.location}
+                          </Text>
+                        </View>
+                      )}
                     </View>
                   </View>
                 </View>
                 
-                {/* Event source indicator */}
+                {/* Event type indicator */}
                 <View className="absolute top-2 right-2">
-                  <View className="px-2 py-1 rounded-full bg-white/80">
-                    <Text className="text-xs font-medium text-gray-600 capitalize">
-                      {event.source}
+                  <View className="px-2 py-1 rounded-full" style={{ backgroundColor: theme.colors.card }}>
+                    <Text className="text-xs font-medium capitalize" style={{ color: theme.colors.muted }}>
+                      {event.eventType || 'event'}
                     </Text>
                   </View>
                 </View>
@@ -255,22 +342,24 @@ export default function CalendarScreen() {
       </ScrollView>
 
       {/* Quick Actions */}
-      <View className="px-6 py-4 border-t border-gray-200 bg-white">
-        <View className="flex-row space-x-3">
+      <View className="px-6 py-2" style={{ borderTopWidth: 1, borderTopColor: theme.colors.border, backgroundColor: theme.colors.card, paddingBottom: 6 }}>
+        <View className="flex-row space-x-2">
           <TouchableOpacity
             onPress={() => router.push('/modals/calendar-integrations')}
-            className="flex-1 py-3 px-4 bg-gray-100 rounded-xl flex-row items-center justify-center"
+            className="flex-1 py-2.5 px-4 rounded-2xl flex-row items-center justify-center"
+            style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}
           >
-            <CalendarIcon size={20} color="#374151" />
-            <Text className="text-gray-700 font-medium ml-2">Integrations</Text>
+            <CalendarIcon size={20} color={theme.colors.muted} />
+            <Text className="font-medium ml-2" style={{ color: theme.colors.foreground }}>Integrations</Text>
           </TouchableOpacity>
           
           <TouchableOpacity
             onPress={() => router.push('/modals/add-event')}
-            className="flex-1 py-3 px-4 bg-blue-500 rounded-xl flex-row items-center justify-center"
+            className="flex-1 py-2.5 px-4 rounded-2xl flex-row items-center justify-center"
+            style={{ backgroundColor: theme.colors.primaryLight, borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.radii.xl }}
           >
-            <PlusIcon size={20} color="white" />
-            <Text className="text-white font-medium ml-2">Add Event</Text>
+            <PlusIcon size={20} color={theme.colors.primary} />
+            <Text className="font-medium ml-2" style={{ color: theme.colors.primary }}>Add Event</Text>
           </TouchableOpacity>
         </View>
       </View>

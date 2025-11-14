@@ -124,7 +124,7 @@ export class StripeWebhookVerifier {
   /**
    * Verify webhook and return parsed event
    */
-  verify(payload: string, signature: string): StripeWebhookEvent {
+  async verify(payload: string, signature: string): Promise<StripeWebhookEvent> {
     return StripeWebhookVerifier.verifySignature(payload, signature, this.webhookSecret);
   }
 }

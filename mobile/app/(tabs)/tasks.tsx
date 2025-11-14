@@ -9,17 +9,21 @@ import {
   ClockIcon, 
   ExclamationTriangleIcon,
   CalendarIcon,
-  FlagIcon
+  FlagIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from 'react-native-heroicons/outline';
 import { CheckCircleIcon as CheckCircleSolid } from 'react-native-heroicons/solid';
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '../../lib/api';
+import { useAppTheme } from '../../constants/dynamicTheme';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 interface Task {
   id: string;
   title: string;
   description?: string;
   priority: number;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'done' | 'archived';
   dueDate?: string;
   estimatedDuration?: number;
   aiPriorityScore?: number;
@@ -28,8 +32,11 @@ interface Task {
 }
 
 export default function TasksScreen() {
+  const theme = useAppTheme();
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [deleteDialog, setDeleteDialog] = useState<{ visible: boolean; task: Task | null }>({ visible: false, task: null });
   const queryClient = useQueryClient();
 
   // Fetch tasks
@@ -37,7 +44,8 @@ export default function TasksScreen() {
     queryKey: ['tasks'],
     queryFn: async (): Promise<Task[]> => {
       const response = await apiClient.getTasks();
-      return response.tasks || [];
+      // Backend returns { tasks: Task[], hasMore, nextCursor, total }
+      return response.tasks || response.data?.tasks || [];
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -50,10 +58,25 @@ export default function TasksScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
     },
     onError: (error) => {
       Alert.alert('Error', 'Failed to update task');
     },
+  });
+
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => apiClient.deleteTask(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
+      Alert.alert('Deleted', 'Task deleted successfully');
+    },
+    onError: () => {
+      Alert.alert('Error', 'Failed to delete task');
+    }
   });
 
   const onRefresh = async () => {
@@ -68,7 +91,7 @@ export default function TasksScreen() {
   };
 
   const handleTaskPress = (task: Task) => {
-    router.push(`/modals/task-detail?id=${task.id}`);
+    router.push({ pathname: '/modals/task-detail', params: { id: task.id } } as any);
   };
 
   const handleCreateTask = () => {
@@ -76,11 +99,15 @@ export default function TasksScreen() {
   };
 
   const toggleTaskStatus = async (task: Task) => {
-    const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+    const newStatus = task.status === 'done' ? 'pending' : 'done';
     updateTaskMutation.mutate({
       taskId: task.id,
       updates: { status: newStatus }
     });
+  };
+
+  const confirmAndDeleteTask = (task: Task) => {
+    setDeleteDialog({ visible: true, task });
   };
 
   const filterOptions = [
@@ -97,53 +124,33 @@ export default function TasksScreen() {
       color: 'text-orange-600'
     },
     { 
-      key: 'in_progress', 
-      label: 'In Progress', 
-      count: tasks.filter(t => t.status === 'in_progress').length,
-      color: 'text-blue-600'
+      key: 'done', 
+      label: 'Done', 
+      count: tasks.filter(t => t.status === 'done').length,
+      color: 'text-green-600'
     },
     { 
-      key: 'completed', 
-      label: 'Done', 
-      count: tasks.filter(t => t.status === 'completed').length,
-      color: 'text-green-600'
+      key: 'archived', 
+      label: 'Archived', 
+      count: tasks.filter(t => t.status === 'archived').length,
+      color: 'text-gray-600'
     },
   ];
 
   const getFilteredTasks = () => {
-    let filtered = tasks;
-    
-    if (selectedFilter !== 'all') {
-      filtered = tasks.filter(task => task.status === selectedFilter);
-    }
-    
-    // Sort by priority and due date
-    return filtered.sort((a, b) => {
-      // Completed tasks go to bottom
-      if (a.status === 'completed' && b.status !== 'completed') return 1;
-      if (b.status === 'completed' && a.status !== 'completed') return -1;
-      
-      // Sort by priority (higher priority first)
-      if (a.priority !== b.priority) return b.priority - a.priority;
-      
-      // Sort by due date (earlier dates first)
-      if (a.dueDate && b.dueDate) {
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      }
-      if (a.dueDate && !b.dueDate) return -1;
-      if (!a.dueDate && b.dueDate) return 1;
-      
-      return 0;
-    });
+    // All: show everything in original order
+    if (selectedFilter === 'all') return tasks;
+    // Others: filter by status only, keep original order
+    return tasks.filter((t) => t.status === selectedFilter);
   };
 
   const getPriorityColor = (priority: number) => {
     switch (priority) {
-      case 4: return 'bg-red-100 text-red-700 border-red-200';
-      case 3: return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 2: return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 1: return 'bg-green-100 text-green-700 border-green-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 4: return 'text-red-700 border-red-300';
+      case 3: return 'text-orange-700 border-orange-300';
+      case 2: return 'text-yellow-700 border-yellow-300';
+      case 1: return 'text-green-700 border-green-300';
+      default: return 'text-gray-700 border-gray-300';
     }
   };
 
@@ -186,19 +193,20 @@ export default function TasksScreen() {
   const filteredTasks = getFilteredTasks();
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.colors.card }}>
       {/* Header */}
-      <View className="px-6 py-4 bg-white border-b border-gray-100">
+      <View className="px-6 py-4" style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
         <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text className="text-3xl font-bold text-gray-900">Tasks</Text>
-            <Text className="text-gray-600 mt-1">
-              {tasks.filter(t => t.status === 'completed').length} of {tasks.length} completed
+            <Text className="text-3xl font-bold" style={{ color: theme.colors.foreground }}>Tasks</Text>
+            <Text className="mt-1" style={{ color: theme.colors.muted }}>
+              {tasks.filter(t => t.status === 'done').length} of {tasks.length} completed
             </Text>
           </View>
           
           <TouchableOpacity
-            className="bg-blue-600 rounded-2xl px-6 py-3 shadow-sm"
+            className="rounded-2xl px-6 py-3 shadow-sm"
+            style={{ backgroundColor: theme.colors.primary }}
             onPress={handleCreateTask}
           >
             <View className="flex-row items-center">
@@ -213,36 +221,39 @@ export default function TasksScreen() {
           {filterOptions.map((filter, index) => (
             <TouchableOpacity
               key={filter.key}
-              className={`px-4 py-2 rounded-full flex-row items-center mr-3 ${
-                selectedFilter === filter.key
-                  ? 'bg-blue-100 border border-blue-200'
-                  : 'bg-gray-100'
-              }`}
+              className="flex-row items-center mr-3 px-6 py-3"
+              style={{
+                borderRadius: theme.radii.pill,
+                backgroundColor:
+                  selectedFilter === filter.key ? theme.colors.primaryLight : theme.colors.input,
+                borderWidth: 1,
+                borderColor:
+                  selectedFilter === filter.key ? theme.colors.primary : theme.colors.border,
+              }}
               onPress={() => setSelectedFilter(filter.key)}
             >
               <Text
-                className={`font-medium text-sm ${
-                  selectedFilter === filter.key
-                    ? 'text-blue-700'
-                    : 'text-gray-600'
-                }`}
+                className="font-medium text-sm"
+                style={{ color: selectedFilter === filter.key ? theme.colors.primary : theme.colors.muted }}
               >
                 {filter.label}
               </Text>
               {filter.count > 0 && (
                 <View
-                  className={`ml-2 px-2 py-0.5 rounded-full ${
-                    selectedFilter === filter.key
-                      ? 'bg-blue-200'
-                      : 'bg-gray-200'
-                  }`}
+                  className="ml-2 rounded-full"
+                  style={{
+                    paddingVertical: theme.spacing.xs,
+                    paddingHorizontal: theme.spacing.sm,
+                    backgroundColor:
+                      selectedFilter === filter.key ? theme.colors.primaryLight : theme.colors.surface,
+                    borderWidth: 1,
+                    borderColor:
+                      selectedFilter === filter.key ? theme.colors.primary : theme.colors.border,
+                  }}
                 >
                   <Text
-                    className={`text-xs font-medium ${
-                      selectedFilter === filter.key
-                        ? 'text-blue-800'
-                        : 'text-gray-700'
-                    }`}
+                    className="text-xs font-medium"
+                    style={{ color: selectedFilter === filter.key ? theme.colors.primary : theme.colors.muted }}
                   >
                     {filter.count}
                   </Text>
@@ -255,26 +266,27 @@ export default function TasksScreen() {
 
       {/* Task List */}
       <ScrollView 
-        className="flex-1 px-6"
+        className="flex-1"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
         {filteredTasks.length === 0 ? (
-          <View className="flex-1 items-center justify-center py-20">
+              <View className="flex-1 items-center justify-center py-20">
             <CheckCircleIcon size={64} color="#D1D5DB" />
-            <Text className="text-gray-500 text-lg font-medium mt-4">
-              {selectedFilter === 'all' ? 'No tasks yet' : `No ${selectedFilter} tasks`}
+            <Text className="text-lg font-medium mt-4" style={{ color: theme.colors.muted }}>
+              {selectedFilter === 'all' ? 'No tasks yet' : `No ${selectedFilter === 'done' ? 'completed' : selectedFilter} tasks`}
             </Text>
-            <Text className="text-gray-400 text-center mt-2 px-8">
+            <Text className="text-center mt-2 px-8" style={{ color: theme.colors.mutedAlt }}>
               {selectedFilter === 'all' 
                 ? 'Create your first task to get started with your productivity journey'
-                : `All your ${selectedFilter} tasks will appear here`
+                : `All your ${selectedFilter === 'done' ? 'completed' : selectedFilter} tasks will appear here`
               }
             </Text>
             {selectedFilter === 'all' && (
               <TouchableOpacity
-                className="bg-blue-600 rounded-2xl px-6 py-3 mt-6"
+                className="rounded-2xl px-6 py-3 mt-6"
+                style={{ backgroundColor: theme.colors.primary }}
                 onPress={handleCreateTask}
               >
                 <Text className="text-white font-semibold">Create First Task</Text>
@@ -282,45 +294,44 @@ export default function TasksScreen() {
             )}
           </View>
         ) : (
-          <View className="py-4 space-y-3">
-            {filteredTasks.map((task) => (
-              <TouchableOpacity
-                key={task.id}
-                className={`bg-white rounded-2xl p-4 shadow-sm border ${
-                  task.status === 'completed' 
-                    ? 'border-green-100 bg-green-50/30' 
-                    : 'border-gray-100'
-                }`}
-                onPress={() => handleTaskPress(task)}
-              >
+          <View>
+            {filteredTasks.map((task, index) => (
+              <View key={task.id}>
+                <TouchableOpacity
+                  className={`px-6 py-4`}
+                  style={{ backgroundColor: task.status === 'done' ? theme.colors.successBg : theme.colors.card }}
+                  onPress={() => setExpanded((prev) => ({ ...prev, [task.id]: !prev[task.id] }))}
+                  onLongPress={() => confirmAndDeleteTask(task)}
+                >
                 <View className="flex-row items-start">
                   {/* Checkbox */}
                   <TouchableOpacity
                     className="mr-4 mt-1"
                     onPress={() => toggleTaskStatus(task)}
                   >
-                    {task.status === 'completed' ? (
-                      <CheckCircleSolid size={24} color="#10B981" />
+                    {task.status === 'done' ? (
+                      <CheckCircleSolid size={24} color={theme.colors.success} />
                     ) : (
-                      <View className="w-6 h-6 rounded-full border-2 border-gray-300" />
-                    )}
-                  </TouchableOpacity>
+                      <View className="w-6 h-6 rounded-full border-2" style={{ borderColor: theme.colors.border }} />
+                  )}
+                </TouchableOpacity>
 
                   {/* Task Content */}
                   <View className="flex-1">
                     <View className="flex-row items-start justify-between mb-2">
                       <Text 
                         className={`text-lg font-semibold flex-1 ${
-                          task.status === 'completed' 
-                            ? 'text-gray-500 line-through' 
-                            : 'text-gray-900'
+                          task.status === 'done' 
+                            ? 'line-through' 
+                            : ''
                         }`}
-                        numberOfLines={2}
+                        style={{ color: task.status === 'done' ? theme.colors.muted : theme.colors.foreground }}
+                        numberOfLines={expanded[task.id] ? undefined : 2}
                       >
                         {task.title}
                       </Text>
                       
-                      {/* Priority Badge */}
+                      {/* Priority Badge - border only, colored text */}
                       <View className={`px-2 py-1 rounded-full border ml-3 ${getPriorityColor(task.priority)}`}>
                         <Text className="text-xs font-medium">
                           {getPriorityLabel(task.priority)}
@@ -330,10 +341,9 @@ export default function TasksScreen() {
 
                     {task.description && (
                       <Text 
-                        className={`text-sm mb-3 ${
-                          task.status === 'completed' ? 'text-gray-400' : 'text-gray-600'
-                        }`}
-                        numberOfLines={2}
+                        className={`text-sm mb-3`}
+                        style={{ color: task.status === 'done' ? theme.colors.mutedAlt : theme.colors.muted }}
+                        numberOfLines={expanded[task.id] ? undefined : 2}
                       >
                         {task.description}
                       </Text>
@@ -348,21 +358,23 @@ export default function TasksScreen() {
                         }`}>
                           <CalendarIcon size={14} color={
                             isOverdue(task.dueDate) ? '#DC2626' : 
-                            isDueToday(task.dueDate) ? '#EA580C' : '#6B7280'
+                            isDueToday(task.dueDate) ? theme.colors.warning : theme.colors.muted
                           } />
                           <Text className={`text-xs font-medium ml-1 ${
                             isOverdue(task.dueDate) ? 'text-red-600' : 
-                            isDueToday(task.dueDate) ? 'text-orange-600' : 'text-gray-500'
+                            isDueToday(task.dueDate) ? '' : ''
                           }`}>
-                            {formatDueDate(task.dueDate)}
+                            <Text style={{ color: isOverdue(task.dueDate) ? '#DC2626' : isDueToday(task.dueDate) ? theme.colors.warning : theme.colors.muted }}>
+                              {formatDueDate(task.dueDate)}
+                            </Text>
                           </Text>
                         </View>
                       )}
 
                       {task.estimatedDuration && (
                         <View className="flex-row items-center mr-4 mb-1">
-                          <ClockIcon size={14} color="#6B7280" />
-                          <Text className="text-xs text-gray-500 font-medium ml-1">
+                          <ClockIcon size={14} color={theme.colors.muted} />
+                          <Text className="text-xs font-medium ml-1" style={{ color: theme.colors.muted }}>
                             {task.estimatedDuration}m
                           </Text>
                         </View>
@@ -377,9 +389,42 @@ export default function TasksScreen() {
                         </View>
                       )}
                     </View>
+
+                    {/* Accordion extra info */}
+                    {expanded[task.id] && (
+                      <View className="mt-3">
+                        <View className="flex-row items-center">
+                          <Text className="text-xs" style={{ color: theme.colors.muted }}>Created:</Text>
+                          <Text className="text-xs ml-1" style={{ color: theme.colors.muted }}>
+                            {new Date(task.createdAt).toLocaleDateString()}
+                          </Text>
+                        </View>
+                        {task.updatedAt && (
+                          <View className="flex-row items-center mt-1">
+                            <Text className="text-xs" style={{ color: theme.colors.muted }}>Updated:</Text>
+                            <Text className="text-xs ml-1" style={{ color: theme.colors.muted }}>
+                              {new Date(task.updatedAt).toLocaleDateString()}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Accordion Toggle Icon */}
+                  <View className="ml-3 mt-1">
+                    {expanded[task.id] ? (
+                      <ChevronUpIcon size={20} color={theme.colors.muted} />
+                    ) : (
+                      <ChevronDownIcon size={20} color={theme.colors.muted} />
+                    )}
                   </View>
                 </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+                {index < filteredTasks.length - 1 && (
+                  <View className="h-px" style={{ backgroundColor: theme.colors.border }} />
+                )}
+              </View>
             ))}
           </View>
         )}
@@ -387,6 +432,20 @@ export default function TasksScreen() {
         {/* Bottom Padding for Tab Bar */}
         <View className="h-20" />
       </ScrollView>
+      <ConfirmDialog
+        visible={deleteDialog.visible}
+        title={'Delete Task'}
+        description={deleteDialog.task ? `Are you sure you want to delete "${deleteDialog.task.title}"?` : ''}
+        confirmText={'Delete'}
+        cancelText={'Cancel'}
+        onCancel={() => setDeleteDialog({ visible: false, task: null })}
+        onConfirm={() => {
+          if (deleteDialog.task) {
+            deleteTaskMutation.mutate(deleteDialog.task.id);
+          }
+          setDeleteDialog({ visible: false, task: null });
+        }}
+      />
     </SafeAreaView>
   );
 }

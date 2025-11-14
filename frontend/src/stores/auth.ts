@@ -332,31 +332,6 @@ export const useAuthStore = create<AuthStore>()(
 
       initialize: async () => {
         console.log('Auth store initialize called');
-        
-        // First, try to restore tokens from localStorage if store doesn't have them yet
-        // This handles cases where rehydration didn't work properly
-        try {
-          const authData = localStorage.getItem('timecraft-auth');
-          if (authData) {
-            const parsed = JSON.parse(authData);
-            const storedTokens = parsed?.state?.tokens || parsed?.tokens;
-            const storedUser = parsed?.state?.user || parsed?.user;
-            
-            if (storedTokens?.accessToken && !get().tokens?.accessToken) {
-              console.log('⚠️ Found tokens in localStorage but not in store, restoring...');
-              set({
-                user: storedUser,
-                tokens: storedTokens,
-                isAuthenticated: true,
-                isLoading: false,
-              });
-              console.log('✅ Restored tokens from localStorage');
-            }
-          }
-        } catch (error) {
-          console.warn('Failed to restore tokens from localStorage:', error);
-        }
-        
         const { tokens, isAuthenticated } = get();
         console.log('Current auth state:', { isAuthenticated, hasTokens: !!tokens?.accessToken });
 
@@ -378,14 +353,31 @@ export const useAuthStore = create<AuthStore>()(
               return;
             }
 
-            // Set tokens in API client from the Zustand store (already rehydrated)
-            // Don't rely on getStoredToken() which reads from localStorage
-            console.log('Setting tokens in API client from store');
-            apiClient.setTokens(tokens);
+            // Check if tokens are valid by trying to get a stored token from API client
+            const storedToken = apiClient.getStoredToken();
+            if (!storedToken) {
+              console.log('No valid token found in API client, clearing auth state');
+              set({
+                user: null,
+                tokens: null,
+                isAuthenticated: false,
+                isLoading: false,
+              });
+              return;
+            }
 
-            // Try to validate the token by making a profile request
-            // This is more reliable than parsing the JWT
-            try {
+            // Ensure token is valid before making requests
+            await apiClient.ensureValidToken();
+
+            // Tokens are still valid, continue with user profile
+            if (tokens?.accessToken) {
+              // Restore tokens in API client from store
+              if (!apiClient.restoreTokensFromStore()) {
+                console.log('Failed to restore tokens from store, using current tokens');
+                apiClient.setTokens(tokens);
+              }
+
+              // Fetch user profile to verify authentication
               const profile = await apiClient.getProfile();
               console.log('Profile loaded successfully:', profile?.email);
 
@@ -407,83 +399,27 @@ export const useAuthStore = create<AuthStore>()(
               startTokenValidation();
 
               console.log('Auth initialization completed successfully');
-            } catch (profileError) {
-              // Profile request failed - token might be expired
-              console.log('Profile request failed, token might be expired');
-              
-              // Try to refresh the token
-              try {
-                console.log('Attempting to refresh token...');
-                const refreshToken = tokens.refreshToken;
-                if (!refreshToken) {
-                  throw new Error('No refresh token available');
-                }
-                
-                const newTokens = await apiClient.refreshTokens(refreshToken);
-                console.log('Token refreshed successfully');
-                
-                // Update store with new tokens
-                set({
-                  tokens: newTokens,
-                  isAuthenticated: true,
-                  isLoading: false,
-                });
-                
-                // Set new tokens in API client
-                apiClient.setTokens(newTokens);
-                
-                // Try profile request again
-                const profile = await apiClient.getProfile();
-                console.log('Profile loaded successfully after refresh:', profile?.email);
-                
-                set({
-                  user: profile,
-                  isAuthenticated: true,
-                  isLoading: false,
-                });
-                
-                // Sync language from user profile
-                if (profile.preferredLanguage && profile.preferredLanguage !== i18n.language) {
-                  await i18n.changeLanguage(profile.preferredLanguage);
-                }
-                
-                // Connect to SSE after successful authentication
-                apiClient.connectSSE();
-                
-                // Start periodic token validation
-                startTokenValidation();
-                
-                console.log('Auth initialization completed successfully after refresh');
-              } catch (refreshError) {
-                console.error('Token refresh failed:', refreshError);
-                // If refresh fails, clear everything
-                set({
-                  user: null,
-                  tokens: null,
-                  isAuthenticated: false,
-                  isLoading: false,
-                });
-                apiClient.clearTokens();
-                stopTokenValidation();
-              }
-            }
-          } catch (error) {
-            console.error('Auth initialization failed:', error);
-            // Don't immediately clear - this might be a network error
-            // Only clear if it's a token-related error
-            if (error instanceof Error && error.message.includes('token')) {
+            } else {
+              // Tokens were cleared during validation (expired/invalid)
+              console.log('Tokens were cleared during validation');
               set({
                 user: null,
                 tokens: null,
                 isAuthenticated: false,
                 isLoading: false,
               });
-              apiClient.clearTokens();
-              stopTokenValidation();
-            } else {
-              // Network or other errors - just set loading to false
-              set({ isLoading: false });
             }
+          } catch (error) {
+            console.error('Auth initialization failed:', error);
+            // Clear invalid tokens and user data
+            set({
+              user: null,
+              tokens: null,
+              isAuthenticated: false,
+              isLoading: false,
+            });
+            apiClient.clearTokens();
+            stopTokenValidation();
           }
         } else {
           console.log('No tokens found, user not authenticated');

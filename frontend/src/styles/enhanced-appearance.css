@@ -1,0 +1,309 @@
+/* Enhanced Appearance Styles */
+
+/* Theme transition disable class */
+.theme-transition-disable,
+.theme-transition-disable *,
+.theme-transition-disable *:before,
+.theme-transition-disable *:after {
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+/* Font Size Variations */
+.font-size-small {
+  --font-size-xs: 0.6875rem;   /* 11px */
+  --font-size-sm: 0.8125rem;   /* 13px */
+  --font-size-base: 0.875rem;  /* 14px */
+  --font-size-lg: 1rem;        /* 16px */
+  --font-size-xl: 1.125rem;    /* 18px */
+  --font-size-2xl: 1.25rem;    /* 20px */
+  --font-size-3xl: 1.5rem;     /* 24px */
+  --font-size-4xl: 1.875rem;   /* 30px */
+  --font-size-5xl: 2.25rem;    /* 36px */
+  --font-size-6xl: 3rem;       /* 48px */
+}
+
+.font-size-medium {
+  --font-size-xs: 0.75rem;     /* 12px */
+  --font-size-sm: 0.875rem;    /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;    /* 18px */
+  --font-size-xl: 1.25rem;     /* 20px */
+  --font-size-2xl: 1.5rem;     /* 24px */
+  --font-size-3xl: 1.875rem;   /* 30px */
+  --font-size-4xl: 2.25rem;    /* 36px */
+  --font-size-5xl: 3rem;       /* 48px */
+  --font-size-6xl: 3.75rem;    /* 60px */
+}
+
+.font-size-large {
+  --font-size-xs: 0.875rem;    /* 14px */
+  --font-size-sm: 1rem;        /* 16px */
+  --font-size-base: 1.125rem;  /* 18px */
+  --font-size-lg: 1.25rem;     /* 20px */
+  --font-size-xl: 1.375rem;    /* 22px */
+  --font-size-2xl: 1.625rem;   /* 26px */
+  --font-size-3xl: 2rem;       /* 32px */
+  --font-size-4xl: 2.5rem;     /* 40px */
+  --font-size-5xl: 3.25rem;    /* 52px */
+  --font-size-6xl: 4rem;       /* 64px */
+}
+
+/* Layout Density Variations */
+.layout-compact {
+  --spacing-xs: 0.125rem;      /* 2px */
+  --spacing-sm: 0.25rem;       /* 4px */
+  --spacing-md: 0.5rem;        /* 8px */
+  --spacing-lg: 0.75rem;       /* 12px */
+  --spacing-xl: 1rem;          /* 16px */
+  --spacing-2xl: 1.5rem;       /* 24px */
+  --spacing-3xl: 2rem;         /* 32px */
+  --spacing-4xl: 3rem;         /* 48px */
+  --spacing-5xl: 4rem;         /* 64px */
+  --spacing-6xl: 6rem;         /* 96px */
+}
+
+.layout-comfortable {
+  --spacing-xs: 0.25rem;       /* 4px */
+  --spacing-sm: 0.5rem;        /* 8px */
+  --spacing-md: 1rem;          /* 16px */
+  --spacing-lg: 1.5rem;        /* 24px */
+  --spacing-xl: 2rem;          /* 32px */
+  --spacing-2xl: 3rem;         /* 48px */
+  --spacing-3xl: 4rem;         /* 64px */
+  --spacing-4xl: 6rem;         /* 96px */
+  --spacing-5xl: 8rem;         /* 128px */
+  --spacing-6xl: 12rem;        /* 192px */
+}
+
+.layout-spacious {
+  --spacing-xs: 0.375rem;      /* 6px */
+  --spacing-sm: 0.75rem;       /* 12px */
+  --spacing-md: 1.5rem;        /* 24px */
+  --spacing-lg: 2rem;          /* 32px */
+  --spacing-xl: 3rem;          /* 48px */
+  --spacing-2xl: 4rem;         /* 64px */
+  --spacing-3xl: 6rem;         /* 96px */
+  --spacing-4xl: 8rem;         /* 128px */
+  --spacing-5xl: 12rem;        /* 192px */
+  --spacing-6xl: 16rem;        /* 256px */
+}
+
+/* Animation Levels */
+.animations-none * {
+  animation: none !important;
+  transition: none !important;
+}
+
+.animations-reduced * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+.animations-reduced .animate-spin {
+  animation: spin 2s linear infinite !important;
+}
+
+.animations-reduced .animate-pulse {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+.animations-full {
+  /* Default animations - no changes needed */
+}
+
+/* High Contrast Mode */
+.high-contrast {
+  --color-foreground: #000000;
+  --color-background: #ffffff;
+  --color-muted-foreground: #333333;
+  --color-border: #000000;
+  --color-primary-500: #0066cc;
+  --color-primary-600: #0052a3;
+  --color-primary-700: #003d7a;
+}
+
+.dark.high-contrast {
+  --color-foreground: #ffffff;
+  --color-background: #000000;
+  --color-muted-foreground: #cccccc;
+  --color-border: #ffffff;
+  --color-primary-500: #66b3ff;
+  --color-primary-600: #4da6ff;
+  --color-primary-700: #3399ff;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .respect-motion-preference * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Enhanced Button Styles for Preview */
+.btn {
+  @apply inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 focus:ring-secondary;
+}
+
+.btn-outline {
+  @apply border border-border bg-transparent hover:bg-primary/5 hover:border-primary/30 focus:ring-primary;
+}
+
+/* Card Enhancements */
+.card {
+  @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm;
+}
+
+/* Enhanced Section Animations */
+.appearance-section-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.appearance-section-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease-out, transform 300ms ease-out;
+}
+
+.appearance-section-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.appearance-section-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 200ms ease-in, transform 200ms ease-in;
+}
+
+/* Color Theme Preview Animation */
+.color-preview-pulse {
+  animation: colorPulse 2s ease-in-out infinite;
+}
+
+@keyframes colorPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Enhanced Focus Styles */
+.enhanced-focus:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+/* Primary Color Checkboxes */
+input[type="checkbox"]:checked {
+  background-color: var(--color-primary-600) !important;
+  border-color: var(--color-primary-600) !important;
+}
+
+input[type="checkbox"]:focus {
+  ring-color: var(--color-primary-500) !important;
+  border-color: var(--color-primary-500) !important;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--color-primary-600);
+}
+
+/* Smooth Scrolling for Settings Sections */
+.settings-scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Loading States */
+.appearance-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.appearance-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--color-primary-500-rgb), 0.1),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Responsive Enhancements */
+@media (max-width: 640px) {
+  .appearance-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .appearance-buttons {
+    flex-direction: column;
+  }
+  
+  .appearance-buttons > * {
+    width: 100%;
+  }
+}
+
+/* Dark Mode Specific Enhancements */
+.dark .appearance-section {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .appearance-preview {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Light Mode Specific Enhancements */
+.light .appearance-section {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .appearance-preview {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.1);
+}

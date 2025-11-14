@@ -88,13 +88,13 @@ const FocusTimer: React.FC<FocusTimerProps> = ({ onComplete }) => {
 
   const getProgress = (): number => {
     if (!currentSession) return 0;
-    const totalSeconds = currentSession.duration * 60;
+    const totalSeconds = currentSession.plannedDuration * 60;
     const elapsed = totalSeconds - timeRemaining;
     return elapsed / totalSeconds;
   };
 
-  const getSessionTypeEmoji = (type: string): string => {
-    switch (type) {
+  const getSessionTypeEmoji = (sessionType: string): string => {
+    switch (sessionType) {
       case 'pomodoro': return '🍅';
       case 'deep_work': return '🎯';
       case 'break': return '☕';
@@ -102,8 +102,8 @@ const FocusTimer: React.FC<FocusTimerProps> = ({ onComplete }) => {
     }
   };
 
-  const getSessionTypeColor = (type: string): string => {
-    switch (type) {
+  const getSessionTypeColor = (sessionType: string): string => {
+    switch (sessionType) {
       case 'pomodoro': return '#ef4444'; // red
       case 'deep_work': return '#3b82f6'; // blue
       case 'break': return '#22c55e'; // green
@@ -120,7 +120,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({ onComplete }) => {
   }
 
   const progress = getProgress();
-  const sessionColor = getSessionTypeColor(currentSession.type);
+  const sessionColor = getSessionTypeColor(currentSession.sessionType);
 
   return (
     <View className="items-center justify-center py-8">
@@ -160,7 +160,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({ onComplete }) => {
           {/* Session Info */}
           <View className="items-center">
             <Text style={{ fontSize: 48 }}>
-              {getSessionTypeEmoji(currentSession.type)}
+              {getSessionTypeEmoji(currentSession.sessionType)}
             </Text>
             
             <Text
@@ -175,7 +175,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({ onComplete }) => {
             </Text>
             
             <Text className="text-gray-600 text-lg mt-2 capitalize">
-              {currentSession.type.replace('_', ' ')}
+              {currentSession.sessionType.replace('_', ' ')}
             </Text>
             
             {isPaused && (
@@ -203,7 +203,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({ onComplete }) => {
             {Math.floor(progress * 100)}% complete
           </Text>
           <Text className="text-gray-500 text-sm">
-            {currentSession.duration} min session
+            {currentSession.plannedDuration} min session
           </Text>
         </View>
       </View>
@@ -232,10 +232,10 @@ const FocusTimer: React.FC<FocusTimerProps> = ({ onComplete }) => {
       </View>
 
       {/* Session Details */}
-      {currentSession.taskId && (
+      {((currentSession as any)?.taskId) && (
         <View className="mt-6 bg-gray-100 rounded-xl p-4">
           <Text className="text-gray-700 font-medium">
-            Working on task: {currentSession.taskId}
+            Working on task: {(currentSession as any).taskId}
           </Text>
         </View>
       )}

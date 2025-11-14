@@ -35,62 +35,78 @@ export const createMockEnv = (): Env => ({
 function createMockD1(): any {
   const mockResults = new Map<string, any>();
   
-  return {
-    // DatabaseService interface methods
-    query: async (query: string, params: any[] = []) => {
-      const key = `${query}_${JSON.stringify(params)}`;
-      const result = mockResults.get(key);
-      if (result && result.error) {
-        throw result.error;
-      }
-      return {
-        success: true,
-        results: result || [],
-        meta: { changes: 1, last_row_id: 1 }
-      };
-    },
-    execute: async (query: string, params: any[] = []) => {
-      const key = `${query}_${JSON.stringify(params)}`;
-      const result = mockResults.get(key);
-      if (result && result.error) {
-        throw result.error;
-      }
-      return {
-        success: true,
-        results: result || [],
-        meta: { changes: 1, last_row_id: 1 }
-      };
-    },
-    // Legacy D1 interface for backward compatibility
-    prepare: (query: string) => ({
-      bind: (...params: any[]) => ({
-        run: async () => ({
-          success: true,
-          results: mockResults.get(query) || [],
-          meta: { changes: 1, last_row_id: 1 }
+  const mockDB = {
+    prepare: vi.fn((query: string) => {
+      const statement = {
+        bind: vi.fn((...params: any[]) => {
+          const key = `${query}_${JSON.stringify(params)}`;
+          return {
+            run: vi.fn(async () => {
+              const result = mockResults.get(key) || mockResults.get(query);
+              if (result && result.error) {
+                throw result.error;
+              }
+              return {
+                success: true,
+                results: result || [],
+                meta: { changes: 1, last_row_id: 1, duration: 0.1 }
+              };
+            }),
+            all: vi.fn(async () => {
+              const result = mockResults.get(key) || mockResults.get(query);
+              if (result && result.error) {
+                throw result.error;
+              }
+              return {
+                success: true,
+                results: result || []
+              };
+            }),
+            first: vi.fn(async () => {
+              const result = mockResults.get(key) || mockResults.get(query);
+              if (result && result.error) {
+                throw result.error;
+              }
+              return (result || [])[0] || null;
+            })
+          };
         }),
-        all: async () => ({
-          success: true,
-          results: mockResults.get(query) || []
+        run: vi.fn(async () => {
+          const result = mockResults.get(query);
+          if (result && result.error) {
+            throw result.error;
+          }
+          return {
+            success: true,
+            results: result || [],
+            meta: { changes: 1, last_row_id: 1, duration: 0.1 }
+          };
         }),
-        first: async () => (mockResults.get(query) || [])[0]
-      }),
-      run: async () => ({
-        success: true,
-        results: mockResults.get(query) || [],
-        meta: { changes: 1, last_row_id: 1 }
-      }),
-      all: async () => ({
-        success: true,
-        results: mockResults.get(query) || []
-      }),
-      first: async () => (mockResults.get(query) || [])[0]
+        all: vi.fn(async () => {
+          const result = mockResults.get(query);
+          if (result && result.error) {
+            throw result.error;
+          }
+          return {
+            success: true,
+            results: result || []
+          };
+        }),
+        first: vi.fn(async () => {
+          const result = mockResults.get(query);
+          if (result && result.error) {
+            throw result.error;
+          }
+          return (result || [])[0] || null;
+        })
+      };
+      return statement;
     }),
-    exec: async (query: string) => ({
+    exec: vi.fn(async (query: string) => ({
       success: true,
       results: mockResults.get(query) || []
-    }),
-    // Helper to set mock data
+    })),
+    // Helper methods for testing
     _setMockData: (query: string, data: any[]) => {
       mockResults.set(query, data);
     },
@@ -98,10 +114,12 @@ function createMockD1(): any {
       mockResults.clear();
     },
     _setMockError: (query: string, error: Error) => {
-      // Store error to throw when query is executed
       mockResults.set(query, { error });
-    }
+    },
+    _getMockResults: () => mockResults
   };
+  
+  return mockDB;
 }
 
 // Mock KV Store
@@ -352,6 +370,83 @@ export function setupTestDatabase(mockDB: any) {
   
   // Set up health logs  
   mockDB._setMockData('SELECT * FROM health_logs WHERE user_id = ?_["user_test_regular"]', testHealthLogs);
+
+  // Set up badge system data
+  const badgeDefinitions = [
+    {
+      id: 'badge_first_task',
+      achievement_key: 'first_task',
+      category: 'tasks',
+      title_en: 'First Task',
+      description_en: 'Complete your first task',
+      criteria: JSON.stringify({ type: 'count', threshold: 1, metric: 'tasks_completed' }),
+      points_awarded: 10,
+      rarity: 'common',
+      icon_emoji: '🎯',
+      color_primary: '#3B82F6',
+      color_secondary: '#1E40AF',
+      is_active: 1
+    },
+    {
+      id: 'badge_task_master_10',
+      achievement_key: 'task_master_10',
+      category: 'tasks',
+      title_en: 'Task Master',
+      description_en: 'Complete 10 tasks',
+      criteria: JSON.stringify({ type: 'count', threshold: 10, metric: 'tasks_completed' }),
+      points_awarded: 50,
+      rarity: 'uncommon',
+      icon_emoji: '🏆',
+      color_primary: '#F59E0B',
+      color_secondary: '#D97706',
+      is_active: 1
+    },
+    {
+      id: 'badge_early_adopter',
+      achievement_key: 'early_adopter',
+      category: 'engagement',
+      title_en: 'Early Adopter',
+      description_en: 'Use the app for 7 consecutive days',
+      criteria: JSON.stringify({ type: 'time_based', threshold: 7, metric: 'days_since_registration' }),
+      points_awarded: 25,
+      rarity: 'rare',
+      icon_emoji: '🌟',
+      color_primary: '#8B5CF6',
+      color_secondary: '#7C3AED',
+      is_active: 1
+    },
+    {
+      id: 'badge_early_bird',
+      achievement_key: 'early_bird',
+      category: 'habits',
+      title_en: 'Early Bird',
+      description_en: 'Complete tasks before 9 AM',
+      criteria: JSON.stringify({ type: 'custom', threshold: 5, metric: 'early_tasks', conditions: { before_hour: 9 } }),
+      points_awarded: 20,
+      rarity: 'uncommon',
+      icon_emoji: '🌅',
+      color_primary: '#F97316',
+      color_secondary: '#EA580C',
+      is_active: 1
+    }
+  ];
+
+  // Mock badge definitions queries
+  mockDB._setMockData('SELECT * FROM achievement_definitions WHERE is_active = 1 ORDER BY points_awarded ASC', badgeDefinitions);
+  mockDB._setMockData('SELECT * FROM achievement_definitions WHERE is_active = ?', badgeDefinitions);
+  
+  // Mock user badges (initially empty)
+  mockDB._setMockData('SELECT * FROM user_badges WHERE user_id = ? ORDER BY unlocked_at DESC', []);
+  
+  // Mock task completion counts - default to 0
+  mockDB._setMockData('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND status = ?', [{ count: 0 }]);
+  
+  // Mock user data for badge checking
+  mockDB._setMockData('SELECT created_at FROM users WHERE id = ?', [{ created_at: Date.now() - (8 * 24 * 60 * 60 * 1000) }]);
+  mockDB._setMockData('SELECT badge_points FROM users WHERE id = ?', [{ badge_points: 0 }]);
+  
+  // Mock early task completion queries
+  mockDB._setMockData('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND status = ? AND CAST(strftime(\'%H\', datetime(updated_at/1000, \'unixepoch\')) AS INTEGER) < ?', [{ count: 0 }]);
 }
 
 // Assertion helpers
@@ -373,8 +468,21 @@ export async function expectValidationError(response: Response, field?: string) 
   expect(response.status).toBe(400);
   const body = await response.json();
   expect(body.error).toBeDefined();
+  
   if (field) {
-    expect(body.error).toContain(field);
+    // Handle both string errors and Zod error objects
+    if (typeof body.error === 'string') {
+      expect(body.error).toContain(field);
+    } else if (body.error.issues && Array.isArray(body.error.issues)) {
+      // Zod error format
+      const fieldFound = body.error.issues.some((issue: any) => 
+        issue.path && issue.path.includes(field)
+      );
+      expect(fieldFound).toBe(true);
+    } else {
+      // Fallback - convert error to string and check
+      expect(JSON.stringify(body.error)).toContain(field);
+    }
   }
 }
 
@@ -424,6 +532,54 @@ export const mockExternalAPIs = {
       id: 'sub_test_subscription',
       status: 'active',
       current_period_end: Math.floor(Date.now() / 1000) + 86400
+    },
+    checkoutSession: {
+      id: 'cs_test_session',
+      url: 'https://checkout.stripe.com/pay/cs_test_session'
+    },
+    paymentMethods: {
+      data: [
+        {
+          id: 'pm_test_123',
+          type: 'card',
+          card: {
+            brand: 'visa',
+            last4: '4242',
+            exp_month: 12,
+            exp_year: 2025
+          }
+        }
+      ]
+    },
+    setupIntent: {
+      id: 'seti_test_123',
+      client_secret: 'seti_test_123_secret_abc123'
+    },
+    invoices: {
+      data: [
+        {
+          id: 'in_test_123',
+          amount_paid: 1999,
+          status: 'paid',
+          created: Math.floor(Date.now() / 1000),
+          hosted_invoice_url: 'https://invoice.stripe.com/in_test_123'
+        }
+      ],
+      has_more: false
+    },
+    upcomingInvoice: {
+      amount_due: 1999,
+      currency: 'usd',
+      period_start: Math.floor(Date.now() / 1000),
+      period_end: Math.floor(Date.now() / 1000) + 2592000,
+      lines: {
+        data: [
+          {
+            description: 'Premium Monthly Subscription',
+            amount: 1999
+          }
+        ]
+      }
     }
   },
   
@@ -458,6 +614,28 @@ export function setupMockExternalAPIs() {
       ok: true,
       json: () => Promise.resolve(mockExternalAPIs.stripe.customer)
     });
+}
+
+// Helper to set up badge test scenarios
+export function setupBadgeTestScenario(mockDB: any, scenario: 'first_task' | 'task_master' | 'early_adopter' | 'early_bird') {
+  switch (scenario) {
+    case 'first_task':
+      // User has completed 1 task
+      mockDB._setMockData('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND status = ?', [{ count: 1 }]);
+      break;
+    case 'task_master':
+      // User has completed 10 tasks
+      mockDB._setMockData('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND status = ?', [{ count: 10 }]);
+      break;
+    case 'early_adopter':
+      // User registered 8 days ago
+      mockDB._setMockData('SELECT created_at FROM users WHERE id = ?', [{ created_at: Date.now() - (8 * 24 * 60 * 60 * 1000) }]);
+      break;
+    case 'early_bird':
+      // User has completed 5 tasks before 9 AM
+      mockDB._setMockData('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND status = ? AND CAST(strftime(\'%H\', datetime(updated_at/1000, \'unixepoch\')) AS INTEGER) < ?', [{ count: 5 }]);
+      break;
+  }
 }
 
 // Helper functions for creating test data

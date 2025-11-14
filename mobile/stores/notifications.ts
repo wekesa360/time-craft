@@ -8,7 +8,9 @@ interface NotificationStore {
   // State
   isInitialized: boolean;
   pushToken: string | null;
-  isLoading: boolean;
+  isLoading: boolean; // compatibility
+  isFetching: boolean;
+  isMutating: boolean;
   settings: PushNotificationSettings;
   scheduledNotifications: {
     taskReminders: Record<string, string>; // taskId -> notificationId
@@ -21,6 +23,7 @@ interface NotificationStore {
   updateSettings: (settings: Partial<PushNotificationSettings>) => Promise<void>;
   scheduleTaskReminder: (taskId: string, title: string, dueDate: Date) => Promise<void>;
   scheduleHealthReminders: () => Promise<void>;
+  scheduleWeeklyReport: () => Promise<void>;
   cancelTaskReminder: (taskId: string) => Promise<void>;
   cancelAllNotifications: () => Promise<void>;
   clearBadge: () => Promise<void>;
@@ -34,6 +37,8 @@ export const useNotificationStore = create<NotificationStore>()(
       isInitialized: false,
       pushToken: null,
       isLoading: false,
+      isFetching: false,
+      isMutating: false,
       settings: {
         taskReminders: true,
         focusSessionAlerts: true,
@@ -48,7 +53,7 @@ export const useNotificationStore = create<NotificationStore>()(
       },
 
       setLoading: (loading) => {
-        set({ isLoading: loading });
+        set({ isLoading: loading, isMutating: loading });
       },
 
       initialize: async () => {
@@ -56,7 +61,7 @@ export const useNotificationStore = create<NotificationStore>()(
         if (state.isInitialized) return;
 
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isFetching: true });
           
           // Initialize notification service
           const pushToken = await notificationService.initialize();
@@ -72,6 +77,7 @@ export const useNotificationStore = create<NotificationStore>()(
             pushToken,
             settings: settings || state.settings,
             isLoading: false,
+            isFetching: false,
           });
 
           // Schedule recurring notifications
@@ -80,7 +86,7 @@ export const useNotificationStore = create<NotificationStore>()(
           
         } catch (error) {
           console.error('Failed to initialize notifications:', error);
-          set({ isLoading: false });
+          set({ isLoading: false, isFetching: false });
         }
       },
 
@@ -89,7 +95,7 @@ export const useNotificationStore = create<NotificationStore>()(
         const updatedSettings = { ...state.settings, ...newSettings };
         
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isMutating: true });
           
           // Update settings on backend
           await notificationService.updateNotificationSettings(newSettings);
@@ -146,10 +152,10 @@ export const useNotificationStore = create<NotificationStore>()(
             await get().scheduleWeeklyReport();
           }
 
-          set({ settings: updatedSettings, isLoading: false });
+          set({ settings: updatedSettings, isLoading: false, isMutating: false });
         } catch (error) {
           console.error('Failed to update notification settings:', error);
-          set({ isLoading: false });
+          set({ isLoading: false, isMutating: false });
           throw error;
         }
       },

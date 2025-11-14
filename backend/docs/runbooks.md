@@ -84,11 +84,11 @@ curl https://api.timeandwellness.com/health
 
 ### Health Check Endpoints
 
-| Endpoint | Purpose | Expected Response |
-|----------|---------|-------------------|
-| `/health` | Basic health check | `{"status": "healthy"}` |
-| `/health/db` | Database connectivity | `{"database": "connected"}` |
-| `/health/detailed` | Comprehensive health | Full system status |
+| Endpoint           | Purpose               | Expected Response           |
+| ------------------ | --------------------- | --------------------------- |
+| `/health`          | Basic health check    | `{"status": "healthy"}`     |
+| `/health/db`       | Database connectivity | `{"database": "connected"}` |
+| `/health/detailed` | Comprehensive health  | Full system status          |
 
 ### Key Metrics to Monitor
 
@@ -120,6 +120,11 @@ curl https://api.timeandwellness.com/health
    - Badge unlocks
    - Social interactions
    - Student verifications
+   - Subscription conversions
+   - Payment success rates
+   - Monthly recurring revenue (MRR)
+   - Customer lifetime value (CLV)
+   - Churn rate
 
 ### Monitoring Tools
 
@@ -134,11 +139,17 @@ Critical Alerts:
   - API error rate > 5%
   - Response time > 1000ms
   - Database connection failures
+  - Payment processing failures > 10%
+  - Stripe webhook failures > 5%
+  - Subscription creation failures > 5%
 
 Warning Alerts:
   - API error rate > 1%
   - Response time > 500ms
   - Memory usage > 80%
+  - Payment processing failures > 5%
+  - Failed payment attempts > 3 per user per hour
+  - Subscription churn rate > 10% monthly
 ```
 
 ## Database Operations
@@ -190,6 +201,38 @@ SELECT type, COUNT(*)
 FROM health_logs 
 WHERE recorded_at > datetime('now', '-24 hours')
 GROUP BY type;
+
+-- Check subscription metrics
+SELECT 
+  plan_id,
+  status,
+  COUNT(*) as count
+FROM user_subscriptions 
+GROUP BY plan_id, status
+ORDER BY count DESC;
+
+-- Check payment success rate
+SELECT 
+  DATE(created_at) as date,
+  COUNT(CASE WHEN status = 'succeeded' THEN 1 END) as successful,
+  COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed,
+  COUNT(CASE WHEN status = 'failed' THEN 1 END) * 100.0 / COUNT(*) as failure_rate
+FROM payments 
+WHERE created_at > datetime('now', '-7 days')
+GROUP BY DATE(created_at)
+ORDER BY date DESC;
+
+-- Check monthly recurring revenue
+SELECT 
+  sp.name,
+  sp.price / 100.0 as monthly_price,
+  COUNT(us.id) as active_subscriptions,
+  (COUNT(us.id) * sp.price / 100.0) as monthly_revenue
+FROM user_subscriptions us
+JOIN subscription_plans sp ON us.plan_id = sp.id
+WHERE us.status = 'active'
+GROUP BY sp.id
+ORDER BY monthly_revenue DESC;
 ```
 
 ### Database Maintenance
@@ -366,14 +409,88 @@ curl -X POST "https://onesignal.com/api/v1/notifications" \
   -d '{"app_id": "YOUR_APP_ID", "include_external_user_ids": ["user_123"]}'
 ```
 
+#### 9. Payment Processing Failures
+
+**Symptoms:** Subscription creation fails, payment method errors, billing issues
+
+**Investigation Steps:**
+1. Check Stripe API status and connectivity
+2. Verify webhook endpoint configuration
+3. Review payment method validation
+4. Check subscription status in database vs Stripe
+
+**Resolution:**
+```bash
+# Check Stripe API connectivity
+curl -X GET "https://api.stripe.com/v1/account" \
+  -H "Authorization: Bearer $STRIPE_SECRET_KEY"
+
+# Verify webhook configuration
+curl -X GET "https://api.stripe.com/v1/webhook_endpoints" \
+  -H "Authorization: Bearer $STRIPE_SECRET_KEY"
+
+# Check subscription sync between database and Stripe
+wrangler d1 execute time-wellness-db --command "
+  SELECT us.*, u.email 
+  FROM user_subscriptions us 
+  JOIN users u ON us.user_id = u.id 
+  WHERE us.status != 'canceled' 
+  ORDER BY us.updated_at DESC LIMIT 10
+"
+
+# Manually sync subscription status
+curl -X GET "https://api.stripe.com/v1/subscriptions/sub_stripe_id" \
+  -H "Authorization: Bearer $STRIPE_SECRET_KEY"
+```
+
+#### 10. Subscription Billing Issues
+
+**Symptoms:** Failed payments, incorrect billing amounts, subscription status mismatches
+
+**Investigation Steps:**
+1. Check payment failure reasons in Stripe
+2. Verify subscription plan pricing
+3. Review usage tracking accuracy
+4. Check webhook event processing
+
+**Resolution:**
+```bash
+# Check recent payment failures
+wrangler d1 execute time-wellness-db --command "
+  SELECT p.*, u.email, us.plan_id
+  FROM payments p
+  JOIN users u ON p.user_id = u.id
+  JOIN user_subscriptions us ON p.subscription_id = us.id
+  WHERE p.status = 'failed' 
+    AND p.created_at > datetime('now', '-7 days')
+  ORDER BY p.created_at DESC
+"
+
+# Verify subscription plan pricing
+wrangler d1 execute time-wellness-db --command "
+  SELECT * FROM subscription_plans WHERE is_active = 1
+"
+
+# Check webhook processing status
+wrangler d1 execute time-wellness-db --command "
+  SELECT event_type, processed, COUNT(*) as count
+  FROM webhook_events 
+  WHERE created_at > datetime('now', '-24 hours')
+  GROUP BY event_type, processed
+"
+
+# Retry failed webhook processing
+# (Manual process - identify failed events and reprocess)
+```
+
 ### Error Code Reference
 
-| Error Code | Description | Resolution |
-|------------|-------------|------------|
-| `AUTH_001` | Invalid JWT token | Check token format and expiration |
-| `DB_001` | Database connection failed | Verify D1 database status |
-| `RATE_001` | Rate limit exceeded | Check rate limit configuration |
-| `VAL_001` | Validation error | Review request payload format |
+| Error Code | Description                | Resolution                        |
+| ---------- | -------------------------- | --------------------------------- |
+| `AUTH_001` | Invalid JWT token          | Check token format and expiration |
+| `DB_001`   | Database connection failed | Verify D1 database status         |
+| `RATE_001` | Rate limit exceeded        | Check rate limit configuration    |
+| `VAL_001`  | Validation error           | Review request payload format     |
 
 ## Backup & Recovery
 
@@ -844,6 +961,327 @@ wrangler d1 execute time-wellness-db --command "
 "
 ```
 
+### Payments & Subscriptions Management
+
+#### Subscription Analytics
+
+```bash
+# Check subscription metrics
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    plan_id,
+    status,
+    COUNT(*) as count,
+    AVG(current_period_end - current_period_start) as avg_period_length
+  FROM user_subscriptions 
+  WHERE created_at > datetime('now', '-30 days')
+  GROUP BY plan_id, status
+  ORDER BY count DESC
+"
+
+# Monitor subscription churn rate
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    DATE(created_at) as date,
+    COUNT(CASE WHEN status = 'active' THEN 1 END) as new_subscriptions,
+    COUNT(CASE WHEN status = 'canceled' THEN 1 END) as cancellations
+  FROM user_subscriptions 
+  WHERE created_at > datetime('now', '-30 days')
+  GROUP BY DATE(created_at)
+  ORDER BY date DESC
+"
+
+# Check revenue metrics
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    sp.name as plan_name,
+    sp.price / 100.0 as price_usd,
+    COUNT(us.id) as active_subscriptions,
+    (COUNT(us.id) * sp.price / 100.0) as monthly_revenue
+  FROM user_subscriptions us
+  JOIN subscription_plans sp ON us.plan_id = sp.id
+  WHERE us.status = 'active'
+  GROUP BY sp.id, sp.name, sp.price
+  ORDER BY monthly_revenue DESC
+"
+```
+
+#### Payment Method Management
+
+```bash
+# Check payment method distribution
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    type,
+    card_brand,
+    COUNT(*) as count
+  FROM payment_methods 
+  WHERE created_at > datetime('now', '-30 days')
+  GROUP BY type, card_brand
+  ORDER BY count DESC
+"
+
+# Clean up expired payment methods
+wrangler d1 execute time-wellness-db --command "
+  DELETE FROM payment_methods 
+  WHERE card_exp_year < strftime('%Y', 'now') 
+     OR (card_exp_year = strftime('%Y', 'now') AND card_exp_month < strftime('%m', 'now'))
+"
+
+# Check payment failures
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    DATE(created_at) as date,
+    COUNT(CASE WHEN status = 'succeeded' THEN 1 END) as successful_payments,
+    COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments,
+    COUNT(CASE WHEN status = 'failed' THEN 1 END) * 100.0 / COUNT(*) as failure_rate
+  FROM payments 
+  WHERE created_at > datetime('now', '-7 days')
+  GROUP BY DATE(created_at)
+  ORDER BY date DESC
+"
+```
+
+#### Stripe Integration Management
+
+```bash
+# Test Stripe API connectivity
+curl -X GET "https://api.stripe.com/v1/account" \
+  -H "Authorization: Bearer $STRIPE_SECRET_KEY"
+
+# Check webhook endpoint status
+curl -X GET "https://api.stripe.com/v1/webhook_endpoints" \
+  -H "Authorization: Bearer $STRIPE_SECRET_KEY"
+
+# Verify webhook signatures (test)
+curl -X POST "https://api.timeandwellness.com/api/payments/webhooks/stripe" \
+  -H "stripe-signature: test_signature" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "test.event", "data": {"object": {}}}'
+
+# Monitor Stripe API usage
+curl -X GET "https://api.stripe.com/v1/events" \
+  -H "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  -G -d "limit=10"
+```
+
+#### Usage Analytics Management
+
+```bash
+# Check usage patterns by plan
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    us.plan_id,
+    AVG(ut.amount) as avg_usage,
+    MAX(ut.amount) as max_usage,
+    ut.resource_type
+  FROM usage_tracking ut
+  JOIN user_subscriptions us ON ut.user_id = us.user_id
+  WHERE ut.created_at > datetime('now', '-30 days')
+    AND us.status = 'active'
+  GROUP BY us.plan_id, ut.resource_type
+  ORDER BY us.plan_id, ut.resource_type
+"
+
+# Monitor users approaching limits
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    u.email,
+    us.plan_id,
+    ut.resource_type,
+    ut.amount as current_usage,
+    CASE 
+      WHEN us.plan_id LIKE '%premium%' THEN 1000
+      ELSE 100
+    END as limit_amount,
+    (ut.amount * 100.0 / CASE WHEN us.plan_id LIKE '%premium%' THEN 1000 ELSE 100 END) as usage_percentage
+  FROM usage_tracking ut
+  JOIN user_subscriptions us ON ut.user_id = us.user_id
+  JOIN users u ON ut.user_id = u.id
+  WHERE ut.created_at > datetime('now', '-7 days')
+    AND us.status = 'active'
+    AND (ut.amount * 100.0 / CASE WHEN us.plan_id LIKE '%premium%' THEN 1000 ELSE 100 END) > 80
+  ORDER BY usage_percentage DESC
+"
+
+# Reset usage tracking for new billing period
+wrangler d1 execute time-wellness-db --command "
+  DELETE FROM usage_tracking 
+  WHERE period_end < datetime('now', '-1 month')
+"
+```
+
+#### Billing Issue Resolution
+
+```bash
+# Handle failed payments
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    u.email,
+    us.plan_id,
+    p.amount / 100.0 as amount_usd,
+    p.status,
+    p.error_message,
+    p.created_at
+  FROM payments p
+  JOIN user_subscriptions us ON p.subscription_id = us.id
+  JOIN users u ON p.user_id = u.id
+  WHERE p.status = 'failed'
+    AND p.created_at > datetime('now', '-7 days')
+  ORDER BY p.created_at DESC
+"
+
+# Retry failed payments (manual process)
+curl -X POST "https://api.stripe.com/v1/invoices/in_failed_invoice/pay" \
+  -H "Authorization: Bearer $STRIPE_SECRET_KEY"
+
+# Update subscription status after payment resolution
+wrangler d1 execute time-wellness-db --command "
+  UPDATE user_subscriptions 
+  SET status = 'active', updated_at = strftime('%s', 'now') * 1000
+  WHERE stripe_subscription_id = 'sub_resolved_subscription'
+"
+```
+
+#### Subscription Plan Management
+
+```bash
+# Add new subscription plan
+wrangler d1 execute time-wellness-db --command "
+  INSERT INTO subscription_plans (
+    id, name, description, price, currency, interval_type, 
+    features, stripe_product_id, stripe_price_id, is_active, 
+    created_at, updated_at
+  ) VALUES (
+    'enterprise_monthly',
+    'Enterprise Monthly',
+    'Advanced features for teams',
+    4999,
+    'USD',
+    'month',
+    '[\"All Premium features\", \"Team collaboration\", \"Advanced analytics\", \"Priority support\"]',
+    'prod_enterprise',
+    'price_enterprise_monthly',
+    1,
+    strftime('%s', 'now') * 1000,
+    strftime('%s', 'now') * 1000
+  )
+"
+
+# Disable subscription plan
+wrangler d1 execute time-wellness-db --command "
+  UPDATE subscription_plans 
+  SET is_active = 0, updated_at = strftime('%s', 'now') * 1000
+  WHERE id = 'plan_to_disable'
+"
+
+# Update plan pricing
+wrangler d1 execute time-wellness-db --command "
+  UPDATE subscription_plans 
+  SET price = 2499, updated_at = strftime('%s', 'now') * 1000
+  WHERE id = 'premium'
+"
+```
+
+#### Webhook Event Management
+
+```bash
+# Check webhook event processing
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    event_type,
+    processed,
+    COUNT(*) as count,
+    AVG(CASE WHEN processed_at IS NOT NULL THEN processed_at - created_at END) as avg_processing_time
+  FROM webhook_events 
+  WHERE created_at > datetime('now', '-24 hours')
+  GROUP BY event_type, processed
+  ORDER BY count DESC
+"
+
+# Retry failed webhook events
+wrangler d1 execute time-wellness-db --command "
+  SELECT stripe_event_id, event_type, error_message
+  FROM webhook_events 
+  WHERE processed = 0 
+    AND created_at > datetime('now', '-24 hours')
+  ORDER BY created_at ASC
+"
+
+# Mark webhook event as processed
+wrangler d1 execute time-wellness-db --command "
+  UPDATE webhook_events 
+  SET processed = 1, processed_at = strftime('%s', 'now') * 1000
+  WHERE stripe_event_id = 'evt_webhook_id'
+"
+```
+
+#### Payment Security Monitoring
+
+```bash
+# Monitor suspicious payment patterns
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    u.email,
+    COUNT(p.id) as payment_attempts,
+    COUNT(CASE WHEN p.status = 'failed' THEN 1 END) as failed_attempts,
+    MIN(p.created_at) as first_attempt,
+    MAX(p.created_at) as last_attempt
+  FROM payments p
+  JOIN users u ON p.user_id = u.id
+  WHERE p.created_at > datetime('now', '-1 hour')
+  GROUP BY u.id, u.email
+  HAVING COUNT(p.id) > 5 OR COUNT(CASE WHEN p.status = 'failed' THEN 1 END) > 3
+  ORDER BY payment_attempts DESC
+"
+
+# Check for duplicate subscriptions
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    user_id,
+    COUNT(*) as active_subscriptions
+  FROM user_subscriptions 
+  WHERE status = 'active'
+  GROUP BY user_id
+  HAVING COUNT(*) > 1
+"
+
+# Monitor refund requests
+wrangler d1 execute time-wellness-db --command "
+  SELECT 
+    DATE(created_at) as date,
+    COUNT(*) as refund_requests,
+    SUM(amount) / 100.0 as total_refunded_usd
+  FROM payments 
+  WHERE status = 'refunded'
+    AND created_at > datetime('now', '-30 days')
+  GROUP BY DATE(created_at)
+  ORDER BY date DESC
+"
+```
+
+#### Emergency Payment Procedures
+
+```bash
+# Suspend user subscription (emergency)
+wrangler d1 execute time-wellness-db --command "
+  UPDATE user_subscriptions 
+  SET status = 'suspended', updated_at = strftime('%s', 'now') * 1000
+  WHERE user_id = 'user_to_suspend'
+"
+
+# Refund payment (requires Stripe dashboard or API)
+curl -X POST "https://api.stripe.com/v1/refunds" \
+  -H "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  -d "payment_intent=pi_payment_intent_id"
+
+# Emergency webhook endpoint disable
+# (Disable in Stripe dashboard if webhook endpoint is compromised)
+
+# Backup payment data
+wrangler d1 export time-wellness-db --output "payment-backup-$(date +%Y%m%d).sql" --table user_subscriptions --table payments --table payment_methods
+```
+
 ---
 
-**Note:** This runbook should be reviewed and updated regularly. All team members should be familiar with these procedures.
+**Note:** This runbook should be reviewed and updated regularly. All team members should be familiar with these procedures. Payment-related procedures require special attention to security and compliance requirements.

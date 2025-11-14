@@ -50,7 +50,7 @@ export interface Task {
   title: string;
   description?: string;
   priority: number; // 1-4 (1=low, 4=urgent)
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'done' | 'archived';
   dueDate?: string;
   estimatedDuration?: number; // in minutes
   aiPriorityScore?: number;
@@ -70,7 +70,7 @@ export interface UpdateTaskRequest {
   title?: string;
   description?: string;
   priority?: number;
-  status?: 'pending' | 'in_progress' | 'completed';
+  status?: 'pending' | 'done' | 'archived';
   dueDate?: string;
   estimatedDuration?: number;
 }

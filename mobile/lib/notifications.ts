@@ -6,13 +6,17 @@ import { apiClient } from './api';
 
 // Conditional import for Expo Go compatibility
 let Notifications: any = null;
+let notifiedUnavailable = false;
 try {
   // Only import notifications if not in Expo Go or if supported
   if (Constants.default.appOwnership !== 'expo') {
     Notifications = require('expo-notifications');
   }
 } catch (error) {
-  console.warn('expo-notifications not available in this environment');
+  if (!notifiedUnavailable) {
+    console.warn('expo-notifications not available in this environment');
+    notifiedUnavailable = true;
+  }
 }
 
 export interface PushNotificationSettings {
@@ -121,10 +125,13 @@ class NotificationService {
    */
   private async registerTokenWithBackend(token: string): Promise<void> {
     try {
-      await apiClient.post('/notifications/register-token', {
-        token,
-        platform: Platform.OS,
-        deviceId: Constants.default.installationId,
+      const deviceType = Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'web';
+      await apiClient.post('/api/notifications/register-device', {
+        deviceType,
+        pushToken: token,
+        language: (Constants as any).default?.expoConfig?.extra?.locale || 'en',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        appVersion: (Constants as any).default?.expoConfig?.version,
       });
     } catch (error) {
       console.error('Failed to register push token with backend:', error);
@@ -139,17 +146,15 @@ class NotificationService {
     
     // Handle incoming notifications when app is in foreground
     Notifications.setNotificationHandler({
-      handleNotification: async (notification) => {
+      handleNotification: async (notification: any) => {
         const { categoryId } = notification.request.content.data || {};
         
         return {
-          shouldShowAlert: true,
+          shouldShowAlert: categoryId !== 'focus_progress',
           shouldPlaySound: true,
           shouldSetBadge: true,
           shouldShowBanner: true,
           shouldShowList: true,
-          // Don't show alert for focus session notifications if they're frequent
-          shouldShowAlert: categoryId !== 'focus_progress',
         };
       },
     });
@@ -218,7 +223,10 @@ class NotificationService {
     trigger: any
   ): Promise<string | null> {
     if (!Notifications) {
-      console.warn('Notifications not available - skipping local notification');
+      if (!notifiedUnavailable) {
+        console.warn('Notifications not available - skipping local notification');
+        notifiedUnavailable = true;
+      }
       return null;
     }
     
@@ -383,8 +391,17 @@ class NotificationService {
    */
   async getNotificationSettings(): Promise<PushNotificationSettings | null> {
     try {
-      const response = await apiClient.get('/notifications/settings');
-      return response.data;
+      const response = await apiClient.get('/api/notifications/preferences');
+      const prefs = (response.data?.preferences) || {};
+      // Map backend preferences to mobile settings shape
+      const mapped: PushNotificationSettings = {
+        taskReminders: prefs.taskReminders ?? true,
+        focusSessionAlerts: true, // no direct backend key; keep enabled by default
+        healthReminders: (prefs.healthCheckins ?? prefs.waterReminders ?? prefs.workoutReminders) ?? true,
+        achievements: prefs.achievements ?? true,
+        weeklyReports: true, // no direct backend key; keep enabled by default
+      };
+      return mapped;
     } catch (error) {
       console.error('Failed to get notification settings:', error);
       return {
@@ -402,7 +419,14 @@ class NotificationService {
    */
   async updateNotificationSettings(settings: Partial<PushNotificationSettings>): Promise<void> {
     try {
-      await apiClient.put('/notifications/settings', settings);
+      // Map mobile settings to backend preferences payload
+      const payload: any = {};
+      if (settings.taskReminders !== undefined) payload.taskReminders = settings.taskReminders;
+      if (settings.healthReminders !== undefined) payload.healthCheckins = settings.healthReminders;
+      if (settings.achievements !== undefined) payload.achievements = settings.achievements;
+      // focusSessionAlerts and weeklyReports have no direct keys; skip sending
+
+      await apiClient.put('/api/notifications/preferences', payload);
     } catch (error) {
       console.error('Failed to update notification settings:', error);
     }
@@ -414,7 +438,7 @@ class NotificationService {
   setupNotificationResponseHandler(): void {
     if (!Notifications) return;
     
-    Notifications.addNotificationResponseReceivedListener((response) => {
+    Notifications.addNotificationResponseReceivedListener((response: any) => {
       const { actionIdentifier, notification } = response;
       const data = notification.request.content.data;
 
@@ -446,7 +470,7 @@ class NotificationService {
 
   private async handleCompleteTask(taskId: string): Promise<void> {
     try {
-      await apiClient.patch(`/tasks/${taskId}`, { status: 'completed' });
+      await apiClient.completeTask(taskId);
     } catch (error) {
       console.error('Failed to complete task from notification:', error);
     }
@@ -455,8 +479,8 @@ class NotificationService {
   private async handleSnoozeTask(taskId: string): Promise<void> {
     const snoozeTime = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     try {
-      const task = await apiClient.get(`/tasks/${taskId}`);
-      await this.scheduleTaskReminder(taskId, task.data.title, snoozeTime);
+      const task = await apiClient.getTask(taskId);
+      await this.scheduleTaskReminder(taskId, task.title, snoozeTime);
     } catch (error) {
       console.error('Failed to snooze task:', error);
     }

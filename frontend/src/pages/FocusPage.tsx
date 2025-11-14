@@ -62,7 +62,7 @@ export default function FocusPage() {
           <div className="max-w-md mx-auto">
             {/* Timer Display */}
             <div className="relative mb-8">
-              <div className="w-64 h-64 md:w-80 md:h-80 mx-auto rounded-full bg-white dark:bg-slate-800 border-8 border-primary flex items-center justify-center shadow-lg">
+              <div className="w-64 h-64 md:w-80 md:h-80 mx-auto rounded-full bg-card border-8 border-primary flex items-center justify-center shadow-lg">
                 <div className="text-center">
                   <div className="text-6xl md:text-7xl font-bold text-foreground font-mono">
                     {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
@@ -102,10 +102,10 @@ export default function FocusPage() {
                     setTime(preset.value * 60)
                     setIsRunning(false)
                   }}
-                  className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                  className={`py-2 px-3 rounded-xl text-sm font-medium transition-colors ${
                     time === preset.value * 60
                       ? "bg-primary text-primary-foreground"
-                      : "bg-white dark:bg-slate-800 border border-border hover:border-primary text-foreground"
+                      : "bg-card border border-border hover:border-primary text-foreground"
                   }`}
                 >
                   {preset.label}
@@ -159,10 +159,10 @@ export default function FocusPage() {
           })()}
 
           {/* Recent Sessions */}
-          <div className="bg-card rounded-2xl p-6 border border-border">
+          <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20">
             <h2 className="text-lg font-bold text-foreground mb-4">Recent Sessions</h2>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {todaySessions && todaySessions.length > 0 ? (
                 todaySessions.slice(0, 3).map((session: any) => {
                   const durationMinutes = Math.floor((session.duration || 0) / 60)
@@ -174,10 +174,12 @@ export default function FocusPage() {
                   return (
                     <button
                       key={session.id}
-                      className="w-full flex items-center justify-between p-3 rounded-lg bg-white dark:bg-slate-800 border border-border hover:border-primary transition-colors text-left"
+                      className="w-full flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/20 hover:border-primary transition-colors text-left"
                     >
                       <div className="flex items-center gap-3">
-                        <Target className="w-4 h-4 text-muted-foreground" />
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Play className="w-4 h-4 text-primary" />
+                        </div>
                         <span className="text-sm font-medium text-foreground">
                           {session.template_key || 'Focus Session'}
                         </span>
@@ -187,8 +189,16 @@ export default function FocusPage() {
                   )
                 })
               ) : (
-                <div className="text-center py-4 text-muted-foreground text-sm">
-                  No focus sessions today
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Clock className="w-8 h-8 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    No focus sessions today
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Start your first focus session to track your progress
+                  </p>
                 </div>
               )}
             </div>
@@ -253,28 +263,28 @@ export default function FocusPage() {
               </div>
 
               <div className="mt-6 grid md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
-                  <Clock className="w-8 h-8 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Avg Session</p>
-                    <p className="text-xl font-bold text-foreground">{avgSessionText}</p>
+                <div className="bg-primary/5 rounded-2xl p-4 md:p-6 border border-primary/20">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                    <Play className="w-6 h-6 text-primary" />
                   </div>
+                  <p className="text-2xl md:text-3xl font-bold text-foreground">{avgSessionText}</p>
+                  <p className="text-sm text-muted-foreground mt-1">Avg Session</p>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
-                  <Target className="w-8 h-8 text-orange-500" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Sessions</p>
-                    <p className="text-xl font-bold text-foreground">{totalSessions}</p>
+                <div className="bg-primary/5 rounded-2xl p-4 md:p-6 border border-primary/20">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                    <Target className="w-6 h-6 text-primary" />
                   </div>
+                  <p className="text-2xl md:text-3xl font-bold text-foreground">{totalSessions}</p>
+                  <p className="text-sm text-muted-foreground mt-1">Total Sessions</p>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
-                  <TrendingUp className="w-8 h-8 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Weekly Total</p>
-                    <p className="text-xl font-bold text-foreground">{totalHours.toFixed(1)}h</p>
+                <div className="bg-primary/5 rounded-2xl p-4 md:p-6 border border-primary/20">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                    <Clock className="w-6 h-6 text-primary" />
                   </div>
+                  <p className="text-2xl md:text-3xl font-bold text-foreground">{totalHours.toFixed(1)}h</p>
+                  <p className="text-sm text-muted-foreground mt-1">Weekly Total</p>
                 </div>
               </div>
             </>

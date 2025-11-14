@@ -1,26 +1,46 @@
-// API client for Time & Wellness Mobile Application
-import axios from 'axios';
-import type { AxiosInstance, AxiosError } from 'axios';
+// Unified API client for Time & Wellness Mobile Application
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import type {
-  AuthResponse,
   LoginForm,
   RegisterForm,
   User,
   Task,
-  TaskForm,
   HealthLog,
-  ExerciseData,
-  NutritionData,
-  MoodData,
-  HydrationData,
-  Badge,
+  ExercisePayload,
+  NutritionPayload,
+  MoodPayload,
+  HydrationPayload,
+  Achievement,
   CalendarEvent,
   FocusSession,
-  Notification,
   PaginatedResponse,
   AuthTokens,
 } from '../types';
+
+// Type aliases for compatibility
+type AuthResponse = {
+  user: User;
+  tokens: AuthTokens;
+  message?: string;
+};
+
+type TaskForm = {
+  title: string;
+  description?: string;
+  priority: number;
+  dueDate?: string;
+  estimatedDuration?: number;
+};
+
+type ExerciseData = ExercisePayload;
+type NutritionData = NutritionPayload;
+type MoodData = MoodPayload;
+type HydrationData = HydrationPayload;
+type Badge = Achievement;
+type Notification = any; // Notification type not defined in types
 
 // Simple notification system for React Native
 export const notify = {
@@ -29,23 +49,52 @@ export const notify = {
   info: (message: string) => console.log('INFO:', message),
 };
 
+// API Configuration - Read from environment variable
+const resolveApiBaseUrl = (): string => {
+  // 1) Check environment variable first (from .env file)
+  const envUrl = process.env.EXPO_PUBLIC_API_URL || Constants.expoConfig?.extra?.apiUrl;
+  if (envUrl && typeof envUrl === 'string') {
+    return envUrl;
+  }
+
+  // 2) Platform-aware sensible defaults for local dev
+  if (Platform.OS === 'android') {
+    // Android emulator loopback to host machine
+    return 'http://10.0.2.2:8787';
+  }
+  if (Platform.OS === 'ios') {
+    return 'http://localhost:8787';
+  }
+  return 'http://localhost:8787';
+};
+
+const API_BASE_URL = __DEV__
+  ? resolveApiBaseUrl()
+  : (process.env.EXPO_PUBLIC_API_URL || 'https://your-production-api.com');
+
+export const getApiBaseUrl = () => API_BASE_URL;
+
 class ApiClient {
   private client: AxiosInstance;
+  private accessToken: string | null = null;
+  private refreshToken: string | null = null;
   private baseURL: string;
+  private onAuthInvalid?: () => void;
 
   constructor() {
-    // TODO: Replace with your backend URL or use env variable
-    this.baseURL = 'http://localhost:8787'; // Your Hono backend
+    this.baseURL = API_BASE_URL;
     
     this.client = axios.create({
       baseURL: this.baseURL,
+      timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 10000,
     });
 
+    console.log('API Client initialized with base URL:', this.baseURL);
     this.setupInterceptors();
+    this.loadTokensFromStorage();
   }
 
   private setupInterceptors() {
@@ -61,7 +110,7 @@ class ApiClient {
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor for error handling
+    // Response interceptor to handle token refresh and errors
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
@@ -99,30 +148,55 @@ class ApiClient {
   }
 
   private handleApiError(error: AxiosError) {
-    if (error.response?.data) {
-      const errorData = error.response.data as any;
-      const message = errorData.error || errorData.message || 'An error occurred';
-      
-      // Don't show notification for authentication errors (handled separately)
+    const method = ((error.config as any)?.method || '').toString().toUpperCase();
+    const url = `${(error.config as any)?.baseURL || ''}${(error.config as any)?.url || ''}`;
+    const status = error.response?.status;
+    const responseData = error.response?.data as any;
+    const message = (responseData && (responseData.error || responseData.message)) ||
+      (status ? `HTTP ${status}` : 'An error occurred');
+
+    if (error.response) {
+      // Structured error console to aid debugging
+      const snippet = typeof responseData === 'string'
+        ? responseData.slice(0, 300)
+        : JSON.stringify(responseData)?.slice(0, 300);
+      console.error('[API ERROR]', { method, url, status, response: snippet });
       if (error.response.status !== 401) {
         notify.error(message);
       }
     } else if (error.request) {
+      console.error('[API ERROR - NETWORK]', { method, url });
       notify.error('Network error. Please check your connection.');
     } else {
+      console.error('[API ERROR - UNEXPECTED]', { method, url, error: error.message });
       notify.error('An unexpected error occurred.');
     }
   }
 
   private redirectToLogin() {
-    // TODO: Implement navigation to login screen
-    console.log('Redirecting to login...');
+    if (this.onAuthInvalid) {
+      try {
+        this.onAuthInvalid();
+      } catch (e) {
+        // noop
+      }
+    } else {
+      // Fallback log to aid debugging if no handler is attached
+      console.log('Redirecting to login...');
+    }
+  }
+
+  // Allow external stores to subscribe to auth invalidation events
+  setAuthInvalidHandler(handler: () => void) {
+    this.onAuthInvalid = handler;
   }
 
   // Token management using SecureStore
   private async getStoredToken(): Promise<string | null> {
     try {
-      return await SecureStore.getItemAsync('accessToken');
+      // Try both key formats for compatibility
+      return await SecureStore.getItemAsync('access_token') || 
+             await SecureStore.getItemAsync('accessToken');
     } catch {
       return null;
     }
@@ -130,239 +204,477 @@ class ApiClient {
 
   private async getStoredRefreshToken(): Promise<string | null> {
     try {
-      return await SecureStore.getItemAsync('refreshToken');
+      // Try both key formats for compatibility
+      return await SecureStore.getItemAsync('refresh_token') || 
+             await SecureStore.getItemAsync('refreshToken');
     } catch {
       return null;
     }
   }
 
-  async setTokens(tokens: AuthTokens) {
+  async setTokens(tokens: AuthTokens | { accessToken: string; refreshToken: string }) {
+    this.accessToken = tokens.accessToken;
+    this.refreshToken = tokens.refreshToken;
+
     try {
+      // Store in both formats for compatibility
+      await SecureStore.setItemAsync('access_token', tokens.accessToken);
+      await SecureStore.setItemAsync('refresh_token', tokens.refreshToken);
       await SecureStore.setItemAsync('accessToken', tokens.accessToken);
       await SecureStore.setItemAsync('refreshToken', tokens.refreshToken);
     } catch (error) {
-      console.error('Failed to store tokens:', error);
+      console.error('Failed to save tokens to storage:', error);
     }
   }
 
   async clearTokens() {
+    this.accessToken = null;
+    this.refreshToken = null;
+
     try {
+      await SecureStore.deleteItemAsync('access_token');
+      await SecureStore.deleteItemAsync('refresh_token');
       await SecureStore.deleteItemAsync('accessToken');
       await SecureStore.deleteItemAsync('refreshToken');
       await SecureStore.deleteItemAsync('user');
     } catch (error) {
-      console.error('Failed to clear tokens:', error);
+      console.error('Failed to clear tokens from storage:', error);
     }
   }
 
-  // Auth endpoints
-  async register(data: RegisterForm): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/auth/register', data);
-    return response.data;
+  private async loadTokensFromStorage() {
+    try {
+      this.accessToken = await this.getStoredToken();
+      this.refreshToken = await this.getStoredRefreshToken();
+    } catch (error) {
+      console.error('Failed to load tokens from storage:', error);
+    }
   }
 
-  async login(data: LoginForm): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/auth/login', data);
-    return response.data;
-  }
-
-  async logout(): Promise<void> {
-    await this.client.post('/auth/logout');
-    await this.clearTokens();
-  }
-
-  async refreshTokens(refreshToken: string): Promise<AuthTokens> {
-    const response = await this.client.post<{ tokens: AuthTokens }>('/auth/refresh', {
+  private async refreshTokens(refreshToken: string): Promise<AuthTokens> {
+    const response = await axios.post(`${this.baseURL}/auth/refresh`, {
       refreshToken,
     });
     return response.data.tokens;
   }
 
-  async forgotPassword(email: string): Promise<void> {
-    await this.client.post('/auth/forgot-password', { email });
+  // HTTP Methods
+  async get(url: string, config?: AxiosRequestConfig) {
+    return this.client.get(url, config);
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    await this.client.post('/auth/reset-password', { token, newPassword });
+  async post(url: string, data?: any, config?: AxiosRequestConfig) {
+    return this.client.post(url, data, config);
   }
 
-  async validateToken(): Promise<{ valid: boolean; payload: any }> {
-    const response = await this.client.get('/auth/validate');
+  async put(url: string, data?: any, config?: AxiosRequestConfig) {
+    return this.client.put(url, data, config);
+  }
+
+  async patch(url: string, data?: any, config?: AxiosRequestConfig) {
+    return this.client.patch(url, data, config);
+  }
+
+  async delete(url: string, config?: AxiosRequestConfig) {
+    return this.client.delete(url, config);
+  }
+
+  // Auth Methods
+  async login(email: string, password: string) {
+    const response = await this.post('/auth/login', { email, password });
+    const { user, tokens } = response.data;
+    
+    await this.setTokens(tokens);
+    return { user, tokens };
+  }
+
+  async register(userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    timezone?: string;
+    preferredLanguage?: string;
+    isStudent?: boolean;
+  }) {
+    const response = await this.post('/auth/register', userData);
+    const { user, tokens } = response.data;
+    
+    await this.setTokens(tokens);
+    return { user, tokens };
+  }
+
+  async logout() {
+    try {
+      if (this.refreshToken) {
+        await this.post('/auth/logout', { refreshToken: this.refreshToken });
+      }
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      await this.clearTokens();
+    }
+  }
+
+  async forgotPassword(email: string) {
+    const response = await this.post('/auth/forgot-password', { email });
     return response.data;
   }
 
-  // User endpoints
+  async resetPassword(token: string, newPassword: string) {
+    const response = await this.post('/auth/reset-password', { token, newPassword });
+    return response.data;
+  }
+
+  async validateToken(): Promise<{ valid: boolean; payload: any }> {
+    const response = await this.get('/auth/validate');
+    return response.data;
+  }
+
+  // OTP Methods
+  async sendOTP(email: string) {
+    const response = await this.post('/api/otp/send-otp', { email });
+    return response.data;
+  }
+
+  async verifyOTP(email: string, code: string) {
+    const response = await this.post('/api/otp/verify-otp', { email, otpCode: code });
+    
+    if (response.data.success && response.data.data) {
+      const { user, accessToken, refreshToken } = response.data.data;
+      if (accessToken && refreshToken) {
+        await this.setTokens({ accessToken, refreshToken });
+      }
+      return {
+        success: true,
+        data: {
+          user,
+          accessToken,
+          refreshToken
+        }
+      };
+    }
+    
+    return response.data;
+  }
+
+  // User/Profile Methods
   async getProfile(): Promise<User> {
-    const response = await this.client.get<{ user: User }>('/users/profile');
+    const response = await this.get('/api/user/profile');
     return response.data.user;
   }
 
   async updateProfile(data: Partial<User>): Promise<User> {
-    const response = await this.client.put<{ user: User }>('/users/profile', data);
+    const response = await this.put('/api/user/profile', data);
     return response.data.user;
   }
 
-  // Task endpoints
-  async getTasks(params?: {
-    status?: string;
-    priority?: number;
+  // Dashboard Methods
+  async getDashboardStats() {
+    const response = await this.get('/api/dashboard');
+    return response.data;
+  }
+
+  async getRecentActivities() {
+    const response = await this.get('/api/dashboard');
+    return response.data;
+  }
+
+  // Tasks Methods
+  async getTasks(params?: { 
+    status?: string; 
+    priority?: number; 
     contextType?: string;
-    page?: number;
     limit?: number;
-  }): Promise<PaginatedResponse<Task[]>> {
-    const response = await this.client.get<PaginatedResponse<Task[]>>('/tasks', { params });
+    offset?: number;
+  }) {
+    const response = await this.get('/api/tasks', { params });
     return response.data;
   }
 
   async getTask(id: string): Promise<Task> {
-    const response = await this.client.get<{ task: Task }>(`/tasks/${id}`);
+    const response = await this.get(`/api/tasks/${id}`);
     return response.data.task;
   }
 
-  async createTask(data: TaskForm): Promise<Task> {
-    const response = await this.client.post<{ task: Task }>('/tasks', data);
-    return response.data.task;
+  async createTask(task: {
+    title: string;
+    description?: string;
+    priority: number;
+    dueDate?: string;
+    estimatedDuration?: number;
+  }) {
+    const response = await this.post('/api/tasks', task);
+    return response.data;
   }
 
-  async updateTask(id: string, data: Partial<TaskForm>): Promise<Task> {
-    const response = await this.client.put<{ task: Task }>(`/tasks/${id}`, data);
-    return response.data.task;
+  async updateTask(taskId: string, updates: any) {
+    const response = await this.put(`/api/tasks/${taskId}`, updates);
+    return response.data;
   }
 
-  async deleteTask(id: string): Promise<void> {
-    await this.client.delete(`/tasks/${id}`);
+  async deleteTask(taskId: string) {
+    const response = await this.delete(`/api/tasks/${taskId}`);
+    return response.data;
   }
 
-  async getTaskStats(): Promise<{
-    total: number;
-    completed: number;
-    pending: number;
-    overdue: number;
-  }> {
-    const response = await this.client.get('/tasks/stats');
-    return response.data.stats;
+  async getTaskStats() {
+    const response = await this.get('/api/tasks/stats');
+    return response.data;
   }
 
-  // Health endpoints
-  async getHealthLogs(params?: {
-    type?: string;
-    startDate?: number;
-    endDate?: number;
-    page?: number;
-    limit?: number;
-  }): Promise<PaginatedResponse<HealthLog[]>> {
-    const response = await this.client.get<PaginatedResponse<HealthLog[]>>('/health/logs', { params });
+  async completeTask(taskId: string) {
+    const response = await this.patch(`/api/tasks/${taskId}/complete`);
+    return response.data;
+  }
+
+  async getMatrix() {
+    const response = await this.get('/api/tasks/matrix');
+    return response.data;
+  }
+
+  async categorizeTasksWithAI() {
+    const response = await this.post('/api/tasks/matrix/categorize');
+    return response.data;
+  }
+
+  async updateTaskMatrix(taskId: string, urgency: number, importance: number) {
+    const response = await this.patch(`/api/tasks/${taskId}/matrix`, { urgency, importance });
+    return response.data;
+  }
+
+  // Health Methods
+  async getHealthLogs(params?: { 
+    type?: string; 
+    limit?: number | string; 
+    startDate?: number | string; 
+    endDate?: number | string;
+    offset?: number | string;
+  }) {
+    const coerced: any = { ...params };
+    if (coerced?.limit !== undefined) coerced.limit = Number(coerced.limit);
+    if (coerced?.offset !== undefined) coerced.offset = Number(coerced.offset);
+    if (coerced?.startDate !== undefined) coerced.startDate = Number(coerced.startDate);
+    if (coerced?.endDate !== undefined) coerced.endDate = Number(coerced.endDate);
+    const response = await this.get('/api/health/logs', { params: coerced });
+    return response.data;
+  }
+
+  async getHealthStats(params?: { period?: string }) {
+    try {
+      const response = await this.get('/api/health/stats', { params });
+      return response.data;
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 500) {
+        // Fallback to summary endpoint and map minimal fields used by the app
+        const summaryRes = await this.get('/api/health/summary');
+        const summary = summaryRes.data?.summary || {};
+        const hydrationAvgMl = summary?.hydration?.averageDaily ?? 0;
+        const mapped = {
+          stats: {
+            caloriesBurned: 0,
+            averageMood: summary?.mood?.averageScore ?? 0,
+            averageSleep: 0,
+            waterIntake: Math.round((hydrationAvgMl / 1000) * 10) / 10,
+          },
+        };
+        return mapped;
+      }
+      throw err;
+    }
+  }
+
+  async createHealthLog(log: {
+    type: string;
+    payload: any;
+    recordedAt?: string | number;
+  }) {
+    const payload = { ...log } as any;
+    if (payload.recordedAt !== undefined) {
+      payload.recordedAt = typeof payload.recordedAt === 'number' 
+        ? payload.recordedAt 
+        : Date.parse(payload.recordedAt);
+    }
+    const response = await this.post('/api/health/logs', payload);
     return response.data;
   }
 
   async logExercise(data: ExerciseData): Promise<HealthLog> {
-    const response = await this.client.post<{ log: HealthLog }>('/health/exercise', data);
+    const d: any = { ...data };
+    if (d.durationMinutes !== undefined) d.durationMinutes = Number(d.durationMinutes);
+    if (d.intensity !== undefined && typeof d.intensity !== 'number') {
+      // allow string labels to pass through; backend supports simple format too
+      if (['low', 'moderate', 'high'].includes(String(d.intensity))) {
+        // leave as-is
+      } else {
+        d.intensity = Number(d.intensity);
+      }
+    }
+    if (d.caloriesBurned !== undefined) d.caloriesBurned = Number(d.caloriesBurned);
+    if (d.distance !== undefined) d.distance = Number(d.distance);
+    if (d.heartRateAvg !== undefined) d.heartRateAvg = Number(d.heartRateAvg);
+    if (d.heartRateMax !== undefined) d.heartRateMax = Number(d.heartRateMax);
+    if (d.recordedAt !== undefined) d.recordedAt = Number(d.recordedAt);
+    const response = await this.post('/api/health/exercise', d);
     return response.data.log;
   }
 
   async logNutrition(data: NutritionData): Promise<HealthLog> {
-    const response = await this.client.post<{ log: HealthLog }>('/health/nutrition', data);
+    const d: any = { ...data };
+    if (Array.isArray(d.foods)) {
+      d.foods = d.foods.map((f: any) => ({
+        ...f,
+        calories: f?.calories !== undefined ? Number(f.calories) : f?.calories,
+      }));
+    }
+    if (d.totalCalories !== undefined) d.totalCalories = Number(d.totalCalories);
+    if (d.waterMl !== undefined) d.waterMl = Number(d.waterMl);
+    if (d.recordedAt !== undefined) d.recordedAt = Number(d.recordedAt);
+    const response = await this.post('/api/health/nutrition', d);
     return response.data.log;
   }
 
   async logMood(data: MoodData): Promise<HealthLog> {
-    const response = await this.client.post<{ log: HealthLog }>('/health/mood', data);
+    const d: any = { ...data };
+    if (d.score !== undefined) d.score = Number(d.score);
+    if (d.energy !== undefined) d.energy = Number(d.energy);
+    if (d.stress !== undefined) d.stress = Number(d.stress);
+    if (d.recordedAt !== undefined) d.recordedAt = Number(d.recordedAt);
+    const response = await this.post('/api/health/mood', d);
     return response.data.log;
   }
 
   async logHydration(data: HydrationData): Promise<HealthLog> {
-    const response = await this.client.post<{ log: HealthLog }>('/health/hydration', data);
+    const d: any = { ...data };
+    if (d.amountMl !== undefined) d.amountMl = Number(d.amountMl);
+    if (d.recordedAt !== undefined) d.recordedAt = Number(d.recordedAt);
+    const response = await this.post('/api/health/hydration', d);
     return response.data.log;
   }
 
-  async getHealthSummary(): Promise<{
-    exerciseCount: number;
-    nutritionCount: number;
-    hydrationTotal: number;
-    moodAverage: number;
-  }> {
-    const response = await this.client.get('/health/summary');
-    return response.data.summary;
+  async getHealthSummary(): Promise<any> {
+    const response = await this.get('/api/health/summary');
+    return response.data; // { summary, timeframe, period }
   }
 
-  // Focus endpoints
+  // Focus Methods
+  async getFocusTemplates() {
+    const response = await this.get('/api/focus/templates');
+    return response.data;
+  }
+
+  async getFocusSessions(params?: { limit?: number }) {
+    const response = await this.get('/api/focus/sessions', { params });
+    return response.data;
+  }
+
+  async getFocusStats(params?: { period?: string }) {
+    const response = await this.get('/api/focus/stats/weekly', { params });
+    return response.data;
+  }
+
+  async createFocusSession(session: {
+    sessionType: string;
+    plannedDuration: number;
+    templateId?: string;
+  }) {
+    const response = await this.post('/api/focus/sessions', session);
+    return response.data;
+  }
+
+  async updateFocusSession(sessionId: string, updates: any) {
+    const response = await this.patch(`/api/focus/sessions/${sessionId}`, updates);
+    return response.data;
+  }
+
   async startFocusSession(data: {
     duration: number;
     taskId?: string;
     type: 'pomodoro' | 'deep_work' | 'break';
   }): Promise<FocusSession> {
-    const response = await this.client.post<{ session: FocusSession }>('/focus/start', data);
-    return response.data.session;
+    const payload = {
+      session_type: data.type,
+      planned_duration: Number(data.duration),
+      task_id: data.taskId,
+    };
+    const response = await this.post('/api/focus/sessions', payload);
+    return response.data.data;
   }
 
   async completeFocusSession(
     id: string,
     data: { actualDuration: number; wasProductive: boolean; notes?: string }
   ): Promise<FocusSession> {
-    const response = await this.client.post<{ session: FocusSession }>(`/focus/${id}/complete`, data);
-    return response.data.session;
+    const payload = {
+      actual_duration: Number(data.actualDuration),
+      is_successful: data.wasProductive,
+      notes: data.notes,
+    };
+    const response = await this.post(`/api/focus/sessions/${id}/complete`, payload);
+    return response.data.data;
   }
 
-  async getFocusSessions(): Promise<FocusSession[]> {
-    const response = await this.client.get<{ sessions: FocusSession[] }>('/focus/sessions');
-    return response.data.sessions;
-  }
-
-  // Badge endpoints
-  async getBadges(): Promise<{ badges: Badge[]; totalPoints: number }> {
-    const response = await this.client.get('/badges/user');
+  // Calendar Methods
+  async getEvents(params?: { start?: number; end?: number; type?: string }) {
+    const response = await this.get('/api/calendar/events', { params });
     return response.data;
   }
 
-  async getAvailableBadges(): Promise<{
-    badges: Badge[];
-    totalAvailable: number;
-    totalUnlocked: number;
-  }> {
-    const response = await this.client.get('/badges/available');
+  async createEvent(eventData: Partial<{
+    title: string;
+    description?: string;
+    startTime: number;
+    endTime: number;
+    location?: string;
+    eventType: string;
+    isAllDay?: boolean;
+  }>) {
+    // Transform event data to match backend format
+    const backendData: any = {
+      title: eventData.title,
+      description: eventData.description,
+      eventType: eventData.eventType || 'appointment',
+      isAllDay: eventData.isAllDay || false,
+    };
+
+    // Handle date conversion
+    if (eventData.startTime) {
+      backendData.startTime = typeof eventData.startTime === 'number' 
+        ? eventData.startTime 
+        : new Date(eventData.startTime).getTime();
+    }
+    if (eventData.endTime) {
+      backendData.endTime = typeof eventData.endTime === 'number'
+        ? eventData.endTime
+        : new Date(eventData.endTime).getTime();
+    }
+
+    if (eventData.location) {
+      backendData.location = eventData.location;
+    }
+
+    const response = await this.post('/api/calendar/events', backendData);
     return response.data;
   }
 
-  async checkBadges(): Promise<{
-    newBadges: Badge[];
-    totalNewPoints: number;
-  }> {
-    const response = await this.client.post('/badges/check');
+  async updateEvent(eventId: string, updates: any) {
+    const response = await this.put(`/api/calendar/events/${eventId}`, updates);
     return response.data;
   }
 
-  // Calendar endpoints
-  async getEvents(params?: {
-    start?: number;
-    end?: number;
-    type?: string;
-  }): Promise<PaginatedResponse<CalendarEvent[]>> {
-    const response = await this.client.get<PaginatedResponse<CalendarEvent[]>>('/calendar/events', { params });
+  async deleteEvent(eventId: string) {
+    const response = await this.delete(`/api/calendar/events/${eventId}`);
     return response.data;
   }
 
-  async createEvent(data: Partial<CalendarEvent>): Promise<CalendarEvent> {
-    const response = await this.client.post<{ event: CalendarEvent }>('/calendar/events', data);
-    return response.data.event;
-  }
-
-  async updateEvent(id: string, data: Partial<CalendarEvent>): Promise<CalendarEvent> {
-    const response = await this.client.put<{ event: CalendarEvent }>(`/calendar/events/${id}`, data);
-    return response.data.event;
-  }
-
-  async deleteEvent(id: string): Promise<void> {
-    await this.client.delete(`/calendar/events/${id}`);
-  }
-
-  // Calendar Integration endpoints
   async getCalendarIntegrations(): Promise<any[]> {
-    const response = await this.client.get('/calendar/connections');
+    const response = await this.get('/api/calendar/connections');
     return response.data.connections || [];
   }
 
   async connectCalendar(provider: string, authData: any): Promise<any> {
-    const response = await this.client.post('/calendar/connect', {
+    const response = await this.post('/api/calendar/connect', {
       provider,
       ...authData
     });
@@ -370,42 +682,166 @@ class ApiClient {
   }
 
   async disconnectCalendar(connectionId: string): Promise<void> {
-    await this.client.delete(`/calendar/connections/${connectionId}`);
+    await this.delete(`/api/calendar/connections/${connectionId}`);
   }
 
   async syncCalendars(): Promise<{ imported: number; exported: number; errors: string[] }> {
-    const response = await this.client.post('/calendar/sync');
+    const response = await this.post('/api/calendar/sync');
     return response.data.result;
   }
 
   async getGoogleAuthUrl(): Promise<{ authUrl: string; state: string }> {
-    const response = await this.client.get('/calendar/google/auth');
+    const response = await this.get('/api/calendar/google/auth');
     return response.data;
   }
 
-  // Notification endpoints
-  async getNotifications(): Promise<Notification[]> {
-    const response = await this.client.get<{ notifications: Notification[] }>('/notifications');
+  // Badge/Achievement Methods
+  async getAchievements() {
+    const response = await this.get('/api/badges');
+    return response.data;
+  }
+
+  async getUserAchievements() {
+    const response = await this.get('/api/badges/user');
+    return response.data;
+  }
+
+  async getBadges(): Promise<{ badges: Achievement[]; totalPoints: number }> {
+    const response = await this.get('/api/badges/user');
+    return response.data;
+  }
+
+  async getAvailableBadges(): Promise<{
+    badges: Achievement[];
+    totalAvailable: number;
+    totalUnlocked: number;
+  }> {
+    const response = await this.get('/api/badges/available');
+    return response.data;
+  }
+
+  async checkBadges(): Promise<{
+    newBadges: Achievement[];
+    totalNewPoints: number;
+  }> {
+    const response = await this.post('/api/badges/check');
+    return response.data;
+  }
+
+  async getBadgeLeaderboard(): Promise<{ leaderboard: any[]; userRank: number }> {
+    const response = await this.get('/api/badges/leaderboard');
+    return response.data;
+  }
+
+  async shareBadge(data: { badgeId: string; platform: 'instagram' | 'whatsapp' | 'twitter' | 'facebook' | 'linkedin' | 'email'; message?: string }) {
+    const payload: any = { platform: data.platform };
+    if (data.message) payload.customMessage = data.message;
+    const response = await this.post(`/api/badges/${data.badgeId}/share`, payload);
+    return response.data;
+  }
+
+  // Notification Methods
+  async getNotifications(): Promise<any[]> {
+    const response = await this.get('/api/notifications');
     return response.data.notifications;
   }
 
   async markNotificationAsRead(id: string): Promise<void> {
-    await this.client.put(`/notifications/${id}/read`);
+    await this.post(`/api/notifications/${id}/opened`);
   }
 
   async markAllNotificationsAsRead(): Promise<void> {
-    await this.client.put('/notifications/read-all');
+    await this.put('/api/notifications/read-all');
   }
 
-  // Analytics endpoints
+  // Analytics Methods
   async getAnalytics(period: '7d' | '30d' | '90d' = '30d'): Promise<{
     tasks: any;
     health: any;
     focus: any;
     productivity: any;
   }> {
-    const response = await this.client.get(`/analytics/overview?period=${period}`);
+    const response = await this.get(`/api/analytics/overview?period=${period}`);
     return response.data.overview;
+  }
+
+  // Social Methods
+  async getSocialFeed(params?: { limit?: number; offset?: number }) {
+    const response = await this.get('/api/social/feed', { params });
+    return response.data;
+  }
+
+  async getConnections(params?: { status?: 'pending' | 'accepted' | 'blocked' }) {
+    const response = await this.get('/api/social/connections', { params });
+    return response.data;
+  }
+
+  async sendConnectionRequest(data: { email?: string; message?: string; addresseeId?: string; type?: 'friend' | 'family' | 'colleague' | 'accountability_partner' }) {
+    const response = await this.post('/api/social/connections/request', data);
+    return response.data;
+  }
+
+  async acceptConnectionRequest(connectionId: string) {
+    const response = await this.post(`/api/social/connections/${connectionId}/accept`, {});
+    return response.data;
+  }
+
+  async rejectConnectionRequest(connectionId: string) {
+    const response = await this.post(`/api/social/connections/${connectionId}/reject`, {});
+    return response.data;
+  }
+
+  async declineConnectionRequest(connectionId: string) {
+    const response = await this.post(`/api/social/connections/${connectionId}/decline`, {});
+    return response.data;
+  }
+
+  async getPublicChallenges(params?: { limit?: number }) {
+    const response = await this.get('/api/social/challenges/public', { params });
+    return response.data;
+  }
+
+  async getMyChallenges() {
+    const response = await this.get('/api/social/challenges/my');
+    return response.data;
+  }
+
+  async createChallenge(data: { title: string; description?: string; challenge_type: 'habit' | 'goal' | 'fitness' | 'mindfulness'; start_date: number; end_date: number; max_participants?: number; is_public?: boolean; reward_type?: string; reward_description?: string; }) {
+    const response = await this.post('/api/social/challenges', data);
+    return response.data;
+  }
+
+  async joinChallenge(challengeId: string) {
+    const response = await this.post(`/api/social/challenges/${challengeId}/join`, {});
+    return response.data;
+  }
+
+  async leaveChallenge(challengeId: string) {
+    const response = await this.post(`/api/social/challenges/${challengeId}/leave`, {});
+    return response.data;
+  }
+
+  // Utility Methods
+  isAuthenticated(): boolean {
+    return !!this.accessToken;
+  }
+
+  getAccessToken(): string | null {
+    return this.accessToken;
+  }
+
+  // Test connection method
+  async testConnection() {
+    try {
+      const response = await this.get('/health');
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Connection failed' 
+      };
+    }
   }
 }
 

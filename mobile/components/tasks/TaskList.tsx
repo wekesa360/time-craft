@@ -25,8 +25,8 @@ interface TaskItemProps {
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onDelete, onPress }) => {
-  const completedOpacity = useSharedValue(task.status === 'completed' ? 0.6 : 1);
-  const completedScale = useSharedValue(task.status === 'completed' ? 0.95 : 1);
+  const completedOpacity = useSharedValue(task.status === 'done' ? 0.6 : 1);
+  const completedScale = useSharedValue(task.status === 'done' ? 0.95 : 1);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: completedOpacity.value,
@@ -34,9 +34,9 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onDelete, onPress
   }));
 
   const handleComplete = () => {
-    const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-    completedOpacity.value = withTiming(newStatus === 'completed' ? 0.6 : 1);
-    completedScale.value = withTiming(newStatus === 'completed' ? 0.95 : 1);
+    const newStatus = task.status === 'done' ? 'pending' : 'done';
+    completedOpacity.value = withTiming(newStatus === 'done' ? 0.6 : 1);
+    completedScale.value = withTiming(newStatus === 'done' ? 0.95 : 1);
     onComplete(task.id);
   };
 
@@ -58,10 +58,10 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onDelete, onPress
         onPress={handleComplete}
       >
         <Text className="text-white font-semibold">
-          {task.status === 'completed' ? '↶' : '✓'}
+          {task.status === 'done' ? '↶' : '✓'}
         </Text>
         <Text className="text-white text-xs mt-1">
-          {task.status === 'completed' ? 'Undo' : 'Done'}
+          {task.status === 'done' ? 'Undo' : 'Done'}
         </Text>
       </TouchableOpacity>
       
@@ -108,7 +108,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onDelete, onPress
               <View className="flex-1 mr-4">
                 <Text 
                   className={`text-lg font-semibold ${
-                    task.status === 'completed' 
+                    task.status === 'done' 
                       ? 'text-gray-500 line-through' 
                       : 'text-gray-900'
                   }`}
@@ -119,7 +119,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onDelete, onPress
                 {task.description && (
                   <Text 
                     className={`text-sm mt-1 ${
-                      task.status === 'completed' ? 'text-gray-400' : 'text-gray-600'
+                      task.status === 'done' ? 'text-gray-400' : 'text-gray-600'
                     }`}
                     numberOfLines={2}
                   >
@@ -132,9 +132,9 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onDelete, onPress
                     {getPriorityText(task.priority)}
                   </Text>
                   
-                  {task.contextType && (
+                  {(task as any).contextType && (
                     <Text className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                      {task.contextType}
+                      {(task as any).contextType}
                     </Text>
                   )}
                   
@@ -149,12 +149,12 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onDelete, onPress
               <TouchableOpacity
                 onPress={handleComplete}
                 className={`w-8 h-8 rounded-full border-2 items-center justify-center ${
-                  task.status === 'completed'
+                  task.status === 'done'
                     ? 'bg-green-500 border-green-500'
                     : 'border-gray-300'
                 }`}
               >
-                {task.status === 'completed' && (
+                {task.status === 'done' && (
                   <Text className="text-white font-bold text-sm">✓</Text>
                 )}
               </TouchableOpacity>
@@ -172,7 +172,7 @@ interface TaskListProps {
 }
 
 const TaskList: React.FC<TaskListProps> = ({ onTaskPress = () => {}, filteredTasks }) => {
-  const { tasks, isLoading, fetchTasks, deleteTask, toggleTaskComplete } = useTaskStore();
+  const { tasks, isFetching, fetchTasks, deleteTask, toggleTaskComplete } = useTaskStore();
   const displayTasks = filteredTasks || tasks;
 
   const handleRefresh = async () => {
@@ -210,7 +210,7 @@ const TaskList: React.FC<TaskListProps> = ({ onTaskPress = () => {}, filteredTas
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={isLoading}
+          refreshing={isFetching}
           onRefresh={handleRefresh}
           colors={['#2563eb']}
           tintColor="#2563eb"

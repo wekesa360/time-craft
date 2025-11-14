@@ -7,18 +7,12 @@ import type { Task } from '../../../types';
 
 interface TaskCardProps {
   task: Task;
-  onComplete: (id: string) => void;
-  onEdit: (task: Task) => void;
-  onDelete: (id: string) => void;
   onView?: (task: Task) => void;
   showQuadrant?: boolean;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({
   task,
-  onComplete,
-  onEdit,
-  onDelete,
   onView,
   showQuadrant = false,
 }) => {
@@ -58,76 +52,48 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const isOverdue = task.due_date && task.due_date < Date.now() && !isCompleted;
 
   return (
-    <div className={`p-4 rounded-xl border border-border bg-card hover:shadow-md transition-all duration-200 ${
+    <div className={`p-3 rounded-lg border border-border bg-card hover:shadow-sm transition-all duration-200 ${
       isCompleted ? 'opacity-75' : ''
     } ${isOverdue ? 'border-error bg-error-light' : ''}`}>
       
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className={`font-semibold text-foreground text-lg ${isCompleted ? 'line-through' : ''}`}>
+            <h3 className={`font-medium text-foreground text-sm ${isCompleted ? 'line-through' : ''}`}>
               {task.title}
             </h3>
             {isOverdue && (
-              <AlertCircle className="w-4 h-4 text-error flex-shrink-0" />
+              <AlertCircle className="w-3 h-3 text-error flex-shrink-0" />
             )}
           </div>
           
           {/* Priority indicator */}
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}></div>
-            <span className="text-sm text-muted-foreground">
-              {getPriorityText(task.priority)} Priority
+            <div className={`w-1.5 h-1.5 rounded-full ${getPriorityColor(task.priority)}`}></div>
+            <span className="text-xs text-muted-foreground">
+              {getPriorityText(task.priority)}
             </span>
           </div>
         </div>
+
+        {/* View Details button */}
+        {onView && (
+          <button
+            onClick={() => onView(task)}
+            className="px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded-md transition-colors flex-shrink-0"
+          >
+            View
+          </button>
+        )}
       </div>
 
       {/* Description preview */}
       {task.description && (
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+        <p className="text-xs text-muted-foreground line-clamp-1">
           {task.description}
         </p>
       )}
-
-      {/* Action buttons */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {!isCompleted && (
-            <button
-              onClick={() => onComplete(task.id)}
-              className="px-3 py-1 text-sm font-medium text-success hover:bg-success-light rounded-lg transition-colors"
-            >
-              Complete
-            </button>
-          )}
-          
-          <button
-            onClick={() => onEdit(task)}
-            className="px-3 py-1 text-sm font-medium text-info hover:bg-info-light rounded-lg transition-colors"
-          >
-            Edit
-          </button>
-          
-          <button
-            onClick={() => onDelete(task.id)}
-            className="px-3 py-1 text-sm font-medium text-error hover:bg-error-light rounded-lg transition-colors"
-          >
-            Delete
-          </button>
-        </div>
-
-        {/* View button */}
-        {onView && (
-          <button
-            onClick={() => onView(task)}
-            className="px-3 py-1 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
-          >
-            View Details
-          </button>
-        )}
-      </div>
     </div>
   );
 };

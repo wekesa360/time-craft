@@ -188,7 +188,7 @@ export const StudentVerification: React.FC = () => {
                     value={studentEmail}
                     onChange={(e) => setStudentEmail(e.target.value)}
                     placeholder="your.name@university.edu"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-muted text-foreground dark:text-white"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground"
                     required
                   />
                   <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">

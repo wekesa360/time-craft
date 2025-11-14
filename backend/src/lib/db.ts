@@ -133,6 +133,11 @@ export class DatabaseService {
     const limit = Math.min(pagination.limit || 50, 100); // Max 100 items
     const offset = pagination.offset || 0;
 
+    // Get total count
+    const countSql = sql.replace(/SELECT \* FROM/, 'SELECT COUNT(*) as count FROM').replace(/ORDER BY.*$/, '');
+    const countResult = await first<{ count: number }>(this.env, countSql, params);
+    const total = countResult?.count || 0;
+
     // Add pagination to query
     const paginatedSql = `${sql} LIMIT ${limit + 1} OFFSET ${offset}`;
     const results = await select<T>(this.env, paginatedSql, params);
@@ -143,7 +148,7 @@ export class DatabaseService {
     return {
       data,
       hasMore,
-      total: undefined, // Could add COUNT query if needed
+      total,
       nextCursor: hasMore ? String(offset + limit) : undefined
     };
   }
@@ -195,6 +200,25 @@ export class DatabaseService {
     const params = userId ? [id, userId] : [id];
     
     return update(this.env, table, { deleted_at: now }, where, params);
+  }
+
+  // Get single record by filters
+  async getOne<T = Row>(
+    table: string,
+    filters: Record<string, any>
+  ): Promise<T | null> {
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null) {
+        conditions.push(`${key} = ?`);
+        params.push(value);
+      }
+    }
+
+    const sql = `SELECT * FROM ${table} WHERE ${conditions.join(' AND ')} LIMIT 1`;
+    return first<T>(this.env, sql, params);
   }
 
   // User-specific query builder

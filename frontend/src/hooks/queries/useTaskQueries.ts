@@ -25,8 +25,8 @@ export const useTasksQuery = (params?: {
   search?: string;
   startDate?: number;
   endDate?: number;
-  page?: number;
   limit?: number;
+  offset?: number;
   quadrant?: string;
   urgency?: number;
   importance?: number;
@@ -39,19 +39,19 @@ export const useTasksQuery = (params?: {
     queryFn: async () => {
       setLoading(true);
       try {
+        // Call API and get TasksResponse format: { tasks, hasMore, nextCursor, total }
         const response = await apiClient.getTasks(params);
-        // Handle different response formats
-        let tasksData: Task[] = [];
         
-        if (Array.isArray(response)) {
-          // Direct array response
-          tasksData = response;
-        } else if (response && typeof response === 'object') {
-          // Object response with tasks property
-          tasksData = (response as any).tasks || (response as any).data || [];
-        }
+        // Extract tasks array from response
+        const tasksData: Task[] = response.tasks || [];
         
-        console.log('Fetched tasks from backend:', tasksData);
+        console.log('Fetched tasks from backend:', {
+          count: tasksData.length,
+          total: response.total,
+          hasMore: response.hasMore,
+          tasks: tasksData
+        });
+        
         return tasksData;
       } catch (error) {
         console.error('Failed to fetch tasks:', error);
@@ -158,8 +158,17 @@ export const useCreateTaskMutation = () => {
       queryClient.setQueriesData(
         { queryKey: taskKeys.lists() },
         (old: any) => {
-          if (!old) return [optimisticTask];
-          return [optimisticTask, ...old];
+          // Handle both array format (new) and object format (legacy)
+          if (Array.isArray(old)) {
+            return [optimisticTask, ...old];
+          }
+          if (old?.tasks && Array.isArray(old.tasks)) {
+            return { ...old, tasks: [optimisticTask, ...old.tasks] };
+          }
+          if (old?.data && Array.isArray(old.data)) {
+            return { ...old, data: [optimisticTask, ...old.data] };
+          }
+          return [optimisticTask];
         }
       );
 
@@ -214,20 +223,36 @@ export const useUpdateTaskMutation = () => {
       queryClient.setQueryData(taskKeys.detail(id), (old: Task) => ({
         ...old,
         ...data,
-        updatedAt: Date.now(),
+        updated_at: Date.now(),
       }));
 
       // Optimistically update task lists
       queryClient.setQueriesData(
         { queryKey: taskKeys.lists() },
         (old: any) => {
-          if (!old?.data) return old;
-          return {
-            ...old,
-            data: old.data.map((task: Task) =>
-              task.id === id ? { ...task, ...data, updatedAt: Date.now() } : task
-            ),
-          };
+          // Handle both array format (new) and object format (legacy)
+          if (Array.isArray(old)) {
+            return old.map((task: Task) =>
+              task.id === id ? { ...task, ...data, updated_at: Date.now() } : task
+            );
+          }
+          if (old?.tasks && Array.isArray(old.tasks)) {
+            return {
+              ...old,
+              tasks: old.tasks.map((task: Task) =>
+                task.id === id ? { ...task, ...data, updated_at: Date.now() } : task
+              ),
+            };
+          }
+          if (old?.data && Array.isArray(old.data)) {
+            return {
+              ...old,
+              data: old.data.map((task: Task) =>
+                task.id === id ? { ...task, ...data, updated_at: Date.now() } : task
+              ),
+            };
+          }
+          return old;
         }
       );
 
@@ -273,11 +298,23 @@ export const useDeleteTaskMutation = () => {
       queryClient.setQueriesData(
         { queryKey: taskKeys.lists() },
         (old: any) => {
-          if (!old?.data) return old;
-          return {
-            ...old,
-            data: old.data.filter((task: Task) => task.id !== id),
-          };
+          // Handle both array format (new) and object format (legacy)
+          if (Array.isArray(old)) {
+            return old.filter((task: Task) => task.id !== id);
+          }
+          if (old?.tasks && Array.isArray(old.tasks)) {
+            return {
+              ...old,
+              tasks: old.tasks.filter((task: Task) => task.id !== id),
+            };
+          }
+          if (old?.data && Array.isArray(old.data)) {
+            return {
+              ...old,
+              data: old.data.filter((task: Task) => task.id !== id),
+            };
+          }
+          return old;
         }
       );
 
@@ -320,15 +357,35 @@ export const useCompleteTaskMutation = () => {
       queryClient.setQueriesData(
         { queryKey: taskKeys.lists() },
         (old: any) => {
-          if (!old?.data) return old;
-          return {
-            ...old,
-            data: old.data.map((task: Task) =>
+          // Handle both array format (new) and object format (legacy)
+          if (Array.isArray(old)) {
+            return old.map((task: Task) =>
               task.id === id
-                ? { ...task, status: 'completed' as const, completedAt: Date.now() }
+                ? { ...task, status: 'done' as const, completed_at: Date.now() }
                 : task
-            ),
-          };
+            );
+          }
+          if (old?.tasks && Array.isArray(old.tasks)) {
+            return {
+              ...old,
+              tasks: old.tasks.map((task: Task) =>
+                task.id === id
+                  ? { ...task, status: 'done' as const, completed_at: Date.now() }
+                  : task
+              ),
+            };
+          }
+          if (old?.data && Array.isArray(old.data)) {
+            return {
+              ...old,
+              data: old.data.map((task: Task) =>
+                task.id === id
+                  ? { ...task, status: 'done' as const, completed_at: Date.now() }
+                  : task
+              ),
+            };
+          }
+          return old;
         }
       );
 

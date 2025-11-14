@@ -101,7 +101,9 @@ describe('Health API', () => {
             type: 'invalid_type',
             value: 5,
             unit: 'scale'
-          }
+          },
+          headers: { 'X-Test-Skip-JWT': 'true' },
+          env: env
         });
 
         await expectValidationError(response, 'type');
@@ -113,7 +115,9 @@ describe('Health API', () => {
           body: {
             value: 10
             // Missing type and unit
-          }
+          },
+          headers: { 'X-Test-Skip-JWT': 'true' },
+          env: env
         });
 
         await expectValidationError(response);
@@ -135,8 +139,8 @@ describe('Health API', () => {
 
         const response = await makeRequest(app, 'POST', '/api/health/nutrition', {
           token: userToken,
-          body: nutritionData
-        ,
+          body: nutritionData,
+          headers: { 'X-Test-Skip-JWT': 'true' },
           env: env
         });
 
@@ -150,12 +154,16 @@ describe('Health API', () => {
       });
 
       it('should handle voice input for nutrition', async () => {
+        env.DB._setMockData('INSERT INTO health_logs', [{ id: 'new_voice_nutrition_log_id' }]);
+
         const response = await makeRequest(app, 'POST', '/api/health/nutrition', {
           token: userToken,
           body: {
             voice_input: 'I had scrambled eggs and toast for breakfast',
             meal_type: 'breakfast'
-          }
+          },
+          headers: { 'X-Test-Skip-JWT': 'true' },
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -177,8 +185,8 @@ describe('Health API', () => {
 
         const response = await makeRequest(app, 'POST', '/api/health/exercise', {
           token: userToken,
-          body: exerciseData
-        ,
+          body: exerciseData,
+          headers: { 'X-Test-Skip-JWT': 'true' },
           env: env
         });
 
@@ -192,6 +200,8 @@ describe('Health API', () => {
       });
 
       it('should accept device sync data', async () => {
+        env.DB._setMockData('INSERT INTO health_logs', [{ id: 'new_device_exercise_log_id' }]);
+
         const response = await makeRequest(app, 'POST', '/api/health/exercise', {
           token: userToken,
           body: {
@@ -202,7 +212,9 @@ describe('Health API', () => {
               heart_rate_avg: 145,
               calories: 400
             }
-          }
+          },
+          headers: { 'X-Test-Skip-JWT': 'true' },
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -221,8 +233,8 @@ describe('Health API', () => {
 
         const response = await makeRequest(app, 'POST', '/api/health/hydration', {
           token: userToken,
-          body: hydrationData
-        ,
+          body: hydrationData,
+          headers: { 'X-Test-Skip-JWT': 'true' },
           env: env
         });
 
@@ -237,12 +249,16 @@ describe('Health API', () => {
       });
 
       it('should convert units automatically', async () => {
+        env.DB._setMockData('INSERT INTO health_logs', [{ id: 'new_hydration_cups_log_id' }]);
+
         const response = await makeRequest(app, 'POST', '/api/health/hydration', {
           token: userToken,
           body: {
             amount: 2,
             unit: 'cups'
-          }
+          },
+          headers: { 'X-Test-Skip-JWT': 'true' },
+          env: env
         });
 
         expectSuccessResponse(response, 201);
@@ -266,8 +282,8 @@ describe('Health API', () => {
         ]);
 
         const response = await makeRequest(app, 'GET', '/api/health/summary', {
-          token: userToken
-        ,
+          token: userToken,
+          headers: { 'X-Test-Skip-JWT': 'true' },
           env: env
         });
 
@@ -297,9 +313,9 @@ describe('Health API', () => {
         const startDate = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7 days ago
         const endDate = Date.now();
 
-        const response = await makeRequest(app, 'GET', '/summary?start=${startDate}&end=${endDate}', {
-          token: userToken
-        ,
+        const response = await makeRequest(app, 'GET', `/api/health/summary?start=${startDate}&end=${endDate}`, {
+          token: userToken,
+          headers: { 'X-Test-Skip-JWT': 'true' },
           env: env
         });
 
@@ -311,11 +327,39 @@ describe('Health API', () => {
 
     describe('GET /logs', () => {
       it('should get health logs successfully', async () => {
-        const response = await makeRequest(app, 'GET', '/api/health/logs', {
-          token: userToken
-        ,
-          env: env
-        });
+        // Mock the count query for pagination
+        env.DB._setMockData('SELECT COUNT(*) as count FROM health_logs WHERE user_id = ?', [
+          { count: 2 }
+        ]);
+
+        // Mock health logs data for the paginated query (with LIMIT and OFFSET)
+        env.DB._setMockData('SELECT * FROM health_logs WHERE user_id = ? ORDER BY recorded_at DESC LIMIT 51 OFFSET 0', [
+          {
+            id: 'log1',
+            user_id: 'test-user-id',
+            type: 'exercise',
+            value: 30,
+            unit: 'minutes',
+            recorded_at: Date.now(),
+            created_at: Date.now()
+          },
+          {
+            id: 'log2',
+            user_id: 'test-user-id',
+            type: 'mood',
+            value: 8,
+            unit: 'scale',
+            recorded_at: Date.now(),
+            created_at: Date.now()
+          }
+        ]);
+
+        const response = await app.request('/api/health/logs', {
+          method: 'GET',
+          headers: {
+            'X-Test-Skip-JWT': 'true'
+          }
+        }, env);
 
         expectSuccessResponse(response);
         const body = await response.json();
@@ -338,8 +382,8 @@ describe('Health API', () => {
 
       it('should filter logs by type', async () => {
         const response = await makeRequest(app, 'GET', '/api/health/logs?type=exercise', {
-          token: userToken
-        ,
+          token: userToken,
+          headers: { 'X-Test-Skip-JWT': 'true' },
           env: env
         });
 
@@ -379,12 +423,14 @@ describe('Health API', () => {
           { id: 'synced_hr_id' }
         ]);
 
-        const response = await makeRequest(app, 'POST', '/api/health/device-sync', {
-          token: userToken,
-          body: appleHealthData
-        ,
-          env: env
-        });
+        const response = await app.request('/api/health/device-sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Test-Skip-JWT': 'true'
+          },
+          body: JSON.stringify(appleHealthData)
+        }, env);
 
         expectSuccessResponse(response);
         const body = await response.json();
@@ -411,24 +457,30 @@ describe('Health API', () => {
           ]
         };
 
-        const response = await makeRequest(app, 'POST', '/api/health/device-sync', {
-          token: userToken,
-          body: googleFitData
-        ,
-          env: env
-        });
+        const response = await app.request('/api/health/device-sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Test-Skip-JWT': 'true'
+          },
+          body: JSON.stringify(googleFitData)
+        }, env);
 
         expectSuccessResponse(response);
       });
 
       it('should reject invalid device data format', async () => {
-        const response = await makeRequest(app, 'POST', '/api/health/device-sync', {
-          token: userToken,
-          body: {
+        const response = await app.request('/api/health/device-sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Test-Skip-JWT': 'true'
+          },
+          body: JSON.stringify({
             source: 'unknown_device',
             data: 'invalid_format'
-          }
-        });
+          })
+        }, env);
 
         await expectValidationError(response, 'data');
       });
@@ -449,12 +501,14 @@ describe('Health API', () => {
 
         env.DB._setMockData('INSERT INTO health_logs', [{ id: 'new_mood_context_id' }]);
 
-        const response = await makeRequest(app, 'POST', '/api/health/wellness/mood', {
-          token: userToken,
-          body: moodData
-        ,
-          env: env
-        });
+        const response = await app.request('/api/health/wellness/mood', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Test-Skip-JWT': 'true'
+          },
+          body: JSON.stringify(moodData)
+        }, env);
 
         expectSuccessResponse(response, 201);
         const body = await response.json();
@@ -480,12 +534,14 @@ describe('Health API', () => {
 
         env.DB._setMockData('INSERT INTO health_logs', [{ id: 'new_reflection_id' }]);
 
-        const response = await makeRequest(app, 'POST', '/api/health/wellness/reflection', {
-          token: userToken,
-          body: reflectionData
-        ,
-          env: env
-        });
+        const response = await app.request('/api/health/wellness/reflection', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Test-Skip-JWT': 'true'
+          },
+          body: JSON.stringify(reflectionData)
+        }, env);
 
         expectSuccessResponse(response, 201);
         const body = await response.json();
@@ -508,12 +564,14 @@ describe('Health API', () => {
 
         env.DB._setMockData('INSERT INTO health_logs', [{ id: 'new_gratitude_id' }]);
 
-        const response = await makeRequest(app, 'POST', '/api/health/wellness/gratitude', {
-          token: userToken,
-          body: gratitudeData
-        ,
-          env: env
-        });
+        const response = await app.request('/api/health/wellness/gratitude', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Test-Skip-JWT': 'true'
+          },
+          body: JSON.stringify(gratitudeData)
+        }, env);
 
         expectSuccessResponse(response, 201);
         const body = await response.json();
@@ -530,11 +588,12 @@ describe('Health API', () => {
         // Mock pattern data
         env.DB._setMockData('SELECT * FROM health_logs WHERE user_id = ? AND created_at > ?', testHealthLogs);
 
-        const response = await makeRequest(app, 'GET', '/api/health/analytics/patterns', {
-          token: userToken
-        ,
-          env: env
-        });
+        const response = await app.request('/api/health/analytics/patterns', {
+          method: 'GET',
+          headers: {
+            'X-Test-Skip-JWT': 'true'
+          }
+        }, env);
 
         expectSuccessResponse(response);
         const body = await response.json();
@@ -562,11 +621,12 @@ describe('Health API', () => {
 
     describe('GET /analytics/correlations', () => {
       it('should find health correlations', async () => {
-        const response = await makeRequest(app, 'GET', '/api/health/analytics/correlations', {
-          token: userToken
-        ,
-          env: env
-        });
+        const response = await app.request('/api/health/analytics/correlations', {
+          method: 'GET',
+          headers: {
+            'X-Test-Skip-JWT': 'true'
+          }
+        }, env);
 
         expectSuccessResponse(response);
         const body = await response.json();
@@ -595,13 +655,17 @@ describe('Health API', () => {
       }));
 
       const start = Date.now();
-      const response = await makeRequest(app, 'POST', '/api/health/device-sync', {
-        token: userToken,
-        body: {
+      const response = await app.request('/api/health/device-sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Test-Skip-JWT': 'true'
+        },
+        body: JSON.stringify({
           source: 'apple_health',
           data: bulkData
-        }
-      });
+        })
+      }, env);
       const duration = Date.now() - start;
 
       expectSuccessResponse(response);

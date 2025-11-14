@@ -10,6 +10,7 @@
 The Time & Wellness API provides comprehensive endpoints for managing productivity, health tracking, wellness data, social features, and advanced AI-powered insights. All API endpoints return JSON and use standard HTTP status codes.
 
 ### New Features in v2.0
+- **Payments & Subscriptions** - Complete Stripe integration with subscription management, billing, and usage analytics
 - **Focus Sessions (Pomodoro)** - Advanced productivity tracking with 5 session templates and analytics
 - **Social Features** - User connections, challenges, and achievement sharing with activity feeds
 - **Student Verification** - Educational email verification with OTP and student pricing (50% discount)
@@ -176,6 +177,174 @@ Authorization: Bearer <access_token>
     "createdAt": 1640995200000,
     "updatedAt": 1640995200000
   }
+}
+```
+
+### Logout
+**POST** `/auth/logout`
+
+Logs out the current user (client-side token removal).
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Logout successful"
+}
+```
+
+### Forgot Password
+**POST** `/auth/forgot-password`
+
+Initiates password reset process by sending reset link to email.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "If the email exists, a reset link has been sent",
+  "resetToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+### Reset Password
+**POST** `/auth/reset-password`
+
+Resets user password using the reset token.
+
+**Request Body:**
+```json
+{
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "newPassword": "newpassword123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Password reset successful"
+}
+```
+
+**Response (401) - Invalid Token:**
+```json
+{
+  "error": "Invalid or expired reset token"
+}
+```
+
+### Send OTP
+**POST** `/auth/send-otp`
+
+Sends one-time password to email for passwordless login.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "OTP sent successfully",
+  "otpId": "otp_uuid_123",
+  "expiresAt": 1641000600000
+}
+```
+
+### Verify OTP
+**POST** `/auth/verify-otp`
+
+Verifies OTP and logs in the user.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "otpCode": "123456"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Login successful",
+  "user": {
+    "id": "user_abc123",
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe"
+  },
+  "tokens": {
+    "accessToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "refreshToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+  }
+}
+```
+
+**Response (400) - Invalid OTP:**
+```json
+{
+  "error": "Invalid OTP"
+}
+```
+
+### Google OAuth - Start Flow
+**GET** `/auth/google`
+
+Initiates Google OAuth authentication flow.
+
+**Response (200):**
+```json
+{
+  "authUrl": "https://accounts.google.com/o/oauth2/v2/auth?client_id=...",
+  "state": "uuid_state_123"
+}
+```
+
+### Google OAuth - Callback
+**GET** `/auth/google/callback`
+
+Handles Google OAuth callback and completes authentication.
+
+**Query Parameters:**
+- `code`: Authorization code from Google
+- `state`: State parameter for security verification
+
+**Response (200):**
+```json
+{
+  "message": "Google authentication successful",
+  "user": {
+    "id": "user_abc123",
+    "email": "user@gmail.com",
+    "firstName": "John",
+    "lastName": "Doe"
+  },
+  "tokens": {
+    "accessToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "refreshToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+  }
+}
+```
+
+**Response (400) - Invalid State:**
+```json
+{
+  "error": "Invalid or expired state"
 }
 ```
 
@@ -1056,6 +1225,94 @@ Content-Type: application/json
 }
 ```
 
+### Get Session Template
+**GET** `/api/focus/templates/{templateKey}`
+
+Gets a specific focus session template.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "key": "classic_pomodoro",
+    "name": "Classic Pomodoro",
+    "description": "Traditional 25-minute focus sessions",
+    "focusDuration": 25,
+    "shortBreakDuration": 5,
+    "longBreakDuration": 15,
+    "sessionsUntilLongBreak": 4
+  }
+}
+```
+
+### Get Focus Sessions
+**GET** `/api/focus/sessions`
+
+Gets user's focus sessions with filtering options.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Query Parameters:**
+- `status` (optional): Filter by session status
+- `limit` (optional): Number of results (default: 50)
+- `offset` (optional): Pagination offset
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "session_789",
+      "templateKey": "classic_pomodoro",
+      "status": "completed",
+      "startTime": 1641000000000,
+      "endTime": 1641001500000,
+      "productivityRating": 8
+    }
+  ],
+  "pagination": {
+    "total": 25,
+    "hasMore": false
+  }
+}
+```
+
+### Get Focus Session
+**GET** `/api/focus/sessions/{sessionId}`
+
+Gets details of a specific focus session.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "session_789",
+    "templateKey": "classic_pomodoro",
+    "status": "active",
+    "startTime": 1641000000000,
+    "plannedEndTime": 1641001500000,
+    "taskId": "task_123",
+    "environmentId": "env_456"
+  }
+}
+```
+
 ### Complete Focus Session
 **PATCH** `/api/focus/sessions/{sessionId}/complete`
 
@@ -1073,6 +1330,417 @@ Content-Type: application/json
   "actualEndTime": 1641001400000,
   "productivityRating": 8,
   "notes": "Great focus session"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "session_789",
+    "status": "completed",
+    "actualDuration": 23,
+    "productivityRating": 8
+  }
+}
+```
+
+### Pause Focus Session
+**PATCH** `/api/focus/sessions/{sessionId}/pause`
+
+Pauses an active focus session.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "session_789",
+    "status": "paused",
+    "pausedAt": 1641000900000
+  }
+}
+```
+
+### Resume Focus Session
+**PATCH** `/api/focus/sessions/{sessionId}/resume`
+
+Resumes a paused focus session.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "session_789",
+    "status": "active",
+    "resumedAt": 1641001000000
+  }
+}
+```
+
+### Cancel Focus Session
+**PATCH** `/api/focus/sessions/{sessionId}/cancel`
+
+Cancels an active focus session.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "reason": "Unexpected interruption"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Session cancelled successfully"
+}
+```
+
+### Record Distraction
+**POST** `/api/focus/sessions/{sessionId}/distractions`
+
+Records a distraction during a focus session.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "type": "notification",
+  "description": "Phone notification",
+  "duration": 30
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Distraction recorded successfully"
+}
+```
+
+### Get Break Reminders
+**GET** `/api/focus/break-reminders`
+
+Gets user's break reminder settings.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "reminder_123",
+      "type": "short_break",
+      "interval": 25,
+      "enabled": true,
+      "message": "Time for a short break!"
+    }
+  ]
+}
+```
+
+### Update Break Reminder
+**PATCH** `/api/focus/break-reminders/{reminderId}`
+
+Updates break reminder settings.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "enabled": false,
+  "interval": 30
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Break reminder updated successfully"
+}
+```
+
+### Get Focus Dashboard
+**GET** `/api/focus/dashboard`
+
+Gets focus session dashboard data.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "todayStats": {
+      "sessionsCompleted": 4,
+      "totalFocusTime": 100,
+      "averageProductivity": 7.5
+    },
+    "weeklyStats": {
+      "totalSessions": 28,
+      "totalFocusTime": 700,
+      "streak": 5
+    }
+  }
+}
+```
+
+### Get Focus Analytics
+**GET** `/api/focus/analytics`
+
+Gets detailed focus session analytics.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Query Parameters:**
+- `period` (optional): Analysis period (default: 30 days)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "productivity": {
+      "average": 7.2,
+      "trend": "improving",
+      "bestTimeOfDay": "10:00"
+    },
+    "patterns": {
+      "mostProductiveDays": ["Tuesday", "Wednesday"],
+      "optimalSessionLength": 25,
+      "distractionTypes": ["phone", "email"]
+    }
+  }
+}
+```
+
+### Get Focus Patterns
+**GET** `/api/focus/patterns`
+
+Gets focus patterns and insights.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "patterns": [
+      {
+        "type": "time_of_day",
+        "insight": "Most productive between 9-11 AM",
+        "confidence": 0.85
+      }
+    ]
+  }
+}
+```
+
+### Get Weekly Stats
+**GET** `/api/focus/stats/weekly`
+
+Gets weekly focus statistics.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "currentWeek": {
+      "sessions": 15,
+      "focusTime": 375,
+      "productivity": 7.8
+    },
+    "previousWeek": {
+      "sessions": 12,
+      "focusTime": 300,
+      "productivity": 7.2
+    }
+  }
+}
+```
+
+### Get Session Type Stats
+**GET** `/api/focus/stats/session-types`
+
+Gets statistics by session type.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "templateKey": "classic_pomodoro",
+      "sessions": 45,
+      "averageProductivity": 7.5,
+      "completionRate": 0.89
+    }
+  ]
+}
+```
+
+### Create Environment
+**POST** `/api/focus/environments`
+
+Creates a new focus environment.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "name": "Home Office",
+  "description": "Quiet home office setup",
+  "location": "Home",
+  "noiseLevel": 2,
+  "lighting": "Natural"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "env_123",
+    "name": "Home Office",
+    "location": "Home",
+    "createdAt": 1641000000000
+  }
+}
+```
+
+### Get Environments
+**GET** `/api/focus/environments`
+
+Gets user's focus environments.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "env_123",
+      "name": "Home Office",
+      "location": "Home",
+      "averageProductivity": 8.2,
+      "sessionsCount": 25
+    }
+  ]
+}
+```
+
+### Update Environment
+**PATCH** `/api/focus/environments/{environmentId}`
+
+Updates a focus environment.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "name": "Updated Home Office",
+  "noiseLevel": 1
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Environment updated successfully"
+}
+```
+
+### Delete Environment
+**DELETE** `/api/focus/environments/{environmentId}`
+
+Deletes a focus environment.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Environment deleted successfully"
 }
 ```
 
@@ -1260,6 +1928,116 @@ Authorization: Bearer <access_token>
 }
 ```
 
+### Manual Health Entry
+**POST** `/api/health/manual-entry`
+
+Generic health data logging for any health metric.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "type": "weight",
+  "value": 75.5,
+  "unit": "kg",
+  "notes": "Morning weight after workout",
+  "category": "body_metrics",
+  "recordedAt": 1641000000000
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "weight logged successfully",
+  "healthLog": {
+    "id": "health_log_123",
+    "type": "weight",
+    "value": 75.5,
+    "unit": "kg",
+    "recordedAt": 1641000000000
+  }
+}
+```
+
+### Get Health Statistics
+**GET** `/api/health/stats`
+
+Gets detailed health statistics and analytics.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "stats": {
+    "totalLogs": 156,
+    "exerciseSessions": 45,
+    "averageMood": 7.2,
+    "totalCalories": 125000,
+    "hydrationGoalMet": 0.85,
+    "streaks": {
+      "exercise": 7,
+      "mood": 14,
+      "hydration": 3
+    }
+  }
+}
+```
+
+### Delete Health Log
+**DELETE** `/api/health/logs/{id}`
+
+Deletes a specific health log entry.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Health log deleted successfully"
+}
+```
+
+### Get Health Goals
+**GET** `/api/health/goals`
+
+Gets the user's health goals.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "goals": [
+    {
+      "id": "goal_123",
+      "goalType": "weight_loss",
+      "title": "Lose 10 pounds",
+      "targetValue": 10,
+      "targetUnit": "lbs",
+      "targetDate": 1643592000000,
+      "progress": 6.5,
+      "isActive": true
+    }
+  ]
+}
+```
+
 ### Create Health Goal
 **POST** `/api/health/goals`
 
@@ -1274,12 +2052,355 @@ Content-Type: application/json
 **Request Body:**
 ```json
 {
-  "type": "exercise_frequency",
+  "goalType": "exercise_frequency",
+  "title": "Exercise 5 times per week",
   "targetValue": 5,
-  "targetPeriod": "weekly",
-  "startDate": 1641000000000,
-  "endDate": 1643592000000,
-  "description": "Exercise 5 times per week"
+  "targetUnit": "sessions",
+  "targetDate": 1643592000000,
+  "description": "Maintain consistent exercise routine"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Health goal created successfully",
+  "goal": {
+    "id": "goal_456",
+    "goalType": "exercise_frequency",
+    "title": "Exercise 5 times per week",
+    "targetValue": 5,
+    "targetDate": 1643592000000
+  }
+}
+```
+
+### Update Goal Progress
+**PUT** `/api/health/goals/{id}/progress`
+
+Updates progress for a specific health goal.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "value": 3.5,
+  "notes": "Good progress this week"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Goal progress updated successfully"
+}
+```
+
+### Get Nutrition Analysis
+**GET** `/api/health/nutrition/analysis`
+
+Gets detailed nutrition analysis and recommendations.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "analysis": {
+    "dailyAverage": {
+      "calories": 2150,
+      "protein": 85,
+      "carbs": 250,
+      "fat": 75
+    },
+    "recommendations": [
+      "Increase protein intake by 15g daily",
+      "Consider more complex carbohydrates"
+    ]
+  }
+}
+```
+
+### Generate Health Insights
+**POST** `/api/health/insights/generate`
+
+Generates new AI-powered health insights.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Health insights generated successfully",
+  "insights": [
+    {
+      "type": "exercise",
+      "message": "Your workout consistency has improved 25% this month",
+      "confidence": 0.92
+    }
+  ]
+}
+```
+
+### Mark Insight as Read
+**PUT** `/api/health/insights/{id}/read`
+
+Marks a health insight as read.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Insight marked as read"
+}
+```
+
+### Get Health Dashboard
+**GET** `/api/health/dashboard`
+
+Gets comprehensive health dashboard data.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "dashboard": {
+    "todayStats": {
+      "steps": 8500,
+      "calories": 2100,
+      "water": 1800,
+      "mood": 8
+    },
+    "weeklyTrends": {
+      "exercise": "improving",
+      "nutrition": "stable",
+      "mood": "excellent"
+    },
+    "goals": {
+      "completed": 3,
+      "inProgress": 2,
+      "total": 5
+    }
+  }
+}
+```
+
+### Sync Device Data
+**POST** `/api/health/device-sync`
+
+Syncs health data from connected devices.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "deviceType": "fitbit",
+  "dataType": "steps",
+  "data": {
+    "steps": 10500,
+    "distance": 8.2,
+    "calories": 450,
+    "activeMinutes": 65
+  },
+  "syncDate": 1641000000000
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Device data synced successfully",
+  "recordsProcessed": 4
+}
+```
+
+### Track Wellness Mood
+**POST** `/api/health/wellness/mood`
+
+Tracks mood with additional wellness context.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "mood": 8,
+  "energy": 7,
+  "stress": 3,
+  "context": "work",
+  "activities": ["meditation", "exercise"],
+  "notes": "Feeling great after morning workout"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Wellness mood tracked successfully",
+  "entry": {
+    "id": "wellness_mood_123",
+    "mood": 8,
+    "energy": 7,
+    "recordedAt": 1641000000000
+  }
+}
+```
+
+### Save Daily Reflection
+**POST** `/api/health/wellness/reflection`
+
+Saves daily wellness reflection.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "reflection": "Today was productive and fulfilling. Managed to complete all tasks and felt energized.",
+  "highlights": ["Completed project", "Good workout", "Quality time with family"],
+  "improvements": ["Could have slept earlier"],
+  "tomorrowGoals": ["Start new project", "Try yoga class"]
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Daily reflection saved successfully",
+  "reflection": {
+    "id": "reflection_123",
+    "date": "2024-01-15",
+    "wordCount": 85
+  }
+}
+```
+
+### Save Gratitude Entries
+**POST** `/api/health/wellness/gratitude`
+
+Saves gratitude journal entries.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "entries": [
+    "Grateful for my health and energy today",
+    "Thankful for supportive colleagues",
+    "Appreciative of beautiful weather"
+  ],
+  "mood": 9
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Gratitude entries saved successfully",
+  "entry": {
+    "id": "gratitude_123",
+    "entriesCount": 3,
+    "recordedAt": 1641000000000
+  }
+}
+```
+
+### Analyze Health Patterns
+**GET** `/api/health/analytics/patterns`
+
+Analyzes health patterns and trends.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Query Parameters:**
+- `days` (optional): Analysis period in days (default: 30)
+- `type` (optional): Focus on specific health type
+
+**Response (200):**
+```json
+{
+  "patterns": {
+    "exercise": {
+      "bestDays": ["Monday", "Wednesday", "Friday"],
+      "averageIntensity": 7.2,
+      "trend": "improving"
+    },
+    "mood": {
+      "averageScore": 7.8,
+      "highestHour": 10,
+      "correlations": ["exercise", "sleep"]
+    }
+  }
+}
+```
+
+### Find Health Correlations
+**GET** `/api/health/analytics/correlations`
+
+Finds correlations between different health metrics.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "correlations": [
+    {
+      "metrics": ["exercise", "mood"],
+      "correlation": 0.78,
+      "strength": "strong",
+      "insight": "Exercise sessions strongly correlate with improved mood"
+    },
+    {
+      "metrics": ["sleep", "energy"],
+      "correlation": 0.65,
+      "strength": "moderate",
+      "insight": "Better sleep quality leads to higher energy levels"
+    }
+  ]
 }
 ```
 
@@ -1577,6 +2698,407 @@ Content-Type: application/json
 **GET** `/api/voice/analytics/usage`
 
 Gets voice processing usage analytics.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "usage": {
+    "totalUploads": 156,
+    "totalDuration": 7890,
+    "averageAccuracy": 0.94,
+    "languageBreakdown": {
+      "en": 120,
+      "de": 36
+    }
+  },
+  "period": {
+    "days": 30,
+    "startDate": 1640390400000,
+    "endDate": 1641000000000
+  }
+}
+```
+
+## Payments & Subscriptions
+
+### Get Subscription Plans
+**GET** `/api/payments/plans`
+
+Gets available subscription plans.
+
+**Response (200):**
+```json
+{
+  "plans": [
+    {
+      "id": "basic_monthly",
+      "name": "Basic Monthly",
+      "description": "Essential features for personal productivity",
+      "price": 999,
+      "currency": "USD",
+      "interval": "month",
+      "features": [
+        "Unlimited tasks",
+        "Basic health tracking",
+        "Priority support",
+        "Export data"
+      ],
+      "pricePerMonth": 999
+    },
+    {
+      "id": "premium",
+      "name": "Premium Monthly",
+      "description": "Advanced features for power users",
+      "price": 1999,
+      "currency": "USD",
+      "interval": "month",
+      "features": [
+        "All Basic features",
+        "AI-powered insights",
+        "Advanced analytics",
+        "Calendar integrations",
+        "Voice transcription",
+        "Custom badges",
+        "Priority AI processing"
+      ],
+      "pricePerMonth": 1999
+    }
+  ]
+}
+```
+
+### Get User Subscription
+**GET** `/api/payments/subscription`
+
+Gets the current user's subscription status.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200) - With Active Subscription:**
+```json
+{
+  "subscription": {
+    "id": "sub_123",
+    "plan": "premium",
+    "status": "active",
+    "currentPeriodEnd": 1643592000000,
+    "isActive": true
+  }
+}
+```
+
+**Response (200) - No Subscription:**
+```json
+{
+  "subscription": null,
+  "availablePlans": [
+    {
+      "id": "basic_monthly",
+      "name": "Basic Monthly",
+      "price": 999,
+      "features": ["Unlimited tasks", "Basic health tracking"]
+    }
+  ]
+}
+```
+
+### Create Subscription Checkout
+**POST** `/api/payments/subscription/create`
+
+Creates a Stripe checkout session for subscription.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "planId": "premium",
+  "billingCycle": "monthly"
+}
+```
+
+**Response (200):**
+```json
+{
+  "sessionId": "cs_test_session123",
+  "checkoutUrl": "https://checkout.stripe.com/pay/cs_test_session123"
+}
+```
+
+### Cancel Subscription
+**POST** `/api/payments/subscription/cancel`
+
+Cancels the user's active subscription.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Subscription cancelled successfully",
+  "subscription": {
+    "status": "cancelled"
+  }
+}
+```
+
+**Response (404) - No Active Subscription:**
+```json
+{
+  "error": "No active subscription found"
+}
+```
+
+### Get Payment Methods
+**GET** `/api/payments/payment-methods`
+
+Gets the user's saved payment methods.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "paymentMethods": [
+    {
+      "id": "pm_test_123",
+      "type": "card",
+      "last4": "4242",
+      "expiryMonth": 12,
+      "expiryYear": 2025,
+      "brand": "visa",
+      "isDefault": true
+    }
+  ]
+}
+```
+
+### Add Payment Method
+**POST** `/api/payments/payment-methods`
+
+Creates a setup intent for adding a new payment method.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "clientSecret": "seti_test_123_secret_abc123",
+  "setupIntentId": "seti_test_123"
+}
+```
+
+### Remove Payment Method
+**DELETE** `/api/payments/payment-methods/{id}`
+
+Removes a saved payment method.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Payment method removed successfully"
+}
+```
+
+### Get Billing History
+**GET** `/api/payments/billing/history`
+
+Gets the user's billing history and invoices.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "invoices": [
+    {
+      "id": "in_test_123",
+      "amount": 1999,
+      "status": "paid",
+      "date": 1641000000000,
+      "downloadUrl": "https://invoice.stripe.com/in_test_123",
+      "description": "Payment for subscription"
+    }
+  ],
+  "pagination": {
+    "hasMore": false
+  }
+}
+```
+
+### Get Upcoming Invoice
+**GET** `/api/payments/billing/upcoming`
+
+Gets preview of the next invoice.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "invoice": {
+    "amount": 1999,
+    "currency": "usd",
+    "periodStart": 1641000000000,
+    "periodEnd": 1643592000000,
+    "lineItems": [
+      {
+        "description": "Premium Monthly Subscription",
+        "amount": 1999
+      }
+    ]
+  }
+}
+```
+
+### Get Payment History
+**GET** `/api/payments/history`
+
+Gets the user's complete payment and subscription history.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "history": [
+    {
+      "subscriptionId": "sub_123",
+      "planId": "premium",
+      "amount": 1999,
+      "currency": "USD",
+      "status": "active",
+      "paymentDate": 1641000000000,
+      "periodStart": 1641000000000,
+      "periodEnd": 1643592000000
+    }
+  ],
+  "totalRecords": 1
+}
+```
+
+### Get Usage Analytics
+**GET** `/api/payments/usage`
+
+Gets subscription usage analytics and limits.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200):**
+```json
+{
+  "plan": "premium",
+  "limits": {
+    "tasks": 1000,
+    "storage": 5368709120,
+    "ai_requests": 500
+  },
+  "current": {
+    "tasks": 45,
+    "storage": 1073741824,
+    "ai_requests": 23
+  },
+  "percentUsed": {
+    "tasks": 4.5,
+    "storage": 20.0,
+    "ai_requests": 4.6
+  }
+}
+```
+
+**Response (200) - No Subscription:**
+```json
+{
+  "hasSubscription": false,
+  "usage": {}
+}
+```
+
+### Stripe Webhook Handler
+**POST** `/api/payments/webhooks/stripe`
+
+Handles Stripe webhook events for subscription updates.
+
+**Headers:**
+```
+stripe-signature: <webhook_signature>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "id": "evt_test_webhook",
+  "object": "event",
+  "type": "customer.subscription.created",
+  "data": {
+    "object": {
+      "id": "sub_test_123",
+      "customer": "cus_test_123",
+      "status": "active"
+    }
+  }
+}
+```
+
+**Response (200):**
+```json
+{
+  "received": true
+}
+```
+
+**Supported Webhook Events:**
+- `customer.subscription.created` - New subscription created
+- `customer.subscription.updated` - Subscription modified
+- `customer.subscription.deleted` - Subscription cancelled
+- `invoice.payment_succeeded` - Payment successful
+- `invoice.payment_failed` - Payment failed
+
+## Calendar Integration
+
+### Get Calendar Events
+**GET** `/api/calendar/events`
+
+Gets the user's calendar events with optional filtering.
 
 **Headers:**
 ```

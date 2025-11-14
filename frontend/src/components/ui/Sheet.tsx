@@ -22,21 +22,21 @@ export const Sheet: React.FC<SheetProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
       
       {/* Sheet */}
-      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-muted shadow-xl transform transition-transform">
+      <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-card border-l border-border shadow-2xl transform transition-transform">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-foreground dark:text-white">
+          <div className="flex items-center justify-between p-6 border-b border-border">
+            <h2 className="text-xl font-bold text-foreground">
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="p-2 text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground transition-colors"
+              className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
             >
               <X className="w-5 h-5" />
             </button>

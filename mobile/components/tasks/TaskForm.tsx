@@ -29,7 +29,7 @@ interface TaskFormProps {
 }
 
 const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, onCancel }) => {
-  const { createTask, isLoading } = useTaskStore();
+  const { createTask, isMutating } = useTaskStore();
 
   const {
     control,
@@ -239,7 +239,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, onCancel }) => {
               <TouchableOpacity
                 className="flex-1 bg-gray-200 rounded-xl py-4"
                 onPress={onCancel}
-                disabled={isLoading}
+                disabled={isMutating}
               >
                 <Text className="text-gray-700 font-semibold text-center">
                   Cancel
@@ -249,12 +249,12 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSuccess, onCancel }) => {
 
             <TouchableOpacity
               className={`flex-1 rounded-xl py-4 ${
-                isLoading ? 'bg-primary-400' : 'bg-primary-600'
+                isMutating ? 'bg-primary-400' : 'bg-primary-600'
               }`}
               onPress={handleSubmit(onSubmit)}
-              disabled={isLoading}
+              disabled={isMutating}
             >
-              {isLoading ? (
+              {isMutating ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text className="text-white font-semibold text-center">

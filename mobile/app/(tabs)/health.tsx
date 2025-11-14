@@ -13,7 +13,9 @@ import {
   BeakerIcon,
   ChartBarIcon
 } from 'react-native-heroicons/outline';
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '../../lib/api';
+import { useAppTheme } from '../../constants/dynamicTheme';
+import { useI18n } from '../../lib/i18n';
 
 interface HealthLog {
   id: string;
@@ -33,6 +35,8 @@ interface HealthStats {
 }
 
 export default function HealthScreen() {
+  const theme = useAppTheme();
+  const { t } = useI18n();
   const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month'>('week');
   const [refreshing, setRefreshing] = useState(false);
   const queryClient = useQueryClient();
@@ -44,7 +48,8 @@ export default function HealthScreen() {
       const response = await apiClient.getHealthLogs({ 
         limit: selectedPeriod === 'day' ? 10 : selectedPeriod === 'week' ? 50 : 100 
       });
-      return response.logs || [];
+      // Backend returns { logs: HealthLog[], hasMore, nextCursor, total }
+      return response.logs || response.data?.logs || [];
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -53,8 +58,8 @@ export default function HealthScreen() {
   const { data: stats } = useQuery({
     queryKey: ['health-stats', selectedPeriod],
     queryFn: async (): Promise<HealthStats> => {
-      const response = await apiClient.get(`/health/stats?period=${selectedPeriod}`);
-      return response.data;
+      const response = await apiClient.getHealthStats({ period: selectedPeriod });
+      return response.stats || response;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -91,8 +96,8 @@ export default function HealthScreen() {
       title: 'Exercise',
       description: 'Log workout session',
       icon: FireIcon,
-      color: 'bg-red-100',
-      iconColor: 'text-red-600',
+      color: theme.colors.successBg,
+      iconColor: theme.colors.success,
       onPress: () => router.push('/modals/log-exercise'),
     },
     {
@@ -100,8 +105,8 @@ export default function HealthScreen() {
       title: 'Mood',
       description: 'Track how you feel',
       icon: FaceSmileIcon,
-      color: 'bg-yellow-100',
-      iconColor: 'text-yellow-600',
+      color: theme.colors.warningBg,
+      iconColor: theme.colors.warning,
       onPress: () => router.push('/modals/log-mood'),
     },
     {
@@ -109,8 +114,8 @@ export default function HealthScreen() {
       title: 'Sleep',
       description: 'Record sleep hours',
       icon: ClockIcon,
-      color: 'bg-purple-100',
-      iconColor: 'text-purple-600',
+      color: theme.colors.infoBg,
+      iconColor: theme.colors.info,
       onPress: () => router.push('/modals/log-sleep'),
     },
     {
@@ -118,8 +123,8 @@ export default function HealthScreen() {
       title: 'Weight',
       description: 'Track body weight',
       icon: ScaleIcon,
-      color: 'bg-blue-100',
-      iconColor: 'text-blue-600',
+      color: theme.colors.infoBg,
+      iconColor: theme.colors.info,
       onPress: () => router.push('/modals/log-weight'),
     },
     {
@@ -127,8 +132,8 @@ export default function HealthScreen() {
       title: 'Water',
       description: 'Log water intake',
       icon: BeakerIcon,
-      color: 'bg-cyan-100',
-      iconColor: 'text-cyan-600',
+      color: theme.colors.infoBg,
+      iconColor: theme.colors.info,
       onPress: () => router.push('/modals/log-hydration'),
     },
     {
@@ -136,8 +141,8 @@ export default function HealthScreen() {
       title: 'Nutrition',
       description: 'Track meals & calories',
       icon: HeartIcon,
-      color: 'bg-green-100',
-      iconColor: 'text-green-600',
+      color: theme.colors.successBg,
+      iconColor: theme.colors.success,
       onPress: () => router.push('/modals/log-nutrition'),
     },
   ];
@@ -196,7 +201,7 @@ export default function HealthScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.colors.card }}>
       <ScrollView 
         className="flex-1"
         refreshControl={
@@ -205,25 +210,23 @@ export default function HealthScreen() {
       >
         {/* Header */}
         <View className="px-6 py-6">
-          <Text className="text-3xl font-bold text-gray-900 mb-2">Health</Text>
-          <Text className="text-gray-600">Track your wellness journey</Text>
+          <Text className="text-3xl font-bold mb-2" style={{ color: theme.colors.foreground }}>Health</Text>
+          <Text style={{ color: theme.colors.muted }}>Track your wellness journey</Text>
         </View>
 
         {/* Period Selector */}
         <View className="px-6 mb-6">
-          <View className="flex-row bg-gray-100 rounded-2xl p-1">
+          <View className="flex-row rounded-2xl p-1" style={{ backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}>
             {periodOptions.map((period) => (
               <TouchableOpacity
                 key={period.key}
-                className={`flex-1 py-3 rounded-xl ${
-                  selectedPeriod === period.key ? 'bg-white shadow-sm' : ''
-                }`}
+                className={`flex-1 rounded-xl`}
+                style={{ backgroundColor: selectedPeriod === period.key ? theme.colors.primaryLight : 'transparent', paddingVertical: theme.spacing.lg, borderRadius: theme.radii.xl, borderWidth: 1, borderColor: selectedPeriod === period.key ? theme.colors.primary : 'transparent' }}
                 onPress={() => setSelectedPeriod(period.key as any)}
               >
                 <Text
-                  className={`text-center font-medium ${
-                    selectedPeriod === period.key ? 'text-gray-900' : 'text-gray-600'
-                  }`}
+                  className={`text-center font-medium`}
+                  style={{ color: selectedPeriod === period.key ? theme.colors.primary : theme.colors.muted }}
                 >
                   {period.label}
                 </Text>
@@ -237,58 +240,74 @@ export default function HealthScreen() {
           <View className="px-6 mb-8">
             <View className="flex-row flex-wrap -mx-2">
               <View className="w-1/2 px-2 mb-4">
-                <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                  <View className="flex-row items-center justify-between mb-3">
-                    <FireIcon size={24} color="#EF4444" />
-                    <Text className="text-2xl font-bold text-red-600">
-                      {stats.caloriesBurned || 0}
-                    </Text>
+                <View className="rounded-2xl p-5" style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radii.xl, padding: theme.spacing.xl }}>
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                      <View className="w-14 h-14 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                        <FireIcon size={24} color={'#FFFFFF'} />
+                      </View>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
+                        {stats.caloriesBurned || 0}
+                      </Text>
+                      <Text className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Calories Burned</Text>
+                    </View>
                   </View>
-                  <Text className="text-gray-600 text-sm font-medium">
-                    Calories Burned
-                  </Text>
                 </View>
               </View>
 
               <View className="w-1/2 px-2 mb-4">
-                <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                  <View className="flex-row items-center justify-between mb-3">
-                    <FaceSmileIcon size={24} color="#F59E0B" />
-                    <Text className="text-2xl font-bold text-orange-600">
-                      {stats.averageMood ? `${stats.averageMood.toFixed(1)}/10` : 'N/A'}
-                    </Text>
+                <View className="rounded-2xl p-5" style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radii.xl }}>
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                      <View className="w-14 h-14 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                        <FaceSmileIcon size={24} color={'#FFFFFF'} />
+                      </View>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
+                        {stats.averageMood ? `${stats.averageMood.toFixed(1)}/10` : 'N/A'}
+                      </Text>
+                      <Text className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Average Mood</Text>
+                    </View>
                   </View>
-                  <Text className="text-gray-600 text-sm font-medium">
-                    Average Mood
-                  </Text>
                 </View>
               </View>
 
               <View className="w-1/2 px-2 mb-4">
-                <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                  <View className="flex-row items-center justify-between mb-3">
-                    <ClockIcon size={24} color="#8B5CF6" />
-                    <Text className="text-2xl font-bold text-purple-600">
-                      {stats.averageSleep ? `${stats.averageSleep.toFixed(1)}h` : 'N/A'}
-                    </Text>
+                <View className="rounded-2xl p-5" style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radii.xl }}>
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                      <View className="w-14 h-14 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                        <ClockIcon size={24} color={'#FFFFFF'} />
+                      </View>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
+                        {stats.averageSleep ? `${stats.averageSleep.toFixed(1)}h` : 'N/A'}
+                      </Text>
+                      <Text className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Average Sleep</Text>
+                    </View>
                   </View>
-                  <Text className="text-gray-600 text-sm font-medium">
-                    Average Sleep
-                  </Text>
                 </View>
               </View>
 
               <View className="w-1/2 px-2 mb-4">
-                <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                  <View className="flex-row items-center justify-between mb-3">
-                    <BeakerIcon size={24} color="#06B6D4" />
-                    <Text className="text-2xl font-bold text-cyan-600">
-                      {stats.waterIntake || 0}L
-                    </Text>
+                <View className="rounded-2xl p-5" style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radii.xl }}>
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                      <View className="w-14 h-14 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                        <BeakerIcon size={24} color={'#FFFFFF'} />
+                      </View>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
+                        {stats.waterIntake || 0}L
+                      </Text>
+                      <Text className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Water Intake</Text>
+                    </View>
                   </View>
-                  <Text className="text-gray-600 text-sm font-medium">
-                    Water Intake
-                  </Text>
                 </View>
               </View>
             </View>
@@ -297,24 +316,29 @@ export default function HealthScreen() {
 
         {/* Quick Log Actions */}
         <View className="px-6 mb-8">
-          <Text className="text-xl font-bold text-gray-900 mb-4">Quick Log</Text>
+          <Text className="text-xl font-bold mb-4" style={{ color: theme.colors.foreground }}>Quick Log</Text>
           
           <View className="flex-row flex-wrap -mx-2">
             {quickLogOptions.map((option) => (
               <View key={option.id} className="w-1/2 px-2 mb-4">
                 <TouchableOpacity 
-                  className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+                  className="rounded-2xl p-4"
+                  style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl, padding: theme.spacing.xl }}
                   onPress={option.onPress}
                 >
-                  <View className={`w-12 h-12 ${option.color} rounded-xl items-center justify-center mb-3`}>
-                    <option.icon size={24} className={option.iconColor} />
+                  <View className="flex-row items-center justify-between">
+                    <View className="w-12 h-12 rounded-full items-center justify-center" style={{ backgroundColor: option.color, borderWidth: 1, borderColor: (option.iconColor as string) + '22' }}>
+                      <option.icon size={22} color={option.iconColor as any} />
+                    </View>
+                    <View style={{ alignItems: 'flex-end', flex: 1, marginLeft: 12 }}>
+                      <Text className="font-semibold text-base" style={{ color: theme.colors.foreground }}>
+                        {option.title}
+                      </Text>
+                      <Text className="text-sm mt-1" style={{ color: theme.colors.muted }}>
+                        {option.description}
+                      </Text>
+                    </View>
                   </View>
-                  <Text className="font-semibold text-gray-900 text-base">
-                    {option.title}
-                  </Text>
-                  <Text className="text-gray-500 text-sm mt-1">
-                    {option.description}
-                  </Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -324,44 +348,44 @@ export default function HealthScreen() {
         {/* Recent Health Logs */}
         <View className="px-6 mb-8">
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-xl font-bold text-gray-900">Recent Logs</Text>
+            <Text className="text-xl font-bold" style={{ color: theme.colors.foreground }}>Recent Logs</Text>
             <TouchableOpacity>
-              <Text className="text-blue-600 font-medium">View All</Text>
+              <Text className="font-medium" style={{ color: theme.colors.primary }}>View All</Text>
             </TouchableOpacity>
           </View>
           
-          <View className="bg-white rounded-2xl shadow-sm border border-gray-100">
+          <View className="rounded-2xl" style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}>
             {healthLogs && healthLogs.length > 0 ? (
               healthLogs.slice(0, 8).map((log, index) => (
                 <View key={log.id}>
                   <View className="p-4 flex-row items-center">
-                    <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center mr-4">
+                    <View className="w-10 h-10 rounded-full items-center justify-center mr-4" style={{ backgroundColor: theme.colors.primaryLight }}>
                       <Text className="text-lg">{getHealthLogIcon(log.type)}</Text>
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold text-gray-900 capitalize">
+                      <Text className="font-semibold capitalize" style={{ color: theme.colors.foreground }}>
                         {log.type}
                       </Text>
-                      <Text className="text-gray-500 text-sm">
+                      <Text className="text-sm" style={{ color: theme.colors.muted }}>
                         {getHealthLogDescription(log)}
                       </Text>
-                      <Text className="text-gray-400 text-xs mt-1">
+                      <Text className="text-xs mt-1" style={{ color: theme.colors.mutedAlt }}>
                         {formatHealthLogTime(log.recordedAt)}
                       </Text>
                     </View>
                   </View>
                   {index < healthLogs.length - 1 && index < 7 && (
-                    <View className="h-px bg-gray-100 mx-4" />
+                    <View className="h-px mx-4" style={{ backgroundColor: theme.colors.border }} />
                   )}
                 </View>
               ))
             ) : (
               <View className="p-8 items-center">
                 <ChartBarIcon size={48} color="#D1D5DB" />
-                <Text className="text-gray-500 text-center mt-4">
+                <Text className="text-center mt-4" style={{ color: theme.colors.muted }}>
                   No health data yet
                 </Text>
-                <Text className="text-gray-400 text-sm text-center mt-1">
+                <Text className="text-sm text-center mt-1" style={{ color: theme.colors.mutedAlt }}>
                   Start logging your health data to track your wellness!
                 </Text>
               </View>

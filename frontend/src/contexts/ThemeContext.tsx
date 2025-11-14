@@ -193,8 +193,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) 
               onClick={() => setMode(value as ThemeMode)}
               className={`px-3 py-2 text-sm rounded-md transition-colors ${
                 mode === value
-                  ? 'bg-info-light text-info dark:bg-info dark:text-info-light'
-                  : 'text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-white'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {label}
@@ -222,12 +222,12 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) 
               onClick={() => setColorScheme(value as ColorScheme)}
               className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-md transition-colors ${
                 colorScheme === value
-                  ? 'bg-info-light text-info dark:bg-info dark:text-info-light'
-                  : 'text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-white'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <div
-                className="w-4 h-4 rounded-full border-2 border-gray-300 dark:border-gray-600"
+                className="w-4 h-4 rounded-full border-2 border-border"
                 style={{ backgroundColor: color }}
               />
               <span>{label}</span>
@@ -240,7 +240,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) 
       <div>
         <button
           onClick={toggleMode}
-          className="w-full px-4 py-2 text-sm font-medium text-white bg-info rounded-md hover:bg-info transition-colors"
+          className="w-full px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-colors"
         >
           Toggle Theme
         </button>

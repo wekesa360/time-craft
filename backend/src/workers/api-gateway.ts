@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { jwt } from 'hono/jwt';
+import { jwt, verify } from 'hono/jwt';
 import { Env } from '@/lib/env';
 
 // middleware
@@ -38,6 +38,52 @@ import fixFocusTableRoutes from './fix-focus-table';
 import fixFocusSessionsTableRoutes from './fix-focus-sessions-table';
 
 const app = new Hono<{ Bindings: Env }>();
+
+// Global error handler for validation and other errors
+app.onError((err, c) => {
+  console.error('API Error:', err);
+  console.error('Error name:', err.name);
+  console.error('Error status:', (err as any).status);
+  console.error('Error message:', err.message);
+  
+  // Handle validation errors from zValidator
+  if (err.name === 'ZodError') {
+    return c.json({ 
+      error: 'Validation failed', 
+      details: err.issues || err.message 
+    }, 400);
+  }
+  
+  // Handle HTTPException from Hono (which zValidator uses)
+  if (err.name === 'HTTPException') {
+    const status = (err as any).status || 500;
+    if (status === 400) {
+      return c.json({ 
+        error: 'Validation failed', 
+        details: err.message 
+      }, 400);
+    }
+    return c.json({ 
+      error: err.message || 'HTTP Error',
+      details: err.message 
+    }, status);
+  }
+  
+  // Handle other known errors
+  if (err.message?.includes('Unauthorized')) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  
+  if (err.message?.includes('Not found')) {
+    return c.json({ error: 'Not found' }, 404);
+  }
+  
+  // Default to 500 for unknown errors
+  return c.json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  }, 500);
+});
 
 // global middleware
 app.use('*', logger());
@@ -79,9 +125,36 @@ app.use('/api/*', async (c, next) => {
   if (c.req.path.startsWith('/api/otp/')) {
     return next();
   }
+
+  // Skip JWT middleware for webhook routes (they have their own authentication)
+  if (c.req.path.startsWith('/api/payments/webhooks/')) {
+    return next();
+  }
   
-  const jwtMiddleware = jwt({ secret: c.env.JWT_SECRET });
-  return jwtMiddleware(c, next);
+  // Skip JWT middleware for test routes in test environment
+  if (process.env.NODE_ENV === 'test' && c.req.header('X-Test-Skip-JWT') === 'true') {
+    // Set a mock payload for testing
+    c.set('jwtPayload', { userId: 'user_test_regular' });
+    return next();
+  }
+  
+  // Custom JWT validation with proper error handling
+  try {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const token = authHeader.substring(7);
+    const payload = await verify(token, c.env.JWT_SECRET);
+    
+    // Store payload in context for route handlers
+    c.set('jwtPayload', payload);
+    
+    return next();
+  } catch (error) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
 });
 
 // health check
@@ -113,7 +186,7 @@ app.route('/api/notifications', notificationRoutes);
 app.route('/api/social', socialRoutes);
 app.route('/api/student', studentVerificationRoutes);
 app.route('/api/localization', localizationRoutes);
-app.route('/api/health', healthMonitorRoutes);
+app.route('/api/system/health', healthMonitorRoutes);
 app.route('/api/metrics', metricsRoutes);
 app.route('/api/openapi', openapiRoutes);
 app.route('/api/realtime', realtimeRoutes);

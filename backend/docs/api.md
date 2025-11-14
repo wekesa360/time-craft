@@ -49,6 +49,23 @@
 
 ## New Features (v2.0)
 
+### Payments & Subscriptions
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/payments/plans` | Get subscription plans |
+| GET | `/api/payments/subscription` | Get user subscription |
+| POST | `/api/payments/subscription/create` | Create checkout session |
+| POST | `/api/payments/subscription/cancel` | Cancel subscription |
+| GET | `/api/payments/payment-methods` | Get payment methods |
+| POST | `/api/payments/payment-methods` | Add payment method |
+| DELETE | `/api/payments/payment-methods/{id}` | Remove payment method |
+| GET | `/api/payments/billing/history` | Get billing history |
+| GET | `/api/payments/billing/upcoming` | Get upcoming invoice |
+| GET | `/api/payments/usage` | Get usage analytics |
+| GET | `/api/payments/history` | Get payment history |
+| POST | `/api/payments/webhooks/stripe` | Stripe webhook handler |
+
 ### Focus Sessions (Pomodoro)
 
 | Method | Endpoint | Description |

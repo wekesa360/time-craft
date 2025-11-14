@@ -8,6 +8,10 @@ import { z } from 'zod';
 import { useAuthStore } from '../../stores/auth';
 import { EyeIcon, EyeSlashIcon } from 'react-native-heroicons/outline';
 import GoogleIcon from '../../components/icons/GoogleIcon';
+import OTPLogin from '../../components/auth/OTPLogin';
+import { showToast, showConnectionTest } from '../../lib/toast';
+import { useAppTheme } from '../../constants/dynamicTheme';
+import { useI18n } from '../../lib/i18n';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -17,10 +21,14 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
-  const { login, loginWithGoogle, loginWithBiometric, isLoading, biometricEnabled, biometricAvailable, biometricCapabilities, initializeBiometric } = useAuthStore();
+  const theme = useAppTheme();
+  const { t } = useI18n();
+  const { login, loginWithGoogle, loginWithBiometric, isLoading, biometricEnabled, biometricAvailable, biometricCapabilities, initializeBiometric, testConnection } = useAuthStore();
   const [showBiometric, setShowBiometric] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<'google' | 'password' | 'otp'>('google');
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
   
   const {
     control,
@@ -45,35 +53,54 @@ export default function LoginScreen() {
   const onSubmit = async (data: LoginForm) => {
     try {
       await login(data);
+      showToast.success('Welcome back!', 'Login Successful');
       router.replace('/(tabs)/dashboard');
     } catch (error) {
-      Alert.alert('Login Failed', 'Invalid email or password');
+      const errorMessage = error instanceof Error ? error.message : 'Invalid email or password';
+      showToast.error(errorMessage, 'Login Failed');
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
+      setGoogleLoading(true);
       await loginWithGoogle();
+      showToast.success('Welcome!', 'Login Successful');
       router.replace('/(tabs)/dashboard');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Please try again.';
-      Alert.alert(
-        'Google Sign-In Not Available', 
-        errorMessage,
-        [
-          { text: 'Use Email Instead', onPress: () => setLoginMethod('otp') },
-          { text: 'OK' }
-        ]
-      );
+      showToast.warning(errorMessage, 'Google Sign-In Not Available');
+      setLoginMethod('otp');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
   const handleBiometricLogin = async () => {
     try {
+      setBiometricLoading(true);
       await loginWithBiometric();
+      showToast.success('Welcome back!', 'Biometric Login Successful');
       router.replace('/(tabs)/dashboard');
     } catch (error) {
-      Alert.alert('Biometric Login Failed', 'Please try again or use your password.');
+      const errorMessage = error instanceof Error ? error.message : 'Please try again or use your password.';
+      showToast.error(errorMessage, 'Biometric Login Failed');
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
+
+  const handleOTPSuccess = async (user: any, tokens: any) => {
+    try {
+      // Update auth store directly with the tokens from OTP
+      const authStore = useAuthStore.getState();
+      authStore.setUser(user);
+      authStore.setTokens(tokens);
+      
+      showToast.success('Welcome!', 'Login Successful');
+      router.replace('/(tabs)/dashboard');
+    } catch (error) {
+      showToast.error('Please try again.', 'Login Failed');
     }
   };
 
@@ -98,74 +125,102 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#f5e6e8' }}>
-      <ScrollView className="flex-1" style={{ backgroundColor: '#f5e6e8' }}>
-        <View className="flex-1 justify-center px-6 py-12 min-h-screen">
-          {/* Logo/Brand */}
-          <View className="items-center mb-8">
-            <View className="w-20 h-20 rounded-3xl items-center justify-center mb-4 shadow-lg" style={{ backgroundColor: '#ff6b35' }}>
-              <Text className="text-3xl font-bold text-white">TC</Text>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.colors.card }}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+        <View className="flex-1 justify-center px-6 py-8" style={{ minHeight: '100%' }}>
+          {/* Logo/Brand */
+          }
+          <View className="items-center mb-10">
+            <View className="w-16 h-16 items-center justify-center mb-4 shadow-lg" style={{ backgroundColor: theme.colors.primary, borderRadius: 20 }}>
+              <Text className="text-2xl font-bold text-white">TC</Text>
             </View>
-            <Text className="text-3xl font-bold mb-2" style={{ color: '#2d2d2d' }}>Welcome Back</Text>
-            <Text className="text-center" style={{ color: '#6b6b6b' }}>Sign in to your TimeCraft account</Text>
+            <Text className="text-3xl font-bold mb-2" style={{ color: theme.colors.foreground }}>{t('welcome_back')}</Text>
+            <Text className="text-center" style={{ color: theme.colors.muted }}>{t('sign_in_to_account')}</Text>
           </View>
 
-        {/* Login Options */}
-        <View className="space-y-6">
-          {/* Primary Login Options - Show when not in password mode */}
-          {loginMethod !== 'password' && (
-            <View className="space-y-4">
+          {/* Login Options */}
+          <View className="space-y-6 mb-8">
+          {/* OTP Login - Show when selected */}
+          {loginMethod === 'otp' && (
+            <OTPLogin
+              onSuccess={handleOTPSuccess}
+              onBack={() => setLoginMethod('google')}
+            />
+          )}
+
+          {/* Primary Login Options - Show when not in password or OTP mode */}
+          {loginMethod !== 'password' && loginMethod !== 'otp' && (
+            <View className="space-y-5">
               {/* Google Sign In */}
               <TouchableOpacity
                 onPress={handleGoogleLogin}
-                disabled={isLoading}
-                className="w-full flex-row items-center justify-center bg-white rounded-2xl py-4 px-6 shadow-sm"
-                style={{ borderWidth: 1, borderColor: '#e8e8e8' }}
+                disabled={isLoading || googleLoading}
+                className="w-full flex-row items-center justify-center py-4 px-6 shadow-sm"
+                style={{ borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.card, opacity: (isLoading || googleLoading) ? 0.7 : 1 }}
               >
-                <View className="mr-3">
-                  <GoogleIcon size={24} />
-                </View>
-                <Text className="font-semibold text-lg" style={{ color: '#2d2d2d' }}>Continue with Google</Text>
+                {googleLoading ? (
+                  <View className="flex-row items-center">
+                    <ActivityIndicator size="small" color={theme.colors.primary} />
+                    <Text className="ml-2 font-medium" style={{ color: theme.colors.foreground }}>{t('signing_in')}</Text>
+                  </View>
+                ) : (
+                  <View className="flex-row items-center">
+                    <View className="mr-3">
+                      <GoogleIcon size={20} />
+                    </View>
+                    <Text className="font-medium" style={{ color: theme.colors.foreground }}>{t('continue_with_google')}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
 
               {/* Divider */}
-              <View className="flex-row items-center my-6">
-                <View className="flex-1 h-px" style={{ backgroundColor: '#e8e8e8' }} />
-                <Text className="px-4 text-sm" style={{ color: '#6b6b6b' }}>or</Text>
-                <View className="flex-1 h-px" style={{ backgroundColor: '#e8e8e8' }} />
+              <View className="flex-row items-center my-4">
+                <View className="flex-1 h-px" style={{ backgroundColor: theme.colors.border }} />
+                <Text className="px-4 text-sm" style={{ color: theme.colors.muted, backgroundColor: theme.colors.card }}>{t('or')}</Text>
+                <View className="flex-1 h-px" style={{ backgroundColor: theme.colors.border }} />
               </View>
 
               {/* Email OTP Option */}
               <TouchableOpacity
                 onPress={() => setLoginMethod('otp')}
-                className="w-full rounded-2xl py-4 px-6 shadow-sm"
-                style={{ backgroundColor: '#ff6b35' }}
+                className="w-full py-4 px-6 shadow-sm"
+                style={{ backgroundColor: theme.colors.primary, borderRadius: 20 }}
+                disabled={isLoading}
               >
-                <Text className="text-white font-semibold text-lg text-center">Continue with Email</Text>
+                <Text className="text-white font-medium text-center">{t('continue_with_email')}</Text>
               </TouchableOpacity>
 
               {/* Biometric Login Option */}
               {showBiometric && (
                 <TouchableOpacity
-                  className="w-full rounded-2xl py-4 px-6 flex-row items-center justify-center"
-                  style={{ borderWidth: 2, borderColor: '#ffd4c8' }}
+                  className="w-full py-4 px-6 flex-row items-center justify-center bg-white"
+                  style={{ borderRadius: 20, borderWidth: 2, borderColor: theme.colors.primaryLight, backgroundColor: theme.colors.card, opacity: (isLoading || biometricLoading) ? 0.7 : 1 }}
                   onPress={handleBiometricLogin}
-                  disabled={isLoading}
+                  disabled={isLoading || biometricLoading}
                 >
-                  <Text className="text-2xl mr-3">{getBiometricIcon()}</Text>
-                  <Text className="font-semibold text-lg" style={{ color: '#ff6b35' }}>
-                    Sign in with {getBiometricText()}
-                  </Text>
+                  {biometricLoading ? (
+                    <View className="flex-row items-center">
+                      <ActivityIndicator size="small" color={theme.colors.primary} />
+                      <Text className="ml-2 font-medium" style={{ color: theme.colors.primary }}>{t('signing_in')}</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <Text className="text-2xl mr-3">{getBiometricIcon()}</Text>
+                      <Text className="font-medium" style={{ color: theme.colors.primary }}>
+                        {t('sign_in')} {t('with') || ''} {getBiometricText()}
+                      </Text>
+                    </>
+                  )}
                 </TouchableOpacity>
               )}
 
               {/* Password Alternative */}
-              <View className="items-center">
+              <View className="items-center mt-4">
                 <TouchableOpacity
                   onPress={() => setLoginMethod('password')}
-                  className="py-2"
+                  className="py-3"
                 >
-                  <Text className="text-sm" style={{ color: '#6b6b6b' }}>Continue with password instead</Text>
+                  <Text className="text-sm" style={{ color: theme.colors.muted }}>{t('continue_with_password_instead')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -173,23 +228,24 @@ export default function LoginScreen() {
 
           {/* Password Login Form - Show when selected */}
           {loginMethod === 'password' && (
-            <View className="bg-white rounded-2xl p-6 shadow-lg space-y-4">
-              <View>
-                <Text className="text-sm font-medium mb-2" style={{ color: '#2d2d2d' }}>Email Address</Text>
+            <View>
+              <View className="mb-5">
+                <Text className="text-sm font-medium mb-3" style={{ color: theme.colors.foreground }}>{t('email_address')}</Text>
                 <Controller
                   control={control}
                   name="email"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                      className="rounded-xl px-4 py-3 text-base"
+                      className="w-full px-4 py-3"
                       style={{
+                        borderRadius: 20,
                         borderWidth: 1,
-                        borderColor: errors.email ? '#ef4444' : '#e8e8e8',
-                        backgroundColor: '#f5f5f5',
-                        color: '#2d2d2d'
+                        borderColor: errors.email ? '#ef4444' : theme.colors.border,
+                        color: theme.colors.foreground,
+                        backgroundColor: theme.colors.card
                       }}
-                      placeholder="Enter your email"
-                      placeholderTextColor="#6b6b6b"
+                      placeholder={t('email_address')}
+                      placeholderTextColor={theme.colors.mutedAlt}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       autoCorrect={false}
@@ -200,29 +256,30 @@ export default function LoginScreen() {
                   )}
                 />
                 {errors.email && (
-                  <Text className="text-sm mt-1" style={{ color: '#ef4444' }}>
+                  <Text className="text-sm mt-2" style={{ color: '#ef4444' }}>
                     {errors.email.message}
                   </Text>
                 )}
               </View>
               
-              <View>
-                <Text className="text-sm font-medium mb-2" style={{ color: '#2d2d2d' }}>Password</Text>
+              <View className="mb-6">
+                <Text className="text-sm font-medium mb-3" style={{ color: theme.colors.foreground }}>{t('password')}</Text>
                 <View className="relative">
                   <Controller
                     control={control}
                     name="password"
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextInput
-                        className="rounded-xl px-4 py-3 pr-12 text-base"
+                        className="w-full px-4 pr-16 py-3"
                         style={{
+                          borderRadius: 20,
                           borderWidth: 1,
-                          borderColor: errors.password ? '#ef4444' : '#e8e8e8',
-                          backgroundColor: '#f5f5f5',
-                          color: '#2d2d2d'
+                          borderColor: errors.password ? '#ef4444' : theme.colors.border,
+                          color: theme.colors.foreground,
+                          backgroundColor: theme.colors.card
                         }}
-                        placeholder="Enter your password"
-                        placeholderTextColor="#6b6b6b"
+                        placeholder={t('password')}
+                        placeholderTextColor={theme.colors.mutedAlt}
                         secureTextEntry={!showPassword}
                         onBlur={onBlur}
                         onChangeText={onChange}
@@ -231,66 +288,75 @@ export default function LoginScreen() {
                     )}
                   />
                   <TouchableOpacity
-                    className="absolute right-3 top-3"
+                    className="absolute right-3"
+                    style={{ top: 12 }}
                     onPress={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? (
-                      <EyeSlashIcon size={20} color="#6b6b6b" />
-                    ) : (
-                      <EyeIcon size={20} color="#6b6b6b" />
-                    )}
+                    <Text className="text-sm underline" style={{ color: theme.colors.primary }}>
+                      {showPassword ? t('hide') : t('show')}
+                    </Text>
                   </TouchableOpacity>
                 </View>
                 {errors.password && (
-                  <Text className="text-sm mt-1" style={{ color: '#ef4444' }}>
+                  <Text className="text-sm mt-2" style={{ color: '#ef4444' }}>
                     {errors.password.message}
                   </Text>
                 )}
-              </View>
-
-              {/* Forgot Password Link */}
-              <View className="items-end">
-                <TouchableOpacity>
-                  <Text className="text-sm font-medium" style={{ color: '#ff6b35' }}>Forgot password?</Text>
-                </TouchableOpacity>
+                
+                {/* Forgot Password Link - moved inside password field container */}
+                <View className="items-end mt-4 mb-3">
+                  <Link href="/auth/forgot-password" asChild>
+                    <TouchableOpacity>
+                      <Text className="text-sm font-medium" style={{ color: theme.colors.primary }}>{t('forgot_password')}</Text>
+                    </TouchableOpacity>
+                  </Link>
+                </View>
               </View>
               
               <TouchableOpacity 
-                className="rounded-xl py-4 mt-6"
-                style={{ backgroundColor: isLoading ? '#ffb3a1' : '#ff6b35' }}
+                className="w-full flex-row items-center justify-center gap-2 px-6 py-4 shadow-sm"
+                style={{ 
+                  backgroundColor: isLoading ? theme.colors.primaryLight : theme.colors.primary,
+                  borderRadius: 20
+                }}
                 onPress={handleSubmit(onSubmit)}
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text className="text-white font-semibold text-lg text-center">
-                    Sign In
-                  </Text>
-                )}
+                  <>
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white font-medium">{t('signing_in')}</Text>
+                </>
+              ) : (
+                <Text className="text-white font-medium">{t('sign_in')}</Text>
+              )}
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={() => setLoginMethod('google')}
-                className="py-2"
-              >
-                <Text className="text-sm text-center" style={{ color: '#6b6b6b' }}>Back to other options</Text>
-              </TouchableOpacity>
+              <View className="items-center mt-4">
+                <TouchableOpacity
+                  onPress={() => setLoginMethod('google')}
+                  className="py-3"
+                >
+                  <Text className="text-sm text-center" style={{ color: theme.colors.muted }}>Back to other options</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </View>
 
-        {/* Footer */}
-        <View className="items-center mt-8">
-          <Text className="text-sm" style={{ color: '#6b6b6b' }}>
-            Don't have an account?{' '}
-            <Link href="/auth/register">
-              <Text className="font-semibold" style={{ color: '#ff6b35' }}>Sign Up</Text>
-            </Link>
-          </Text>
+          {/* Footer */}
+          <View className="items-center space-y-4">
+            <View className="flex-row">
+              <Text className="text-sm" style={{ color: theme.colors.muted }}>{t('dont_have_account')} </Text>
+              <Link href="/auth/register" asChild>
+                <TouchableOpacity>
+                  <Text className="text-sm font-medium" style={{ color: theme.colors.primary }}>{t('sign_up')}</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
     </SafeAreaView>
   );
 }

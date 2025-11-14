@@ -28,7 +28,7 @@ const SessionComplete: React.FC<SessionCompleteProps> = ({
   sessionDuration,
   onComplete,
 }) => {
-  const { completeFocusSession, isLoading } = useFocusStore();
+  const { completeFocusSession, isMutating } = useFocusStore();
 
   const {
     control,
@@ -198,12 +198,12 @@ const SessionComplete: React.FC<SessionCompleteProps> = ({
       {/* Action Buttons */}
       <TouchableOpacity
         className={`rounded-xl py-4 px-6 ${
-          isLoading ? 'bg-primary-400' : 'bg-primary-600'
+          isMutating ? 'bg-primary-400' : 'bg-primary-600'
         }`}
         onPress={handleSubmit(onSubmit)}
-        disabled={isLoading}
+        disabled={isMutating}
       >
-        {isLoading ? (
+        {isMutating ? (
           <ActivityIndicator size="small" color="white" />
         ) : (
           <Text className="text-white font-semibold text-center text-lg">

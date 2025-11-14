@@ -16,7 +16,7 @@ interface FocusSetupProps {
 const FocusSetup: React.FC<FocusSetupProps> = ({ onSessionStart }) => {
   const { 
     startFocusSession, 
-    isLoading, 
+    isMutating, 
     pomodoroSettings 
   } = useFocusStore();
   
@@ -103,7 +103,7 @@ const FocusSetup: React.FC<FocusSetupProps> = ({ onSessionStart }) => {
                 key={option.type}
                 className={`${option.color} ${option.borderColor} border rounded-2xl p-6 shadow-sm`}
                 onPress={() => handleStartSession(option.type, option.duration)}
-                disabled={isLoading}
+                disabled={isMutating}
               >
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center flex-1">
@@ -121,7 +121,7 @@ const FocusSetup: React.FC<FocusSetupProps> = ({ onSessionStart }) => {
                     </View>
                   </View>
                   
-                  {isLoading ? (
+                  {isMutating ? (
                     <ActivityIndicator size="small" color="#6b7280" />
                   ) : (
                     <Text className="text-gray-400 text-2xl">›</Text>
@@ -144,7 +144,7 @@ const FocusSetup: React.FC<FocusSetupProps> = ({ onSessionStart }) => {
                 key={duration}
                 className="bg-gray-100 border border-gray-300 rounded-xl px-6 py-3"
                 onPress={() => handleStartSession('deep_work', duration)}
-                disabled={isLoading}
+                disabled={isMutating}
               >
                 <Text className="font-semibold text-gray-700">
                   {duration} min
@@ -167,7 +167,7 @@ const FocusSetup: React.FC<FocusSetupProps> = ({ onSessionStart }) => {
                   key={task.id}
                   className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
                   onPress={() => handleStartSession('pomodoro', pomodoroSettings.workDuration, task.id)}
-                  disabled={isLoading}
+                  disabled={isMutating}
                 >
                   <View className="flex-row items-center justify-between">
                     <View className="flex-1">

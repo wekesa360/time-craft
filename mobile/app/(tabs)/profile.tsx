@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Switch, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../stores/auth';
@@ -18,7 +18,12 @@ import {
   ClockIcon,
   HeartIcon
 } from 'react-native-heroicons/outline';
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '../../lib/api';
+import { useAppTheme } from '../../constants/dynamicTheme';
+import { useI18n } from '../../lib/i18n';
+import { showToast } from '../../lib/toast';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import healthService from '../../lib/health';
 
 interface UserStats {
   totalTasks: number;
@@ -33,16 +38,53 @@ export default function ProfileScreen() {
   const { user, logout, biometricEnabled, setBiometricEnabled } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const queryClient = useQueryClient();
+  const theme = useAppTheme();
+  const { t } = useI18n();
+  const [logoutDialogVisible, setLogoutDialogVisible] = useState(false);
+  const [healthStatus, setHealthStatus] = useState<{ connected: boolean; provider: any }>({ connected: false, provider: null });
 
-  // Fetch user stats
+  useEffect(() => {
+    (async () => {
+      await healthService.initialize();
+      setHealthStatus(healthService.getStatus());
+    })();
+  }, []);
+
+  const handleConnectHealth = async () => {
+    const ok = await healthService.connect();
+    setHealthStatus(healthService.getStatus());
+    if (!ok) {
+      showToast.info(t('health_sync_unavailable'));
+    }
+  };
+  const openURL = (url: string) => {
+    Linking.openURL(url).catch(() => Alert.alert(t('error'), t('unable_to_open_link')));
+  };
+
+  // Fetch user stats (compose from existing endpoints)
   const { data: stats } = useQuery({
     queryKey: ['user-stats'],
     queryFn: async (): Promise<UserStats> => {
-      const response = await apiClient.get('/profile/stats');
-      return response.data;
+      // No backend endpoint available; return safe defaults to avoid 404s
+      return {
+        totalTasks: 0,
+        completedTasks: 0,
+        totalFocusMinutes: 0,
+        currentStreak: 0,
+        totalAchievements: 0,
+        healthLogsCount: 0,
+      };
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
+
+  // Safe community summary fallbacks for profile cards
+  const community = {
+    challengesActive: 0,
+    badgesCount: Number(stats?.totalAchievements ?? 0) || 0,
+    friendsCount: 0,
+    leaderboardRank: undefined as number | undefined,
+  };
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
@@ -54,33 +96,12 @@ export default function ProfileScreen() {
       Alert.alert('Success', 'Profile updated successfully');
     },
     onError: (error) => {
-      Alert.alert('Error', 'Failed to update profile');
+      Alert.alert(t('error'), 'Failed to update profile');
     },
   });
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            setIsLoggingOut(true);
-            try {
-              await logout();
-              router.replace('/auth/login');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to sign out');
-            } finally {
-              setIsLoggingOut(false);
-            }
-          },
-        },
-      ]
-    );
+    setLogoutDialogVisible(true);
   };
 
   const handleBiometricToggle = async (enabled: boolean) => {
@@ -93,98 +114,96 @@ export default function ProfileScreen() {
 
   const menuSections = [
     {
-      title: 'Account',
+      title: t('account'),
       items: [
         {
           id: 'edit-profile',
-          title: 'Edit Profile',
-          description: 'Update your personal information',
+          title: t('edit_profile'),
+          description: t('update_personal_info'),
           icon: PencilIcon,
-          onPress: () => router.push('/modals/edit-profile'),
+          onPress: () => router.push('/edit-profile' as any),
         },
         {
           id: 'achievements',
-          title: 'Achievements',
-          description: 'View your badges and milestones',
+          title: t('achievements'),
+          description: t('view_badges_milestones'),
           icon: TrophyIcon,
-          onPress: () => router.push('/achievements'),
+          onPress: () => router.push('/achievements' as any),
         },
         {
           id: 'analytics',
-          title: 'Analytics',
-          description: 'Detailed insights and reports',
+          title: t('analytics'),
+          description: t('detailed_insights_reports'),
           icon: ChartBarIcon,
-          onPress: () => router.push('/analytics'),
+          onPress: () => router.push('/analytics' as any),
         },
       ],
     },
     {
-      title: 'Settings',
+      title: t('settings'),
       items: [
         {
-          id: 'notifications',
-          title: 'Notifications',
-          description: 'Manage your notification preferences',
-          icon: BellIcon,
-          onPress: () => router.push('/settings/notifications'),
-        },
-        {
-          id: 'privacy',
-          title: 'Privacy & Security',
-          description: 'Control your privacy settings',
-          icon: ShieldCheckIcon,
-          onPress: () => router.push('/settings/privacy'),
-        },
-        {
-          id: 'preferences',
-          title: 'App Preferences',
-          description: 'Customize your app experience',
+          id: 'settings',
+          title: t('settings'),
+          description: 'Notifications, privacy, preferences',
           icon: CogIcon,
-          onPress: () => router.push('/settings/preferences'),
+          onPress: () => router.push('/modals/settings'),
         },
       ],
     },
     {
-      title: 'Support',
+      title: t('social'),
+      items: [
+        {
+          id: 'social-community',
+          title: t('social'),
+          description: t('feed_challenges_connections'),
+          icon: UserIcon,
+          onPress: () => router.push('/social' as any),
+        },
+      ],
+    },
+    {
+      title: t('support'),
       items: [
         {
           id: 'help',
-          title: 'Help & Support',
-          description: 'Get help and contact support',
+          title: t('help_support'),
+          description: t('get_help_and_contact_support'),
           icon: QuestionMarkCircleIcon,
-          onPress: () => router.push('/help'),
+          onPress: () => Alert.alert(t('coming_soon'), 'Help & Support will be available soon.'),
         },
       ],
     },
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.colors.card }}>
       <ScrollView className="flex-1">
         {/* Header */}
         <View className="px-6 py-6">
-          <Text className="text-3xl font-bold text-gray-900 mb-2">Profile</Text>
-          <Text className="text-gray-600">Manage your account and preferences</Text>
+          <Text className="text-3xl font-bold mb-2" style={{ color: theme.colors.foreground }}>{t('profile')}</Text>
+          <Text style={{ color: theme.colors.muted }}>{t('manage_account_and_prefs')}</Text>
         </View>
 
         {/* User Info Card */}
         <View className="px-6 mb-8">
-          <View className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <View className="rounded-3xl p-6 shadow-sm" style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii['3xl'], padding: theme.spacing.xl }}>
             <View className="flex-row items-center mb-6">
-              <View className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mr-4">
-                <UserIcon size={40} color="#3B82F6" />
+              <View className="w-20 h-20 rounded-full items-center justify-center mr-4" style={{ backgroundColor: theme.colors.primaryLight }}>
+                <UserIcon size={40} color={theme.colors.primary} />
               </View>
               <View className="flex-1">
-                <Text className="text-2xl font-bold text-gray-900">
+                <Text className="text-2xl font-bold" style={{ color: theme.colors.foreground }}>
                   {user?.firstName} {user?.lastName}
                 </Text>
-                <Text className="text-gray-600 text-lg">
+                <Text className="text-lg" style={{ color: theme.colors.muted }}>
                   {user?.email}
                 </Text>
                 {user?.isStudent && (
                   <View className="mt-2">
-                    <View className="bg-green-100 rounded-full px-3 py-1 self-start">
-                      <Text className="text-green-700 text-sm font-medium">
+                    <View className="rounded-full px-3 py-1 self-start" style={{ backgroundColor: theme.colors.successBg }}>
+                      <Text className="text-sm font-medium" style={{ color: theme.colors.success }}>
                         Student Account
                       </Text>
                     </View>
@@ -193,74 +212,97 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* Quick Stats */}
-            {stats && (
-              <View className="flex-row flex-wrap -mx-2">
-                <View className="w-1/2 px-2 mb-4">
-                  <View className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
-                    <View className="flex-row items-center mb-2">
-                      <ClockIcon size={20} color="#3B82F6" />
-                      <Text className="text-blue-600 font-semibold ml-2">Focus Time</Text>
+            <View className="flex-row flex-wrap -mx-2">
+              <View className="w-1/2 px-2 mb-4">
+                <TouchableOpacity onPress={() => router.push('/challenges' as any)}>
+                  <View className="rounded-2xl p-5" style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radii.xl }}>
+                    <View className="flex-row items-center justify-between">
+                      <View className="w-14 h-14 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                        <TrophyIcon size={24} color={'#FFFFFF'} />
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
+                          {community.challengesActive}
+                        </Text>
+                        <Text className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{t('active_challenges')}</Text>
+                      </View>
                     </View>
-                    <Text className="text-2xl font-bold text-blue-700">
-                      {Math.floor(stats.totalFocusMinutes / 60)}h {stats.totalFocusMinutes % 60}m
-                    </Text>
                   </View>
-                </View>
-
-                <View className="w-1/2 px-2 mb-4">
-                  <View className="bg-green-50 rounded-2xl p-4 border border-green-100">
-                    <View className="flex-row items-center mb-2">
-                      <TrophyIcon size={20} color="#10B981" />
-                      <Text className="text-green-600 font-semibold ml-2">Tasks Done</Text>
-                    </View>
-                    <Text className="text-2xl font-bold text-green-700">
-                      {stats.completedTasks}
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="w-1/2 px-2 mb-4">
-                  <View className="bg-orange-50 rounded-2xl p-4 border border-orange-100">
-                    <View className="flex-row items-center mb-2">
-                      <FireIcon size={20} color="#F59E0B" />
-                      <Text className="text-orange-600 font-semibold ml-2">Streak</Text>
-                    </View>
-                    <Text className="text-2xl font-bold text-orange-700">
-                      {stats.currentStreak} days
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="w-1/2 px-2 mb-4">
-                  <View className="bg-red-50 rounded-2xl p-4 border border-red-100">
-                    <View className="flex-row items-center mb-2">
-                      <HeartIcon size={20} color="#EF4444" />
-                      <Text className="text-red-600 font-semibold ml-2">Health Logs</Text>
-                    </View>
-                    <Text className="text-2xl font-bold text-red-700">
-                      {stats.healthLogsCount}
-                    </Text>
-                  </View>
-                </View>
+                </TouchableOpacity>
               </View>
-            )}
+
+              <View className="w-1/2 px-2 mb-4">
+                <TouchableOpacity onPress={() => router.push('/leaderboard' as any)}>
+                  <View className="rounded-2xl p-5" style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radii.xl }}>
+                    <View className="flex-row items-center justify-between">
+                      <View className="w-14 h-14 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                        <ChartBarIcon size={24} color={'#FFFFFF'} />
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
+                          {community.leaderboardRank ? `#${community.leaderboardRank}` : '—'}
+                        </Text>
+                        <Text className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{t('leaderboard')}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              
+
+              <View className="w-1/2 px-2 mb-4">
+                <TouchableOpacity onPress={() => router.push('/social' as any)}>
+                  <View className="rounded-2xl p-5" style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radii.xl }}>
+                    <View className="flex-row items-center justify-between">
+                      <View className="w-14 h-14 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                        <UserIcon size={24} color={'#FFFFFF'} />
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
+                          {community.friendsCount}
+                        </Text>
+                        <Text className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{t('connections')}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              <View className="w-1/2 px-2 mb-4">
+                <TouchableOpacity onPress={() => router.push('/achievements' as any)}>
+                  <View className="rounded-2xl p-5" style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radii.xl }}>
+                    <View className="flex-row items-center justify-between">
+                      <View className="w-14 h-14 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                        <FireIcon size={24} color={'#FFFFFF'} />
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
+                          {community.badgesCount}
+                        </Text>
+                        <Text className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{t('achievements')}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </View>
 
         {/* Biometric Setting */}
         <View className="px-6 mb-8">
-          <View className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <View className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl, padding: theme.spacing.xl }}>
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center flex-1">
-                <View className="w-10 h-10 bg-purple-100 rounded-xl items-center justify-center mr-4">
-                  <ShieldCheckIcon size={24} color="#8B5CF6" />
+                <View className="w-10 h-10 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: theme.colors.primaryLight }}>
+                  <ShieldCheckIcon size={24} color={theme.colors.primary} />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-semibold text-gray-900">
+                  <Text className="font-semibold" style={{ color: theme.colors.foreground }}>
                     Biometric Authentication
                   </Text>
-                  <Text className="text-gray-500 text-sm">
+                  <Text className="text-sm" style={{ color: theme.colors.muted }}>
                     Use Face ID or Touch ID to sign in
                   </Text>
                 </View>
@@ -268,7 +310,7 @@ export default function ProfileScreen() {
               <Switch
                 value={biometricEnabled}
                 onValueChange={handleBiometricToggle}
-                trackColor={{ false: '#E5E7EB', true: '#8B5CF6' }}
+                trackColor={{ false: '#E5E7EB', true: theme.colors.primary }}
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -278,34 +320,33 @@ export default function ProfileScreen() {
         {/* Menu Sections */}
         {menuSections.map((section) => (
           <View key={section.title} className="px-6 mb-8">
-            <Text className="text-lg font-bold text-gray-900 mb-4">
+            <Text className="text-lg font-bold mb-4" style={{ color: theme.colors.foreground }}>
               {section.title}
             </Text>
-            
-            <View className="bg-white rounded-2xl shadow-sm border border-gray-100">
+            <View className="rounded-2xl shadow-sm" style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}>
               {section.items.map((item, index) => (
                 <View key={item.id}>
                   <TouchableOpacity
                     className="p-4 flex-row items-center"
                     onPress={item.onPress}
                   >
-                    <View className="w-10 h-10 bg-gray-100 rounded-xl items-center justify-center mr-4">
-                      <item.icon size={24} color="#6B7280" />
+                    <View className="w-10 h-10 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: theme.colors.surface }}>
+                      <item.icon size={24} color={theme.colors.muted} />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold text-gray-900">
+                      <Text className="font-semibold" style={{ color: theme.colors.foreground }}>
                         {item.title}
                       </Text>
-                      <Text className="text-gray-500 text-sm">
+                      <Text className="text-sm" style={{ color: theme.colors.muted }}>
                         {item.description}
                       </Text>
                     </View>
                     <View className="ml-4">
-                      <Text className="text-gray-400">›</Text>
+                      <Text style={{ color: theme.colors.mutedAlt }}>›</Text>
                     </View>
                   </TouchableOpacity>
                   {index < section.items.length - 1 && (
-                    <View className="h-px bg-gray-100 mx-4" />
+                    <View className="h-px mx-4" style={{ backgroundColor: theme.colors.border }} />
                   )}
                 </View>
               ))}
@@ -313,17 +354,66 @@ export default function ProfileScreen() {
           </View>
         ))}
 
+        {/* Health Connect / Apple Health */}
+        <View className="px-6 mb-8">
+          <Text className="text-lg font-bold mb-4" style={{ color: theme.colors.foreground }}>
+            {t('connect_health_services')}
+          </Text>
+          <View className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}>
+            <Text className="mb-2" style={{ color: theme.colors.muted }}>
+              {Platform.OS === 'android' ? t('connect_health_desc_android') : t('connect_health_desc_ios')}
+            </Text>
+            <View className="flex-row items-center justify-between mt-2">
+              <View>
+                <Text style={{ color: healthStatus.connected ? theme.colors.success : theme.colors.muted }}>
+                  {healthStatus.connected ? t('connected') : t('not_connected')}
+                </Text>
+              </View>
+              {healthStatus.connected ? (
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      const ok = await healthService.fetchAndLogData();
+                      if (ok) {
+                        showToast.success(t('sync_now'), t('success'));
+                      } else {
+                        showToast.info(t('health_sync_unavailable'));
+                      }
+                    }}
+                    className="px-4 py-3 rounded-2xl"
+                    style={{ backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}
+                  >
+                    <Text style={{ color: theme.colors.foreground, fontWeight: '600' }}>{t('sync_now')}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  disabled={healthStatus.connected}
+                  onPress={handleConnectHealth}
+                  className="px-4 py-3 rounded-2xl"
+                  style={{ backgroundColor: theme.colors.primary, borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.radii.xl }}
+                >
+                  <Text style={{ color: theme.colors.primaryForeground, fontWeight: '600' }}>
+                    {t('connect_now')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+
         {/* Sign Out Button */}
         <View className="px-6 mb-8">
           <TouchableOpacity
-            className="bg-white rounded-2xl p-4 shadow-sm border border-red-200"
+            className="rounded-2xl p-4 shadow-sm"
+            style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.danger + '55', borderRadius: theme.radii.xl, padding: theme.spacing.xl }}
             onPress={handleLogout}
             disabled={isLoggingOut}
           >
             <View className="flex-row items-center justify-center">
-              <ArrowRightOnRectangleIcon size={24} color="#EF4444" />
-              <Text className="text-red-600 font-semibold text-lg ml-3">
-                {isLoggingOut ? 'Signing Out...' : 'Sign Out'}
+              <ArrowRightOnRectangleIcon size={24} color={theme.colors.danger} />
+              <Text className="font-semibold text-lg ml-3" style={{ color: theme.colors.danger }}>
+                {isLoggingOut ? t('signing_out') : t('sign_out')}
               </Text>
             </View>
           </TouchableOpacity>
@@ -331,14 +421,34 @@ export default function ProfileScreen() {
 
         {/* App Version */}
         <View className="px-6 mb-8">
-          <Text className="text-center text-gray-400 text-sm">
-            TimeCraft Mobile v1.0.0
+          <Text className="text-center text-sm" style={{ color: theme.colors.mutedAlt }}>
+            {t('about_version')}
           </Text>
         </View>
 
         {/* Bottom Padding for Tab Bar */}
         <View className="h-20" />
       </ScrollView>
+      <ConfirmDialog
+        visible={logoutDialogVisible}
+        title={t('sign_out_title')}
+        description={t('are_you_sure_sign_out')}
+        confirmText={t('sign_out')}
+        cancelText={t('cancel')}
+        onCancel={() => setLogoutDialogVisible(false)}
+        onConfirm={async () => {
+          setLogoutDialogVisible(false);
+          setIsLoggingOut(true);
+          try {
+            await logout();
+            router.replace('/auth/login');
+          } catch (error) {
+            Alert.alert(t('error'), 'Failed to sign out');
+          } finally {
+            setIsLoggingOut(false);
+          }
+        }}
+      />
     </SafeAreaView>
   );
 }

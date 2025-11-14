@@ -158,7 +158,7 @@ export default function SocialPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -166,190 +166,228 @@ export default function SocialPage() {
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-[1600px] mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Social</h1>
-        <p className="text-muted-foreground mt-1">Connect with friends and share your wellness journey</p>
-      </div>
-
-      {/* View Navigation */}
-      <TabSwitcher
-        tabs={socialTabs}
-        activeTab={viewMode}
-        onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
-      />
-
-      {/* Social Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-card rounded-2xl p-4 md:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-          <p className="text-2xl md:text-3xl font-bold text-card-foreground">{connections.length}</p>
-          <p className="text-sm text-muted-foreground mt-1">Connections</p>
-          <div className="mt-2 flex items-center gap-1 text-xs text-blue-600 font-medium">
-            <span>Active friends</span>
-          </div>
-        </div>
-
-        <div className="bg-card rounded-2xl p-4 md:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-              <Target className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-          <p className="text-2xl md:text-3xl font-bold text-card-foreground">
-            {challenges.filter(c => c.isActive && c.participants.some(p => p.userId === 'current-user')).length}
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+            Social & Community
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Connect with friends and share your wellness journey
           </p>
-          <p className="text-sm text-muted-foreground mt-1">Active Challenges</p>
-          <div className="mt-2 flex items-center gap-1 text-xs text-green-600 font-medium">
-            <span>Participating</span>
-          </div>
         </div>
 
-        <div className="bg-card rounded-2xl p-4 md:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-purple-600" />
+        {/* Social Overview */}
+        <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-6 md:p-8 text-primary-foreground">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <p className="text-primary-foreground/80 mb-2">
+                Your Social Impact
+              </p>
+              <p className="text-5xl md:text-6xl font-bold">
+                {connections.length + challenges.filter(c => c.participants.some(p => p.userId === 'current-user')).length}
+              </p>
+              <p className="text-primary-foreground/80 mt-2">
+                Active Connections & Challenges
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <div className="w-20 h-20 rounded-full bg-primary-foreground/20 flex items-center justify-center mb-2">
+                  <Users className="w-10 h-10" />
+                </div>
+                <p className="text-sm">{connections.length} Friends</p>
+              </div>
+              <div className="text-center">
+                <div className="w-20 h-20 rounded-full bg-primary-foreground/20 flex items-center justify-center mb-2">
+                  <Trophy className="w-10 h-10" />
+                </div>
+                <p className="text-sm">
+                  {challenges.filter(c => c.participants.some(p => p.userId === 'current-user')).length} Challenges
+                </p>
+              </div>
             </div>
           </div>
-          <p className="text-2xl md:text-3xl font-bold text-card-foreground">
-            {challenges.filter(c => !c.isActive && c.participants.some(p => p.userId === 'current-user')).length}
-          </p>
-          <p className="text-sm text-muted-foreground mt-1">Completed</p>
-          <div className="mt-2 flex items-center gap-1 text-xs text-purple-600 font-medium">
-            <span>Finished</span>
-          </div>
         </div>
 
-        <div className="bg-card rounded-2xl p-4 md:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
-              <MessageCircle className="w-6 h-6 text-orange-600" />
+        {/* View Navigation */}
+        <TabSwitcher
+          tabs={socialTabs}
+          activeTab={viewMode}
+          onTabChange={(tabId) => setViewMode(tabId as ViewMode)}
+        />
+
+        {/* Content based on view mode */}
+        {viewMode === 'feed' && (
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-card rounded-2xl p-4 md:p-6 border border-border">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-2xl md:text-3xl font-bold text-foreground">{connections.length}</p>
+                <p className="text-sm text-muted-foreground mt-1">Connections</p>
+              </div>
+
+              <div className="bg-card rounded-2xl p-4 md:p-6 border border-border">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                  <Target className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-2xl md:text-3xl font-bold text-foreground">
+                  {challenges.filter(c => c.isActive && c.participants.some(p => p.userId === 'current-user')).length}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">Active Challenges</p>
+              </div>
+
+              <div className="bg-card rounded-2xl p-4 md:p-6 border border-border">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                  <Trophy className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-2xl md:text-3xl font-bold text-foreground">
+                  {challenges.filter(c => !c.isActive && c.participants.some(p => p.userId === 'current-user')).length}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">Completed</p>
+              </div>
+
+              <div className="bg-card rounded-2xl p-4 md:p-6 border border-border">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                  <MessageCircle className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-2xl md:text-3xl font-bold text-foreground">{pendingRequests.length}</p>
+                <p className="text-sm text-muted-foreground mt-1">Pending Requests</p>
+              </div>
+            </div>
+
+            {/* Activity Feed */}
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <h2 className="text-xl font-bold text-foreground mb-6">Recent Activity</h2>
+              <ActivityFeed
+                activities={activities}
+                isLoading={activitiesLoading}
+              />
             </div>
           </div>
-          <p className="text-2xl md:text-3xl font-bold text-card-foreground">{pendingRequests.length}</p>
-          <p className="text-sm text-muted-foreground mt-1">Pending Requests</p>
-          <div className="mt-2 flex items-center gap-1 text-xs text-orange-600 font-medium">
-            <span>Awaiting response</span>
-          </div>
-        </div>
-      </div>
+        )}
 
-      {/* Content based on view mode */}
-      {viewMode === 'feed' && (
-        <div className="bg-card rounded-2xl p-6 border border-border">
-          <h2 className="text-xl font-bold text-foreground mb-6">Activity Feed</h2>
-          <ActivityFeed
-            activities={activities}
-            isLoading={activitiesLoading}
-          />
-        </div>
-      )}
-
-      {viewMode === 'challenges' && (
-        <div className="space-y-6">
-          {/* Challenge Filters */}
+        {viewMode === 'challenges' && (
           <div className="bg-card rounded-2xl p-6 border border-border">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <h2 className="text-xl font-bold text-foreground">Challenges</h2>
-              <button 
-                onClick={() => setChallengeCreatorOpen(true)}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
-              >
-                Create Challenge
-              </button>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-2">
-              {[
-                { key: 'all', label: 'All Challenges' },
-                { key: 'active', label: 'Active' },
-                { key: 'my', label: 'My Challenges' },
-                { key: 'completed', label: 'Completed' }
-              ].map((filter) => (
-                <button
-                  key={filter.key}
-                  onClick={() => setChallengeFilter(filter.key as any)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                    challengeFilter === filter.key
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-white dark:bg-slate-800 border border-border text-foreground hover:border-primary'
-                  }`}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  {[
+                    { key: 'all', label: 'All' },
+                    { key: 'active', label: 'Active' },
+                    { key: 'my', label: 'Mine' },
+                    { key: 'completed', label: 'Completed' }
+                  ].map((filter) => (
+                    <button
+                      key={filter.key}
+                      onClick={() => setChallengeFilter(filter.key as any)}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        challengeFilter === filter.key
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => setChallengeCreatorOpen(true)}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
                 >
-                  {filter.label}
+                  Create
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Challenges Grid */}
-          {filteredChallenges.length === 0 ? (
-            <div className="bg-card rounded-2xl p-12 border border-border text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                <Trophy className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                {challengeFilter === 'all' ? 'No challenges available' : 
-                 challengeFilter === 'my' ? 'You haven\'t joined any challenges yet' :
-                 challengeFilter === 'active' ? 'No active challenges' :
-                 'No completed challenges'}
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                {challengeFilter === 'all' ? 'Be the first to create a challenge and motivate others!' :
-                 challengeFilter === 'my' ? 'Join a challenge or create your own to get started' :
-                 'Check back later for new challenges'}
-              </p>
-              <div className="flex items-center justify-center gap-3">
+            </div>
+
+            {filteredChallenges.length === 0 ? (
+              <div className="text-center py-12">
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  No challenges found
+                </h3>
                 <button 
                   onClick={() => setChallengeCreatorOpen(true)}
                   className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
                 >
                   Create Challenge
                 </button>
-                {challengeFilter !== 'all' && (
-                  <button 
-                    onClick={() => setChallengeFilter('all')}
-                    className="px-6 py-3 bg-muted text-foreground rounded-xl font-medium hover:bg-muted/80 transition-colors"
-                  >
-                    View All Challenges
-                  </button>
-                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredChallenges.map((challenge) => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    currentUserId="current-user"
+                    isParticipating={challenge.participants.some(p => p.userId === 'current-user')}
+                    onJoin={handleJoinChallenge}
+                    onLeave={handleLeaveChallenge}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {viewMode === 'connections' && (
+          <div className="space-y-6">
+            {/* Connection Stats */}
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-card rounded-2xl p-6 border border-border">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Users className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground mb-1">
+                  {connections.length}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Active Connections
+                </p>
+              </div>
+
+              <div className="bg-card rounded-2xl p-6 border border-border">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                  <MessageCircle className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground mb-1">
+                  {pendingRequests.length}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Pending Requests
+                </p>
+              </div>
+
+              <div className="bg-card rounded-2xl p-6 border border-border">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                  <TrendingUp className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground mb-1">
+                  {Math.round((connections.length / Math.max(connections.length + pendingRequests.length, 1)) * 100)}%
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Connection Rate
+                </p>
               </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredChallenges.map((challenge) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  challenge={challenge}
-                  currentUserId="current-user"
-                  isParticipating={challenge.participants.some(p => p.userId === 'current-user')}
-                  onJoin={handleJoinChallenge}
-                  onLeave={handleLeaveChallenge}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
-      {viewMode === 'connections' && (
-        <div className="bg-card rounded-2xl p-6 border border-border">
-          <h2 className="text-xl font-bold text-foreground mb-6">Connections</h2>
-          <ConnectionsList
-            connections={connections}
-            pendingRequests={pendingRequests}
-            onSendRequest={handleSendConnectionRequest}
-            onAcceptRequest={handleAcceptConnectionRequest}
-            onDeclineRequest={handleDeclineConnectionRequest}
-            onRemoveConnection={() => {}} // TODO: Implement
-            isLoading={connectionsLoading}
-          />
-        </div>
-      )}
+            {/* Connections Management */}
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <h2 className="text-xl font-bold text-foreground mb-6">Manage Connections</h2>
+              <ConnectionsList
+                connections={connections}
+                pendingRequests={pendingRequests}
+                onSendRequest={handleSendConnectionRequest}
+                onAcceptRequest={handleAcceptConnectionRequest}
+                onDeclineRequest={handleDeclineConnectionRequest}
+                onRemoveConnection={() => {}} // TODO: Implement
+                isLoading={connectionsLoading}
+              />
+            </div>
+          </div>
+        )}
 
       {/* Challenge Creator Modal */}
       <ChallengeCreator

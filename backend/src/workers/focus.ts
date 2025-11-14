@@ -525,12 +525,12 @@ app.get('/patterns', async (c) => {
 // Statistics Endpoints
 app.get('/stats/weekly', async (c) => {
   try {
-    const db = c.get('db') as Database;
+    const db = c.get('db') as DatabaseService;
     const jwtPayload = c.get('jwtPayload') as any;
     const userId = jwtPayload?.userId;
     const weekStart = Date.now() - (7 * 24 * 60 * 60 * 1000);
-    
-    const weeklyStats = await db.prepare(`
+
+    const result = await db.query(`
       SELECT 
         DATE(datetime(started_at/1000, 'unixepoch')) as date,
         COUNT(*) as sessions,
@@ -540,11 +540,11 @@ app.get('/stats/weekly', async (c) => {
       WHERE user_id = ? AND started_at >= ?
       GROUP BY DATE(datetime(started_at/1000, 'unixepoch'))
       ORDER BY date DESC
-    `).all(userId, weekStart);
-    
+    `, [userId, weekStart]);
+
     return c.json({
       success: true,
-      data: weeklyStats
+      data: result.results || []
     });
   } catch (error) {
     logger.error('Failed to get weekly stats:', error);
@@ -557,12 +557,12 @@ app.get('/stats/weekly', async (c) => {
 
 app.get('/stats/session-types', async (c) => {
   try {
-    const db = c.get('db') as Database;
+    const db = c.get('db') as DatabaseService;
     const jwtPayload = c.get('jwtPayload') as any;
     const userId = jwtPayload?.userId;
     const monthStart = Date.now() - (30 * 24 * 60 * 60 * 1000);
-    
-    const sessionTypeStats = await db.prepare(`
+
+    const result = await db.query(`
       SELECT 
         session_type,
         COUNT(*) as count,
@@ -572,11 +572,11 @@ app.get('/stats/session-types', async (c) => {
       WHERE user_id = ? AND started_at >= ? AND completed_at IS NOT NULL
       GROUP BY session_type
       ORDER BY count DESC
-    `).all(userId, monthStart);
-    
+    `, [userId, monthStart]);
+
     return c.json({
       success: true,
-      data: sessionTypeStats
+      data: result.results || []
     });
   } catch (error) {
     logger.error('Failed to get session type stats:', error);

@@ -12,6 +12,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useHealthStore } from '../../stores/health';
+import { useAppTheme } from '../../constants/dynamicTheme';
 
 const exerciseSchema = z.object({
   activity: z.string().min(1, 'Activity is required'),
@@ -32,7 +33,8 @@ interface ExerciseFormProps {
 }
 
 const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
-  const { logExercise, isLoading } = useHealthStore();
+  const theme = useAppTheme();
+  const { logExercise, isMutating } = useHealthStore();
 
   const {
     control,
@@ -41,10 +43,10 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
     reset,
     watch,
   } = useForm<ExerciseFormData>({
-    resolver: zodResolver(exerciseSchema),
+    resolver: zodResolver(exerciseSchema) as any,
     defaultValues: {
       activity: '',
-      durationMinutes: undefined,
+      durationMinutes: 30,
       intensity: 5,
       notes: '',
     },
@@ -87,16 +89,16 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1" style={{ backgroundColor: theme.colors.card }}>
       <View className="p-6">
-        <View className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-          <Text className="text-2xl font-bold text-gray-900 mb-6">
+        <View className="mb-6">
+          <Text className="text-2xl font-bold mb-6" style={{ color: theme.colors.foreground }}>
             Log Your Workout
           </Text>
 
           {/* Activity Field */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-2">
+            <Text className="text-sm font-medium mb-2" style={{ color: theme.colors.muted }}>
               Activity *
             </Text>
             <Controller
@@ -104,9 +106,13 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
               name="activity"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className={`border rounded-xl px-4 py-3 text-base ${
-                    errors.activity ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`px-4 py-3 text-base`}
+                  style={{
+                    backgroundColor: theme.colors.card,
+                    borderWidth: 1,
+                    borderColor: errors.activity ? '#ef4444' : theme.colors.border,
+                    borderRadius: theme.radii.xl as any,
+                  }}
                   placeholder="e.g., Running, Swimming, Yoga"
                   onBlur={onBlur}
                   onChangeText={onChange}
@@ -115,17 +121,19 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
               )}
             />
             {errors.activity && (
-              <Text className="text-red-500 text-sm mt-1">
+              <Text className="text-sm mt-1" style={{ color: '#ef4444' }}>
                 {errors.activity.message}
               </Text>
             )}
 
             {/* Activity Suggestions */}
-            <View className="flex-row flex-wrap gap-2 mt-3">
+            <View className="flex-row flex-wrap gap-3 mt-3">
               {activitySuggestions.map((suggestion) => (
                 <TouchableOpacity
                   key={suggestion.name}
-                  className="bg-gray-100 rounded-full px-3 py-2 flex-row items-center"
+                  className="rounded-full px-5 py-3 flex-row items-center"
+                  style={{ backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}
+                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                   onPress={() => {
                     const currentValue = watch('activity');
                     if (currentValue !== suggestion.name) {
@@ -134,8 +142,8 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
                     }
                   }}
                 >
-                  <Text className="mr-1">{suggestion.emoji}</Text>
-                  <Text className="text-sm text-gray-700">{suggestion.name}</Text>
+                  <Text className="mr-2">{suggestion.emoji}</Text>
+                  <Text className="text-base font-medium" style={{ color: theme.colors.foreground }}>{suggestion.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -145,7 +153,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
           <View className="mb-6">
             <View className="flex-row gap-4 mb-4">
               <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
+                <Text className="text-sm font-medium mb-2" style={{ color: theme.colors.muted }}>
                   Duration (minutes) *
                 </Text>
                 <Controller
@@ -153,9 +161,13 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
                   name="durationMinutes"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className={`border rounded-xl px-4 py-3 text-base ${
-                        errors.durationMinutes ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`px-4 py-3 text-base`}
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        borderWidth: 1,
+                        borderColor: errors.durationMinutes ? '#ef4444' : theme.colors.border,
+                        borderRadius: theme.radii.xl as any,
+                      }}
                       placeholder="30"
                       keyboardType="numeric"
                       onChangeText={(text) => {
@@ -167,14 +179,14 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
                   )}
                 />
                 {errors.durationMinutes && (
-                  <Text className="text-red-500 text-sm mt-1">
+                  <Text className="text-sm mt-1" style={{ color: '#ef4444' }}>
                     {errors.durationMinutes.message}
                   </Text>
                 )}
               </View>
 
               <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
+                <Text className="text-sm font-medium mb-2" style={{ color: theme.colors.muted }}>
                   Distance (km)
                 </Text>
                 <Controller
@@ -182,7 +194,8 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
                   name="distance"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+                      className="px-4 py-3 text-base"
+                      style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl as any }}
                       placeholder="5.0"
                       keyboardType="decimal-pad"
                       onChangeText={(text) => {
@@ -198,7 +211,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
 
             <View className="flex-row gap-4">
               <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
+                <Text className="text-sm font-medium mb-2" style={{ color: theme.colors.muted }}>
                   Calories Burned
                 </Text>
                 <Controller
@@ -206,7 +219,8 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
                   name="caloriesBurned"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+                      className="px-4 py-3 text-base"
+                      style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl as any }}
                       placeholder="300"
                       keyboardType="numeric"
                       onChangeText={(text) => {
@@ -220,7 +234,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
               </View>
 
               <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
+                <Text className="text-sm font-medium mb-2" style={{ color: theme.colors.muted }}>
                   Avg Heart Rate
                 </Text>
                 <Controller
@@ -228,7 +242,8 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
                   name="heartRateAvg"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+                      className="px-4 py-3 text-base"
+                      style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl as any }}
                       placeholder="150"
                       keyboardType="numeric"
                       onChangeText={(text) => {
@@ -245,7 +260,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
 
           {/* Intensity Scale */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-3">
+            <Text className="text-sm font-medium mb-3" style={{ color: theme.colors.muted }}>
               Intensity Level: {selectedIntensity}/10 ({intensityLevels[selectedIntensity - 1]?.label})
             </Text>
             <Controller
@@ -255,21 +270,21 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
                 <View className="flex-row flex-wrap gap-2">
                   {[...Array(10)].map((_, index) => {
                     const level = index + 1;
-                    const config = intensityLevels[index];
+                    const isActive = level <= value;
                     return (
                       <TouchableOpacity
                         key={level}
-                        className={`w-10 h-10 rounded-full border-2 items-center justify-center ${
-                          level <= value
-                            ? `${config.color} border-gray-400`
-                            : 'bg-gray-100 border-gray-300'
-                        }`}
+                        className="w-10 h-10 rounded-full items-center justify-center"
+                        style={{
+                          backgroundColor: isActive ? theme.colors.primaryLight : theme.colors.card,
+                          borderWidth: 1,
+                          borderColor: isActive ? theme.colors.primary : theme.colors.border,
+                        }}
                         onPress={() => onChange(level)}
                       >
                         <Text
-                          className={`font-semibold text-sm ${
-                            level <= value ? config.textColor : 'text-gray-500'
-                          }`}
+                          className="font-semibold text-sm"
+                          style={{ color: isActive ? theme.colors.primary : theme.colors.muted }}
                         >
                           {level}
                         </Text>
@@ -283,7 +298,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
 
           {/* Notes Field */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-2">
+            <Text className="text-sm font-medium mb-2" style={{ color: theme.colors.muted }}>
               Notes (Optional)
             </Text>
             <Controller
@@ -291,7 +306,8 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
               name="notes"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+                  className="px-4 py-3 text-base"
+                  style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl as any }}
                   placeholder="How did it feel? Any achievements?"
                   multiline
                   numberOfLines={3}
@@ -307,24 +323,24 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, onCancel }) => {
           <View className="flex-row gap-3">
             {onCancel && (
               <TouchableOpacity
-                className="flex-1 bg-gray-200 rounded-xl py-4"
+                className="flex-1 rounded-2xl py-4"
+                style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}
                 onPress={onCancel}
-                disabled={isLoading}
+                disabled={isMutating}
               >
-                <Text className="text-gray-700 font-semibold text-center">
+                <Text className="font-semibold text-center" style={{ color: theme.colors.foreground }}>
                   Cancel
                 </Text>
               </TouchableOpacity>
             )}
 
             <TouchableOpacity
-              className={`flex-1 rounded-xl py-4 ${
-                isLoading ? 'bg-primary-400' : 'bg-primary-600'
-              }`}
-              onPress={handleSubmit(onSubmit)}
-              disabled={isLoading}
+              className="flex-1 rounded-2xl py-4"
+              style={{ backgroundColor: theme.colors.primary, opacity: isMutating ? 0.7 : 1, borderRadius: theme.radii.xl }}
+              onPress={handleSubmit(onSubmit as any)}
+              disabled={isMutating}
             >
-              {isLoading ? (
+              {isMutating ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text className="text-white font-semibold text-center">

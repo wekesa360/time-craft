@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,7 +13,12 @@ import {
   AdjustmentsHorizontalIcon,
   BoltIcon
 } from 'react-native-heroicons/outline';
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '../../lib/api';
+import { useAppTheme } from '../../constants/dynamicTheme';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import { showToast } from '../../lib/toast';
 
 interface FocusSession {
   id: string;
@@ -48,18 +53,22 @@ interface FocusStats {
 }
 
 export default function FocusScreen() {
+  const theme = useAppTheme();
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [view, setView] = useState<'timer' | 'progress'>('timer');
   const queryClient = useQueryClient();
+  const [backDialogVisible, setBackDialogVisible] = useState(false);
+  const [completeDialogVisible, setCompleteDialogVisible] = useState(false);
 
   // Fetch focus templates
   const { data: templates = [] } = useQuery({
     queryKey: ['focus-templates'],
     queryFn: async (): Promise<FocusTemplate[]> => {
-      const response = await apiClient.get('/focus/templates');
-      return response.data.templates || [];
+      const response = await apiClient.getFocusTemplates();
+      return response.templates || response.data?.templates || [];
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
@@ -68,8 +77,8 @@ export default function FocusScreen() {
   const { data: stats } = useQuery({
     queryKey: ['focus-stats'],
     queryFn: async (): Promise<FocusStats> => {
-      const response = await apiClient.get('/focus/stats');
-      return response.data;
+      const response = await apiClient.getFocusStats();
+      return response.stats || response;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -79,7 +88,7 @@ export default function FocusScreen() {
     queryKey: ['focus-sessions'],
     queryFn: async (): Promise<FocusSession[]> => {
       const response = await apiClient.getFocusSessions({ limit: 10 });
-      return response.sessions || [];
+      return response.sessions || response.data?.sessions || [];
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -90,14 +99,15 @@ export default function FocusScreen() {
       return apiClient.createFocusSession(session);
     },
     onSuccess: (data) => {
-      setActiveSession(data.session);
-      setTimeRemaining(data.session.plannedDuration * 60); // Convert to seconds
+      const session = data.session || data;
+      setActiveSession(session);
+      setTimeRemaining(session.plannedDuration * 60); // Convert to seconds
       setIsRunning(true);
       setIsPaused(false);
       queryClient.invalidateQueries({ queryKey: ['focus-sessions'] });
     },
     onError: (error) => {
-      Alert.alert('Error', 'Failed to start focus session');
+      showToast.error('Failed to start focus session', 'Error');
     },
   });
 
@@ -115,7 +125,7 @@ export default function FocusScreen() {
 
   // Timer effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     
     if (isRunning && !isPaused && timeRemaining > 0) {
       interval = setInterval(() => {
@@ -178,19 +188,7 @@ export default function FocusScreen() {
           isSuccessful: true,
         }
       });
-      
-      // Show completion alert
-      Alert.alert(
-        'Session Complete! 🎉',
-        `Great job! You completed a ${activeSession.plannedDuration}-minute ${activeSession.sessionType} session.`,
-        [
-          {
-            text: 'Rate Session',
-            onPress: () => router.push(`/modals/rate-session?id=${activeSession.id}`),
-          },
-          { text: 'Done', style: 'default' },
-        ]
-      );
+      setCompleteDialogVisible(true);
     }
     
     resetSession();
@@ -202,6 +200,21 @@ export default function FocusScreen() {
     setIsRunning(false);
     setIsPaused(false);
   };
+
+  // Intercept Android hardware back button while session is active
+  useEffect(() => {
+    const onBackPress = () => {
+      if (activeSession) {
+        setBackDialogVisible(true);
+        return true; // Block default back action
+      }
+      return false;
+    };
+
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, [activeSession, isRunning, isPaused, timeRemaining]);
+
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -220,85 +233,105 @@ export default function FocusScreen() {
     }
   };
 
-  const getSessionTypeColor = (type: string) => {
+  const getSessionTypeTheme = (type: string) => {
     switch (type) {
-      case 'pomodoro': return 'bg-red-100 text-red-700 border-red-200';
-      case 'deep_work': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'meditation': return 'bg-green-100 text-green-700 border-green-200';
-      case 'study': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'creative': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'pomodoro':
+        return { bg: theme.colors.danger + '20', text: theme.colors.danger, border: theme.colors.danger + '33' };
+      case 'deep_work':
+        return { bg: theme.colors.primaryLight, text: theme.colors.primary, border: theme.colors.primary + '55' };
+      case 'meditation':
+        return { bg: theme.colors.successBg, text: theme.colors.success, border: theme.colors.successBg };
+      case 'study':
+        return { bg: theme.colors.infoBg, text: theme.colors.info, border: theme.colors.infoBg };
+      case 'creative':
+        return { bg: theme.colors.warningBg, text: theme.colors.warning, border: theme.colors.warningBg };
+      default:
+        return { bg: theme.colors.surface, text: theme.colors.muted, border: theme.colors.border };
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.colors.background }}>
       <ScrollView className="flex-1">
         {/* Header */}
         <View className="px-6 py-6">
-          <Text className="text-3xl font-bold text-gray-900 mb-2">Focus</Text>
-          <Text className="text-gray-600">Deep work sessions and productivity tracking</Text>
+          <Text className="text-3xl font-bold mb-2" style={{ color: theme.colors.foreground }}>Focus</Text>
+          <Text style={{ color: theme.colors.muted }}>Deep work sessions and productivity tracking</Text>
         </View>
 
-        {/* Active Session or Timer */}
+        {/* Pager Tabs */}
+        <View className="px-6 mb-4">
+          <View style={{ flexDirection: 'row', gap: theme.spacing.md }}>
+            {[
+              { id: 'timer', label: 'Timer' },
+              { id: 'progress', label: 'Progress' },
+            ].map((t) => (
+              <TouchableOpacity
+                key={t.id}
+                onPress={() => setView(t.id as any)}
+                style={{
+                  paddingVertical: theme.spacing.lg,
+                  paddingHorizontal: theme.spacing.xl,
+                  borderRadius: theme.radii.xl,
+                  backgroundColor: view === t.id ? theme.colors.primary : theme.colors.card,
+                  borderWidth: 1,
+                  borderColor: view === t.id ? theme.colors.primary : theme.colors.border,
+                }}
+              >
+                <Text style={{ color: view === t.id ? theme.colors.primaryForeground : theme.colors.muted, fontWeight: '700' }}>{t.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {view === 'timer' && (
         <View className="px-6 mb-8">
-          <View className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
+          <Card style={{ borderRadius: theme.radii.xl, padding: theme.spacing.xl }}>
             {activeSession ? (
               <View className="items-center">
                 {/* Session Info */}
-                <View className={`px-4 py-2 rounded-full border mb-6 ${getSessionTypeColor(activeSession.sessionType)}`}>
-                  <Text className="font-medium capitalize">
+                <View className="px-4 py-2 rounded-full border mb-6" style={{ backgroundColor: getSessionTypeTheme(activeSession.sessionType).bg, borderColor: getSessionTypeTheme(activeSession.sessionType).border }}>
+                  <Text className="font-medium capitalize" style={{ color: getSessionTypeTheme(activeSession.sessionType).text }}>
                     {getSessionTypeIcon(activeSession.sessionType)} {activeSession.sessionType}
                   </Text>
                 </View>
 
                 {/* Timer Display */}
-                <Text className="text-6xl font-bold text-gray-900 mb-2">
+                <Text className="text-6xl font-bold mb-2" style={{ color: theme.colors.foreground }}>
                   {formatTime(timeRemaining)}
                 </Text>
-                <Text className="text-gray-500 mb-8">
+                <Text style={{ color: theme.colors.muted }} className="mb-8">
                   {activeSession.plannedDuration} minute session
                 </Text>
 
                 {/* Controls */}
                 <View className="flex-row items-center space-x-4">
                   {!isRunning && !isPaused ? (
-                    <TouchableOpacity
-                      className="bg-blue-600 rounded-full p-4"
-                      onPress={resumeSession}
-                    >
-                      <PlayIcon size={32} color="white" />
+                    <TouchableOpacity className="rounded-full p-4" style={{ backgroundColor: theme.colors.primary }} onPress={resumeSession}>
+                      <PlayIcon size={theme.iconSizes.lg} color={theme.colors.primaryForeground} />
                     </TouchableOpacity>
                   ) : isPaused ? (
-                    <TouchableOpacity
-                      className="bg-blue-600 rounded-full p-4"
-                      onPress={resumeSession}
-                    >
-                      <PlayIcon size={32} color="white" />
+                    <TouchableOpacity className="rounded-full p-4" style={{ backgroundColor: theme.colors.primary }} onPress={resumeSession}>
+                      <PlayIcon size={theme.iconSizes.lg} color={theme.colors.primaryForeground} />
                     </TouchableOpacity>
                   ) : (
-                    <TouchableOpacity
-                      className="bg-orange-500 rounded-full p-4"
-                      onPress={pauseSession}
-                    >
-                      <PauseIcon size={32} color="white" />
+                    <TouchableOpacity className="rounded-full p-4" style={{ backgroundColor: theme.colors.warning }} onPress={pauseSession}>
+                      <PauseIcon size={theme.iconSizes.lg} color={theme.colors.primaryForeground} />
                     </TouchableOpacity>
                   )}
 
-                  <TouchableOpacity
-                    className="bg-red-500 rounded-full p-4"
-                    onPress={stopSession}
-                  >
-                    <StopIcon size={32} color="white" />
+                  <TouchableOpacity className="rounded-full p-4" style={{ backgroundColor: theme.colors.danger }} onPress={stopSession}>
+                    <StopIcon size={theme.iconSizes.lg} color={theme.colors.primaryForeground} />
                   </TouchableOpacity>
                 </View>
 
                 {/* Progress Bar */}
                 <View className="w-full mt-8">
-                  <View className="bg-gray-200 rounded-full h-2">
+                  <View className="rounded-full h-2" style={{ backgroundColor: theme.colors.border }}>
                     <View 
-                      className="bg-blue-600 rounded-full h-2 transition-all duration-1000"
+                      className="rounded-full h-2 transition-all duration-1000"
                       style={{ 
+                        backgroundColor: theme.colors.primary,
                         width: `${((activeSession.plannedDuration * 60 - timeRemaining) / (activeSession.plannedDuration * 60)) * 100}%` 
                       }}
                     />
@@ -307,89 +340,114 @@ export default function FocusScreen() {
               </View>
             ) : (
               <View className="items-center">
-                <ClockIcon size={64} color="#D1D5DB" />
-                <Text className="text-xl font-semibold text-gray-900 mt-4 mb-2">
+                <ClockIcon size={64} color={theme.colors.mutedAlt} />
+                <Text className="text-xl font-semibold mt-4 mb-2" style={{ color: theme.colors.foreground }}>
                   Ready to Focus?
                 </Text>
-                <Text className="text-gray-500 text-center">
+                <Text className="text-center" style={{ color: theme.colors.muted }}>
                   Choose a focus template below to start your session
                 </Text>
               </View>
             )}
-          </View>
+          </Card>
         </View>
+        )}
 
-        {/* Focus Stats */}
-        {stats && (
+        {/* Focus Stats (Progress tab) */}
+        {view === 'progress' && stats && (
           <View className="px-6 mb-8">
-            <Text className="text-xl font-bold text-gray-900 mb-4">Your Progress</Text>
-            
+            <Text className="text-xl font-bold mb-4" style={{ color: theme.colors.foreground }}>Your Progress</Text>
             <View className="flex-row flex-wrap -mx-2">
               <View className="w-1/2 px-2 mb-4">
-                <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                <Card style={{ padding: theme.spacing.lg }}>
                   <View className="flex-row items-center justify-between mb-3">
-                    <ClockIcon size={24} color="#3B82F6" />
-                    <Text className="text-2xl font-bold text-blue-600">
+                    <ClockIcon size={theme.iconSizes.md} color={theme.colors.info} />
+                    <Text className="text-2xl font-bold" style={{ color: theme.colors.info }}>
                       {stats.todayMinutes}m
                     </Text>
                   </View>
-                  <Text className="text-gray-600 text-sm font-medium">
+                  <Text className="text-sm font-medium" style={{ color: theme.colors.muted }}>
                     Today's Focus
                   </Text>
-                </View>
+                </Card>
               </View>
 
               <View className="w-1/2 px-2 mb-4">
-                <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                <Card style={{ padding: theme.spacing.lg }}>
                   <View className="flex-row items-center justify-between mb-3">
-                    <FireIcon size={24} color="#F59E0B" />
-                    <Text className="text-2xl font-bold text-orange-600">
+                    <FireIcon size={theme.iconSizes.md} color={theme.colors.warning} />
+                    <Text className="text-2xl font-bold" style={{ color: theme.colors.warning }}>
                       {stats.streakDays}
                     </Text>
                   </View>
-                  <Text className="text-gray-600 text-sm font-medium">
+                  <Text className="text-sm font-medium" style={{ color: theme.colors.muted }}>
                     Day Streak
                   </Text>
-                </View>
+                </Card>
               </View>
 
               <View className="w-1/2 px-2 mb-4">
-                <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                <Card style={{ padding: theme.spacing.lg }}>
                   <View className="flex-row items-center justify-between mb-3">
-                    <ChartBarIcon size={24} color="#10B981" />
-                    <Text className="text-2xl font-bold text-green-600">
+                    <ChartBarIcon size={theme.iconSizes.md} color={theme.colors.success} />
+                    <Text className="text-2xl font-bold" style={{ color: theme.colors.success }}>
                       {stats.totalSessions}
                     </Text>
                   </View>
-                  <Text className="text-gray-600 text-sm font-medium">
+                  <Text className="text-sm font-medium" style={{ color: theme.colors.muted }}>
                     Total Sessions
                   </Text>
-                </View>
+                </Card>
               </View>
 
               <View className="w-1/2 px-2 mb-4">
-                <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                <Card style={{ padding: theme.spacing.lg }}>
                   <View className="flex-row items-center justify-between mb-3">
-                    <BoltIcon size={24} color="#8B5CF6" />
-                    <Text className="text-2xl font-bold text-purple-600">
+                    <BoltIcon size={theme.iconSizes.md} color={theme.colors.primary} />
+                    <Text className="text-2xl font-bold" style={{ color: theme.colors.primary }}>
                       {stats.averageRating ? stats.averageRating.toFixed(1) : 'N/A'}
                     </Text>
                   </View>
-                  <Text className="text-gray-600 text-sm font-medium">
+                  <Text className="text-sm font-medium" style={{ color: theme.colors.muted }}>
                     Avg Rating
                   </Text>
-                </View>
+                </Card>
               </View>
             </View>
           </View>
         )}
 
-        {/* Focus Templates */}
+        {/* Quick Start - only in Timer view */}
+        {view === 'timer' && (
+        <View className="px-6 mb-4">
+          <Card style={{ padding: theme.spacing.lg }}>
+            <Text className="text-lg font-bold mb-3" style={{ color: theme.colors.foreground }}>Quick Start</Text>
+            <View className="flex-row items-center" style={{ gap: theme.spacing.sm, flexWrap: 'wrap' as any }}>
+              {[
+                { label: '15 min', type: 'pomodoro', duration: 15 },
+                { label: '25 min', type: 'pomodoro', duration: 25 },
+                { label: '45 min', type: 'deep_work', duration: 45 },
+                { label: '90 min', type: 'deep_work', duration: 90 },
+              ].map((q) => (
+                <Button
+                  key={q.label}
+                  title={q.label}
+                  variant="outline"
+                  onPress={() => !activeSession && createSessionMutation.mutate({ sessionType: q.type as any, plannedDuration: q.duration })}
+                />
+              ))}
+            </View>
+          </Card>
+        </View>
+        )}
+
+        {/* Focus Templates - only in Timer view */}
+        {view === 'timer' && (
         <View className="px-6 mb-8">
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-xl font-bold text-gray-900">Focus Templates</Text>
+            <Text className="text-xl font-bold" style={{ color: theme.colors.foreground }}>Focus Templates</Text>
             <TouchableOpacity>
-              <AdjustmentsHorizontalIcon size={24} color="#6B7280" />
+              <AdjustmentsHorizontalIcon size={theme.iconSizes.md} color={theme.colors.muted} />
             </TouchableOpacity>
           </View>
           
@@ -397,83 +455,86 @@ export default function FocusScreen() {
             {templates.map((template) => (
               <TouchableOpacity
                 key={template.id}
-                className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+                className="rounded-2xl"
+                style={{ opacity: activeSession ? 0.6 : 1 }}
                 onPress={() => !activeSession && startSession(template)}
                 disabled={!!activeSession}
               >
-                <View className="flex-row items-center">
-                  <View className={`w-12 h-12 rounded-xl items-center justify-center mr-4 ${
-                    template.isDefault ? 'bg-blue-100' : 'bg-gray-100'
-                  }`}>
-                    <Text className="text-2xl">
-                      {getSessionTypeIcon(template.sessionType)}
-                    </Text>
-                  </View>
-                  
-                  <View className="flex-1">
-                    <View className="flex-row items-center mb-1">
-                      <Text className="font-semibold text-gray-900 text-lg">
-                        {template.name}
+                <Card style={{ padding: theme.spacing.lg }}>
+                  <View className="flex-row items-center">
+                    <View className={`w-12 h-12 rounded-xl items-center justify-center mr-4`} style={{ backgroundColor: template.isDefault ? theme.colors.primaryLight : theme.colors.surface }}>
+                      <Text className="text-2xl">
+                        {getSessionTypeIcon(template.sessionType)}
                       </Text>
-                      {template.isDefault && (
-                        <View className="ml-2 px-2 py-1 bg-blue-100 rounded-full">
-                          <Text className="text-xs font-medium text-blue-700">
-                            Default
-                          </Text>
-                        </View>
-                      )}
                     </View>
-                    <Text className="text-gray-500 text-sm mb-2">
-                      {template.description}
-                    </Text>
-                    <View className="flex-row items-center">
-                      <ClockIcon size={16} color="#6B7280" />
-                      <Text className="text-gray-500 text-sm ml-1">
-                        {template.durationMinutes} minutes
+                    
+                    <View className="flex-1">
+                      <View className="flex-row items-center mb-1">
+                        <Text className="font-semibold text-lg" style={{ color: theme.colors.foreground }}>
+                          {template.name}
+                        </Text>
+                        {template.isDefault && (
+                          <View className="ml-2 px-2 py-1 rounded-full" style={{ backgroundColor: theme.colors.primaryLight }}>
+                            <Text className="text-xs font-medium" style={{ color: theme.colors.primary }}>
+                              Default
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text className="text-sm mb-2" style={{ color: theme.colors.muted }}>
+                        {template.description}
                       </Text>
-                      {template.breakDurationMinutes > 0 && (
-                        <>
-                          <Text className="text-gray-400 mx-2">•</Text>
-                          <Text className="text-gray-500 text-sm">
-                            {template.breakDurationMinutes}m break
-                          </Text>
-                        </>
-                      )}
+                      <View className="flex-row items-center">
+                        <ClockIcon size={theme.iconSizes.sm} color={theme.colors.muted} />
+                        <Text className="text-sm ml-1" style={{ color: theme.colors.muted }}>
+                          {template.durationMinutes} minutes
+                        </Text>
+                        {template.breakDurationMinutes > 0 && (
+                          <>
+                            <Text className="mx-2" style={{ color: theme.colors.mutedAlt }}>•</Text>
+                            <Text className="text-sm" style={{ color: theme.colors.muted }}>
+                              {template.breakDurationMinutes}m break
+                            </Text>
+                          </>
+                        )}
+                      </View>
                     </View>
-                  </View>
 
-                  <View className="ml-4">
-                    <PlayIcon size={24} color={activeSession ? "#D1D5DB" : "#3B82F6"} />
+                    <View className="ml-4">
+                      <PlayIcon size={theme.iconSizes.md} color={activeSession ? '#D1D5DB' : theme.colors.primary} />
+                    </View>
                   </View>
-                </View>
+                </Card>
               </TouchableOpacity>
             ))}
           </View>
         </View>
+        )}
 
-        {/* Recent Sessions */}
+        {/* Recent Sessions - only in Progress view */}
+        {view === 'progress' && (
         <View className="px-6 mb-8">
-          <Text className="text-xl font-bold text-gray-900 mb-4">Recent Sessions</Text>
+          <Text className="text-xl font-bold mb-4" style={{ color: theme.colors.foreground }}>Recent Sessions</Text>
           
-          <View className="bg-white rounded-2xl shadow-sm border border-gray-100">
+          <Card style={{ padding: 0 }}>
             {recentSessions && recentSessions.length > 0 ? (
               recentSessions.slice(0, 5).map((session, index) => (
                 <View key={session.id}>
                   <View className="p-4 flex-row items-center">
-                    <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center mr-4">
+                    <View className="w-10 h-10 rounded-full items-center justify-center mr-4" style={{ backgroundColor: theme.colors.primaryLight }}>
                       <Text className="text-lg">
                         {getSessionTypeIcon(session.sessionType)}
                       </Text>
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold text-gray-900 capitalize">
+                      <Text className="font-semibold capitalize" style={{ color: theme.colors.foreground }}>
                         {session.sessionType}
                       </Text>
-                      <Text className="text-gray-500 text-sm">
+                      <Text className="text-sm" style={{ color: theme.colors.muted }}>
                         {session.actualDuration || session.plannedDuration} minutes
                         {session.isSuccessful ? ' • Completed' : ' • Stopped early'}
                       </Text>
-                      <Text className="text-gray-400 text-xs mt-1">
+                      <Text className="text-xs mt-1" style={{ color: theme.colors.mutedAlt }}>
                         {new Date(session.startedAt).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
@@ -483,35 +544,61 @@ export default function FocusScreen() {
                       </Text>
                     </View>
                     {session.productivityRating && (
-                      <View className="bg-yellow-100 rounded-full px-2 py-1">
-                        <Text className="text-yellow-700 text-sm font-medium">
+                      <View className="rounded-full px-2 py-1" style={{ backgroundColor: theme.colors.warningBg }}>
+                        <Text className="text-sm font-medium" style={{ color: theme.colors.warning }}>
                           ⭐ {session.productivityRating}/5
                         </Text>
                       </View>
                     )}
                   </View>
                   {index < recentSessions.length - 1 && index < 4 && (
-                    <View className="h-px bg-gray-100 mx-4" />
+                    <View className="h-px mx-4" style={{ backgroundColor: theme.colors.border }} />
                   )}
                 </View>
               ))
             ) : (
               <View className="p-8 items-center">
-                <ClockIcon size={48} color="#D1D5DB" />
-                <Text className="text-gray-500 text-center mt-4">
+                <ClockIcon size={theme.iconSizes.lg} color={theme.colors.mutedAlt} />
+                <Text className="text-center mt-4" style={{ color: theme.colors.muted }}>
                   No focus sessions yet
                 </Text>
-                <Text className="text-gray-400 text-sm text-center mt-1">
+                <Text className="text-sm text-center mt-1" style={{ color: theme.colors.mutedAlt }}>
                   Start your first focus session to see your history here
                 </Text>
               </View>
             )}
-          </View>
+          </Card>
         </View>
+        )}
 
         {/* Bottom Padding for Tab Bar */}
         <View className="h-20" />
       </ScrollView>
+      <ConfirmDialog
+        visible={backDialogVisible}
+        title={'Active session'}
+        description={'A focus session is running. Do you want to stop it and leave?'}
+        confirmText={'Stop & Leave'}
+        cancelText={'Stay'}
+        onCancel={() => setBackDialogVisible(false)}
+        onConfirm={() => {
+          setBackDialogVisible(false);
+          stopSession();
+          router.back();
+        }}
+      />
+      <ConfirmDialog
+        visible={completeDialogVisible}
+        title={'Session Complete! 🎉'}
+        description={'Great job completing your focus session.'}
+        confirmText={'Done'}
+        cancelText={'Rate (soon)'}
+        onCancel={() => {
+          setCompleteDialogVisible(false);
+          showToast.info('Session rating will be available soon.');
+        }}
+        onConfirm={() => setCompleteDialogVisible(false)}
+      />
     </SafeAreaView>
   );
 }

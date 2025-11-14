@@ -100,7 +100,7 @@ export default function BadgesPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -177,7 +177,7 @@ export default function BadgesPage() {
                   .map((badge) => (
                     <div
                       key={badge.id}
-                      className="p-6 rounded-xl bg-white dark:bg-slate-800 border border-border hover:border-primary transition-colors cursor-pointer"
+                      className="p-6 rounded-xl bg-primary/5 border border-primary/20 hover:border-primary transition-colors cursor-pointer"
                       onClick={() => handleShareBadge(badge)}
                     >
                       <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-4">
@@ -255,15 +255,17 @@ export default function BadgesPage() {
         )}
 
         {viewMode === "leaderboard" && (
-          <div className="bg-card rounded-2xl p-6 border border-border">
-            <h2 className="text-xl font-bold text-foreground mb-6">
-              Badge Leaderboard
-            </h2>
-            <BadgeLeaderboard
-              leaderboard={leaderboard}
-              currentUserId="current-user"
-              isLoading={leaderboardLoading}
-            />
+          <div className="space-y-6">
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <h2 className="text-xl font-bold text-foreground mb-6">
+                Badge Leaderboard
+              </h2>
+              <BadgeLeaderboard
+                leaderboard={leaderboard}
+                currentUserId="current-user"
+                isLoading={leaderboardLoading}
+              />
+            </div>
           </div>
         )}
 
@@ -282,7 +284,7 @@ export default function BadgesPage() {
                   .map((badge, i) => (
                     <div
                       key={badge.id}
-                      className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border"
+                      className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/20"
                     >
                       <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                         <span className="text-2xl">{badge.icon}</span>
@@ -308,9 +310,9 @@ export default function BadgesPage() {
                 {badges.filter((b) => b.category === "streak" && b.isUnlocked)
                   .length === 0 && (
                   <>
-                    <div className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
+                    <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/20">
                       <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Target className="w-7 h-7 text-primary" />
+                        <Trophy className="w-7 h-7 text-primary" />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-foreground">
@@ -325,9 +327,9 @@ export default function BadgesPage() {
                         <p className="text-xs text-muted-foreground">days</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
-                      <div className="w-14 h-14 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
-                        <Heart className="w-7 h-7 text-red-600" />
+                    <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                      <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Star className="w-7 h-7 text-primary" />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-foreground">
@@ -375,7 +377,7 @@ export default function BadgesPage() {
                     .map((badge) => (
                       <div
                         key={badge.id}
-                        className="flex items-center space-x-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border"
+                        className="flex items-center space-x-4 p-4 rounded-xl bg-primary/5 border border-primary/20"
                       >
                         <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
                           <span className="text-lg opacity-50">

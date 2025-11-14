@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { ThemeSelector } from '../components/ui/ThemeSelector';
+import { EnhancedAppearanceSection } from '../components/settings/EnhancedAppearanceSection';
 import { LocalizationSection } from '../components/settings/LocalizationSection';
 import { LanguagePreferencesSectionWithSuspense as LanguagePreferencesSection } from '../components/localization/LazyLocalizationComponents';
 import { GermanTextOptimizer, GermanTitle } from '../components/common/GermanTextOptimizer';
@@ -39,7 +40,6 @@ interface SecurityForm {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
-  enable2FA: boolean;
 }
 
 type SettingsTab = 'profile' | 'appearance' | 'notifications' | 'subscription' | 'security' | 'language' | 'privacy';
@@ -238,7 +238,7 @@ export default function SettingsPage() {
   if (profileLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -265,14 +265,14 @@ export default function SettingsPage() {
         {activeSection === 'profile' && (
           <div className="bg-card rounded-2xl p-6 border border-border">
             <div className="flex items-center space-x-3 mb-6">
-              <User className="w-5 h-5 text-primary-500" />
+              <User className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">
                 {t('settings.profile', 'Profile')}
               </h2>
             </div>
             
             {/* Avatar Section */}
-            <div className="flex items-center space-x-6 mb-6 p-4 bg-background-secondary rounded-lg">
+            <div className="flex items-center space-x-6 mb-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-950 flex items-center justify-center overflow-hidden">
                       {avatarPreview || profile?.avatar ? (
@@ -282,12 +282,12 @@ export default function SettingsPage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User className="w-8 h-8 text-primary-600" />
+                        <User className="w-8 h-8 text-primary" />
                       )}
                     </div>
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center text-white hover:bg-primary-700 transition-colors"
+                      className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white hover:bg-primary/90 transition-colors"
                       disabled={uploadAvatarMutation.isPending}
                     >
                       <Camera className="w-3 h-3" />
@@ -337,7 +337,6 @@ export default function SettingsPage() {
                       <input
                         {...profileForm.register('firstName', { required: true })}
                         className="input w-full"
-                        placeholder={t('auth.firstName', 'First Name')}
                       />
                     </div>
                     <div>
@@ -347,7 +346,6 @@ export default function SettingsPage() {
                       <input
                         {...profileForm.register('lastName', { required: true })}
                         className="input w-full"
-                        placeholder={t('auth.lastName', 'Last Name')}
                       />
                     </div>
                   </div>
@@ -359,7 +357,6 @@ export default function SettingsPage() {
                     <input
                       {...profileForm.register('displayName')}
                       className="input w-full"
-                      placeholder={t('settings.displayNamePlaceholder', 'How others see your name')}
                     />
                   </div>
                   
@@ -370,7 +367,7 @@ export default function SettingsPage() {
                     <input
                       type="email"
                       value={profile?.email || ''}
-                      className="input w-full bg-background-tertiary"
+                      className="input w-full bg-muted"
                       disabled
                       aria-describedby="email-help"
                     />
@@ -418,14 +415,14 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => profileForm.reset()}
-                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground dark:text-muted-foreground bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-muted dark:hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground bg-card border border-border rounded-lg hover:bg-primary/5 hover:border-primary/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
                     >
                       {t('common.cancel', 'Cancel')}
                     </button>
                     <button
                       type="submit"
                       disabled={updateProfileMutation.isPending}
-                      className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-info hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg transition-colors duration-200 ${
+                      className={`inline-flex items-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary rounded-lg transition-colors duration-200 ${
                         updateProfileMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
                     >
@@ -450,13 +447,23 @@ export default function SettingsPage() {
         {activeSection === 'appearance' && (
           <div className="bg-card rounded-2xl p-6 border border-border">
             <div className="flex items-center space-x-3 mb-6">
-              <Palette className="w-5 h-5 text-primary-500" aria-hidden="true" />
+              <Palette className="w-5 h-5 text-primary" aria-hidden="true" />
               <h2 className="text-xl font-semibold text-foreground">
                 {t('settings.themeSettings.appearance', 'Appearance')}
               </h2>
+              <div className="flex-1"></div>
+              <Link 
+                to="/appearance-demo" 
+                className="text-xs text-primary hover:text-primary/80 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-full transition-colors font-medium"
+              >
+                View Demo
+              </Link>
+              <div className="text-xs text-muted-foreground bg-primary/10 px-2 py-1 rounded-full">
+                Enhanced
+              </div>
             </div>
             
-            <ThemeSelector />
+            <EnhancedAppearanceSection />
           </div>
         )}
 
@@ -464,7 +471,7 @@ export default function SettingsPage() {
         {activeSection === 'notifications' && (
           <div className="bg-card rounded-2xl p-6 border border-border">
             <div className="flex items-center space-x-3 mb-6">
-              <Bell className="w-5 h-5 text-primary-500" />
+              <Bell className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">
                 {t('settings.notifications', 'Notifications')}
               </h2>
@@ -635,7 +642,7 @@ export default function SettingsPage() {
         {activeSection === 'subscription' && (
           <div className="bg-card rounded-2xl p-6 border border-border">
             <div className="flex items-center space-x-3 mb-6">
-              <CreditCard className="w-5 h-5 text-primary-500" />
+              <CreditCard className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">
                 {t('settings.subscription', 'Subscription')}
               </h2>
@@ -654,7 +661,7 @@ export default function SettingsPage() {
                       ? 'border-gold-500 bg-gold-50 dark:bg-gold-950/20'
                       : profile?.subscriptionType === 'enterprise'
                       ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/20'
-                      : 'border-gray-300 bg-muted dark:bg-muted/20'
+                      : 'border-border bg-muted'
                   }`}>
                     <div className="flex items-center justify-between mb-4">
                       <div>
@@ -748,7 +755,7 @@ export default function SettingsPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-foreground mb-4">{t('settings.billingHistory', 'Billing History')}</h3>
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between p-3 bg-background-secondary rounded">
+                        <div className="flex items-center justify-between p-3 bg-primary/5 rounded border border-primary/20">
                           <div>
                             <p className="text-sm font-medium">{profile?.subscriptionType} Plan</p>
                             <p className="text-xs text-foreground-secondary">{new Date().toLocaleDateString()}</p>
@@ -765,7 +772,7 @@ export default function SettingsPage() {
                   {/* Subscription Actions */}
                   {profile?.subscriptionType !== 'free' && (
                     <div className="flex space-x-3 pt-4 border-t border-border">
-                      <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground dark:text-muted-foreground bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-muted dark:hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                      <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground bg-card border border-border rounded-lg hover:bg-primary/5 hover:border-primary/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200">
                         <CreditCard className="w-4 h-4 mr-2" />
                         {t('settings.manageBilling', 'Manage Billing')}
                       </button>
@@ -784,7 +791,7 @@ export default function SettingsPage() {
         {activeSection === 'security' && (
           <div className="bg-card rounded-2xl p-6 border border-border">
             <div className="flex items-center space-x-3 mb-6">
-              <Shield className="w-5 h-5 text-primary-500" />
+              <Shield className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">
                 {t('settings.security', 'Security')}
               </h2>
@@ -800,7 +807,7 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => setShowPasswordForm(!showPasswordForm)}
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground dark:text-muted-foreground bg-white dark:bg-muted border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-muted dark:hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground bg-card border border-border rounded-lg hover:bg-primary/5 hover:border-primary/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
                   >
                     <Key className="w-4 h-4 mr-2" />
                     {t('settings.changePassword', 'Change Password')}
@@ -808,7 +815,7 @@ export default function SettingsPage() {
                 </div>
                     
                     {showPasswordForm && (
-                      <form onSubmit={securityForm.handleSubmit(handleSecuritySubmit)} className="space-y-4 p-4 bg-background-secondary rounded-lg">
+                      <form onSubmit={securityForm.handleSubmit(handleSecuritySubmit)} className="space-y-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
                         <div>
                           <label className="block text-sm font-medium text-foreground mb-2">
                             {t('settings.currentPassword', 'Current Password')}
@@ -886,41 +893,7 @@ export default function SettingsPage() {
                     )}
                   </div>
                   
-                  {/* Two-Factor Authentication */}
-                  <div className="pt-4 border-t border-border">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-foreground">{t('settings.twoFactorAuth', 'Two-Factor Authentication')}</h3>
-                        <p className="text-xs text-foreground-secondary">{t('settings.twoFactorAuthDesc', 'Add an extra layer of security to your account')}</p>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-light dark:bg-error/20 text-error dark:text-error-light">
-                          {t('settings.disabled', 'Disabled')}
-                        </span>
-                        <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-info hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg transition-colors duration-200">
-                          <Lock className="w-4 h-4 mr-2" />
-                          {t('settings.enable2FA', 'Enable 2FA')}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Login Sessions */}
-                  <div className="pt-4 border-t border-border">
-                    <h3 className="text-sm font-medium text-foreground mb-4">{t('settings.activeSessions', 'Active Sessions')}</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-background-secondary rounded">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-2 h-2 bg-success-light0 rounded-full"></div>
-                          <div>
-                            <p className="text-sm font-medium">{t('settings.currentSession', 'Current Session')}</p>
-                            <p className="text-xs text-foreground-secondary">{t('settings.thisDevice', 'This device')} • {t('settings.now', 'Now')}</p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-success">{t('settings.active', 'Active')}</span>
-                      </div>
-                    </div>
-                  </div>
+
             </div>
           </div>
         )}
@@ -941,26 +914,37 @@ export default function SettingsPage() {
                     <p className="text-xs text-foreground-secondary mb-4">
                       {t('settings.dataCollectionDesc', 'Control what data is collected to improve your experience')}
                     </p>
-                    <div className="space-y-3">
-                      <label className="flex items-start space-x-3">
-                        <input type="checkbox" className="mt-1 rounded border-border" defaultChecked />
+                    <div className="space-y-4">
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="mt-1 w-4 h-4 text-primary bg-card border-border rounded focus:ring-primary focus:ring-2 focus:ring-offset-0" 
+                          defaultChecked 
+                        />
                         <div>
                           <span className="text-sm text-foreground block">{t('settings.analyticsData', 'Analytics and usage data')}</span>
-                          <span className="text-xs text-foreground-secondary">{t('settings.analyticsDesc', 'Help us improve the app by sharing anonymous usage data')}</span>
+                          <span className="text-xs text-muted-foreground">{t('settings.analyticsDesc', 'Help us improve the app by sharing anonymous usage data')}</span>
                         </div>
                       </label>
-                      <label className="flex items-start space-x-3">
-                        <input type="checkbox" className="mt-1 rounded border-border" defaultChecked />
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="mt-1 w-4 h-4 text-primary bg-card border-border rounded focus:ring-primary focus:ring-2 focus:ring-offset-0" 
+                          defaultChecked 
+                        />
                         <div>
                           <span className="text-sm text-foreground block">{t('settings.performanceMonitoring', 'Performance monitoring')}</span>
-                          <span className="text-xs text-foreground-secondary">{t('settings.performanceDesc', 'Monitor app performance and crashes')}</span>
+                          <span className="text-xs text-muted-foreground">{t('settings.performanceDesc', 'Monitor app performance and crashes')}</span>
                         </div>
                       </label>
-                      <label className="flex items-start space-x-3">
-                        <input type="checkbox" className="mt-1 rounded border-border" />
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="mt-1 w-4 h-4 text-primary bg-card border-border rounded focus:ring-primary focus:ring-2 focus:ring-offset-0" 
+                        />
                         <div>
                           <span className="text-sm text-foreground block">{t('settings.marketingEmails', 'Marketing emails')}</span>
-                          <span className="text-xs text-foreground-secondary">{t('settings.marketingDesc', 'Receive updates about new features and tips')}</span>
+                          <span className="text-xs text-muted-foreground">{t('settings.marketingDesc', 'Receive updates about new features and tips')}</span>
                         </div>
                       </label>
                     </div>
@@ -969,24 +953,12 @@ export default function SettingsPage() {
                   
                   {/* Account Deletion */}
                   <div className="pt-4 border-t border-border">
-                    <div className="p-4 bg-error-light dark:bg-error/20 rounded-lg border border-red-200 dark:border-red-800">
-                      <div className="flex items-start space-x-3">
-                        <AlertTriangle className="w-5 h-5 text-error mt-0.5" />
-                        <div className="flex-1">
-                          <h3 className="text-sm font-medium text-error dark:text-error-light">{t('settings.dangerZone', 'Danger Zone')}</h3>
-                          <p className="text-xs text-error dark:text-error-light mb-3">
-                            {t('settings.accountDeletionDesc', 'Once you delete your account, there is no going back. Please be certain.')}
-                          </p>
-                          <button
-                            onClick={handleAccountDelete}
-                            className="btn-outline text-error border-red-300 hover:bg-error-light dark:text-error-light dark:border-red-800 dark:hover:bg-error"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            {t('settings.deleteAccount', 'Delete Account')}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <button
+                      onClick={handleAccountDelete}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 rounded-lg transition-colors duration-200 border border-red-600 hover:border-red-700"
+                    >
+                      {t('settings.deleteAccount', 'Delete Account')}
+                    </button>
                   </div>
             </div>
           </div>

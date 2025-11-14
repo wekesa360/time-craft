@@ -14,6 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import * as ImagePicker from 'expo-image-picker';
 import { useHealthStore } from '../../stores/health';
+import { useAppTheme } from '../../constants/dynamicTheme';
 
 const nutritionSchema = z.object({
   mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
@@ -34,7 +35,8 @@ interface NutritionFormProps {
 }
 
 const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) => {
-  const { logNutrition, isLoading } = useHealthStore();
+  const theme = useAppTheme();
+  const { logNutrition, isMutating } = useHealthStore();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const {
@@ -140,16 +142,16 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
   ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1" style={{ backgroundColor: theme.colors.card }}>
       <View className="p-6">
-        <View className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-          <Text className="text-2xl font-bold text-gray-900 mb-6">
+        <View className="mb-6">
+          <Text className="text-2xl font-bold mb-6" style={{ color: theme.colors.foreground }}>
             Log Your Meal
           </Text>
 
           {/* Meal Type Selection */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-3">
+            <Text className="text-sm font-medium mb-3" style={{ color: theme.colors.muted }}>
               Meal Type
             </Text>
             <Controller
@@ -160,21 +162,17 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
                   {mealTypeOptions.map((option) => (
                     <TouchableOpacity
                       key={option.value}
-                      className={`px-4 py-3 rounded-xl border flex-row items-center ${
-                        value === option.value
-                          ? 'bg-primary-100 border-primary-300'
-                          : 'bg-gray-100 border-gray-300'
-                      }`}
+                      className="px-4 py-3 rounded-xl flex-row items-center"
+                      style={{
+                        backgroundColor: value === option.value ? theme.colors.primaryLight : theme.colors.surface,
+                        borderWidth: 1,
+                        borderColor: value === option.value ? theme.colors.primary : theme.colors.border,
+                        borderRadius: theme.radii.xl,
+                      }}
                       onPress={() => onChange(option.value)}
                     >
                       <Text className="mr-2 text-lg">{option.emoji}</Text>
-                      <Text
-                        className={`font-medium ${
-                          value === option.value
-                            ? 'text-primary-700'
-                            : 'text-gray-600'
-                        }`}
-                      >
+                      <Text className="font-medium" style={{ color: value === option.value ? theme.colors.primary : theme.colors.foreground }}>
                         {option.label}
                       </Text>
                     </TouchableOpacity>
@@ -186,7 +184,7 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
 
           {/* Photo Section */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-3">
+            <Text className="text-sm font-medium mb-3" style={{ color: theme.colors.muted }}>
               Meal Photo (Optional)
             </Text>
             
@@ -198,13 +196,15 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
                   resizeMode="cover"
                 />
                 <TouchableOpacity
-                  className="absolute top-2 right-2 bg-red-500 rounded-full w-8 h-8 items-center justify-center"
+                  className="absolute top-2 right-2 rounded-full w-8 h-8 items-center justify-center"
+                  style={{ backgroundColor: '#ef4444' }}
                   onPress={() => setSelectedImage(null)}
                 >
                   <Text className="text-white font-bold">×</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="absolute bottom-2 right-2 bg-blue-500 rounded-full px-3 py-1"
+                  className="absolute bottom-2 right-2 rounded-full px-3 py-1"
+                  style={{ backgroundColor: theme.colors.primary }}
                   onPress={showImageOptions}
                 >
                   <Text className="text-white text-xs font-medium">Change</Text>
@@ -212,19 +212,20 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
               </View>
             ) : (
               <TouchableOpacity
-                className="border-2 border-dashed border-gray-300 rounded-xl p-8 items-center"
+                className="p-8 items-center"
+                style={{ borderWidth: 2, borderStyle: 'dashed', borderColor: theme.colors.border, borderRadius: theme.radii.xl }}
                 onPress={showImageOptions}
               >
                 <Text className="text-4xl mb-2">📷</Text>
-                <Text className="text-gray-600 font-medium">Add Photo</Text>
-                <Text className="text-gray-500 text-sm">Tap to take or select</Text>
+                <Text className="font-medium" style={{ color: theme.colors.foreground }}>Add Photo</Text>
+                <Text className="text-sm" style={{ color: theme.colors.muted }}>Tap to take or select</Text>
               </TouchableOpacity>
             )}
           </View>
 
           {/* Description Field */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-2">
+            <Text className="text-sm font-medium mb-2" style={{ color: theme.colors.muted }}>
               What did you eat? *
             </Text>
             <Controller
@@ -232,9 +233,13 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
               name="description"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className={`border rounded-xl px-4 py-3 text-base ${
-                    errors.description ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`px-4 py-3 text-base`}
+                  style={{
+                    backgroundColor: theme.colors.card,
+                    borderWidth: 1,
+                    borderColor: errors.description ? '#ef4444' : theme.colors.border,
+                    borderRadius: theme.radii.xl as any,
+                  }}
                   placeholder="e.g., Grilled chicken salad with mixed vegetables"
                   multiline
                   numberOfLines={3}
@@ -245,7 +250,7 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
               )}
             />
             {errors.description && (
-              <Text className="text-red-500 text-sm mt-1">
+              <Text className="text-sm mt-1" style={{ color: '#ef4444' }}>
                 {errors.description.message}
               </Text>
             )}
@@ -253,19 +258,20 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
 
           {/* Nutrition Facts (Optional) */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-3">
+            <Text className="text-sm font-medium mb-3" style={{ color: theme.colors.muted }}>
               Nutrition Facts (Optional)
             </Text>
             
             <View className="grid grid-cols-2 gap-4">
               <View>
-                <Text className="text-xs text-gray-600 mb-1">Calories</Text>
+                <Text className="text-xs mb-1" style={{ color: theme.colors.muted }}>Calories</Text>
                 <Controller
                   control={control}
                   name="calories"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      className="px-3 py-2 text-sm"
+                      style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl as any }}
                       placeholder="0"
                       keyboardType="numeric"
                       onChangeText={(text) => {
@@ -279,13 +285,14 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
               </View>
 
               <View>
-                <Text className="text-xs text-gray-600 mb-1">Protein (g)</Text>
+                <Text className="text-xs mb-1" style={{ color: theme.colors.muted }}>Protein (g)</Text>
                 <Controller
                   control={control}
                   name="protein"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      className="px-3 py-2 text-sm"
+                      style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl as any }}
                       placeholder="0"
                       keyboardType="numeric"
                       onChangeText={(text) => {
@@ -299,13 +306,14 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
               </View>
 
               <View>
-                <Text className="text-xs text-gray-600 mb-1">Carbs (g)</Text>
+                <Text className="text-xs mb-1" style={{ color: theme.colors.muted }}>Carbs (g)</Text>
                 <Controller
                   control={control}
                   name="carbs"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      className="px-3 py-2 text-sm"
+                      style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl as any }}
                       placeholder="0"
                       keyboardType="numeric"
                       onChangeText={(text) => {
@@ -319,13 +327,14 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
               </View>
 
               <View>
-                <Text className="text-xs text-gray-600 mb-1">Fat (g)</Text>
+                <Text className="text-xs mb-1" style={{ color: theme.colors.muted }}>Fat (g)</Text>
                 <Controller
                   control={control}
                   name="fat"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      className="px-3 py-2 text-sm"
+                      style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl as any }}
                       placeholder="0"
                       keyboardType="numeric"
                       onChangeText={(text) => {
@@ -344,24 +353,24 @@ const NutritionForm: React.FC<NutritionFormProps> = ({ onSuccess, onCancel }) =>
           <View className="flex-row gap-3">
             {onCancel && (
               <TouchableOpacity
-                className="flex-1 bg-gray-200 rounded-xl py-4"
+                className="flex-1 rounded-2xl py-4"
+                style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}
                 onPress={onCancel}
-                disabled={isLoading}
+                disabled={isMutating}
               >
-                <Text className="text-gray-700 font-semibold text-center">
+                <Text className="font-semibold text-center" style={{ color: theme.colors.foreground }}>
                   Cancel
                 </Text>
               </TouchableOpacity>
             )}
 
             <TouchableOpacity
-              className={`flex-1 rounded-xl py-4 ${
-                isLoading ? 'bg-primary-400' : 'bg-primary-600'
-              }`}
+              className="flex-1 rounded-2xl py-4"
+              style={{ backgroundColor: theme.colors.primary, opacity: isMutating ? 0.7 : 1, borderRadius: theme.radii.xl }}
               onPress={handleSubmit(onSubmit)}
-              disabled={isLoading}
+              disabled={isMutating}
             >
-              {isLoading ? (
+              {isMutating ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text className="text-white font-semibold text-center">

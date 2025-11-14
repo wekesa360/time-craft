@@ -24,8 +24,13 @@ app.use('*', authenticateUser);
 
 // Validation schemas
 const connectionRequestSchema = z.object({
-  addresseeId: z.string().uuid(),
+  addresseeId: z.string().uuid().optional(),
+  email: z.string().email().optional(),
+  message: z.string().max(500).optional(),
   type: z.enum(['friend', 'family', 'colleague', 'accountability_partner']).optional()
+}).refine((v) => !!v.addresseeId || !!v.email, {
+  message: 'Either addresseeId or email is required',
+  path: ['addresseeId']
 });
 
 const shareAchievementSchema = z.object({
@@ -57,10 +62,21 @@ app.post('/connections/request', async (c) => {
     const jwtPayload = c.get('jwtPayload') as any;
     const userId = jwtPayload?.userId;
     const body = await c.req.json();
-    const { addresseeId, type } = connectionRequestSchema.parse(body);
+    const parsed = connectionRequestSchema.parse(body);
+
+    let targetUserId = parsed.addresseeId as string | undefined;
+    if (!targetUserId && parsed.email) {
+      // Resolve email to user ID
+      const result = await c.env.DB.prepare('SELECT id FROM users WHERE email = ? LIMIT 1').bind(parsed.email).all();
+      const row: any = (result.results || [])[0];
+      if (!row?.id) {
+        return c.json({ success: false, error: 'User not found for provided email' }, 404);
+      }
+      targetUserId = row.id as string;
+    }
 
     const socialService = new SocialFeaturesServiceImpl(new DatabaseService(c.env));
-    const connection = await socialService.sendConnectionRequest(userId, addresseeId, type);
+    const connection = await socialService.sendConnectionRequest(userId, targetUserId!, parsed.type);
 
     return c.json({
       success: true,

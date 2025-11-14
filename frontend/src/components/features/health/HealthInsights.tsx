@@ -111,15 +111,15 @@ const HealthInsights: React.FC<HealthInsightsProps> = ({
   return (
     <div className="space-y-6">
       {/* AI Health Score */}
-      <div className="card p-6 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 border-purple-200 dark:border-purple-800">
+      <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-3 bg-purple-100 dark:bg-purple-950 rounded-lg">
-              <Brain className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <Brain className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-foreground">AI Health Analysis</h3>
-              <p className="text-foreground-secondary">Based on your recent health data</p>
+              <p className="text-muted-foreground">Based on your recent health data</p>
             </div>
           </div>
           <div className="text-center">
@@ -128,7 +128,7 @@ const HealthInsights: React.FC<HealthInsightsProps> = ({
             >
               {safeInsights.overallScore.toFixed(1)}
             </div>
-            <div className="text-sm text-foreground-secondary">
+            <div className="text-sm text-muted-foreground">
               {getScoreDescription(safeInsights.overallScore)}
             </div>
           </div>

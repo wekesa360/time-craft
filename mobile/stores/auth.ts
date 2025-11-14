@@ -2,15 +2,23 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiClient } from '../lib/api-client';
+import { apiClient } from '../lib/api';
 import { biometricAuth, type BiometricCapabilities } from '../lib/biometric-auth';
 import type { User, AuthTokens, LoginForm, RegisterForm, AuthState } from '../types';
+
+// API Configuration
+const API_BASE_URL = __DEV__ 
+  ? 'http://192.168.13.106:8787' // Local development - use your computer's IP
+  : 'https://your-production-api.com'; // Production
 
 interface AuthStore extends AuthState {
   // Biometric state
   biometricCapabilities: BiometricCapabilities | null;
   biometricEnabled: boolean;
   biometricAvailable: boolean;
+  // Unified loading flags
+  isFetching: boolean;
+  isMutating: boolean;
   
   // Actions
   login: (credentials: LoginForm) => Promise<void>;
@@ -20,6 +28,10 @@ interface AuthStore extends AuthState {
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  sendOTP: (email: string) => Promise<any>;
+  verifyOTP: (email: string, code: string) => Promise<any>;
+  testConnection: () => Promise<void>;
   setUser: (user: User | null) => void;
   setTokens: (tokens: AuthTokens | null) => void;
   setLoading: (loading: boolean) => void;
@@ -39,6 +51,8 @@ export const useAuthStore = create<AuthStore>()(
       tokens: null,
       isAuthenticated: false,
       isLoading: false,
+      isFetching: false,
+      isMutating: false,
       
       // Biometric state
       biometricCapabilities: null,
@@ -53,19 +67,19 @@ export const useAuthStore = create<AuthStore>()(
       setTokens: (tokens) => {
         set({ tokens });
         if (tokens) {
-          apiClient.setTokens(tokens.accessToken, tokens.refreshToken);
+          apiClient.setTokens(tokens);
         } else {
           apiClient.clearTokens();
         }
       },
 
       setLoading: (isLoading) => {
-        set({ isLoading });
+        set({ isLoading, isMutating: isLoading });
       },
 
       login: async (credentials) => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isMutating: true });
           const response = await apiClient.login(credentials.email, credentials.password);
           
           set({
@@ -73,21 +87,22 @@ export const useAuthStore = create<AuthStore>()(
             tokens: response.tokens,
             isAuthenticated: true,
             isLoading: false,
+            isMutating: false,
           });
           
-          await apiClient.setTokens(response.tokens.accessToken, response.tokens.refreshToken);
+          await apiClient.setTokens(response.tokens);
         } catch (error) {
-          set({ isLoading: false });
+          set({ isLoading: false, isMutating: false });
           throw error;
         }
       },
 
       loginWithGoogle: async () => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isMutating: true });
           
           // Get Google OAuth URL from backend
-          const response = await fetch(`${apiClient.baseURL}/auth/google`);
+          const response = await fetch(`${API_BASE_URL}/auth/google`);
           if (!response.ok) {
             throw new Error('Failed to get Google OAuth URL');
           }
@@ -110,7 +125,7 @@ export const useAuthStore = create<AuthStore>()(
 
       register: async (data) => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isMutating: true });
           const response = await apiClient.register(data);
           
           set({
@@ -118,9 +133,10 @@ export const useAuthStore = create<AuthStore>()(
             tokens: response.tokens,
             isAuthenticated: true,
             isLoading: false,
+            isMutating: false,
           });
           
-          await apiClient.setTokens(response.tokens.accessToken, response.tokens.refreshToken);
+          await apiClient.setTokens(response.tokens);
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -138,6 +154,7 @@ export const useAuthStore = create<AuthStore>()(
             tokens: null,
             isAuthenticated: false,
             isLoading: false,
+            isMutating: false,
           });
           await apiClient.clearTokens();
         }
@@ -159,18 +176,18 @@ export const useAuthStore = create<AuthStore>()(
 
       updateProfile: async (data) => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isMutating: true });
           const updatedUser = await apiClient.updateProfile(data);
-          set({ user: updatedUser, isLoading: false });
+          set({ user: updatedUser, isLoading: false, isMutating: false });
         } catch (error) {
-          set({ isLoading: false });
+          set({ isLoading: false, isMutating: false });
           throw error;
         }
       },
 
       loginWithBiometric: async () => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isMutating: true });
           
           const isEnabled = await biometricAuth.isBiometricEnabled();
           if (!isEnabled) {
@@ -183,14 +200,35 @@ export const useAuthStore = create<AuthStore>()(
 
           if (result.success) {
             await biometricAuth.setLastBiometricAuth();
-            // User is already authenticated, just update the timestamp
-            set({ isLoading: false });
+            // Restore tokens from SecureStore and validate session
+            const accessToken = (await (await import('expo-secure-store')).getItemAsync('access_token'))
+              || (await (await import('expo-secure-store')).getItemAsync('accessToken'));
+            const refreshToken = (await (await import('expo-secure-store')).getItemAsync('refresh_token'))
+              || (await (await import('expo-secure-store')).getItemAsync('refreshToken'));
+
+            if (!accessToken || !refreshToken) {
+              set({ isLoading: false, isMutating: false });
+              throw new Error('No saved session found');
+            }
+
+            const tokens = { accessToken, refreshToken } as AuthTokens;
+            await apiClient.setTokens(tokens);
+
+            try {
+              const user = await apiClient.getProfile();
+              set({ user, tokens, isAuthenticated: true, isLoading: false, isMutating: false });
+            } catch (e) {
+              // Profile fetch failed; clear session
+              await apiClient.clearTokens();
+              set({ user: null, tokens: null, isAuthenticated: false, isLoading: false, isMutating: false });
+              throw new Error('Saved session is invalid. Please sign in again.');
+            }
           } else {
-            set({ isLoading: false });
+            set({ isLoading: false, isMutating: false });
             throw new Error('Biometric authentication failed');
           }
         } catch (error) {
-          set({ isLoading: false });
+          set({ isLoading: false, isMutating: false });
           throw error;
         }
       },
@@ -217,14 +255,15 @@ export const useAuthStore = create<AuthStore>()(
 
       setBiometricEnabled: async (enabled: boolean) => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isMutating: true });
           await biometricAuth.setBiometricEnabled(enabled);
           set({ 
             biometricEnabled: enabled,
-            isLoading: false 
+            isLoading: false,
+            isMutating: false 
           });
         } catch (error) {
-          set({ isLoading: false });
+          set({ isLoading: false, isMutating: false });
           throw error;
         }
       },
@@ -238,9 +277,79 @@ export const useAuthStore = create<AuthStore>()(
         return await biometricAuth.isReauthRequired();
       },
 
+      forgotPassword: async (email: string) => {
+        try {
+          set({ isLoading: true, isMutating: true });
+          await apiClient.forgotPassword(email);
+          set({ isLoading: false, isMutating: false });
+        } catch (error) {
+          set({ isLoading: false, isMutating: false });
+          throw error;
+        }
+      },
+
+      sendOTP: async (email: string) => {
+        try {
+          set({ isLoading: true, isMutating: true });
+          const result = await apiClient.sendOTP(email);
+          set({ isLoading: false, isMutating: false });
+          return result;
+        } catch (error) {
+          set({ isLoading: false, isMutating: false });
+          throw error;
+        }
+      },
+
+      verifyOTP: async (email: string, code: string) => {
+        try {
+          set({ isLoading: true, isMutating: true });
+          const result = await apiClient.verifyOTP(email, code);
+          
+          if (result.success && result.data.user && result.data.tokens) {
+            set({
+              user: result.data.user,
+              tokens: result.data.tokens,
+              isAuthenticated: true,
+              isLoading: false,
+              isMutating: false,
+            });
+          } else {
+            set({ isLoading: false, isMutating: false });
+          }
+          
+          return result;
+        } catch (error) {
+          set({ isLoading: false, isMutating: false });
+          throw error;
+        }
+      },
+
+      testConnection: async () => {
+        try {
+          set({ isLoading: true, isFetching: true });
+          const result = await apiClient.testConnection();
+          set({ isLoading: false, isFetching: false });
+          
+          if (!result.success) {
+            throw new Error(result.error || 'Connection test failed');
+          }
+        } catch (error) {
+          set({ isLoading: false, isFetching: false });
+          throw error;
+        }
+      },
+
       initialize: async () => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isFetching: true });
+          // Wire API client auth invalidation to store logout
+          apiClient.setAuthInvalidHandler(() => {
+            try {
+              get().logout();
+            } catch (_) {
+              // noop
+            }
+          });
           const { tokens } = get();
           
           // Initialize biometric capabilities
@@ -261,7 +370,7 @@ export const useAuthStore = create<AuthStore>()(
           console.error('Auth initialization failed:', error);
           get().logout();
         } finally {
-          set({ isLoading: false });
+          set({ isLoading: false, isFetching: false });
         }
       },
     }),

@@ -798,7 +798,7 @@ calendar.get('/events', async (c) => {
     }));
 
     return c.json({
-      data: events,
+      events: events,
       pagination: {
         total: events.length,
         page: 1,
@@ -813,6 +813,912 @@ calendar.get('/events', async (c) => {
   } catch (error) {
     console.error('Get calendar events error:', error);
     return c.json({ error: 'Failed to fetch calendar events' }, 500);
+  }
+});
+
+// ========== EVENT CRUD OPERATIONS ==========
+
+// Event creation schema
+const createEventSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200),
+  description: z.string().max(2000).optional(),
+  startTime: z.number().int().positive('Start time must be a positive timestamp'),
+  endTime: z.number().int().positive('End time must be a positive timestamp'),
+  location: z.string().max(500).optional(),
+  eventType: z.enum(['meeting', 'appointment', 'task', 'reminder', 'personal', 'work']).default('appointment'),
+  isAllDay: z.boolean().default(false),
+  attendees: z.array(z.string().email()).optional(),
+  reminders: z.array(z.number().int().min(0)).optional()
+}).refine(data => data.endTime > data.startTime, {
+  message: 'End time must be after start time',
+  path: ['endTime']
+});
+
+// POST /api/calendar/events - Create new event
+calendar.post('/events', zValidator('json', createEventSchema), async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const eventData = c.req.valid('json');
+    const db = new DatabaseService(c.env);
+    
+    // Check for overlapping events if needed
+    const overlappingEvents = await db.query(`
+      SELECT id FROM calendar_events 
+      WHERE user_id = ? AND status != 'cancelled'
+        AND ((? >= "start" AND ? < "end") OR (? > "start" AND ? <= "end") 
+             OR (? <= "start" AND ? >= "end"))
+    `, [
+      auth.userId, 
+      eventData.startTime, eventData.startTime,
+      eventData.endTime, eventData.endTime,
+      eventData.startTime, eventData.endTime
+    ]);
+
+    if (overlappingEvents.results?.length && eventData.eventType === 'meeting') {
+      return c.json({ 
+        error: 'Event conflicts with existing appointment',
+        conflictingEvents: overlappingEvents.results 
+      }, 409);
+    }
+
+    const eventId = `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    await db.query(`
+      INSERT INTO calendar_events (
+        id, user_id, title, description, "start", "end", location, 
+        event_type, is_all_day, status, source, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      eventId, auth.userId, eventData.title, eventData.description,
+      eventData.startTime, eventData.endTime, eventData.location,
+      eventData.eventType, eventData.isAllDay, 'confirmed', 'local',
+      Date.now(), Date.now()
+    ]);
+
+    // Add attendees if provided
+    if (eventData.attendees?.length) {
+      for (const email of eventData.attendees) {
+        await db.query(`
+          INSERT INTO event_attendees (event_id, email, status, created_at)
+          VALUES (?, ?, ?, ?)
+        `, [eventId, email, 'pending', Date.now()]);
+      }
+    }
+
+    // Add reminders if provided
+    if (eventData.reminders?.length) {
+      for (const reminderMinutes of eventData.reminders) {
+        const reminderId = `rem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        await db.query(`
+          INSERT INTO event_reminders (id, event_id, user_id, minutes_before, created_at)
+          VALUES (?, ?, ?, ?, ?)
+        `, [reminderId, eventId, auth.userId, reminderMinutes, Date.now()]);
+      }
+    }
+
+    const createdEvent = {
+      id: eventId,
+      title: eventData.title,
+      description: eventData.description,
+      startTime: eventData.startTime,
+      endTime: eventData.endTime,
+      location: eventData.location,
+      eventType: eventData.eventType,
+      isAllDay: eventData.isAllDay,
+      status: 'confirmed',
+      attendees: eventData.attendees || [],
+      reminders: eventData.reminders || []
+    };
+
+    return c.json({
+      message: 'Event created successfully',
+      event: createdEvent
+    }, 201);
+  } catch (error) {
+    console.error('Create event error:', error);
+    return c.json({ error: 'Failed to create event' }, 500);
+  }
+});
+
+// Update event schema (all fields optional)
+const updateEventSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional(),
+  startTime: z.number().int().positive().optional(),
+  endTime: z.number().int().positive().optional(),
+  location: z.string().max(500).optional(),
+  eventType: z.enum(['meeting', 'appointment', 'task', 'reminder', 'personal', 'work']).optional(),
+  isAllDay: z.boolean().optional(),
+  attendees: z.array(z.string().email()).optional(),
+  reminders: z.array(z.number().int().min(0)).optional()
+});
+
+// PUT /api/calendar/events/:id - Update event
+calendar.put('/events/:id', zValidator('json', updateEventSchema), async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const eventId = c.req.param('id');
+    const updates = c.req.valid('json');
+    const db = new DatabaseService(c.env);
+
+    // Check if event exists and belongs to user
+    const existingEvent = await db.query(`
+      SELECT * FROM calendar_events WHERE id = ? AND user_id = ?
+    `, [eventId, auth.userId]);
+
+    if (!existingEvent.results?.length) {
+      return c.json({ error: 'Event not found' }, 404);
+    }
+
+    // Validate time range if both times are provided
+    if (updates.startTime && updates.endTime && updates.endTime <= updates.startTime) {
+      return c.json({ error: 'End time must be after start time' }, 400);
+    }
+
+    // Build update query dynamically
+    const updateFields = [];
+    const updateValues = [];
+    
+    if (updates.title !== undefined) {
+      updateFields.push('title = ?');
+      updateValues.push(updates.title);
+    }
+    if (updates.description !== undefined) {
+      updateFields.push('description = ?');
+      updateValues.push(updates.description);
+    }
+    if (updates.startTime !== undefined) {
+      updateFields.push('"start" = ?');
+      updateValues.push(updates.startTime);
+    }
+    if (updates.endTime !== undefined) {
+      updateFields.push('"end" = ?');
+      updateValues.push(updates.endTime);
+    }
+    if (updates.location !== undefined) {
+      updateFields.push('location = ?');
+      updateValues.push(updates.location);
+    }
+    if (updates.eventType !== undefined) {
+      updateFields.push('event_type = ?');
+      updateValues.push(updates.eventType);
+    }
+    if (updates.isAllDay !== undefined) {
+      updateFields.push('is_all_day = ?');
+      updateValues.push(updates.isAllDay);
+    }
+
+    updateFields.push('updated_at = ?');
+    updateValues.push(Date.now());
+    updateValues.push(eventId, auth.userId);
+
+    await db.query(`
+      UPDATE calendar_events 
+      SET ${updateFields.join(', ')}
+      WHERE id = ? AND user_id = ?
+    `, updateValues);
+
+    // Get updated event
+    const updatedEvent = await db.query(`
+      SELECT * FROM calendar_events WHERE id = ? AND user_id = ?
+    `, [eventId, auth.userId]);
+
+    const event = updatedEvent.results?.[0];
+    if (event) {
+      return c.json({
+        message: 'Event updated successfully',
+        event: {
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          startTime: event.start,
+          endTime: event.end,
+          location: event.location,
+          eventType: event.event_type,
+          isAllDay: event.is_all_day,
+          status: event.status
+        }
+      });
+    }
+
+    return c.json({ error: 'Failed to retrieve updated event' }, 500);
+  } catch (error) {
+    console.error('Update event error:', error);
+    return c.json({ error: 'Failed to update event' }, 500);
+  }
+});
+
+// DELETE /api/calendar/events/:id - Delete event
+calendar.delete('/events/:id', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const eventId = c.req.param('id');
+    const db = new DatabaseService(c.env);
+
+    // Check if event exists and belongs to user
+    const existingEvent = await db.query(`
+      SELECT * FROM calendar_events WHERE id = ? AND user_id = ?
+    `, [eventId, auth.userId]);
+
+    if (!existingEvent.results?.length) {
+      return c.json({ error: 'Event not found' }, 404);
+    }
+
+    // Delete related data first
+    await db.query('DELETE FROM event_attendees WHERE event_id = ?', [eventId]);
+    await db.query('DELETE FROM event_reminders WHERE event_id = ?', [eventId]);
+    
+    // Delete the event
+    await db.query(`
+      DELETE FROM calendar_events WHERE id = ? AND user_id = ?
+    `, [eventId, auth.userId]);
+
+    return c.json({
+      message: 'Event deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete event error:', error);
+    return c.json({ error: 'Failed to delete event' }, 500);
+  }
+});
+
+// ========== CALENDAR INTEGRATIONS ==========
+
+// GET /api/calendar/integrations - Get available integrations
+calendar.get('/integrations', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const db = new DatabaseService(c.env);
+    
+    // Get user's existing connections
+    const connections = await db.query(`
+      SELECT provider, is_active, calendar_name, last_sync_at 
+      FROM calendar_connections 
+      WHERE user_id = ?
+    `, [auth.userId]);
+
+    const connectedProviders = new Set(
+      (connections.results || []).map((conn: any) => conn.provider)
+    );
+
+    const availableIntegrations = [
+      {
+        provider: 'google',
+        name: 'Google Calendar',
+        description: 'Sync with Google Calendar',
+        isConnected: connectedProviders.has('google'),
+        features: ['bidirectional_sync', 'real_time_updates', 'multiple_calendars']
+      },
+      {
+        provider: 'outlook',
+        name: 'Microsoft Outlook',
+        description: 'Sync with Outlook Calendar',
+        isConnected: connectedProviders.has('outlook'),
+        features: ['bidirectional_sync', 'real_time_updates']
+      },
+      {
+        provider: 'apple',
+        name: 'Apple Calendar',
+        description: 'Sync with Apple iCloud Calendar',
+        isConnected: connectedProviders.has('apple'),
+        features: ['import_only', 'manual_sync']
+      }
+    ];
+
+    return c.json({
+      integrations: availableIntegrations,
+      connectedCount: connectedProviders.size
+    });
+  } catch (error) {
+    console.error('Get integrations error:', error);
+    return c.json({ error: 'Failed to fetch integrations' }, 500);
+  }
+});
+
+// POST /api/calendar/integrations/:provider/connect - Initiate connection
+calendar.post('/integrations/:provider/connect', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const provider = c.req.param('provider') as CalendarProvider;
+    
+    if (!['google', 'outlook', 'apple'].includes(provider)) {
+      return c.json({ error: 'Unsupported calendar provider' }, 400);
+    }
+
+    // Generate OAuth URL based on provider
+    let authUrl = '';
+    let state = crypto.randomUUID();
+    
+    // Store state for verification
+    await c.env.CACHE.put(`calendar_oauth_${state}`, JSON.stringify({
+      userId: auth.userId,
+      provider,
+      timestamp: Date.now()
+    }), { expirationTtl: 600 }); // 10 minutes
+
+    switch (provider) {
+      case 'google':
+        const googleScopes = [
+          'https://www.googleapis.com/auth/calendar',
+          'https://www.googleapis.com/auth/calendar.events'
+        ].join(' ');
+        
+        authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+          `client_id=${c.env.GOOGLE_CLIENT_ID}&` +
+          `redirect_uri=${encodeURIComponent(c.env.GOOGLE_REDIRECT_URI)}&` +
+          `scope=${encodeURIComponent(googleScopes)}&` +
+          `response_type=code&` +
+          `access_type=offline&` +
+          `state=${state}`;
+        break;
+        
+      case 'outlook':
+        const outlookScopes = [
+          'https://graph.microsoft.com/calendars.readwrite',
+          'offline_access'
+        ].join(' ');
+        
+        authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+          `client_id=${c.env.OUTLOOK_CLIENT_ID}&` +
+          `redirect_uri=${encodeURIComponent(c.env.OUTLOOK_REDIRECT_URI)}&` +
+          `scope=${encodeURIComponent(outlookScopes)}&` +
+          `response_type=code&` +
+          `state=${state}`;
+        break;
+        
+      default:
+        return c.json({ error: 'OAuth not implemented for this provider' }, 501);
+    }
+
+    return c.json({
+      authUrl,
+      state,
+      provider,
+      expiresAt: Date.now() + 600000 // 10 minutes
+    });
+  } catch (error) {
+    console.error('Initiate connection error:', error);
+    return c.json({ error: 'Failed to initiate connection' }, 500);
+  }
+});
+
+// POST /api/calendar/integrations/:provider/callback - Handle OAuth callback
+calendar.post('/integrations/:provider/callback', async (c) => {
+  try {
+    const provider = c.req.param('provider') as CalendarProvider;
+    const body = await c.req.json();
+    const { code, state, error } = body;
+
+    if (error) {
+      return c.json({ error: `OAuth error: ${error}` }, 400);
+    }
+
+    if (!code || !state) {
+      return c.json({ error: 'Missing authorization code or state' }, 400);
+    }
+
+    // Verify state
+    const stateData = await c.env.CACHE.get(`calendar_oauth_${state}`);
+    if (!stateData) {
+      return c.json({ error: 'Invalid or expired state' }, 400);
+    }
+
+    const { userId } = JSON.parse(stateData);
+    await c.env.CACHE.delete(`calendar_oauth_${state}`);
+
+    // Exchange code for tokens
+    const tokenData = await exchangeAuthCodeForTokens(provider, code, '', c.env);
+    
+    // Store connection
+    const db = new DatabaseService(c.env);
+    const connectionId = `conn_${provider}_${Date.now()}`;
+    
+    await db.query(`
+      INSERT INTO calendar_connections (
+        id, user_id, provider, provider_id, access_token, refresh_token,
+        token_expires_at, calendar_name, is_active, sync_settings,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      connectionId, userId, provider, tokenData.provider_id || 'primary',
+      tokenData.access_token, tokenData.refresh_token,
+      tokenData.expires_at, tokenData.calendar_name || `${provider} Calendar`,
+      true, JSON.stringify({
+        syncDirection: 'bidirectional',
+        syncTasks: true,
+        syncMeetings: true,
+        autoSync: true,
+        syncFrequency: 15,
+        conflictResolution: 'local_wins'
+      }), Date.now(), Date.now()
+    ]);
+
+    return c.json({
+      success: true,
+      message: `${provider} Calendar connected successfully`,
+      connection: {
+        id: connectionId,
+        provider,
+        calendarName: tokenData.calendar_name || `${provider} Calendar`
+      }
+    });
+  } catch (error) {
+    console.error('OAuth callback error:', error);
+    return c.json({ error: 'Failed to complete OAuth flow' }, 500);
+  }
+});
+
+// POST /api/calendar/integrations/:provider/sync - Sync with provider
+calendar.post('/integrations/:provider/sync', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const provider = c.req.param('provider') as CalendarProvider;
+    const syncEngine = new CalendarSyncEngine(c.env);
+    
+    // Get user's connection for this provider
+    const db = new DatabaseService(c.env);
+    const connection = await db.query(`
+      SELECT * FROM calendar_connections 
+      WHERE user_id = ? AND provider = ? AND is_active = true
+      LIMIT 1
+    `, [auth.userId, provider]);
+
+    if (!connection.results?.length) {
+      return c.json({ error: `No active ${provider} connection found` }, 404);
+    }
+
+    // Perform sync for this specific provider
+    const result = await syncEngine.syncUserCalendars(auth.userId);
+
+    return c.json({
+      message: `${provider} Calendar sync completed`,
+      result: {
+        imported: result.imported,
+        exported: result.exported,
+        errors: result.errors
+      },
+      syncedAt: Date.now()
+    });
+  } catch (error) {
+    console.error('Provider sync error:', error);
+    
+    // Handle specific sync errors
+    if (error instanceof Error && error.message.includes('API error')) {
+      return c.json({ 
+        error: 'Calendar sync failed due to API error',
+        details: error.message 
+      }, 502);
+    }
+    
+    return c.json({ error: 'Calendar sync failed' }, 500);
+  }
+});
+
+// ========== SMART SCHEDULING ==========
+
+// POST /api/calendar/smart-schedule - AI-powered meeting scheduling
+const smartScheduleSchema = z.object({
+  title: z.string().min(1).max(200),
+  participants: z.array(z.string().email()).min(1),
+  duration: z.number().int().min(15).max(480), // 15 minutes to 8 hours
+  meetingType: z.enum(['meeting', 'interview', 'presentation', 'standup']).default('meeting'),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
+  preferredTimes: z.array(z.object({
+    dayOfWeek: z.number().int().min(0).max(6),
+    startHour: z.number().int().min(0).max(23),
+    endHour: z.number().int().min(0).max(23)
+  })).optional(),
+  dateRange: z.object({
+    start: z.number().int().positive(),
+    end: z.number().int().positive()
+  }),
+  bufferTime: z.number().int().min(0).max(60).default(15)
+});
+
+calendar.post('/smart-schedule', zValidator('json', smartScheduleSchema), async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const request = c.req.valid('json');
+    const db = new DatabaseService(c.env);
+
+    // Get user's existing events in the date range
+    const existingEvents = await db.query(`
+      SELECT "start", "end" FROM calendar_events 
+      WHERE user_id = ? AND status != 'cancelled'
+        AND "start" >= ? AND "start" <= ?
+      ORDER BY "start" ASC
+    `, [auth.userId, request.dateRange.start, request.dateRange.end]);
+
+    // Simple scheduling algorithm
+    const suggestions = [];
+    const events = existingEvents.results || [];
+    
+    // Generate time slots
+    const startDate = new Date(request.dateRange.start);
+    const endDate = new Date(request.dateRange.end);
+    
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      // Skip weekends for business meetings
+      if (request.meetingType === 'meeting' && (date.getDay() === 0 || date.getDay() === 6)) {
+        continue;
+      }
+
+      // Check preferred times or default business hours
+      const workStart = request.preferredTimes?.length 
+        ? request.preferredTimes[0].startHour 
+        : 9;
+      const workEnd = request.preferredTimes?.length 
+        ? request.preferredTimes[0].endHour 
+        : 17;
+
+      for (let hour = workStart; hour < workEnd; hour++) {
+        const slotStart = new Date(date);
+        slotStart.setHours(hour, 0, 0, 0);
+        const slotEnd = new Date(slotStart);
+        slotEnd.setMinutes(slotEnd.getMinutes() + request.duration);
+
+        // Check for conflicts
+        const hasConflict = events.some((event: any) => {
+          const eventStart = new Date(event.start);
+          const eventEnd = new Date(event.end);
+          return (slotStart < eventEnd && slotEnd > eventStart);
+        });
+
+        if (!hasConflict && suggestions.length < 5) {
+          suggestions.push({
+            startTime: slotStart.getTime(),
+            endTime: slotEnd.getTime(),
+            confidence: 0.8 + (Math.random() * 0.2), // Mock confidence score
+            reasoning: `Available ${hour}:00 slot on ${date.toDateString()}`
+          });
+        }
+      }
+    }
+
+    if (suggestions.length === 0) {
+      return c.json({
+        suggestions: [],
+        message: 'No available time slots found in the specified range',
+        alternativeOptions: {
+          extendDateRange: true,
+          considerWeekends: request.meetingType !== 'meeting',
+          shortenDuration: request.duration > 30
+        }
+      });
+    }
+
+    return c.json({
+      suggestions: suggestions.slice(0, 3), // Return top 3 suggestions
+      meetingDetails: {
+        title: request.title,
+        duration: request.duration,
+        participants: request.participants.length,
+        priority: request.priority
+      },
+      generatedAt: Date.now()
+    });
+  } catch (error) {
+    console.error('Smart schedule error:', error);
+    return c.json({ error: 'Failed to generate schedule suggestions' }, 500);
+  }
+});
+
+// POST /api/calendar/find-common-time - Find mutual availability
+const findCommonTimeSchema = z.object({
+  participants: z.array(z.string().email()).min(2),
+  duration: z.number().int().min(15).max(480),
+  dateRange: z.object({
+    start: z.number().int().positive(),
+    end: z.number().int().positive()
+  }),
+  workingHours: z.object({
+    start: z.number().int().min(0).max(23).default(9),
+    end: z.number().int().min(0).max(23).default(17)
+  }).optional()
+});
+
+calendar.post('/find-common-time', zValidator('json', findCommonTimeSchema), async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const request = c.req.valid('json');
+    
+    // For now, return mock availability data
+    // In a real implementation, this would check all participants' calendars
+    const commonSlots = [
+      {
+        startTime: Date.now() + 86400000, // Tomorrow
+        endTime: Date.now() + 86400000 + (request.duration * 60000),
+        availableParticipants: request.participants,
+        conflictingParticipants: []
+      },
+      {
+        startTime: Date.now() + 172800000, // Day after tomorrow
+        endTime: Date.now() + 172800000 + (request.duration * 60000),
+        availableParticipants: request.participants.slice(0, -1),
+        conflictingParticipants: [request.participants[request.participants.length - 1]]
+      }
+    ];
+
+    return c.json({
+      commonAvailability: commonSlots,
+      participantCount: request.participants.length,
+      searchCriteria: {
+        duration: request.duration,
+        dateRange: request.dateRange,
+        workingHours: request.workingHours || { start: 9, end: 17 }
+      }
+    });
+  } catch (error) {
+    console.error('Find common time error:', error);
+    return c.json({ error: 'Failed to find common availability' }, 500);
+  }
+});
+
+// ========== REMINDERS AND NOTIFICATIONS ==========
+
+// GET /api/calendar/reminders - Get upcoming reminders
+calendar.get('/reminders', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const db = new DatabaseService(c.env);
+    const now = Date.now();
+    const next24Hours = now + (24 * 60 * 60 * 1000);
+
+    const reminders = await db.query(`
+      SELECT r.*, e.title, e.start, e.location, e.event_type
+      FROM event_reminders r
+      JOIN calendar_events e ON r.event_id = e.id
+      WHERE r.user_id = ? AND e.start >= ? AND e.start <= ?
+        AND e.status != 'cancelled'
+      ORDER BY e.start ASC
+    `, [auth.userId, now, next24Hours]);
+
+    const upcomingReminders = (reminders.results || []).map((reminder: any) => ({
+      id: reminder.id,
+      eventId: reminder.event_id,
+      eventTitle: reminder.title,
+      eventStart: reminder.start,
+      location: reminder.location,
+      eventType: reminder.event_type,
+      reminderTime: reminder.start - (reminder.minutes_before * 60000),
+      minutesBefore: reminder.minutes_before
+    }));
+
+    return c.json({
+      reminders: upcomingReminders,
+      count: upcomingReminders.length,
+      timeframe: '24 hours'
+    });
+  } catch (error) {
+    console.error('Get reminders error:', error);
+    return c.json({ error: 'Failed to fetch reminders' }, 500);
+  }
+});
+
+// POST /api/calendar/events/:id/reminders - Set event reminder
+const reminderSchema = z.object({
+  minutesBefore: z.array(z.number().int().min(0).max(10080)).min(1) // Up to 1 week before
+});
+
+calendar.post('/events/:id/reminders', zValidator('json', reminderSchema), async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const eventId = c.req.param('id');
+    const { minutesBefore } = c.req.valid('json');
+    const db = new DatabaseService(c.env);
+
+    // Verify event exists and belongs to user
+    const event = await db.query(`
+      SELECT id FROM calendar_events WHERE id = ? AND user_id = ?
+    `, [eventId, auth.userId]);
+
+    if (!event.results?.length) {
+      return c.json({ error: 'Event not found' }, 404);
+    }
+
+    // Delete existing reminders
+    await db.query('DELETE FROM event_reminders WHERE event_id = ? AND user_id = ?', [eventId, auth.userId]);
+
+    // Add new reminders
+    const reminderIds = [];
+    for (const minutes of minutesBefore) {
+      const reminderId = `rem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      await db.query(`
+        INSERT INTO event_reminders (id, event_id, user_id, minutes_before, created_at)
+        VALUES (?, ?, ?, ?, ?)
+      `, [reminderId, eventId, auth.userId, minutes, Date.now()]);
+      reminderIds.push(reminderId);
+    }
+
+    return c.json({
+      message: 'Reminders set successfully',
+      reminders: minutesBefore.map((minutes, index) => ({
+        id: reminderIds[index],
+        minutesBefore: minutes
+      }))
+    }, 201);
+  } catch (error) {
+    console.error('Set reminders error:', error);
+    return c.json({ error: 'Failed to set reminders' }, 500);
+  }
+});
+
+// ========== CALENDAR ANALYTICS ==========
+
+// GET /api/calendar/analytics/time-usage - Analyze time usage patterns
+calendar.get('/analytics/time-usage', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const db = new DatabaseService(c.env);
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+
+    const events = await db.query(`
+      SELECT event_type, "start", "end", title
+      FROM calendar_events 
+      WHERE user_id = ? AND "start" >= ? AND status != 'cancelled'
+    `, [auth.userId, thirtyDaysAgo]);
+
+    const timeUsage = {};
+    let totalTime = 0;
+
+    (events.results || []).forEach((event: any) => {
+      const duration = event.end - event.start;
+      const type = event.event_type || 'other';
+      
+      if (!timeUsage[type]) {
+        timeUsage[type] = { duration: 0, count: 0 };
+      }
+      
+      timeUsage[type].duration += duration;
+      timeUsage[type].count += 1;
+      totalTime += duration;
+    });
+
+    const patterns = Object.entries(timeUsage).map(([type, data]: [string, any]) => ({
+      category: type,
+      totalMinutes: Math.round(data.duration / (1000 * 60)),
+      eventCount: data.count,
+      percentage: Math.round((data.duration / totalTime) * 100),
+      averageDuration: Math.round(data.duration / data.count / (1000 * 60))
+    }));
+
+    return c.json({
+      timeUsage: patterns,
+      summary: {
+        totalEvents: (events.results || []).length,
+        totalMinutes: Math.round(totalTime / (1000 * 60)),
+        averageEventDuration: Math.round(totalTime / (events.results?.length || 1) / (1000 * 60)),
+        period: '30 days'
+      },
+      generatedAt: Date.now()
+    });
+  } catch (error) {
+    console.error('Time usage analytics error:', error);
+    return c.json({ error: 'Failed to analyze time usage' }, 500);
+  }
+});
+
+// GET /api/calendar/analytics/productivity - Analyze productivity patterns
+calendar.get('/analytics/productivity', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const db = new DatabaseService(c.env);
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+
+    const events = await db.query(`
+      SELECT "start", "end", event_type
+      FROM calendar_events 
+      WHERE user_id = ? AND "start" >= ? AND status != 'cancelled'
+    `, [auth.userId, thirtyDaysAgo]);
+
+    // Analyze productivity by time of day
+    const hourlyProductivity = Array(24).fill(0).map(() => ({ events: 0, duration: 0 }));
+    const dailyProductivity = Array(7).fill(0).map(() => ({ events: 0, duration: 0 }));
+
+    (events.results || []).forEach((event: any) => {
+      const startDate = new Date(event.start);
+      const duration = event.end - event.start;
+      const hour = startDate.getHours();
+      const dayOfWeek = startDate.getDay();
+
+      hourlyProductivity[hour].events += 1;
+      hourlyProductivity[hour].duration += duration;
+      
+      dailyProductivity[dayOfWeek].events += 1;
+      dailyProductivity[dayOfWeek].duration += duration;
+    });
+
+    const insights = [];
+    
+    // Find most productive hours
+    const peakHour = hourlyProductivity.reduce((max, current, index) => 
+      current.events > hourlyProductivity[max].events ? index : max, 0);
+    
+    insights.push({
+      type: 'peak_productivity',
+      message: `Your most productive hour is ${peakHour}:00 with ${hourlyProductivity[peakHour].events} events`,
+      data: { hour: peakHour, events: hourlyProductivity[peakHour].events }
+    });
+
+    // Find busiest day
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const busiestDay = dailyProductivity.reduce((max, current, index) => 
+      current.events > dailyProductivity[max].events ? index : max, 0);
+    
+    insights.push({
+      type: 'busiest_day',
+      message: `${dayNames[busiestDay]} is your busiest day with ${dailyProductivity[busiestDay].events} events`,
+      data: { day: dayNames[busiestDay], events: dailyProductivity[busiestDay].events }
+    });
+
+    return c.json({
+      productivity: {
+        hourlyDistribution: hourlyProductivity.map((data, hour) => ({
+          hour,
+          events: data.events,
+          totalMinutes: Math.round(data.duration / (1000 * 60))
+        })),
+        dailyDistribution: dailyProductivity.map((data, day) => ({
+          day: dayNames[day],
+          events: data.events,
+          totalMinutes: Math.round(data.duration / (1000 * 60))
+        }))
+      },
+      insights,
+      period: '30 days',
+      generatedAt: Date.now()
+    });
+  } catch (error) {
+    console.error('Productivity analytics error:', error);
+    return c.json({ error: 'Failed to analyze productivity patterns' }, 500);
   }
 });
 

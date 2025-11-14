@@ -18,6 +18,11 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [viewingTask, setViewingTask] = useState<Task | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    high: false,
+    medium: false,
+    low: false
+  });
   
   const { filters, setFilters } = useTaskStore();
 
@@ -265,33 +270,40 @@ export default function TasksPage() {
 
       {/* Task Lists */}
       {!isLoading && (
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* High Priority */}
           {(selectedFilter === "all" || selectedFilter === "high") && (
-            <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="bg-card rounded-2xl p-6 border border-border h-fit">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Flag className="w-5 h-5 text-red-500" />
+                <h2 className="text-lg font-bold text-foreground">
                   High Priority
                 </h2>
                 <span className="text-sm text-muted-foreground">{filteredTasks.high.length} tasks</span>
               </div>
 
-              <div className="space-y-3">
-                {filteredTasks.high.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onComplete={handleCompleteTask}
-                    onEdit={handleEditTask}
-                    onDelete={handleDeleteTask}
-                    onView={handleViewTask}
-                  />
-                ))}
-                {filteredTasks.high.length === 0 && (
+              <div className="space-y-2 min-h-[300px]">
+                {filteredTasks.high.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No high priority tasks
                   </div>
+                ) : (
+                  <>
+                    {(expandedSections.high ? filteredTasks.high : filteredTasks.high.slice(0, 4)).map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onView={handleViewTask}
+                      />
+                    ))}
+                    {filteredTasks.high.length > 4 && (
+                      <button
+                        onClick={() => setExpandedSections(prev => ({ ...prev, high: !prev.high }))}
+                        className="w-full py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      >
+                        {expandedSections.high ? 'View Less' : `View More (${filteredTasks.high.length - 4} more)`}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -299,30 +311,37 @@ export default function TasksPage() {
 
           {/* Medium Priority */}
           {(selectedFilter === "all" || selectedFilter === "medium") && (
-            <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="bg-card rounded-2xl p-6 border border-border h-fit">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Flag className="w-5 h-5 text-yellow-500" />
+                <h2 className="text-lg font-bold text-foreground">
                   Medium Priority
                 </h2>
                 <span className="text-sm text-muted-foreground">{filteredTasks.medium.length} tasks</span>
               </div>
 
-              <div className="space-y-3">
-                {filteredTasks.medium.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onComplete={handleCompleteTask}
-                    onEdit={handleEditTask}
-                    onDelete={handleDeleteTask}
-                    onView={handleViewTask}
-                  />
-                ))}
-                {filteredTasks.medium.length === 0 && (
+              <div className="space-y-2 min-h-[300px]">
+                {filteredTasks.medium.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No medium priority tasks
                   </div>
+                ) : (
+                  <>
+                    {(expandedSections.medium ? filteredTasks.medium : filteredTasks.medium.slice(0, 4)).map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onView={handleViewTask}
+                      />
+                    ))}
+                    {filteredTasks.medium.length > 4 && (
+                      <button
+                        onClick={() => setExpandedSections(prev => ({ ...prev, medium: !prev.medium }))}
+                        className="w-full py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      >
+                        {expandedSections.medium ? 'View Less' : `View More (${filteredTasks.medium.length - 4} more)`}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -330,30 +349,37 @@ export default function TasksPage() {
 
           {/* Low Priority */}
           {(selectedFilter === "all" || selectedFilter === "low") && (
-            <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="bg-card rounded-2xl p-6 border border-border h-fit">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Flag className="w-5 h-5 text-green-500" />
+                <h2 className="text-lg font-bold text-foreground">
                   Low Priority
                 </h2>
                 <span className="text-sm text-muted-foreground">{filteredTasks.low.length} tasks</span>
               </div>
 
-              <div className="space-y-3">
-                {filteredTasks.low.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onComplete={handleCompleteTask}
-                    onEdit={handleEditTask}
-                    onDelete={handleDeleteTask}
-                    onView={handleViewTask}
-                  />
-                ))}
-                {filteredTasks.low.length === 0 && (
+              <div className="space-y-2 min-h-[300px]">
+                {filteredTasks.low.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No low priority tasks
                   </div>
+                ) : (
+                  <>
+                    {(expandedSections.low ? filteredTasks.low : filteredTasks.low.slice(0, 4)).map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onView={handleViewTask}
+                      />
+                    ))}
+                    {filteredTasks.low.length > 4 && (
+                      <button
+                        onClick={() => setExpandedSections(prev => ({ ...prev, low: !prev.low }))}
+                        className="w-full py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      >
+                        {expandedSections.low ? 'View Less' : `View More (${filteredTasks.low.length - 4} more)`}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -361,31 +387,28 @@ export default function TasksPage() {
 
       {/* Completed Tasks */}
       {filteredTasks.completed.length > 0 && (
-        <div className="bg-card rounded-2xl p-6 border border-border">
+        <div className="bg-card rounded-2xl p-6 border border-border col-span-full">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-foreground">Completed Today</h2>
             <span className="text-sm text-primary font-medium">{filteredTasks.completed.length} tasks</span>
           </div>
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {filteredTasks.completed.map((task) => (
-              <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-primary/10">
-                <div className="w-5 h-5 rounded bg-primary flex items-center justify-center flex-shrink-0">
-                  <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div key={task.id} className="flex items-center gap-3 p-2 rounded-lg bg-primary/10">
+                <div className="w-4 h-4 rounded bg-primary flex items-center justify-center flex-shrink-0">
+                  <svg className="w-2.5 h-2.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-foreground line-through opacity-70">{task.title}</p>
-                  {task.description && (
-                    <p className="text-xs text-muted-foreground line-through opacity-50">{task.description}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground line-through opacity-70 truncate">{task.title}</p>
+                  {task.completed_at && (
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(task.completed_at).toLocaleTimeString()}
+                    </span>
                   )}
                 </div>
-                {task.completed_at && (
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(task.completed_at).toLocaleTimeString()}
-                  </span>
-                )}
               </div>
             ))}
           </div>
@@ -504,6 +527,17 @@ export default function TasksPage() {
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3 pt-4 border-t border-border">
+                  {viewingTask.status !== 'done' && (
+                    <button
+                      onClick={() => {
+                        handleCompleteTask(viewingTask.id);
+                        setViewingTask(null);
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Complete Task
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setViewingTask(null);
@@ -514,8 +548,19 @@ export default function TasksPage() {
                     Edit Task
                   </button>
                   <button
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this task?')) {
+                        handleDeleteTask(viewingTask.id);
+                        setViewingTask(null);
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Delete Task
+                  </button>
+                  <button
                     onClick={() => setViewingTask(null)}
-                    className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                    className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors ml-auto"
                   >
                     Close
                   </button>

@@ -6,13 +6,28 @@ import { vi } from 'vitest';
 // Set up global test environment
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-key-for-testing-only';
+process.env.REFRESH_SECRET = 'test-refresh-secret-key-for-testing';
+process.env.ENCRYPTION_KEY = 'test-encryption-key-32-characters';
 process.env.OPENAI_API_KEY = 'test-openai-key';
 process.env.DEEPGRAM_API_KEY = 'test-deepgram-key';
 process.env.ONESIGNAL_API_KEY = 'test-onesignal-key';
 process.env.STRIPE_SECRET_KEY = 'sk_test_test-stripe-secret-key';
+process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_webhook_secret';
+process.env.RESEND_API_KEY = 're_test_resend_key';
+process.env.FROM_EMAIL = 'test@timecraft.app';
+process.env.APP_BASE_URL = 'http://localhost:3000';
 
 // Mock global fetch if not already mocked in individual tests
 global.fetch = vi.fn();
+
+// Mock bcrypt for password testing
+vi.mock('bcryptjs', () => ({
+  hash: vi.fn(async (password: string, rounds: number) => `$2b$${rounds}$mocked.hash.${password}`),
+  compare: vi.fn(async (password: string, hash: string) => {
+    // For testing, accept 'correct-password' with any mock hash
+    return password === 'correct-password' && hash.includes('mocked.hash');
+  })
+}));
 
 // Mock console methods to reduce noise in test output
 global.console = {

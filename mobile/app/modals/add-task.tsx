@@ -7,13 +7,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  XMarkIcon,
+  ArrowLeftIcon,
   CalendarIcon,
   ClockIcon,
-  FlagIcon,
-  DocumentTextIcon
+  FlagIcon
 } from 'react-native-heroicons/outline';
-import { apiClient } from '../../lib/api-client';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { apiClient } from '../../lib/api';
+import { useAppTheme } from '../../constants/dynamicTheme';
 
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -26,8 +27,12 @@ const taskSchema = z.object({
 type TaskForm = z.infer<typeof taskSchema>;
 
 export default function AddTaskModal() {
+  const theme = useAppTheme();
   const [selectedPriority, setSelectedPriority] = useState(2);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showCustomDuration, setShowCustomDuration] = useState(false);
+  const [customDuration, setCustomDuration] = useState<string>('');
+  const [durationUnit, setDurationUnit] = useState<'m' | 'h'>('m');
   const queryClient = useQueryClient();
 
   const {
@@ -73,10 +78,10 @@ export default function AddTaskModal() {
   };
 
   const priorityOptions = [
-    { value: 1, label: 'Low', color: 'bg-green-100 text-green-700 border-green-200', emoji: '🟢' },
-    { value: 2, label: 'Medium', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', emoji: '🟡' },
-    { value: 3, label: 'High', color: 'bg-orange-100 text-orange-700 border-orange-200', emoji: '🟠' },
-    { value: 4, label: 'Urgent', color: 'bg-red-100 text-red-700 border-red-200', emoji: '🔴' },
+    { value: 1, label: 'Low', bg: '#E6F4EA', fg: '#16A34A', border: '#C8E6D4' },
+    { value: 2, label: 'Medium', bg: '#FEF3C7', fg: '#D97706', border: '#FDE68A' },
+    { value: 3, label: 'High', bg: '#FFEDD5', fg: '#EA580C', border: '#FED7AA' },
+    { value: 4, label: 'Urgent', bg: '#FEE2E2', fg: '#DC2626', border: '#FCA5A5' },
   ];
 
   const durationOptions = [15, 30, 45, 60, 90, 120];
@@ -96,40 +101,38 @@ export default function AddTaskModal() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.colors.card }}>
       {/* Header */}
-      <View className="px-6 py-4 bg-white border-b border-gray-100 flex-row items-center justify-between">
-        <TouchableOpacity onPress={() => router.back()}>
-          <XMarkIcon size={24} color="#6B7280" />
-        </TouchableOpacity>
-        <Text className="text-lg font-semibold text-gray-900">Add Task</Text>
+      <View
+        className="px-6 py-4 flex-row items-center justify-between"
+        style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
+      >
         <TouchableOpacity
-          onPress={handleSubmit(onSubmit)}
-          disabled={createTaskMutation.isPending}
-          className={`px-4 py-2 rounded-xl ${
-            createTaskMutation.isPending ? 'bg-blue-400' : 'bg-blue-600'
-          }`}
+          onPress={() => router.back()}
+          className="p-2 rounded-2xl"
+          style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}
         >
-          <Text className="text-white font-semibold">
-            {createTaskMutation.isPending ? 'Creating...' : 'Create'}
-          </Text>
+          <ArrowLeftIcon size={20} color={theme.colors.muted} />
         </TouchableOpacity>
+
+        <Text className="text-lg font-semibold" style={{ color: theme.colors.foreground }}>Add Task</Text>
+
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView className="flex-1 px-6 py-6">
         {/* Task Title */}
         <View className="mb-6">
-          <Text className="text-lg font-semibold text-gray-900 mb-3">Task Title</Text>
+          <Text className="text-lg font-semibold mb-3" style={{ color: theme.colors.foreground }}>Task Title</Text>
           <Controller
             control={control}
             name="title"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className={`bg-white border rounded-2xl px-4 py-4 text-base ${
-                  errors.title ? 'border-red-500' : 'border-gray-200'
-                }`}
+                className={`border px-6 py-3 text-base`}
+                style={{ backgroundColor: theme.colors.card, color: theme.colors.foreground, borderColor: errors.title ? '#ef4444' : theme.colors.border, borderRadius: theme.radii.xl as any }}
                 placeholder="What needs to be done?"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.colors.mutedAlt}
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
@@ -138,7 +141,7 @@ export default function AddTaskModal() {
             )}
           />
           {errors.title && (
-            <Text className="text-red-500 text-sm mt-2">
+            <Text className="text-sm mt-2" style={{ color: '#ef4444' }}>
               {errors.title.message}
             </Text>
           )}
@@ -146,20 +149,21 @@ export default function AddTaskModal() {
 
         {/* Description */}
         <View className="mb-6">
-          <Text className="text-lg font-semibold text-gray-900 mb-3">Description</Text>
+          <Text className="text-lg font-semibold mb-3" style={{ color: theme.colors.foreground }}>Description</Text>
           <Controller
             control={control}
             name="description"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className="bg-white border border-gray-200 rounded-2xl px-4 py-4 text-base"
+                className="border px-6 py-3 text-base"
+                style={{ backgroundColor: theme.colors.card, color: theme.colors.foreground, borderColor: theme.colors.border, borderRadius: theme.radii.xl as any, minHeight: 120 }}
                 placeholder="Add more details (optional)"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.colors.mutedAlt}
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
                 multiline
-                numberOfLines={3}
+                numberOfLines={5}
                 textAlignVertical="top"
               />
             )}
@@ -168,7 +172,7 @@ export default function AddTaskModal() {
 
         {/* Priority */}
         <View className="mb-6">
-          <Text className="text-lg font-semibold text-gray-900 mb-3">Priority</Text>
+          <Text className="text-lg font-semibold mb-3" style={{ color: theme.colors.foreground }}>Priority</Text>
           <View className="flex-row flex-wrap -mx-1">
             {priorityOptions.map((option) => (
               <TouchableOpacity
@@ -179,24 +183,9 @@ export default function AddTaskModal() {
                   setValue('priority', option.value);
                 }}
               >
-                <View
-                  className={`p-4 rounded-2xl border-2 ${
-                    selectedPriority === option.value
-                      ? option.color
-                      : 'bg-white border-gray-200'
-                  }`}
-                >
-                  <View className="flex-row items-center justify-center">
-                    <Text className="text-2xl mr-2">{option.emoji}</Text>
-                    <Text
-                      className={`font-semibold ${
-                        selectedPriority === option.value
-                          ? option.color.split(' ')[1]
-                          : 'text-gray-600'
-                      }`}
-                    >
-                      {option.label}
-                    </Text>
+                <View className="rounded-2xl" style={{ borderRadius: theme.radii.xl }}>
+                  <View className="rounded-2xl items-center justify-center px-6 py-3" style={{ backgroundColor: option.bg, borderWidth: 1, borderColor: option.border, borderRadius: theme.radii.xl }}>
+                    <Text className="font-semibold" style={{ color: option.fg }}>{option.label}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -206,39 +195,39 @@ export default function AddTaskModal() {
 
         {/* Due Date */}
         <View className="mb-6">
-          <Text className="text-lg font-semibold text-gray-900 mb-3">Due Date</Text>
-          <View className="flex-row flex-wrap -mx-1">
+          <Text className="text-lg font-semibold mb-3" style={{ color: theme.colors.foreground }}>Due Date</Text>
+          <View>
             <TouchableOpacity
-              className="w-1/3 px-1 mb-2"
-              onPress={() => setDueDate(0)}
+              className="rounded-2xl"
+              onPress={() => setShowDatePicker(true)}
             >
-              <View className="bg-white border border-gray-200 rounded-2xl p-3">
-                <Text className="text-center font-medium text-gray-900">Today</Text>
+              <View className="border px-6 py-3 rounded-2xl" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}>
+                <View className="flex-row items-center justify-center">
+                  <CalendarIcon size={20} color={theme.colors.muted} />
+                  <Text className="font-medium ml-2" style={{ color: theme.colors.foreground }}>
+                    {watch('dueDate') ? `Change date (${formatDate(new Date(watch('dueDate')!))})` : 'Pick a date'}
+                  </Text>
+                </View>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity
-              className="w-1/3 px-1 mb-2"
-              onPress={() => setDueDate(1)}
-            >
-              <View className="bg-white border border-gray-200 rounded-2xl p-3">
-                <Text className="text-center font-medium text-gray-900">Tomorrow</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="w-1/3 px-1 mb-2"
-              onPress={() => setDueDate(7)}
-            >
-              <View className="bg-white border border-gray-200 rounded-2xl p-3">
-                <Text className="text-center font-medium text-gray-900">Next Week</Text>
-              </View>
-            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={watch('dueDate') ? new Date(watch('dueDate')!) : new Date()}
+                mode="date"
+                display="default"
+                onChange={(_, date) => {
+                  setShowDatePicker(false);
+                  if (date) setValue('dueDate', date.toISOString());
+                }}
+              />
+            )}
           </View>
           
           {watch('dueDate') && (
-            <View className="mt-3 bg-blue-50 border border-blue-200 rounded-2xl p-3">
+            <View className="mt-3 rounded-2xl p-3" style={{ backgroundColor: theme.colors.infoBg, borderColor: theme.colors.infoBg, borderWidth: 1 }}>
               <View className="flex-row items-center">
-                <CalendarIcon size={20} color="#3B82F6" />
-                <Text className="text-blue-700 font-medium ml-2">
+                <CalendarIcon size={20} color={theme.colors.info} />
+                <Text className="font-medium ml-2" style={{ color: theme.colors.info }}>
                   Due: {formatDate(new Date(watch('dueDate')!))}
                 </Text>
               </View>
@@ -248,7 +237,7 @@ export default function AddTaskModal() {
 
         {/* Estimated Duration */}
         <View className="mb-6">
-          <Text className="text-lg font-semibold text-gray-900 mb-3">Estimated Duration</Text>
+          <Text className="text-lg font-semibold mb-3" style={{ color: theme.colors.foreground }}>Estimated Duration</Text>
           <View className="flex-row flex-wrap -mx-1">
             {durationOptions.map((duration) => (
               <TouchableOpacity
@@ -257,31 +246,71 @@ export default function AddTaskModal() {
                 onPress={() => setValue('estimatedDuration', duration)}
               >
                 <View
-                  className={`p-3 rounded-2xl border-2 ${
-                    watch('estimatedDuration') === duration
-                      ? 'bg-purple-100 border-purple-200'
-                      : 'bg-white border-gray-200'
-                  }`}
+                  className={`p-3 rounded-2xl border-2`}
+                  style={{ borderColor: watch('estimatedDuration') === duration ? theme.colors.primary : theme.colors.border, backgroundColor: watch('estimatedDuration') === duration ? theme.colors.primaryLight : theme.colors.surface, borderRadius: theme.radii.xl, padding: theme.spacing.lg }}
                 >
                   <Text
-                    className={`text-center font-medium ${
-                      watch('estimatedDuration') === duration
-                        ? 'text-purple-700'
-                        : 'text-gray-900'
-                    }`}
+                    className={`text-center font-medium`}
+                    style={{ color: watch('estimatedDuration') === duration ? theme.colors.primary : theme.colors.foreground }}
                   >
                     {duration}m
                   </Text>
                 </View>
               </TouchableOpacity>
             ))}
+            <TouchableOpacity
+              className="w-1/3 px-1 mb-2"
+              onPress={() => setShowCustomDuration((s) => !s)}
+            >
+              <View className={`p-3 rounded-2xl border-2`} style={{ borderColor: theme.colors.border, backgroundColor: theme.colors.surface, borderRadius: theme.radii.xl, padding: theme.spacing.lg }}>
+                <Text className="text-center font-medium" style={{ color: theme.colors.foreground }}>
+                  Custom
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
+          {showCustomDuration && (
+            <View className="mt-3 flex-row items-center">
+              <TextInput
+                className="border px-4 py-3 mr-3"
+                style={{ backgroundColor: theme.colors.card, color: theme.colors.foreground, borderColor: theme.colors.border, borderRadius: theme.radii.xl, minWidth: 100 }}
+                placeholder="Amount"
+                placeholderTextColor={theme.colors.mutedAlt}
+                keyboardType="numeric"
+                value={customDuration}
+                onChangeText={setCustomDuration}
+              />
+              <View className="flex-row">
+                <TouchableOpacity onPress={() => setDurationUnit('m')} className="px-4 py-3 mr-2 rounded-2xl" style={{ backgroundColor: durationUnit === 'm' ? theme.colors.primaryLight : theme.colors.surface, borderWidth: 1, borderColor: durationUnit === 'm' ? theme.colors.primary : theme.colors.border, borderRadius: theme.radii.xl }}>
+                  <Text style={{ color: durationUnit === 'm' ? theme.colors.primary : theme.colors.foreground }}>min</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setDurationUnit('h')} className="px-4 py-3 rounded-2xl" style={{ backgroundColor: durationUnit === 'h' ? theme.colors.primaryLight : theme.colors.surface, borderWidth: 1, borderColor: durationUnit === 'h' ? theme.colors.primary : theme.colors.border, borderRadius: theme.radii.xl }}>
+                  <Text style={{ color: durationUnit === 'h' ? theme.colors.primary : theme.colors.foreground }}>hr</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                className="ml-3 px-4 py-3 rounded-2xl"
+                style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radii.xl }}
+                onPress={() => {
+                  const amt = parseFloat(customDuration);
+                  if (!isNaN(amt) && amt > 0) {
+                    const minutes = durationUnit === 'h' ? Math.round(amt * 60) : Math.round(amt);
+                    setValue('estimatedDuration', minutes);
+                    setShowCustomDuration(false);
+                    setCustomDuration('');
+                  }
+                }}
+              >
+                <Text className="text-white font-semibold">Set</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           
           {watch('estimatedDuration') && (
-            <View className="mt-3 bg-purple-50 border border-purple-200 rounded-2xl p-3">
+            <View className="mt-3 rounded-2xl p-3" style={{ backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primaryLight, borderWidth: 1 }}>
               <View className="flex-row items-center">
-                <ClockIcon size={20} color="#8B5CF6" />
-                <Text className="text-purple-700 font-medium ml-2">
+                <ClockIcon size={20} color={theme.colors.primary} />
+                <Text className="font-medium ml-2" style={{ color: theme.colors.primary }}>
                   Estimated: {watch('estimatedDuration')} minutes
                 </Text>
               </View>
@@ -289,38 +318,18 @@ export default function AddTaskModal() {
           )}
         </View>
 
-        {/* Quick Templates */}
-        <View className="mb-6">
-          <Text className="text-lg font-semibold text-gray-900 mb-3">Quick Templates</Text>
-          <View className="space-y-2">
-            {[
-              { title: 'Review emails', priority: 2, duration: 15 },
-              { title: 'Team meeting preparation', priority: 3, duration: 30 },
-              { title: 'Weekly report', priority: 3, duration: 60 },
-              { title: 'Exercise session', priority: 2, duration: 45 },
-            ].map((template, index) => (
-              <TouchableOpacity
-                key={index}
-                className="bg-white border border-gray-200 rounded-2xl p-4"
-                onPress={() => {
-                  setValue('title', template.title);
-                  setValue('priority', template.priority);
-                  setValue('estimatedDuration', template.duration);
-                  setSelectedPriority(template.priority);
-                }}
-              >
-                <View className="flex-row items-center justify-between">
-                  <Text className="font-medium text-gray-900">{template.title}</Text>
-                  <View className="flex-row items-center">
-                    <Text className="text-gray-500 text-sm mr-2">{template.duration}m</Text>
-                    <Text className="text-lg">
-                      {priorityOptions.find(p => p.value === template.priority)?.emoji}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+        {/* Bottom Create Button */}
+        <View className="mt-4">
+          <TouchableOpacity
+            onPress={handleSubmit(onSubmit)}
+            disabled={createTaskMutation.isPending}
+            className="w-full items-center justify-center rounded-2xl px-6 py-4"
+            style={{ backgroundColor: theme.colors.primary, opacity: createTaskMutation.isPending ? 0.7 : 1, borderRadius: theme.radii.xl }}
+          >
+            <Text className="text-white font-semibold">
+              {createTaskMutation.isPending ? 'Creating...' : 'Create Task'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Bottom Padding */}

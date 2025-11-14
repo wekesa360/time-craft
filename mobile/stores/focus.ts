@@ -4,6 +4,9 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as Haptics from 'expo-haptics';
+import { Platform, Linking, Alert } from 'react-native';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { apiClient, notify } from '../lib/api';
 import type { FocusSession } from '../types';
 
@@ -11,7 +14,9 @@ interface FocusStore {
   // State
   currentSession: FocusSession | null;
   sessions: FocusSession[];
-  isLoading: boolean;
+  isLoading: boolean; // compatibility
+  isFetching: boolean;
+  isMutating: boolean;
   timeRemaining: number;
   isTimerActive: boolean;
   isPaused: boolean;
@@ -63,6 +68,8 @@ export const useFocusStore = create<FocusStore>()(
       currentSession: null,
       sessions: [],
       isLoading: false,
+      isFetching: false,
+      isMutating: false,
       timeRemaining: 0,
       isTimerActive: false,
       isPaused: false,
@@ -76,7 +83,7 @@ export const useFocusStore = create<FocusStore>()(
 
       // Actions
       setLoading: (isLoading) => {
-        set({ isLoading });
+        set({ isLoading, isMutating: isLoading });
       },
 
       setTimeRemaining: (timeRemaining) => {
@@ -96,7 +103,7 @@ export const useFocusStore = create<FocusStore>()(
 
       startFocusSession: async (data) => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isMutating: true });
           
           // Cancel any existing session
           const current = get().currentSession;
@@ -115,7 +122,16 @@ export const useFocusStore = create<FocusStore>()(
             isTimerActive: true,
             isPaused: false,
             isLoading: false,
+            isMutating: false,
           });
+
+          // Keep device awake and lock orientation during active session
+          try {
+            await activateKeepAwakeAsync();
+          } catch {}
+          try {
+            await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+          } catch {}
 
           // Schedule notification for session completion
           await Notifications.scheduleNotificationAsync({
@@ -134,8 +150,34 @@ export const useFocusStore = create<FocusStore>()(
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           
           notify.success(`${data.type} session started!`);
+
+          // Optional: Prompt user to enable OS Do Not Disturb for fewer interruptions (cannot be auto-toggled)
+          if (Platform.OS === 'android') {
+            Alert.alert(
+              'Reduce interruptions',
+              'For the best focus, enable Do Not Disturb in system settings while the session runs.',
+              [
+                { text: 'Later', style: 'cancel' },
+                {
+                  text: 'Open Settings',
+                  onPress: () => {
+                    // Attempt to open Android DND settings; may vary by device
+                    const intents = [
+                      'android.settings.ZEN_MODE_SETTINGS',
+                      'android.settings.NOTIFICATION_POLICY_ACCESS_SETTINGS',
+                    ];
+                    // Try the first available intent via Linking
+                    for (const intent of intents) {
+                      const url = `intent:#Intent;action=${intent};end`;
+                      Linking.openURL(url).catch(() => {});
+                    }
+                  },
+                },
+              ]
+            );
+          }
         } catch (error) {
-          set({ isLoading: false });
+          set({ isLoading: false, isMutating: false });
           console.error('Failed to start focus session:', error);
           notify.error('Failed to start focus session');
           throw error;
@@ -147,7 +189,7 @@ export const useFocusStore = create<FocusStore>()(
           const currentSession = get().currentSession;
           if (!currentSession) return;
 
-          set({ isLoading: true });
+          set({ isLoading: true, isMutating: true });
           
           // Complete session via API
           const completedSession = await apiClient.completeFocusSession(
@@ -164,17 +206,21 @@ export const useFocusStore = create<FocusStore>()(
             isTimerActive: false,
             isPaused: false,
             isLoading: false,
+            isMutating: false,
           });
 
           // Cancel any pending notifications
           await Notifications.cancelAllScheduledNotificationsAsync();
+          // Release keep-awake and unlock orientation
+          try { deactivateKeepAwake(); } catch {}
+          try { await ScreenOrientation.unlockAsync(); } catch {}
           
           // Haptic feedback
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           
           notify.success('Focus session completed!');
         } catch (error) {
-          set({ isLoading: false });
+          set({ isLoading: false, isMutating: false });
           console.error('Failed to complete focus session:', error);
           notify.error('Failed to complete session');
           throw error;
@@ -192,6 +238,8 @@ export const useFocusStore = create<FocusStore>()(
 
         // Cancel scheduled notifications
         Notifications.cancelAllScheduledNotificationsAsync();
+        // Allow device to sleep while paused
+        try { deactivateKeepAwake(); } catch {}
         
         // Haptic feedback
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -211,7 +259,7 @@ export const useFocusStore = create<FocusStore>()(
           await Notifications.scheduleNotificationAsync({
             content: {
               title: 'Focus Session Complete! 🎉',
-              body: `Your ${currentSession.type} session has finished. Great job!`,
+              body: `Your ${currentSession.sessionType} session has finished. Great job!`,
               sound: 'default',
             },
             trigger: {
@@ -220,6 +268,9 @@ export const useFocusStore = create<FocusStore>()(
             } as Notifications.TimeIntervalTriggerInput,
           });
         }
+
+        // Re-apply keep-awake
+        try { await activateKeepAwakeAsync(); } catch {}
 
         // Haptic feedback
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -240,6 +291,9 @@ export const useFocusStore = create<FocusStore>()(
 
           // Cancel notifications
           await Notifications.cancelAllScheduledNotificationsAsync();
+          // Release keep-awake and unlock orientation
+          try { deactivateKeepAwake(); } catch {}
+          try { await ScreenOrientation.unlockAsync(); } catch {}
           
           // Haptic feedback
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -253,19 +307,22 @@ export const useFocusStore = create<FocusStore>()(
             isTimerActive: false,
             isPaused: false,
           });
+          try { deactivateKeepAwake(); } catch {}
+          try { await ScreenOrientation.unlockAsync(); } catch {}
         }
       },
 
       fetchSessions: async () => {
         try {
-          set({ isLoading: true });
+          set({ isLoading: true, isFetching: true });
           const sessions = await apiClient.getFocusSessions();
           set({ 
             sessions,
-            isLoading: false 
+            isLoading: false,
+            isFetching: false,
           });
         } catch (error) {
-          set({ isLoading: false });
+          set({ isLoading: false, isFetching: false });
           console.error('Failed to fetch focus sessions:', error);
           notify.error('Failed to load focus sessions');
         }

@@ -24,6 +24,8 @@ import type {
   Notification,
   NotificationPreferences,
   PaginatedResponse,
+  TasksResponse,
+  TaskResponse,
   AuthTokens,
   EisenhowerMatrix,
   MatrixStats,
@@ -1129,54 +1131,102 @@ class ApiClient {
     search?: string;
     startDate?: number;
     endDate?: number;
-    page?: number;
     limit?: number;
+    offset?: number;
     quadrant?: string;
     urgency?: number;
     importance?: number;
     isDelegated?: boolean;
-  }): Promise<PaginatedResponse<Task[]>> {
+  }): Promise<TasksResponse> {
     // Clean parameters - remove undefined, null, empty strings, and invalid numbers
-    const cleanParams = Object.fromEntries(
-      Object.entries(params || {}).filter(([key, value]) => {
-        if (value === undefined || value === null || value === '') return false;
-        
-        // Validate status enum
-        if (key === 'status' && !['pending', 'done', 'archived', 'completed'].includes(value as string)) return false;
-        
-        // Validate quadrant enum
-        if (key === 'quadrant' && !['do', 'decide', 'delegate', 'delete'].includes(value as string)) return false;
-        
-        // Validate numeric ranges
-        if (key === 'priority' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 4)) return false;
-        if (key === 'urgency' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 4)) return false;
-        if (key === 'importance' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 4)) return false;
-        if (key === 'limit' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 100)) return false;
-        if (key === 'page' && (isNaN(Number(value)) || Number(value) < 0)) return false;
-        
-        // Validate boolean
-        if (key === 'isDelegated' && typeof value !== 'boolean') return false;
-        
-        return true;
-      })
-    );
+    // Map frontend parameter names to backend API parameter names
+    const cleanParams: Record<string, any> = {};
     
-    const response = await this.client.get<PaginatedResponse<Task[]>>('/api/tasks', { params: cleanParams });
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return;
+      
+      // Map frontend parameter names to backend API names
+      const paramMap: Record<string, string> = {
+        startDate: 'startDate',
+        endDate: 'endDate',
+        contextType: 'contextType',
+      };
+      
+      const backendKey = paramMap[key] || key;
+      
+      // Validate status enum
+      if (key === 'status' && !['pending', 'done', 'archived'].includes(value as string)) return;
+      
+      // Validate quadrant enum
+      if (key === 'quadrant' && !['do', 'decide', 'delegate', 'delete'].includes(value as string)) return;
+      
+      // Validate numeric ranges
+      if (key === 'priority' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 4)) return;
+      if (key === 'urgency' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 4)) return;
+      if (key === 'importance' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 4)) return;
+      if (key === 'limit' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 100)) return;
+      if (key === 'offset' && (isNaN(Number(value)) || Number(value) < 0)) return;
+      
+      // Validate boolean
+      if (key === 'isDelegated' && typeof value !== 'boolean') return;
+      
+      cleanParams[backendKey] = value;
+    });
+    
+    const response = await this.client.get<TasksResponse>('/api/tasks', { params: cleanParams });
     return response.data;
   }
 
   async getTask(id: string): Promise<Task> {
-    const response = await this.client.get<{ task: Task }>(`/api/tasks/${id}`);
+    const response = await this.client.get<TaskResponse>(`/api/tasks/${id}`);
     return response.data.task;
   }
 
   async createTask(data: TaskForm): Promise<Task> {
-    const response = await this.client.post<{ task: Task }>('/api/tasks', data);
+    // Transform frontend TaskForm to backend API format
+    const backendData = {
+      title: data.title,
+      description: data.description,
+      priority: data.priority,
+      dueDate: data.dueDate,
+      estimatedDuration: data.estimatedDuration,
+      energyLevelRequired: data.energyLevelRequired,
+      contextType: data.contextType,
+      // Include Eisenhower Matrix fields if provided
+      ...(data.urgency !== undefined && { urgency: data.urgency }),
+      ...(data.importance !== undefined && { importance: data.importance }),
+      ...(data.eisenhower_quadrant && { quadrant: data.eisenhower_quadrant }),
+      ...(data.matrixNotes && { matrixNotes: data.matrixNotes }),
+      ...(data.isDelegated !== undefined && { isDelegated: data.isDelegated }),
+      ...(data.delegatedTo && { delegatedTo: data.delegatedTo }),
+      ...(data.delegationNotes && { delegationNotes: data.delegationNotes }),
+    };
+    
+    const response = await this.client.post<TaskResponse>('/api/tasks', backendData);
     return response.data.task;
   }
 
   async updateTask(id: string, data: Partial<TaskForm>): Promise<Task> {
-    const response = await this.client.put<{ task: Task }>(`/api/tasks/${id}`, data);
+    // Transform frontend TaskForm to backend API format
+    const backendData: Record<string, any> = {};
+    
+    if (data.title !== undefined) backendData.title = data.title;
+    if (data.description !== undefined) backendData.description = data.description;
+    if (data.priority !== undefined) backendData.priority = data.priority;
+    if (data.status !== undefined) backendData.status = data.status;
+    if (data.dueDate !== undefined) backendData.dueDate = data.dueDate;
+    if (data.estimatedDuration !== undefined) backendData.estimatedDuration = data.estimatedDuration;
+    if (data.energyLevelRequired !== undefined) backendData.energyLevelRequired = data.energyLevelRequired;
+    if (data.contextType !== undefined) backendData.contextType = data.contextType;
+    if (data.urgency !== undefined) backendData.urgency = data.urgency;
+    if (data.importance !== undefined) backendData.importance = data.importance;
+    if (data.eisenhower_quadrant !== undefined) backendData.quadrant = data.eisenhower_quadrant;
+    if (data.matrixNotes !== undefined) backendData.matrixNotes = data.matrixNotes;
+    if (data.isDelegated !== undefined) backendData.isDelegated = data.isDelegated;
+    if (data.delegatedTo !== undefined) backendData.delegatedTo = data.delegatedTo;
+    if (data.delegationNotes !== undefined) backendData.delegationNotes = data.delegationNotes;
+    
+    const response = await this.client.put<TaskResponse>(`/api/tasks/${id}`, backendData);
     return response.data.task;
   }
 
@@ -1194,7 +1244,7 @@ class ApiClient {
     pending: number;
     overdue: number;
   }> {
-    const response = await this.client.get('/api/tasks/stats');
+    const response = await this.client.get<{ stats: { total: number; completed: number; pending: number; overdue: number } }>('/api/tasks/stats');
     return response.data.stats;
   }
 
@@ -1210,7 +1260,7 @@ class ApiClient {
   }
 
   async updateTaskMatrix(id: string, urgency: number, importance: number): Promise<Task> {
-    const response = await this.client.patch<{ task: Task }>(`/api/tasks/${id}/matrix`, {
+    const response = await this.client.patch<TaskResponse>(`/api/tasks/${id}/matrix`, {
       urgency,
       importance,
     });

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, Plus, X, Calendar, Clock, MapPin } from 'lucide-react';
+import { Plus, Calendar, Clock, MapPin } from 'lucide-react';
 import MeetingScheduler from '../components/features/calendar/MeetingScheduler';
 import CalendarView from '../components/features/calendar/CalendarView';
 import { MeetingRequests } from '../components/features/calendar/MeetingRequests';
 import { AvailabilityPicker } from '../components/features/calendar/AvailabilityPicker';
 import CalendarIntegrations from '../components/features/calendar/CalendarIntegrations';
+import EventForm from '../components/features/calendar/EventForm';
 import TabSwitcher from '../components/ui/TabSwitcher';
 import type { TabItem } from '../components/ui/TabSwitcher';
 import { useCalendarEventsQuery } from '../hooks/queries/useCalendarQueries';
@@ -113,7 +114,7 @@ export default function CalendarPage() {
                     {todayEvents.map((event, i) => (
                       <div
                         key={i}
-                        className="flex items-start gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-border hover:border-primary transition-colors cursor-pointer"
+                        className="flex items-start gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20 hover:border-primary transition-colors cursor-pointer"
                       >
                         <div className={`w-1 h-full ${getEventColor(event.eventType)} rounded-full`} />
                         <div className="flex-1 min-w-0">
@@ -150,7 +151,7 @@ export default function CalendarPage() {
                   {upcomingEvents.map((event, i) => (
                     <div
                       key={i}
-                      className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-border hover:border-primary transition-colors cursor-pointer"
+                      className="p-4 rounded-xl bg-primary/5 border border-primary/20 hover:border-primary transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <div className={`w-3 h-3 rounded-full ${getEventColor(event.eventType)}`} />
@@ -246,60 +247,11 @@ export default function CalendarPage() {
         {/* Active View Content */}
         {renderActiveView()}
 
-      {/* Add Event Modal */}
-      {showAddEvent && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-2xl p-6 border border-border max-w-md w-full">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-foreground">Add Event</h3>
-              <button 
-                onClick={() => setShowAddEvent(false)} 
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Event title..."
-                className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
-              />
-              <input
-                type="datetime-local"
-                className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
-              />
-              <input
-                type="text"
-                placeholder="Location (optional)..."
-                className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
-              />
-              <textarea
-                placeholder="Description (optional)..."
-                rows={3}
-                className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground resize-none"
-              />
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowAddEvent(false)}
-                  className="flex-1 py-2 bg-muted text-foreground rounded-xl font-medium hover:bg-muted/80 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    // TODO: Implement add event functionality
-                    setShowAddEvent(false);
-                  }}
-                  className="flex-1 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
-                >
-                  Add Event
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        {/* Add Event Sheet */}
+        <EventForm
+          isOpen={showAddEvent}
+          onClose={() => setShowAddEvent(false)}
+        />
       </div>
     </div>
   );

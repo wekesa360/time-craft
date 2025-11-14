@@ -64,9 +64,9 @@ export const StudentPricing: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-info-light dark:bg-info/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-8">
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-8">
           <div className="text-center">
-            <div className="font-semibold text-info dark:text-info-light mb-1">
+            <div className="font-semibold text-primary mb-1">
               🎓 Student? Get 50% Off!
             </div>
             <div className="text-sm text-info dark:text-info-light">
@@ -135,7 +135,7 @@ export const StudentPricing: React.FC = () => {
         <div className="bg-white dark:bg-muted rounded-xl border border-gray-200 dark:border-gray-600 p-8 relative">
           {/* Popular Badge */}
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-            <span className="bg-info text-white px-4 py-1 rounded-full text-sm font-medium">
+            <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
               Most Popular
             </span>
           </div>
@@ -189,7 +189,7 @@ export const StudentPricing: React.FC = () => {
             disabled={!isVerifiedStudent}
             className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
               isVerifiedStudent
-                ? 'bg-info hover:bg-info text-white'
+                ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
                 : 'bg-muted dark:bg-muted text-muted-foreground dark:text-muted-foreground cursor-not-allowed'
             }`}
           >

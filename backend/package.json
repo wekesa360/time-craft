@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/workers/api-gateway.ts",
   "scripts": {
-    "dev": "wrangler dev src/workers/api-gateway.ts --env local",
+    "dev": "wrangler dev src/workers/api-gateway.ts --env local --host 0.0.0.0 --port 8787",
     "deploy": "wrangler deploy --env production",
     "db:apply": "wrangler d1 migrations apply wellness_prod",
     "type-check": "tsc --noEmit",
@@ -36,6 +36,7 @@
     "@types/node": "^20.14.9",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
     "@typescript-eslint/parser": "^7.13.1",
+    "@vitest/coverage-v8": "^1.6.1",
     "eslint": "^8.57.0",
     "miniflare": "^3.20250718.1",
     "prettier": "^3.3.2",

@@ -99,8 +99,8 @@ const StudentPage: React.FC = () => {
               onClick={() => setActiveView(view.id)}
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                 activeView === view.id
-                  ? 'bg-info text-white shadow-lg'
-                  : 'bg-white dark:bg-muted text-muted-foreground dark:text-muted-foreground hover:bg-info-light dark:hover:bg-muted'
+                  ? 'bg-primary text-primary-foreground shadow-lg'
+                  : 'bg-card text-muted-foreground hover:bg-primary/5 hover:border-primary/20'
               }`}
             >
               <span className="mr-2">{view.icon}</span>

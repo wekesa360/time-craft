@@ -109,6 +109,12 @@ export const LazyAdminDashboard = createLazyComponent(
   () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.admin}</div>
 );
 
+// Demo pages
+export const LazyAppearanceDemoPage = createLazyComponent(
+  () => import('./AppearanceDemoPage'),
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading appearance demo...</div>
+);
+
 // Preload functions for route prefetching
 export const preloadRoutes = {
   dashboard: () => import('./Dashboard'),
@@ -127,4 +133,5 @@ export const preloadRoutes = {
   admin: () => import('./admin/AdminDashboard'),
   terms: () => import('./TermsOfServicePage'),
   privacy: () => import('./PrivacyPolicyPage'),
+  appearanceDemo: () => import('./AppearanceDemoPage'),
 };

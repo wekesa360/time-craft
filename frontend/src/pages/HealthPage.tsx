@@ -156,7 +156,7 @@ export default function HealthPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -176,25 +176,21 @@ export default function HealthPage() {
           {
             icon: Activity,
             label: "Log Exercise",
-            color: "bg-primary/10 text-primary",
             action: () => setActiveLogger('exercise'),
           },
           {
             icon: Heart,
             label: "Log Nutrition",
-            color: "bg-orange-100 text-orange-600",
             action: () => setActiveLogger('nutrition'),
           },
           { 
             icon: Droplets, 
             label: "Log Water", 
-            color: "bg-blue-100 text-blue-600", 
             action: () => setActiveLogger('hydration') 
           },
           { 
             icon: Smile, 
             label: "Log Mood", 
-            color: "bg-purple-100 text-purple-600", 
             action: () => setActiveLogger('mood') 
           },
         ].map((action, i) => (
@@ -203,8 +199,8 @@ export default function HealthPage() {
             onClick={action.action}
             className="flex flex-col items-center gap-2 p-4 bg-card rounded-xl border border-border hover:border-primary transition-colors"
           >
-            <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center`}>
-              <action.icon className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <action.icon className="w-6 h-6 text-primary" />
             </div>
             <span className="text-sm font-medium text-foreground">{action.label}</span>
           </button>
@@ -275,33 +271,33 @@ export default function HealthPage() {
 
                 {/* Macros - Calculate from nutrition logs */}
                 <div className="grid md:grid-cols-3 gap-4">
-                  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
+                  <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-muted-foreground">Carbs</span>
                       <span className="text-xs text-muted-foreground">{Math.round(totalMacros.carbs)} / {macroTargets.carbs}g</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-orange-400 rounded-full" style={{ width: `${macroPercentages.carbs}%` }} />
+                      <div className="h-full bg-primary rounded-full" style={{ width: `${macroPercentages.carbs}%` }} />
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
+                  <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-muted-foreground">Protein</span>
                       <span className="text-xs text-muted-foreground">{Math.round(totalMacros.protein)} / {macroTargets.protein}g</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-purple-400 rounded-full" style={{ width: `${macroPercentages.protein}%` }} />
+                      <div className="h-full bg-primary rounded-full" style={{ width: `${macroPercentages.protein}%` }} />
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
+                  <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-muted-foreground">Fats</span>
                       <span className="text-xs text-muted-foreground">{Math.round(totalMacros.fat)} / {macroTargets.fat}g</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-teal-400 rounded-full" style={{ width: `${macroPercentages.fat}%` }} />
+                      <div className="h-full bg-primary rounded-full" style={{ width: `${macroPercentages.fat}%` }} />
                     </div>
                   </div>
                 </div>
@@ -331,10 +327,10 @@ export default function HealthPage() {
                   return (
                     <div
                       key={log.id}
-                      className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border"
+                      className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/20"
                     >
-                      <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                        <Heart className="w-6 h-6 text-orange-600" />
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Heart className="w-6 h-6 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground truncate">
@@ -381,7 +377,7 @@ export default function HealthPage() {
                   return (
                     <div
                       key={log.id}
-                      className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border"
+                      className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/20"
                     >
                       <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                         <Activity className="w-6 h-6 text-primary" />
@@ -412,7 +408,7 @@ export default function HealthPage() {
           </div>
 
           {/* Weekly Progress */}
-          <div className="bg-card rounded-2xl p-6 border border-border">
+          <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-foreground">Weekly Progress</h2>
               <div className="flex items-center gap-2 text-sm text-primary">
@@ -452,7 +448,7 @@ export default function HealthPage() {
                   bg: "bg-orange-100" 
                 },
               ].map((stat, i) => (
-                <div key={i} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-border">
+                <div key={i} className="bg-primary/5 rounded-xl p-4 border border-primary/20">
                   <div className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center mb-3`}>
                     <TrendingUp className={`w-5 h-5 ${stat.color}`} />
                   </div>
@@ -491,7 +487,7 @@ export default function HealthPage() {
             ) : (
               <div className="space-y-3">
                 {logs.slice(0, 10).map((log) => (
-                  <div key={log.id} className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
+                  <div key={log.id} className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/20">
                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
                       log.type === 'exercise' ? 'bg-primary/10' :
                       log.type === 'nutrition' ? 'bg-orange-100' :
@@ -550,7 +546,7 @@ export default function HealthPage() {
             ) : (
               <div className="space-y-4">
                 {goals.map((goal) => (
-                  <div key={goal.id} className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-border">
+                  <div key={goal.id} className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-foreground">{goal.description}</h4>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${

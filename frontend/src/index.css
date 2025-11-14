@@ -3,6 +3,7 @@
 @import "./styles/language-transitions.css";
 @import "./styles/german-text-layout.css";
 @import "./styles/german-accessibility.css";
+@import "./styles/enhanced-appearance.css";
 
 /* v0-fitness-app-ui Design System - Exact Match */
 :root {
