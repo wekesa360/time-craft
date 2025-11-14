@@ -1183,48 +1183,64 @@ class ApiClient {
   }
 
   async createTask(data: TaskForm): Promise<Task> {
-    // Transform frontend TaskForm to backend API format
-    const backendData = {
+    // Transform frontend TaskForm to backend API format with coercions
+    const backendData: Record<string, any> = {
       title: data.title,
       description: data.description,
-      priority: data.priority,
-      dueDate: data.dueDate,
-      estimatedDuration: data.estimatedDuration,
-      energyLevelRequired: data.energyLevelRequired,
       contextType: data.contextType,
-      // Include Eisenhower Matrix fields if provided
-      ...(data.urgency !== undefined && { urgency: data.urgency }),
-      ...(data.importance !== undefined && { importance: data.importance }),
-      ...(data.eisenhower_quadrant && { quadrant: data.eisenhower_quadrant }),
-      ...(data.matrixNotes && { matrixNotes: data.matrixNotes }),
-      ...(data.isDelegated !== undefined && { isDelegated: data.isDelegated }),
-      ...(data.delegatedTo && { delegatedTo: data.delegatedTo }),
-      ...(data.delegationNotes && { delegationNotes: data.delegationNotes }),
     };
+
+    // Numeric coercions
+    if (data.priority !== undefined) backendData.priority = Number(data.priority);
+    if (data.estimatedDuration !== undefined) backendData.estimatedDuration = Number(data.estimatedDuration);
+    if (data.energyLevelRequired !== undefined) backendData.energyLevelRequired = Number(data.energyLevelRequired);
+    if (data.urgency !== undefined) backendData.urgency = Number(data.urgency);
+    if (data.importance !== undefined) backendData.importance = Number(data.importance);
+
+    // dueDate to epoch ms
+    if (data.dueDate !== undefined) {
+      const d: any = data.dueDate as any;
+      if (typeof d === 'number') backendData.dueDate = d;
+      else if (d instanceof Date) backendData.dueDate = d.getTime();
+      else backendData.dueDate = Date.parse(String(d));
+    }
+
+    // Optional matrix/delegation fields
+    if (data.eisenhower_quadrant) backendData.quadrant = data.eisenhower_quadrant;
+    if (data.matrixNotes) backendData.matrixNotes = data.matrixNotes;
+    if (data.isDelegated !== undefined) backendData.isDelegated = data.isDelegated;
+    if (data.delegatedTo) backendData.delegatedTo = data.delegatedTo;
+    if (data.delegationNotes) backendData.delegationNotes = data.delegationNotes;
     
     const response = await this.client.post<TaskResponse>('/api/tasks', backendData);
     return response.data.task;
   }
 
   async updateTask(id: string, data: Partial<TaskForm>): Promise<Task> {
-    // Transform frontend TaskForm to backend API format
+    // Transform frontend TaskForm to backend API format with coercions
     const backendData: Record<string, any> = {};
-    
+
     if (data.title !== undefined) backendData.title = data.title;
     if (data.description !== undefined) backendData.description = data.description;
-    if (data.priority !== undefined) backendData.priority = data.priority;
-    if (data.status !== undefined) backendData.status = data.status;
-    if (data.dueDate !== undefined) backendData.dueDate = data.dueDate;
-    if (data.estimatedDuration !== undefined) backendData.estimatedDuration = data.estimatedDuration;
-    if (data.energyLevelRequired !== undefined) backendData.energyLevelRequired = data.energyLevelRequired;
+    if (data.priority !== undefined) backendData.priority = Number(data.priority);
+    if (data.status !== undefined) backendData.status = data.status as any;
+    if (data.estimatedDuration !== undefined) backendData.estimatedDuration = Number(data.estimatedDuration);
+    if (data.energyLevelRequired !== undefined) backendData.energyLevelRequired = Number(data.energyLevelRequired);
     if (data.contextType !== undefined) backendData.contextType = data.contextType;
-    if (data.urgency !== undefined) backendData.urgency = data.urgency;
-    if (data.importance !== undefined) backendData.importance = data.importance;
+    if (data.urgency !== undefined) backendData.urgency = Number(data.urgency);
+    if (data.importance !== undefined) backendData.importance = Number(data.importance);
     if (data.eisenhower_quadrant !== undefined) backendData.quadrant = data.eisenhower_quadrant;
     if (data.matrixNotes !== undefined) backendData.matrixNotes = data.matrixNotes;
     if (data.isDelegated !== undefined) backendData.isDelegated = data.isDelegated;
     if (data.delegatedTo !== undefined) backendData.delegatedTo = data.delegatedTo;
     if (data.delegationNotes !== undefined) backendData.delegationNotes = data.delegationNotes;
+
+    if (data.dueDate !== undefined) {
+      const d: any = data.dueDate as any;
+      if (typeof d === 'number') backendData.dueDate = d;
+      else if (d instanceof Date) backendData.dueDate = d.getTime();
+      else backendData.dueDate = Date.parse(String(d));
+    }
     
     const response = await this.client.put<TaskResponse>(`/api/tasks/${id}`, backendData);
     return response.data.task;
@@ -1349,9 +1365,17 @@ class ApiClient {
     return response.data.goals;
   }
 
-  async updateHealthGoal(id: string, data: Partial<HealthGoal>): Promise<HealthGoal> {
-    const response = await this.client.put<{ goal: HealthGoal }>(`/api/health/goals/${id}`, data);
-    return response.data.goal;
+  async updateHealthGoal(id: string, data: Partial<HealthGoal> & { value?: number; notes?: string }): Promise<void> {
+    // Backend supports progress updates via /goals/:id/progress
+    const payload: { value: number; notes?: string } = {
+      value: (data as any).value ?? (data as any).current_value ?? 0,
+      notes: (data as any).notes,
+    };
+    await this.client.put(`/api/health/goals/${id}/progress`, payload);
+  }
+
+  async updateHealthGoalProgress(id: string, value: number, notes?: string): Promise<void> {
+    await this.client.put(`/api/health/goals/${id}/progress`, { value, notes });
   }
 
   async deleteHealthGoal(id: string): Promise<void> {

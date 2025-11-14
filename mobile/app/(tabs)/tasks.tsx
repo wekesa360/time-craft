@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, RefreshControl, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,6 +8,8 @@ import {
   CheckCircleIcon, 
   ClockIcon, 
   ExclamationTriangleIcon,
+  PencilSquareIcon,
+  TrashIcon,
   CalendarIcon,
   FlagIcon,
   ChevronDownIcon,
@@ -17,6 +19,7 @@ import { CheckCircleIcon as CheckCircleSolid } from 'react-native-heroicons/soli
 import { apiClient } from '../../lib/api';
 import { useAppTheme } from '../../constants/dynamicTheme';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import { showToast } from '../../lib/toast';
 
 interface Task {
   id: string;
@@ -24,11 +27,11 @@ interface Task {
   description?: string;
   priority: number;
   status: 'pending' | 'done' | 'archived';
-  dueDate?: string;
-  estimatedDuration?: number;
-  aiPriorityScore?: number;
-  createdAt: string;
-  updatedAt: string;
+  dueDate?: number | null;
+  estimatedDuration?: number | null;
+  aiPriorityScore?: number | null;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export default function TasksScreen() {
@@ -44,8 +47,21 @@ export default function TasksScreen() {
     queryKey: ['tasks'],
     queryFn: async (): Promise<Task[]> => {
       const response = await apiClient.getTasks();
-      // Backend returns { tasks: Task[], hasMore, nextCursor, total }
-      return response.tasks || response.data?.tasks || [];
+      const raw = response.tasks || response.data?.tasks || [];
+      // Normalize backend fields (snake_case, numeric timestamps) to local Task shape
+      const mapped: Task[] = raw.map((t: any) => ({
+        id: t.id,
+        title: t.title,
+        description: t.description ?? undefined,
+        priority: Number(t.priority ?? 1),
+        status: (t.status as any) ?? 'pending',
+        dueDate: t.due_date ?? t.dueDate ?? null,
+        estimatedDuration: t.estimated_duration ?? t.estimatedDuration ?? null,
+        aiPriorityScore: t.ai_priority_score ?? t.aiPriorityScore ?? null,
+        createdAt: (t.created_at ?? t.createdAt) as number,
+        updatedAt: (t.updated_at ?? t.updatedAt) as number,
+      }));
+      return mapped;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -60,8 +76,8 @@ export default function TasksScreen() {
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
     },
-    onError: (error) => {
-      Alert.alert('Error', 'Failed to update task');
+    onError: () => {
+      showToast.error('Failed to update task');
     },
   });
 
@@ -72,10 +88,10 @@ export default function TasksScreen() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
-      Alert.alert('Deleted', 'Task deleted successfully');
+      showToast.success('Task deleted successfully');
     },
     onError: () => {
-      Alert.alert('Error', 'Failed to delete task');
+      showToast.error('Failed to delete task');
     }
   });
 
@@ -83,8 +99,9 @@ export default function TasksScreen() {
     setRefreshing(true);
     try {
       await refetch();
+      showToast.success('Tasks refreshed');
     } catch (error) {
-      Alert.alert('Error', 'Failed to refresh tasks');
+      showToast.error('Failed to refresh tasks');
     } finally {
       setRefreshing(false);
     }
@@ -164,8 +181,8 @@ export default function TasksScreen() {
     }
   };
 
-  const formatDueDate = (dueDate: string) => {
-    const date = new Date(dueDate);
+  const formatDueDate = (dueDate: number) => {
+    const date = new Date(Number(dueDate));
     const now = new Date();
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -175,17 +192,17 @@ export default function TasksScreen() {
     if (diffDays === 1) return 'Tomorrow';
     if (diffDays <= 7) return `${diffDays} days`;
     
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
-  const isDueToday = (dueDate: string) => {
-    const date = new Date(dueDate);
+  const isDueToday = (dueDate: number) => {
+    const date = new Date(Number(dueDate));
     const today = new Date();
     return date.toDateString() === today.toDateString();
   };
 
-  const isOverdue = (dueDate: string) => {
-    const date = new Date(dueDate);
+  const isOverdue = (dueDate: number) => {
+    const date = new Date(Number(dueDate));
     const now = new Date();
     return date.getTime() < now.getTime();
   };
@@ -361,8 +378,7 @@ export default function TasksScreen() {
                             isDueToday(task.dueDate) ? theme.colors.warning : theme.colors.muted
                           } />
                           <Text className={`text-xs font-medium ml-1 ${
-                            isOverdue(task.dueDate) ? 'text-red-600' : 
-                            isDueToday(task.dueDate) ? '' : ''
+                            isOverdue(task.dueDate) ? 'text-red-600' : ''
                           }`}>
                             <Text style={{ color: isOverdue(task.dueDate) ? '#DC2626' : isDueToday(task.dueDate) ? theme.colors.warning : theme.colors.muted }}>
                               {formatDueDate(task.dueDate)}
@@ -407,6 +423,37 @@ export default function TasksScreen() {
                             </Text>
                           </View>
                         )}
+
+                        {/* Action buttons */}
+                        <View className="flex-row items-center mt-3" style={{ gap: 12 }}>
+                          <TouchableOpacity
+                            onPress={() => toggleTaskStatus(task)}
+                            className="px-4 py-2 rounded-full"
+                            style={{ backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }}
+                          >
+                            <Text style={{ color: theme.colors.foreground, fontWeight: '600' }}>
+                              {task.status === 'done' ? 'Undo' : 'Complete'}
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            onPress={() => router.push({ pathname: '/modals/add-task', params: { id: task.id } } as any)}
+                            className="px-4 py-2 rounded-full flex-row items-center"
+                            style={{ backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }}
+                          >
+                            <PencilSquareIcon size={16} color={theme.colors.muted} />
+                            <Text style={{ color: theme.colors.foreground, fontWeight: '600', marginLeft: 6 }}>Edit</Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            onPress={() => confirmAndDeleteTask(task)}
+                            className="px-4 py-2 rounded-full flex-row items-center"
+                            style={{ backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }}
+                          >
+                            <TrashIcon size={16} color={theme.colors.danger || '#DC2626'} />
+                            <Text style={{ color: theme.colors.danger || '#DC2626', fontWeight: '600', marginLeft: 6 }}>Delete</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     )}
                   </View>

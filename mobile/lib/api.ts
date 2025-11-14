@@ -400,16 +400,56 @@ class ApiClient {
   async createTask(task: {
     title: string;
     description?: string;
-    priority: number;
-    dueDate?: string;
-    estimatedDuration?: number;
+    priority: number | string;
+    dueDate?: string | number | Date;
+    estimatedDuration?: number | string;
+    energyLevelRequired?: number | string;
+    contextType?: string;
+    urgency?: number | string;
+    importance?: number | string;
+    matrixNotes?: string;
+    isDelegated?: boolean;
+    delegatedTo?: string;
+    delegationNotes?: string;
   }) {
-    const response = await this.post('/api/tasks', task);
+    const payload: any = { ...task };
+    if (payload.priority !== undefined) payload.priority = Number(payload.priority);
+    if (payload.estimatedDuration !== undefined) payload.estimatedDuration = Number(payload.estimatedDuration);
+    if (payload.energyLevelRequired !== undefined) payload.energyLevelRequired = Number(payload.energyLevelRequired);
+    if (payload.urgency !== undefined) payload.urgency = Number(payload.urgency);
+    if (payload.importance !== undefined) payload.importance = Number(payload.importance);
+    if (payload.dueDate !== undefined) {
+      if (typeof payload.dueDate === 'number') {
+        // keep as-is
+      } else if (payload.dueDate instanceof Date) {
+        payload.dueDate = payload.dueDate.getTime();
+      } else {
+        const ts = Date.parse(payload.dueDate);
+        if (!Number.isNaN(ts)) payload.dueDate = ts;
+      }
+    }
+    const response = await this.post('/api/tasks', payload);
     return response.data;
   }
 
   async updateTask(taskId: string, updates: any) {
-    const response = await this.put(`/api/tasks/${taskId}`, updates);
+    const payload: any = { ...updates };
+    if (payload.priority !== undefined) payload.priority = Number(payload.priority);
+    if (payload.estimatedDuration !== undefined) payload.estimatedDuration = Number(payload.estimatedDuration);
+    if (payload.energyLevelRequired !== undefined) payload.energyLevelRequired = Number(payload.energyLevelRequired);
+    if (payload.urgency !== undefined) payload.urgency = Number(payload.urgency);
+    if (payload.importance !== undefined) payload.importance = Number(payload.importance);
+    if (payload.dueDate !== undefined) {
+      if (typeof payload.dueDate === 'number') {
+        // keep as-is
+      } else if (payload.dueDate instanceof Date) {
+        payload.dueDate = payload.dueDate.getTime();
+      } else {
+        const ts = Date.parse(payload.dueDate);
+        if (!Number.isNaN(ts)) payload.dueDate = ts;
+      }
+    }
+    const response = await this.put(`/api/tasks/${taskId}`, payload);
     return response.data;
   }
 
@@ -434,7 +474,7 @@ class ApiClient {
   }
 
   async categorizeTasksWithAI() {
-    const response = await this.post('/api/tasks/matrix/categorize');
+    const response = await this.post('/api/matrix/categorize');
     return response.data;
   }
 
@@ -486,17 +526,24 @@ class ApiClient {
   }
 
   async createHealthLog(log: {
-    type: string;
-    payload: any;
+    type: 'exercise' | 'mood' | 'nutrition' | 'hydration' | 'sleep' | 'weight';
+    value: number | string;
+    unit?: string;
+    notes?: string;
+    category?: string;
     recordedAt?: string | number;
   }) {
-    const payload = { ...log } as any;
-    if (payload.recordedAt !== undefined) {
-      payload.recordedAt = typeof payload.recordedAt === 'number' 
-        ? payload.recordedAt 
-        : Date.parse(payload.recordedAt);
+    const payload: any = {
+      type: log.type,
+      value: Number(log.value),
+      unit: log.unit,
+      notes: log.notes,
+      category: log.category,
+    };
+    if (log.recordedAt !== undefined) {
+      payload.recordedAt = typeof log.recordedAt === 'number' ? log.recordedAt : Date.parse(String(log.recordedAt));
     }
-    const response = await this.post('/api/health/logs', payload);
+    const response = await this.post('/api/health/manual-entry', payload);
     return response.data;
   }
 

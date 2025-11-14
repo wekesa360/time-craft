@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { apiClient } from '../../lib/api';
 import { useAppTheme } from '../../constants/dynamicTheme';
+import { showToast } from '../../lib/toast';
 
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -28,12 +29,14 @@ type TaskForm = z.infer<typeof taskSchema>;
 
 export default function AddTaskModal() {
   const theme = useAppTheme();
+  const params = useLocalSearchParams<{ id?: string }>();
   const [selectedPriority, setSelectedPriority] = useState(2);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showCustomDuration, setShowCustomDuration] = useState(false);
   const [customDuration, setCustomDuration] = useState<string>('');
   const [durationUnit, setDurationUnit] = useState<'m' | 'h'>('m');
   const queryClient = useQueryClient();
+  const isEditing = !!params?.id;
 
   const {
     control,
@@ -51,6 +54,35 @@ export default function AddTaskModal() {
     },
   });
 
+  // Load task for edit mode
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!isEditing || !params.id) return;
+      try {
+        const t = await apiClient.getTask(String(params.id));
+        if (!mounted) return;
+        // Prefill form values
+        setValue('title', t.title || '');
+        setValue('description', t.description || '');
+        const pr = Number((t as any).priority ?? 2);
+        setSelectedPriority(isNaN(pr) ? 2 : pr);
+        setValue('priority', isNaN(pr) ? 2 : pr);
+        const est = (t as any).estimated_duration ?? (t as any).estimatedDuration;
+        if (est !== undefined && est !== null) setValue('estimatedDuration', Number(est));
+        const dueRaw = (t as any).due_date ?? (t as any).dueDate;
+        if (dueRaw) {
+          const ts = typeof dueRaw === 'number' ? dueRaw : Date.parse(String(dueRaw));
+          if (!Number.isNaN(ts)) setValue('dueDate', new Date(ts).toISOString());
+        }
+      } catch (e) {
+        showToast.error('Failed to load task');
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [isEditing, params?.id]);
+
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (task: TaskForm) => {
@@ -65,16 +97,39 @@ export default function AddTaskModal() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      Alert.alert('Success', 'Task created successfully!');
+      showToast.success('Task created successfully');
       router.back();
     },
-    onError: (error) => {
-      Alert.alert('Error', 'Failed to create task. Please try again.');
+    onError: () => {
+      showToast.error('Failed to create task');
+    },
+  });
+
+  // Update task mutation (edit mode)
+  const updateTaskMutation = useMutation({
+    mutationFn: async (task: TaskForm) => {
+      return apiClient.updateTask(String(params.id), {
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        dueDate: task.dueDate,
+        estimatedDuration: task.estimatedDuration,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      showToast.success('Task updated successfully');
+      router.back();
+    },
+    onError: () => {
+      showToast.error('Failed to update task');
     },
   });
 
   const onSubmit = (data: TaskForm) => {
-    createTaskMutation.mutate(data);
+    if (isEditing) updateTaskMutation.mutate(data);
+    else createTaskMutation.mutate(data);
   };
 
   const priorityOptions = [
@@ -115,7 +170,7 @@ export default function AddTaskModal() {
           <ArrowLeftIcon size={20} color={theme.colors.muted} />
         </TouchableOpacity>
 
-        <Text className="text-lg font-semibold" style={{ color: theme.colors.foreground }}>Add Task</Text>
+        <Text className="text-lg font-semibold" style={{ color: theme.colors.foreground }}>{isEditing ? 'Edit Task' : 'Add Task'}</Text>
 
         <View style={{ width: 40 }} />
       </View>
@@ -318,16 +373,16 @@ export default function AddTaskModal() {
           )}
         </View>
 
-        {/* Bottom Create Button */}
+        {/* Bottom Submit Button */}
         <View className="mt-4">
           <TouchableOpacity
             onPress={handleSubmit(onSubmit)}
-            disabled={createTaskMutation.isPending}
+            disabled={createTaskMutation.isPending || updateTaskMutation.isPending}
             className="w-full items-center justify-center rounded-2xl px-6 py-4"
-            style={{ backgroundColor: theme.colors.primary, opacity: createTaskMutation.isPending ? 0.7 : 1, borderRadius: theme.radii.xl }}
+            style={{ backgroundColor: theme.colors.primary, opacity: (createTaskMutation.isPending || updateTaskMutation.isPending) ? 0.7 : 1, borderRadius: theme.radii.xl }}
           >
             <Text className="text-white font-semibold">
-              {createTaskMutation.isPending ? 'Creating...' : 'Create Task'}
+              {isEditing ? (updateTaskMutation.isPending ? 'Updating...' : 'Update Task') : (createTaskMutation.isPending ? 'Creating...' : 'Create Task')}
             </Text>
           </TouchableOpacity>
         </View>

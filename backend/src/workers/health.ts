@@ -790,6 +790,24 @@ health.put('/goals/:id/progress', zValidator('json', goalProgressSchema), async 
   }
 });
 
+// DELETE /api/health/goals/:id - Delete a health goal (soft delete)
+health.delete('/goals/:id', async (c) => {
+  const auth = await getUserFromToken(c);
+  if (!auth) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const goalId = c.req.param('id');
+    const db = new DatabaseService(c.env);
+    await db.softDelete('health_goals', goalId, auth.userId);
+    return c.json({ message: 'Health goal deleted successfully' });
+  } catch (error) {
+    console.error('Delete health goal error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
 // GET /api/health/nutrition/analysis - Get nutrition analysis
 health.get('/nutrition/analysis', async (c) => {
   const auth = await getUserFromToken(c);
