@@ -55,7 +55,17 @@ export default function LoginScreen() {
       await login(data);
       showToast.success('Welcome back!', 'Login Successful');
       router.replace('/(tabs)/dashboard');
-    } catch (error) {
+    } catch (error: any) {
+      // Check if error is due to unverified email
+      if (error.requiresVerification && error.email) {
+        // Redirect to verification page instead of showing toast
+        router.push({
+          pathname: '/auth/verify-email',
+          params: { email: error.email }
+        });
+        return;
+      }
+      
       const errorMessage = error instanceof Error ? error.message : 'Invalid email or password';
       showToast.error(errorMessage, 'Login Failed');
     }

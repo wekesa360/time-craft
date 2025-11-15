@@ -22,9 +22,13 @@ import type {
 
 // Type aliases for compatibility
 type AuthResponse = {
-  user: User;
-  tokens: AuthTokens;
+  user?: User;
+  tokens?: AuthTokens;
   message?: string;
+  requiresVerification?: boolean;
+  otpId?: string;
+  expiresAt?: number;
+  email?: string;
 };
 
 type TaskForm = {
@@ -151,9 +155,24 @@ class ApiClient {
     const method = ((error.config as any)?.method || '').toString().toUpperCase();
     const url = `${(error.config as any)?.baseURL || ''}${(error.config as any)?.url || ''}`;
     const status = error.response?.status;
-    const responseData = error.response?.data as any;
+    let responseData = error.response?.data as any;
+    
+    // Parse responseData if it's a string
+    if (typeof responseData === 'string') {
+      try {
+        responseData = JSON.parse(responseData);
+      } catch {
+        // If parsing fails, keep as string
+      }
+    }
+    
     const message = (responseData && (responseData.error || responseData.message)) ||
       (status ? `HTTP ${status}` : 'An error occurred');
+
+    // Skip error handling for email verification errors - handled by redirect in LoginScreen
+    if (responseData?.requiresVerification) {
+      return;
+    }
 
     if (error.response) {
       // Structured error console to aid debugging
@@ -281,11 +300,37 @@ class ApiClient {
 
   // Auth Methods
   async login(email: string, password: string) {
-    const response = await this.post('/auth/login', { email, password });
-    const { user, tokens } = response.data;
-    
-    await this.setTokens(tokens);
-    return { user, tokens };
+    try {
+      const response = await this.post('/auth/login', { email, password });
+      const { user, tokens } = response.data;
+      
+      if (tokens) {
+        await this.setTokens(tokens);
+      }
+      return { user, tokens };
+    } catch (error: any) {
+      // Check if error is due to unverified email
+      let responseData = error.response?.data;
+      
+      // Parse if string
+      if (typeof responseData === 'string') {
+        try {
+          responseData = JSON.parse(responseData);
+        } catch {
+          // Keep as string if parsing fails
+        }
+      }
+      
+      if (responseData?.requiresVerification && responseData?.email) {
+        // Create a new error object with verification info
+        const verificationError: any = new Error(responseData.error || 'Email not verified');
+        verificationError.requiresVerification = true;
+        verificationError.email = responseData.email;
+        verificationError.response = error.response;
+        throw verificationError;
+      }
+      throw error;
+    }
   }
 
   async register(userData: {
@@ -298,10 +343,40 @@ class ApiClient {
     isStudent?: boolean;
   }) {
     const response = await this.post('/auth/register', userData);
+    const data = response.data;
+    
+    // If verification is required, return the verification info
+    if (data.requiresVerification) {
+      return {
+        requiresVerification: true,
+        email: data.email || userData.email,
+        otpId: data.otpId,
+        expiresAt: data.expiresAt
+      };
+    }
+    
+    // Otherwise, complete registration with tokens
+    if (data.user && data.tokens) {
+      await this.setTokens(data.tokens);
+      return { user: data.user, tokens: data.tokens };
+    }
+    
+    return data;
+  }
+
+  async verifyEmail(email: string, otpCode: string) {
+    const response = await this.post('/auth/verify-email', { email, otpCode });
     const { user, tokens } = response.data;
     
-    await this.setTokens(tokens);
+    if (tokens) {
+      await this.setTokens(tokens);
+    }
     return { user, tokens };
+  }
+
+  async resendVerification(email: string) {
+    const response = await this.post('/auth/resend-verification', { email });
+    return response.data;
   }
 
   async logout() {

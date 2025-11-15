@@ -24,7 +24,9 @@ interface AuthStore extends AuthState {
   login: (credentials: LoginForm) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithBiometric: () => Promise<void>;
-  register: (data: RegisterForm) => Promise<void>;
+  register: (data: RegisterForm) => Promise<{ requiresVerification: boolean; email?: string; otpId?: string; expiresAt?: number } | void>;
+  verifyEmail: (email: string, otpCode: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<{ otpId: string; expiresAt: number }>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -91,8 +93,16 @@ export const useAuthStore = create<AuthStore>()(
           });
           
           await apiClient.setTokens(response.tokens);
-        } catch (error) {
+        } catch (error: any) {
           set({ isLoading: false, isMutating: false });
+          // Re-throw with verification info if applicable
+          if (error.requiresVerification) {
+            throw {
+              ...error,
+              requiresVerification: true,
+              email: error.email
+            };
+          }
           throw error;
         }
       },
@@ -126,19 +136,79 @@ export const useAuthStore = create<AuthStore>()(
       register: async (data) => {
         try {
           set({ isLoading: true, isMutating: true });
-          const response = await apiClient.register(data);
-          
-          set({
-            user: response.user,
-            tokens: response.tokens,
-            isAuthenticated: true,
-            isLoading: false,
-            isMutating: false,
+          const response = await apiClient.register({
+            email: data.email,
+            password: data.password,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            timezone: data.timezone,
+            preferredLanguage: data.preferredLanguage,
+            isStudent: data.isStudent
           });
           
-          await apiClient.setTokens(response.tokens);
+          // If verification is required, return the verification info
+          if (response && typeof response === 'object' && 'requiresVerification' in response && response.requiresVerification) {
+            set({ isLoading: false, isMutating: false });
+            return {
+              requiresVerification: true,
+              email: response.email || data.email,
+              otpId: response.otpId,
+              expiresAt: response.expiresAt
+            };
+          }
+          
+          // Otherwise, complete registration with tokens
+          if (response && 'user' in response && 'tokens' in response && response.user && response.tokens) {
+            set({
+              user: response.user,
+              tokens: response.tokens,
+              isAuthenticated: true,
+              isLoading: false,
+              isMutating: false,
+            });
+            
+            await apiClient.setTokens(response.tokens);
+          } else {
+            set({ isLoading: false, isMutating: false });
+          }
         } catch (error) {
-          set({ isLoading: false });
+          set({ isLoading: false, isMutating: false });
+          throw error;
+        }
+      },
+
+      verifyEmail: async (email, otpCode) => {
+        try {
+          set({ isLoading: true, isMutating: true });
+          const response = await apiClient.verifyEmail(email, otpCode);
+          
+          if (response.user && response.tokens) {
+            set({
+              user: response.user,
+              tokens: response.tokens,
+              isAuthenticated: true,
+              isLoading: false,
+              isMutating: false,
+            });
+            
+            await apiClient.setTokens(response.tokens);
+          } else {
+            set({ isLoading: false, isMutating: false });
+          }
+        } catch (error) {
+          set({ isLoading: false, isMutating: false });
+          throw error;
+        }
+      },
+
+      resendVerification: async (email) => {
+        try {
+          set({ isLoading: true, isMutating: true });
+          const response = await apiClient.resendVerification(email);
+          set({ isLoading: false, isMutating: false });
+          return response;
+        } catch (error) {
+          set({ isLoading: false, isMutating: false });
           throw error;
         }
       },

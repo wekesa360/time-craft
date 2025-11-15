@@ -76,9 +76,21 @@ export default function RegisterScreen() {
 
   const onSubmit = async (data: RegisterForm) => {
     try {
-      await registerUser(data as any);
-      showToast.success('Account created successfully! Welcome!', 'Success');
-      router.replace('/(tabs)/dashboard');
+      const result = await registerUser(data as any);
+      
+      // Check if verification is required
+      if (result && typeof result === 'object' && 'requiresVerification' in result && result.requiresVerification) {
+        // Redirect to verification page
+        router.push({
+          pathname: '/auth/verify-email',
+          params: { email: result.email || data.email }
+        });
+        showToast.success('Account created! Please verify your email.', 'Success');
+      } else {
+        // Registration completed (shouldn't happen with new flow, but handle it)
+        showToast.success('Account created successfully! Welcome!', 'Success');
+        router.replace('/(tabs)/dashboard');
+      }
     } catch (error) {
       console.error('Registration failed:', error);
       showToast.error('Please check your information and try again', 'Registration Failed');
