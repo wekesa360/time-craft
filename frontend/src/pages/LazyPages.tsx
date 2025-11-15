@@ -31,6 +31,11 @@ export const LazyEmailVerificationPage = createLazyComponent(
   () => <div className="flex items-center justify-center min-h-[200px]">Loading email verification...</div>
 );
 
+export const LazyAcceptInvitationPage = createLazyComponent(
+  () => import('./AcceptInvitationPage'),
+  () => <div className="flex items-center justify-center min-h-[200px]">Loading invitation...</div>
+);
+
 // Public legal pages
 export const LazyTermsOfServicePage = createLazyComponent(
   () => import('./TermsOfServicePage'),

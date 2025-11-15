@@ -175,6 +175,44 @@ export class EmailService {
     });
   }
 
+  // Connection Invitation Email
+  async sendConnectionInvitation(
+    email: string,
+    inviterName: string,
+    invitationLink: string,
+    message?: string,
+    language: string = 'en'
+  ): Promise<EmailResponse> {
+    const templates = this.getConnectionInvitationTemplates();
+    const template = templates[language] || templates.en;
+
+    // Format message for HTML
+    const messageHtml = message 
+      ? `<p style="background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0; font-style: italic;">"${message}"</p>`
+      : '';
+    
+    const html = template.html
+      .replace('{{INVITER_NAME}}', inviterName)
+      .replace('{{INVITATION_LINK}}', invitationLink)
+      .replace('{{MESSAGE}}', messageHtml);
+    
+    const text = template.text
+      .replace('{{INVITER_NAME}}', inviterName)
+      .replace('{{INVITATION_LINK}}', invitationLink)
+      .replace('{{MESSAGE}}', message ? `\n\nMessage: "${message}"` : '');
+
+    return this.sendEmail({
+      to: email,
+      subject: template.subject,
+      html,
+      text,
+      tags: [
+        { name: 'type', value: 'connection_invitation' },
+        { name: 'language', value: language }
+      ]
+    });
+  }
+
   // Email Templates
   private getVerificationOTPTemplates(): Record<string, EmailTemplate> {
     return {
@@ -718,6 +756,119 @@ TimeCraft-Benachrichtigung
 {{TITLE}}
 
 {{MESSAGE}}
+
+© 2025 TimeCraft. Alle Rechte vorbehalten.
+        `
+      }
+    };
+  }
+
+  private getConnectionInvitationTemplates(): Record<string, EmailTemplate> {
+    return {
+      en: {
+        subject: 'You have a connection request on TimeCraft',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Connection Request</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">TimeCraft</h1>
+              <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Your Personal Productivity & Wellness Companion</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #333; margin-top: 0;">Connection Request</h2>
+              <p><strong>{{INVITER_NAME}}</strong> wants to connect with you on TimeCraft!</p>
+              
+              <div>{{MESSAGE}}</div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{INVITATION_LINK}}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                  Accept Invitation
+                </a>
+              </div>
+              
+              <p style="font-size: 14px; color: #666; text-align: center;">
+                Or copy and paste this link into your browser:<br>
+                <a href="{{INVITATION_LINK}}" style="color: #667eea; word-break: break-all;">{{INVITATION_LINK}}</a>
+              </p>
+              
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+              <p style="font-size: 14px; color: #666; text-align: center;">
+                © 2025 TimeCraft. All rights reserved.
+              </p>
+            </div>
+          </body>
+          </html>
+        `,
+        text: `
+TimeCraft - Connection Request
+
+{{INVITER_NAME}} wants to connect with you on TimeCraft!
+
+{{MESSAGE}}
+
+Accept this invitation by clicking the link below:
+{{INVITATION_LINK}}
+
+© 2025 TimeCraft. All rights reserved.
+        `
+      },
+      de: {
+        subject: 'Sie haben eine Verbindungsanfrage auf TimeCraft',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verbindungsanfrage</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">TimeCraft</h1>
+              <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Ihr persönlicher Produktivitäts- und Wellness-Begleiter</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #333; margin-top: 0;">Verbindungsanfrage</h2>
+              <p><strong>{{INVITER_NAME}}</strong> möchte sich mit Ihnen auf TimeCraft verbinden!</p>
+              
+              <div>{{MESSAGE}}</div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{INVITATION_LINK}}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                  Einladung annehmen
+                </a>
+              </div>
+              
+              <p style="font-size: 14px; color: #666; text-align: center;">
+                Oder kopieren Sie diesen Link in Ihren Browser:<br>
+                <a href="{{INVITATION_LINK}}" style="color: #667eea; word-break: break-all;">{{INVITATION_LINK}}</a>
+              </p>
+              
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+              <p style="font-size: 14px; color: #666; text-align: center;">
+                © 2025 TimeCraft. Alle Rechte vorbehalten.
+              </p>
+            </div>
+          </body>
+          </html>
+        `,
+        text: `
+TimeCraft - Verbindungsanfrage
+
+{{INVITER_NAME}} möchte sich mit Ihnen auf TimeCraft verbinden!
+
+{{MESSAGE}}
+
+Nehmen Sie diese Einladung an, indem Sie auf den folgenden Link klicken:
+{{INVITATION_LINK}}
 
 © 2025 TimeCraft. Alle Rechte vorbehalten.
         `

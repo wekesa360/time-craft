@@ -38,6 +38,7 @@ import {
   LazyForgotPasswordPage,
   LazyResetPasswordPage,
   LazyEmailVerificationPage,
+  LazyAcceptInvitationPage,
   LazyTermsOfServicePage,
   LazyPrivacyPolicyPage,
   LazyDashboard,
@@ -236,6 +237,14 @@ function App() {
                     <LazyResetPasswordPage />
                   </AuthLayout>
                 </PublicRoute>
+              }
+            />
+            <Route
+              path="/accept-invitation"
+              element={
+                <UnprotectedRoute>
+                  <LazyAcceptInvitationPage />
+                </UnprotectedRoute>
               }
             />
 

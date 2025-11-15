@@ -1761,9 +1761,44 @@ class ApiClient {
     return response.data;
   }
 
-  async getConnections(): Promise<{ connections: Connection[]; pendingRequests: Connection[] }> {
-    const response = await this.client.get('/api/social/connections');
-    return response.data;
+  async getConnections(params?: { status?: 'pending' | 'accepted' | 'blocked' }): Promise<{ success: boolean; data: Connection[] }> {
+    const response = await this.client.get('/api/social/connections', { params });
+    
+    if (!response.data.success || !response.data.data) {
+      return { success: false, data: [] };
+    }
+
+    // Get current user ID from auth store
+    const { user } = useAuthStore.getState();
+    const currentUserId = user?.id;
+
+    // Transform backend UserConnection format to frontend Connection format
+    const transformedConnections: Connection[] = (response.data.data || []).map((conn: any) => {
+      // Determine the other user's info (not the current user)
+      const isCurrentUserRequester = conn.requester_id === currentUserId;
+      const otherUserId = isCurrentUserRequester ? conn.addressee_id : conn.requester_id;
+      const otherUserFirstName = isCurrentUserRequester 
+        ? (conn.addressee_first_name || '') 
+        : (conn.requester_first_name || '');
+      const otherUserLastName = isCurrentUserRequester 
+        ? (conn.addressee_last_name || '') 
+        : (conn.requester_last_name || '');
+
+      return {
+        id: conn.id,
+        userId: otherUserId,
+        firstName: otherUserFirstName,
+        lastName: otherUserLastName,
+        status: conn.status as 'pending' | 'accepted' | 'declined',
+        connectedAt: conn.updated_at || conn.created_at,
+        message: undefined, // Backend doesn't return message in connection list
+      };
+    });
+
+    return {
+      success: true,
+      data: transformedConnections
+    };
   }
 
   async acceptConnection(id: string): Promise<void> {
@@ -1810,8 +1845,63 @@ class ApiClient {
   }
 
   async getActivityFeed(): Promise<ActivityFeedItem[]> {
-    const response = await this.client.get<{ feed: ActivityFeedItem[] }>('/api/social/feed');
-    return response.data.feed;
+    const response = await this.client.get<{ success: boolean; data: any[]; hasMore?: boolean; total?: number }>('/api/social/feed');
+    
+    if (!response.data.success || !response.data.data) {
+      return [];
+    }
+
+    // Transform backend feed items to ActivityFeedItem format
+    return response.data.data.map((item: any) => {
+      // Map backend types to frontend types
+      let type: ActivityFeedItem['type'] = 'achievement_share';
+      if (item.type === 'achievement_share') {
+        type = 'achievement_share';
+      } else if (item.type === 'challenge_update') {
+        type = 'challenge_join'; // Default to join, could be enhanced to detect completion
+      } else if (item.type === 'public_challenge') {
+        type = 'challenge_join';
+      }
+
+      // Build content object based on item type
+      const content: ActivityFeedItem['content'] = {};
+      
+      if (item.type === 'achievement_share') {
+        content.badgeName = item.badge_title || 'Achievement';
+        content.badgeDescription = item.badge_description || '';
+        content.shareUrl = item.share_url;
+        content.message = item.message || `${item.first_name || 'User'} shared an achievement!`;
+      } else if (item.type === 'challenge_update' || item.type === 'public_challenge') {
+        content.challengeName = item.challenge_title || item.title || 'Challenge';
+        content.challengeDescription = item.description || '';
+        if (item.progress_data) {
+          try {
+            const progress = typeof item.progress_data === 'string' 
+              ? JSON.parse(item.progress_data) 
+              : item.progress_data;
+            content.challengeProgress = progress.progress || progress.completion || 0;
+            // Detect if challenge is completed (progress >= 100 or completion === true)
+            if ((progress.progress >= 100 || progress.completion === true) && type === 'challenge_join') {
+              type = 'challenge_complete';
+              content.finalScore = progress.finalScore || progress.score || 100;
+              content.targetValue = progress.targetValue || progress.target || 100;
+            }
+          } catch {
+            content.challengeProgress = 0;
+          }
+        }
+      }
+
+      return {
+        id: item.id || `feed_${Date.now()}_${Math.random()}`,
+        userId: item.user_id || item.userId || '',
+        firstName: item.first_name || item.firstName || 'User',
+        lastName: item.last_name || item.lastName || '',
+        type,
+        content,
+        timestamp: item.created_at || item.timestamp || Date.now(),
+      } as ActivityFeedItem;
+    });
   }
 
   // Voice Processing endpoints

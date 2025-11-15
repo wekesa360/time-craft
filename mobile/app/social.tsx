@@ -7,6 +7,7 @@ import Button from '../components/ui/Button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api';
 import { router } from 'expo-router';
+import { useAuthStore } from '../stores/auth';
 import {
   UsersIcon,
   TrophyIcon,
@@ -18,6 +19,7 @@ type TabKey = 'feed' | 'challenges' | 'connections';
 
 export default function SocialScreen() {
   const theme = useAppTheme();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabKey>('feed');
   const [challengeFilter, setChallengeFilter] = useState<'all' | 'active' | 'completed' | 'my'>('all');
   const queryClient = useQueryClient();
@@ -288,14 +290,20 @@ export default function SocialScreen() {
         {/* Connections */}
         {activeTab === 'connections' && (
           <View style={{ gap: theme.spacing.lg }}>
-            {/* Stats */}
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -8 }}>
-              {[
-                { key: 'friends', icon: UsersIcon, label: 'Active Connections', value: String(connections?.data?.length || 0) },
-                { key: 'pending', icon: ChatBubbleLeftRightIcon, label: 'Pending Requests', value: String(pendingConnections?.data?.length || 0) },
-                { key: 'rate', icon: ChartBarIcon, label: 'Connection Rate', value: `${Math.round((Number(connections?.data?.length || 0) / Math.max(((connections?.data?.length || 0) + (pendingConnections?.data?.length || 0)), 1)) * 100)}%` },
-              ].map((s) => (
-                <View key={s.key} style={{ width: '100%', paddingHorizontal: 8, marginBottom: 12 }}>
+            {/* Stats Card with Add Friend Button */}
+            <Card>
+              {/* Add Friend Button at Top */}
+              <View style={{ marginBottom: theme.spacing.lg }}>
+                <Button 
+                  title="Add Friend" 
+                  onPress={() => router.push('/modals/add-friend' as any)}
+                  style={{ width: '100%' }}
+                />
+              </View>
+
+              {/* Stats Row - Active and Pending side by side */}
+              <View style={{ flexDirection: 'row', gap: theme.spacing.md }}>
+                <View style={{ flex: 1 }}>
                   <Card>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View
@@ -309,52 +317,164 @@ export default function SocialScreen() {
                           marginRight: 12,
                         }}
                       >
-                        <s.icon size={theme.iconSizes.lg} color={theme.colors.primary} />
+                        <UsersIcon size={theme.iconSizes.lg} color={theme.colors.primary} />
                       </View>
                       <View>
-                        <Text style={{ color: theme.colors.foreground, fontWeight: '700' }}>{s.value}</Text>
-                        <Text style={{ color: theme.colors.muted, marginTop: 4 }}>{s.label}</Text>
+                        <Text style={{ color: theme.colors.foreground, fontWeight: '700', fontSize: 20 }}>
+                          {connections?.data?.length || 0}
+                        </Text>
+                        <Text style={{ color: theme.colors.muted, marginTop: 4 }}>Active</Text>
                       </View>
                     </View>
                   </Card>
                 </View>
-              ))}
-            </View>
-
-            {/* Connections Management */}
-            <Card>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.md }}>
-                <Text style={{ color: theme.colors.foreground, fontWeight: '700' }}>Manage Connections</Text>
-                <Button title="Add Friend" onPress={() => router.push('/modals/add-friend' as any)} />
-              </View>
-              <View style={{ gap: theme.spacing.md }}>
-                {(pendingConnections?.data || []).map((conn: any) => (
-                  <View key={conn.id} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={{ color: theme.colors.foreground }}>
-                      {conn.requester_first_name} {conn.requester_last_name} → {conn.addressee_first_name} {conn.addressee_last_name}
-                    </Text>
-                    <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-                      <Button
-                        title="Accept"
-                        variant="outline"
-                        onPress={async () => {
-                          await apiClient.acceptConnectionRequest(conn.id);
-                          queryClient.invalidateQueries({ queryKey: ['connections'] });
+                <View style={{ flex: 1 }}>
+                  <Card>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: theme.radii.xl,
+                          backgroundColor: theme.colors.primaryLight,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 12,
                         }}
-                      />
-                      <Button
-                        title="Decline"
-                        variant="ghost"
-                        onPress={async () => {
-                          await apiClient.declineConnectionRequest(conn.id);
-                          queryClient.invalidateQueries({ queryKey: ['connections'] });
-                        }}
-                      />
+                      >
+                        <ChatBubbleLeftRightIcon size={theme.iconSizes.lg} color={theme.colors.primary} />
+                      </View>
+                      <View>
+                        <Text style={{ color: theme.colors.foreground, fontWeight: '700', fontSize: 20 }}>
+                          {pendingConnections?.data?.length || 0}
+                        </Text>
+                        <Text style={{ color: theme.colors.muted, marginTop: 4 }}>Pending</Text>
+                      </View>
                     </View>
-                  </View>
-                ))}
+                  </Card>
+                </View>
               </View>
             </Card>
+
+            {/* All Connections List */}
+            <Card>
+              <Text style={{ color: theme.colors.foreground, fontWeight: '700', marginBottom: theme.spacing.md }}>
+                All Connections
+              </Text>
+              <View style={{ gap: theme.spacing.md }}>
+                {(connections?.data || []).length > 0 ? (
+                  (connections?.data || []).map((conn: any) => {
+                    // Determine the other user's info (not the current user)
+                    const currentUserId = user?.id;
+                    const isCurrentUserRequester = conn.requester_id === currentUserId;
+                    const otherUser = {
+                      firstName: isCurrentUserRequester 
+                        ? (conn.addressee_first_name || '') 
+                        : (conn.requester_first_name || ''),
+                      lastName: isCurrentUserRequester 
+                        ? (conn.addressee_last_name || '') 
+                        : (conn.requester_last_name || ''),
+                    };
+                    
+                    return (
+                      <View 
+                        key={conn.id} 
+                        style={{ 
+                          flexDirection: 'row', 
+                          alignItems: 'center', 
+                          justifyContent: 'space-between',
+                          paddingVertical: theme.spacing.sm,
+                          borderBottomWidth: 1,
+                          borderBottomColor: theme.colors.border,
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                          <View
+                            style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 24,
+                              backgroundColor: theme.colors.primaryLight,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginRight: 12,
+                            }}
+                          >
+                            <UsersIcon size={theme.iconSizes.md} color={theme.colors.primary} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ color: theme.colors.foreground, fontWeight: '600' }}>
+                              {otherUser.firstName} {otherUser.lastName}
+                            </Text>
+                            <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 2 }}>
+                              {conn.connection_type || 'friend'}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })
+                ) : (
+                  <View style={{ paddingVertical: theme.spacing.xl, alignItems: 'center' }}>
+                    <Text style={{ color: theme.colors.muted }}>No connections yet</Text>
+                    <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 4 }}>
+                      Add friends to get started!
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </Card>
+
+            {/* Pending Requests */}
+            {(pendingConnections?.data || []).length > 0 && (
+              <Card>
+                <Text style={{ color: theme.colors.foreground, fontWeight: '700', marginBottom: theme.spacing.md }}>
+                  Pending Requests
+                </Text>
+                <View style={{ gap: theme.spacing.md }}>
+                  {(pendingConnections?.data || []).map((conn: any) => (
+                    <View 
+                      key={conn.id} 
+                      style={{ 
+                        flexDirection: 'row', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        paddingVertical: theme.spacing.sm,
+                        borderBottomWidth: 1,
+                        borderBottomColor: theme.colors.border,
+                      }}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: theme.colors.foreground, fontWeight: '600' }}>
+                          {conn.requester_first_name} {conn.requester_last_name}
+                        </Text>
+                        <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 2 }}>
+                          Wants to connect
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+                        <Button
+                          title="Accept"
+                          variant="outline"
+                          onPress={async () => {
+                            await apiClient.acceptConnectionRequest(conn.id);
+                            queryClient.invalidateQueries({ queryKey: ['connections'] });
+                          }}
+                        />
+                        <Button
+                          title="Decline"
+                          variant="ghost"
+                          onPress={async () => {
+                            await apiClient.declineConnectionRequest(conn.id);
+                            queryClient.invalidateQueries({ queryKey: ['connections'] });
+                          }}
+                        />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </Card>
+            )}
           </View>
         )}
 

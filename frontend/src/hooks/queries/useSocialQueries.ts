@@ -13,12 +13,46 @@ export const socialKeys = {
   activityFeed: () => [...socialKeys.all, 'activity-feed'] as const,
 };
 
-// Connections query
+// Connections query (all connections)
 export const useConnectionsQuery = () => {
   return useQuery({
     queryKey: socialKeys.connections(),
-    queryFn: () => apiClient.getConnections(),
+    queryFn: async () => {
+      const [acceptedResponse, pendingResponse] = await Promise.all([
+        apiClient.getConnections({ status: 'accepted' }),
+        apiClient.getConnections({ status: 'pending' })
+      ]);
+      
+      return {
+        connections: acceptedResponse.data || [],
+        pendingRequests: pendingResponse.data || []
+      };
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+// Accepted connections query
+export const useAcceptedConnectionsQuery = () => {
+  return useQuery({
+    queryKey: [...socialKeys.connections(), 'accepted'],
+    queryFn: async () => {
+      const response = await apiClient.getConnections({ status: 'accepted' });
+      return response.data || [];
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
+// Pending connections query
+export const usePendingConnectionsQuery = () => {
+  return useQuery({
+    queryKey: [...socialKeys.connections(), 'pending'],
+    queryFn: async () => {
+      const response = await apiClient.getConnections({ status: 'pending' });
+      return response.data || [];
+    },
+    staleTime: 2 * 60 * 1000,
   });
 };
 
@@ -175,6 +209,8 @@ export const useShareAchievementMutation = () => {
 export const useSocialQueries = () => {
   return {
     useConnectionsQuery,
+    useAcceptedConnectionsQuery,
+    usePendingConnectionsQuery,
     useChallengesQuery,
     usePublicChallengesQuery,
     useActivityFeedQuery,

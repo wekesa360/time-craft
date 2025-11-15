@@ -51,9 +51,25 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
          OR (requester_id = ? AND addressee_id = ?)
     `, [requesterId, addresseeId, addresseeId, requesterId]);
 
-    const existing = (existingResult.results || [])[0];
+    const existing = (existingResult.results || [])[0] as any;
     if (existing) {
-      throw new Error('Connection already exists between these users');
+      // Provide detailed error message about existing connection
+      const status = existing.status;
+      const isRequester = existing.requester_id === requesterId;
+      
+      if (status === 'accepted') {
+        throw new Error('You are already connected with this user');
+      } else if (status === 'pending') {
+        if (isRequester) {
+          throw new Error('You have already sent a connection request to this user. Please wait for them to accept it.');
+        } else {
+          throw new Error('This user has already sent you a connection request. Please accept or decline it first.');
+        }
+      } else if (status === 'blocked') {
+        throw new Error('Connection is blocked. Cannot send request.');
+      } else {
+        throw new Error(`Connection already exists with status: ${status}`);
+      }
     }
 
     const connection: UserConnection = {
@@ -71,18 +87,125 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [id, requesterId, addresseeId, 'pending', type, now, now]);
 
+    // Generate invitation token (valid for 7 days)
+    const token = crypto.randomUUID();
+    const expiresAt = now + (7 * 24 * 60 * 60 * 1000); // 7 days
+    
+    await this.db.execute(`
+      INSERT INTO connection_invitation_tokens (id, connection_id, token, expires_at, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `, [crypto.randomUUID(), id, token, expiresAt, now]);
+
     return connection;
+  }
+
+  async getInvitationToken(connectionId: string): Promise<string | null> {
+    const result = await this.db.query(`
+      SELECT token FROM connection_invitation_tokens
+      WHERE connection_id = ? AND expires_at > ? AND used_at IS NULL
+      ORDER BY created_at DESC
+      LIMIT 1
+    `, [connectionId, Date.now()]);
+
+    const row = (result.results || [])[0] as any;
+    return row?.token || null;
+  }
+
+  async acceptConnectionByToken(token: string): Promise<{ success: boolean; connectionId?: string; error?: string }> {
+    const now = Date.now();
+    
+    // Find valid token
+    const tokenResult = await this.db.query(`
+      SELECT cit.connection_id, cit.token, cit.expires_at, uc.addressee_id, uc.status
+      FROM connection_invitation_tokens cit
+      JOIN user_connections uc ON cit.connection_id = uc.id
+      WHERE cit.token = ? AND cit.expires_at > ? AND cit.used_at IS NULL
+    `, [token, now]);
+
+    const tokenRow = (tokenResult.results || [])[0] as any;
+    if (!tokenRow) {
+      return { success: false, error: 'Invalid or expired invitation token' };
+    }
+
+    if (tokenRow.status !== 'pending') {
+      return { success: false, error: 'Connection request already processed' };
+    }
+
+    const connectionId = tokenRow.connection_id;
+    const addresseeId = tokenRow.addressee_id;
+
+    // Accept the connection
+    const updateResult = await this.db.execute(`
+      UPDATE user_connections 
+      SET status = 'accepted', updated_at = ?
+      WHERE id = ? AND status = 'pending'
+    `, [now, connectionId]);
+
+    if (updateResult.changes === 0) {
+      return { success: false, error: 'Failed to accept connection' };
+    }
+
+    // Mark token as used
+    await this.db.execute(`
+      UPDATE connection_invitation_tokens
+      SET used_at = ?
+      WHERE token = ?
+    `, [now, token]);
+
+    return { success: true, connectionId };
   }
 
   async acceptConnectionRequest(connectionId: string, userId: string): Promise<boolean> {
     const now = Date.now();
     
+    // First, check if the connection exists and get its details
+    const connectionCheck = await this.db.query(`
+      SELECT * FROM user_connections 
+      WHERE id = ? AND (requester_id = ? OR addressee_id = ?)
+    `, [connectionId, userId, userId]);
+    
+    const connection = (connectionCheck.results || [])[0] as any;
+    if (!connection) {
+      console.log('[Accept Connection] Connection not found', { connectionId, userId });
+      return false;
+    }
+    
+    console.log('[Accept Connection] Connection found', {
+      connectionId,
+      userId,
+      requester_id: connection.requester_id,
+      addressee_id: connection.addressee_id,
+      status: connection.status,
+      isAddressee: connection.addressee_id === userId,
+      isRequester: connection.requester_id === userId
+    });
+    
+    // User can only accept if they are the addressee (recipient) of a pending request
+    const isAddressee = connection.addressee_id === userId;
+    
+    if (!isAddressee) {
+      console.log('[Accept Connection] User is not the addressee', {
+        userId,
+        addressee_id: connection.addressee_id,
+        requester_id: connection.requester_id
+      });
+      return false; // Only the addressee can accept
+    }
+    
+    if (connection.status !== 'pending') {
+      console.log('[Accept Connection] Connection is not pending', { status: connection.status });
+      return false; // Can only accept pending requests
+    }
+    
+    // Accept the pending request
     const result = await this.db.execute(`
       UPDATE user_connections 
       SET status = 'accepted', updated_at = ?
       WHERE id = ? AND addressee_id = ? AND status = 'pending'
     `, [now, connectionId, userId]);
-
+    
+    console.log('[Accept Connection] Update result', { changes: result.changes, connectionId, userId });
+    
     return result.changes > 0;
   }
 
@@ -131,6 +254,13 @@ export class SocialFeaturesServiceImpl implements SocialFeaturesService {
     if (status) {
       query += ` AND uc.status = ?`;
       params.push(status);
+      
+      // For pending status, only show incoming requests (where user is addressee)
+      // This prevents users from seeing/accepting their own outgoing requests
+      if (status === 'pending') {
+        query += ` AND uc.addressee_id = ?`;
+        params.push(userId);
+      }
     }
     
     query += ` ORDER BY uc.updated_at DESC`;
