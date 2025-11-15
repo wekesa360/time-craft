@@ -52,7 +52,8 @@ export default function HealthPage() {
   // Queries
   const { data: summary, isLoading: summaryLoading } = useHealthSummaryQuery();
   const { data: insights, isLoading: insightsLoading } = useHealthInsightsQuery();
-  const { data: logs = [], isLoading: logsLoading } = useHealthLogsQuery();
+  const { data: logsData, isLoading: logsLoading } = useHealthLogsQuery();
+  const logs = logsData?.logs || (Array.isArray(logsData) ? logsData : []);
   const { data: goals = [], isLoading: goalsLoading } = useHealthGoalsQuery();
 
   // Mutations
@@ -226,7 +227,12 @@ export default function HealthPage() {
               const payload = log.payload as any;
               return sum + (payload?.calories || payload?.total_calories || 0);
             }, 0);
-            const calorieTarget = 2300;
+
+            // Get calorie target from active nutrition goal if available
+            const calorieGoal = goals.find(
+              (g) => g.type === 'nutrition_calories' && g.isActive && g.targetPeriod === 'daily'
+            );
+            const calorieTarget = calorieGoal?.targetValue;
 
             const totalMacros = todayLogs.reduce((acc, log) => {
               const payload = log.payload as any;
@@ -237,67 +243,53 @@ export default function HealthPage() {
               };
             }, { carbs: 0, protein: 0, fat: 0 });
 
-            const macroTargets = { carbs: 240, protein: 140, fat: 110 };
-            const macroPercentages = {
-              carbs: Math.min(100, (totalMacros.carbs / macroTargets.carbs) * 100),
-              protein: Math.min(100, (totalMacros.protein / macroTargets.protein) * 100),
-              fat: Math.min(100, (totalMacros.fat / macroTargets.fat) * 100),
-            };
-
             return (
               <div className="bg-card rounded-2xl p-6 border border-border">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-foreground">Today's Nutrition</h2>
                   <span className="text-sm text-muted-foreground">
-                    {totalCalories} / {calorieTarget.toLocaleString()} kcal
+                    {totalCalories} {calorieTarget ? ` / ${calorieTarget.toLocaleString()}` : ''} kcal
                   </span>
                 </div>
 
-                {/* Calorie Progress */}
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-foreground">Calories</span>
-                    <span className="text-sm text-primary font-medium">
-                      {Math.round((totalCalories / calorieTarget) * 100)}%
-                    </span>
+                {/* Calorie Progress - Only show if target exists */}
+                {calorieTarget && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-foreground">Calories</span>
+                      <span className="text-sm text-primary font-medium">
+                        {Math.round((totalCalories / calorieTarget) * 100)}%
+                      </span>
+                    </div>
+                    <div className="h-3 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary rounded-full" 
+                        style={{ width: `${Math.min(100, (totalCalories / calorieTarget) * 100)}%` }} 
+                      />
+                    </div>
                   </div>
-                  <div className="h-3 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary rounded-full" 
-                      style={{ width: `${Math.min(100, (totalCalories / calorieTarget) * 100)}%` }} 
-                    />
-                  </div>
-                </div>
+                )}
 
-                {/* Macros - Calculate from nutrition logs */}
+                {/* Macros - Show consumed amounts */}
                 <div className="grid md:grid-cols-3 gap-4">
                   <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-muted-foreground">Carbs</span>
-                      <span className="text-xs text-muted-foreground">{Math.round(totalMacros.carbs)} / {macroTargets.carbs}g</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full" style={{ width: `${macroPercentages.carbs}%` }} />
+                      <span className="text-xs text-muted-foreground">{Math.round(totalMacros.carbs)}g</span>
                     </div>
                   </div>
 
                   <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-muted-foreground">Protein</span>
-                      <span className="text-xs text-muted-foreground">{Math.round(totalMacros.protein)} / {macroTargets.protein}g</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full" style={{ width: `${macroPercentages.protein}%` }} />
+                      <span className="text-xs text-muted-foreground">{Math.round(totalMacros.protein)}g</span>
                     </div>
                   </div>
 
                   <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-muted-foreground">Fats</span>
-                      <span className="text-xs text-muted-foreground">{Math.round(totalMacros.fat)} / {macroTargets.fat}g</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full" style={{ width: `${macroPercentages.fat}%` }} />
+                      <span className="text-xs text-muted-foreground">{Math.round(totalMacros.fat)}g</span>
                     </div>
                   </div>
                 </div>
@@ -411,10 +403,6 @@ export default function HealthPage() {
           <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-foreground">Weekly Progress</h2>
-              <div className="flex items-center gap-2 text-sm text-primary">
-                <TrendingUp className="w-4 h-4" />
-                <span>+12% from last week</span>
-              </div>
             </div>
 
             <div className="grid md:grid-cols-4 gap-4">

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { verify } from 'hono/jwt';
 
 import type { Env } from '../lib/env';
-import { HealthRepository, DatabaseService } from '../lib/db';
+import { HealthRepository, DatabaseService, remove } from '../lib/db';
 import { HealthInsightsService } from '../lib/health-insights';
 import type { 
   HealthLogType, 
@@ -707,7 +707,14 @@ health.delete('/logs/:id', async (c) => {
     const logId = c.req.param('id');
     const db = new DatabaseService(c.env);
     
-    await db.softDelete('health_logs', logId, auth.userId);
+    // First check if log exists
+    const existingLog = await db.getOne('health_logs', { id: logId, user_id: auth.userId });
+    if (!existingLog) {
+      return c.json({ error: 'Health log not found' }, 404);
+    }
+    
+    // Hard delete - remove the log from database
+    await remove(c.env, 'health_logs', 'id = ? AND user_id = ?', [logId, auth.userId]);
     
     return c.json({ message: 'Health log deleted successfully' });
   } catch (error) {
@@ -800,7 +807,16 @@ health.delete('/goals/:id', async (c) => {
   try {
     const goalId = c.req.param('id');
     const db = new DatabaseService(c.env);
-    await db.softDelete('health_goals', goalId, auth.userId);
+    
+    // First check if goal exists
+    const existingGoal = await db.getOne('health_goals', { id: goalId, user_id: auth.userId });
+    if (!existingGoal) {
+      return c.json({ error: 'Health goal not found' }, 404);
+    }
+    
+    // Hard delete - remove the goal from database
+    await remove(c.env, 'health_goals', 'id = ? AND user_id = ?', [goalId, auth.userId]);
+    
     return c.json({ message: 'Health goal deleted successfully' });
   } catch (error) {
     console.error('Delete health goal error:', error);

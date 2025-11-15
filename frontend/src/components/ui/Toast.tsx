@@ -118,32 +118,32 @@ export const Toast: React.FC<ToastProps> = ({
             <div className={`text-sm font-semibold ${styles.title}`}>
               {title}
             </div>
-            {message && (
+        {message && (
               <div className={`text-sm opacity-90 ${styles.message}`}>
                 {message}
               </div>
-            )}
-            {action && (
+        )}
+        {action && (
               <div className="mt-2">
-                <button
-                  onClick={action.onClick}
+            <button
+              onClick={action.onClick}
                   className="text-sm font-medium text-primary hover:text-primary/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm underline-offset-4 hover:underline"
-                >
-                  {action.label}
-                </button>
-              </div>
-            )}
+            >
+              {action.label}
+            </button>
+          </div>
+        )}
           </div>
         </div>
       </div>
       
-      <button
-        onClick={handleClose}
+        <button
+          onClick={handleClose}
         className="absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600"
         aria-label="Close"
-      >
+        >
         <X className="h-4 w-4" />
-      </button>
+        </button>
       
       {/* Progress bar */}
       <div

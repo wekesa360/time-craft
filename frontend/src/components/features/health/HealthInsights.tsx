@@ -110,31 +110,6 @@ const HealthInsights: React.FC<HealthInsightsProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* AI Health Score */}
-      <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <Brain className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">AI Health Analysis</h3>
-              <p className="text-muted-foreground">Based on your recent health data</p>
-            </div>
-          </div>
-          <div className="text-center">
-            <div
-              className={`text-4xl font-bold ${getScoreColor(safeInsights.overallScore)}`}
-            >
-              {safeInsights.overallScore.toFixed(1)}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {getScoreDescription(safeInsights.overallScore)}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Health Trends */}
       <div className="card p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">Health Trends</h3>

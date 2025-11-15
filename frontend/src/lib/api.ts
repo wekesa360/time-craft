@@ -1337,8 +1337,10 @@ class ApiClient {
     endDate?: number;
     page?: number;
     limit?: number;
-  }): Promise<PaginatedResponse<HealthLog[]>> {
-    const response = await this.client.get<PaginatedResponse<HealthLog[]>>('/api/health/logs', { params });
+    offset?: number;
+    source?: string;
+  }): Promise<{ logs: HealthLog[]; hasMore: boolean; nextCursor?: string | null; total?: number }> {
+    const response = await this.client.get<{ logs: HealthLog[]; hasMore: boolean; nextCursor?: string | null; total?: number }>('/api/health/logs', { params });
     return response.data;
   }
 
@@ -1391,7 +1393,42 @@ class ApiClient {
     moodAverage: number;
   }> {
     const response = await this.client.get('/api/health/summary', { params: { days } });
+    // Backend returns { summary: {...}, period: {...} }
     return response.data.summary;
+  }
+
+  async getHealthStats(period?: number): Promise<{
+    exercise: {
+      totalSessions: number;
+      totalDuration: number;
+      averageIntensity: number;
+    };
+    nutrition: {
+      totalEntries: number;
+      averageCaloriesPerDay: number;
+    };
+    mood: {
+      totalEntries: number;
+      averageMoodScore: number;
+      averageEnergyLevel: number;
+    };
+    hydration: {
+      totalEntries: number;
+      totalWaterMl: number;
+      averageDailyWaterMl: number;
+    };
+    period: {
+      days: number;
+      startDate: number;
+      endDate: number;
+    };
+  }> {
+    const response = await this.client.get('/api/health/stats', { params: { period } });
+    return response.data;
+  }
+
+  async deleteHealthLog(id: string): Promise<void> {
+    await this.client.delete(`/api/health/logs/${id}`);
   }
 
   // Health Insights endpoints

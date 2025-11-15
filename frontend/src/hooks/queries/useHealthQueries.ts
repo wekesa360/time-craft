@@ -30,12 +30,20 @@ export const useHealthLogsQuery = (params?: {
   endDate?: number;
   page?: number;
   limit?: number;
+  offset?: number;
 }) => {
   return useQuery({
     queryKey: healthKeys.logsList(params || {}),
     queryFn: async () => {
       const response = await apiClient.getHealthLogs(params);
-      return response.data || []; // Extract the logs array from the paginated response
+      // Backend returns { logs: [...], hasMore, nextCursor, total }
+      // Return full response for pagination support
+      return {
+        logs: response.logs || response.data || [],
+        hasMore: response.hasMore || false,
+        nextCursor: response.nextCursor || null,
+        total: response.total || (response.logs?.length || response.data?.length || 0)
+      };
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -101,15 +109,28 @@ export const useLogExerciseMutation = () => {
       queryClient.setQueriesData(
         { queryKey: healthKeys.logs() },
         (old: any) => {
-          if (!old?.data) return old;
-          return {
-            ...old,
-            data: [optimisticLog, ...old.data],
-          };
+          // Handle both paginated format and array format
+          if (old?.logs && Array.isArray(old.logs)) {
+            return {
+              ...old,
+              logs: [optimisticLog, ...old.logs],
+              total: (old.total || old.logs.length) + 1
+            };
+          }
+          if (old?.data && Array.isArray(old.data)) {
+            return {
+              ...old,
+              data: [optimisticLog, ...old.data],
+            };
+          }
+          if (Array.isArray(old)) {
+            return [optimisticLog, ...old];
+          }
+          return { logs: [optimisticLog], hasMore: false, total: 1 };
         }
       );
 
-      return { previousLogs };
+      return { previousLogs, optimisticLog };
     },
     onError: (err, newExercise, context) => {
       console.error('❌ Exercise log mutation error:', err);
@@ -118,8 +139,34 @@ export const useLogExerciseMutation = () => {
       }
       toast.error('Failed to log exercise. Please try again.');
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables, context) => {
       console.log('✅ Exercise logged successfully, data:', data);
+      // Replace optimistic log with real data
+      if (context?.optimisticLog) {
+        queryClient.setQueriesData(
+          { queryKey: healthKeys.logs() },
+          (old: any) => {
+            // Handle both paginated format and array format
+            if (old?.logs && Array.isArray(old.logs)) {
+              return {
+                ...old,
+                logs: [data, ...old.logs.filter((log: HealthLog) => log.id !== context.optimisticLog.id)],
+                total: old.total || old.logs.length
+              };
+            }
+            if (old?.data && Array.isArray(old.data)) {
+              return {
+                ...old,
+                data: [data, ...old.data.filter((log: HealthLog) => log.id !== context.optimisticLog.id)]
+              };
+            }
+            if (Array.isArray(old)) {
+              return [data, ...old.filter((log: HealthLog) => log.id !== context.optimisticLog.id)];
+            }
+            return { logs: [data], hasMore: false, total: 1 };
+          }
+        );
+      }
       toast.success('💪 Exercise logged successfully!');
     },
     onSettled: () => {
@@ -155,15 +202,28 @@ export const useLogNutritionMutation = () => {
       queryClient.setQueriesData(
         { queryKey: healthKeys.logs() },
         (old: any) => {
-          if (!old?.data) return old;
-          return {
-            ...old,
-            data: [optimisticLog, ...old.data],
-          };
+          // Handle both paginated format and array format
+          if (old?.logs && Array.isArray(old.logs)) {
+            return {
+              ...old,
+              logs: [optimisticLog, ...old.logs],
+              total: (old.total || old.logs.length) + 1
+            };
+          }
+          if (old?.data && Array.isArray(old.data)) {
+            return {
+              ...old,
+              data: [optimisticLog, ...old.data],
+            };
+          }
+          if (Array.isArray(old)) {
+            return [optimisticLog, ...old];
+          }
+          return { logs: [optimisticLog], hasMore: false, total: 1 };
         }
       );
 
-      return { previousLogs };
+      return { previousLogs, optimisticLog };
     },
     onError: (err, newNutrition, context) => {
       if (context?.previousLogs) {
@@ -171,7 +231,33 @@ export const useLogNutritionMutation = () => {
       }
       toast.error('Failed to log nutrition');
     },
-    onSuccess: () => {
+    onSuccess: (data, variables, context) => {
+      // Replace optimistic log with real data
+      if (context?.optimisticLog) {
+        queryClient.setQueriesData(
+          { queryKey: healthKeys.logs() },
+          (old: any) => {
+            // Handle both paginated format and array format
+            if (old?.logs && Array.isArray(old.logs)) {
+              return {
+                ...old,
+                logs: [data, ...old.logs.filter((log: HealthLog) => log.id !== context.optimisticLog.id)],
+                total: old.total || old.logs.length
+              };
+            }
+            if (old?.data && Array.isArray(old.data)) {
+              return {
+                ...old,
+                data: [data, ...old.data.filter((log: HealthLog) => log.id !== context.optimisticLog.id)]
+              };
+            }
+            if (Array.isArray(old)) {
+              return [data, ...old.filter((log: HealthLog) => log.id !== context.optimisticLog.id)];
+            }
+            return { logs: [data], hasMore: false, total: 1 };
+          }
+        );
+      }
       toast.success('🍎 Nutrition logged successfully!');
     },
     onSettled: () => {
@@ -206,15 +292,28 @@ export const useLogMoodMutation = () => {
       queryClient.setQueriesData(
         { queryKey: healthKeys.logs() },
         (old: any) => {
-          if (!old?.data) return old;
-          return {
-            ...old,
-            data: [optimisticLog, ...old.data],
-          };
+          // Handle both paginated format and array format
+          if (old?.logs && Array.isArray(old.logs)) {
+            return {
+              ...old,
+              logs: [optimisticLog, ...old.logs],
+              total: (old.total || old.logs.length) + 1
+            };
+          }
+          if (old?.data && Array.isArray(old.data)) {
+            return {
+              ...old,
+              data: [optimisticLog, ...old.data],
+            };
+          }
+          if (Array.isArray(old)) {
+            return [optimisticLog, ...old];
+          }
+          return { logs: [optimisticLog], hasMore: false, total: 1 };
         }
       );
 
-      return { previousLogs };
+      return { previousLogs, optimisticLog };
     },
     onError: (err, newMood, context) => {
       if (context?.previousLogs) {
@@ -222,7 +321,33 @@ export const useLogMoodMutation = () => {
       }
       toast.error('Failed to log mood');
     },
-    onSuccess: () => {
+    onSuccess: (data, variables, context) => {
+      // Replace optimistic log with real data
+      if (context?.optimisticLog) {
+        queryClient.setQueriesData(
+          { queryKey: healthKeys.logs() },
+          (old: any) => {
+            // Handle both paginated format and array format
+            if (old?.logs && Array.isArray(old.logs)) {
+              return {
+                ...old,
+                logs: [data, ...old.logs.filter((log: HealthLog) => log.id !== context.optimisticLog.id)],
+                total: old.total || old.logs.length
+              };
+            }
+            if (old?.data && Array.isArray(old.data)) {
+              return {
+                ...old,
+                data: [data, ...old.data.filter((log: HealthLog) => log.id !== context.optimisticLog.id)]
+              };
+            }
+            if (Array.isArray(old)) {
+              return [data, ...old.filter((log: HealthLog) => log.id !== context.optimisticLog.id)];
+            }
+            return { logs: [data], hasMore: false, total: 1 };
+          }
+        );
+      }
       toast.success('😊 Mood logged successfully!');
     },
     onSettled: () => {
@@ -257,15 +382,28 @@ export const useLogHydrationMutation = () => {
       queryClient.setQueriesData(
         { queryKey: healthKeys.logs() },
         (old: any) => {
-          if (!old?.data) return old;
-          return {
-            ...old,
-            data: [optimisticLog, ...old.data],
-          };
+          // Handle both paginated format and array format
+          if (old?.logs && Array.isArray(old.logs)) {
+            return {
+              ...old,
+              logs: [optimisticLog, ...old.logs],
+              total: (old.total || old.logs.length) + 1
+            };
+          }
+          if (old?.data && Array.isArray(old.data)) {
+            return {
+              ...old,
+              data: [optimisticLog, ...old.data],
+            };
+          }
+          if (Array.isArray(old)) {
+            return [optimisticLog, ...old];
+          }
+          return { logs: [optimisticLog], hasMore: false, total: 1 };
         }
       );
 
-      return { previousLogs };
+      return { previousLogs, optimisticLog };
     },
     onError: (err, newHydration, context) => {
       if (context?.previousLogs) {
@@ -273,7 +411,33 @@ export const useLogHydrationMutation = () => {
       }
       toast.error('Failed to log hydration');
     },
-    onSuccess: () => {
+    onSuccess: (data, variables, context) => {
+      // Replace optimistic log with real data
+      if (context?.optimisticLog) {
+        queryClient.setQueriesData(
+          { queryKey: healthKeys.logs() },
+          (old: any) => {
+            // Handle both paginated format and array format
+            if (old?.logs && Array.isArray(old.logs)) {
+              return {
+                ...old,
+                logs: [data, ...old.logs.filter((log: HealthLog) => log.id !== context.optimisticLog.id)],
+                total: old.total || old.logs.length
+              };
+            }
+            if (old?.data && Array.isArray(old.data)) {
+              return {
+                ...old,
+                data: [data, ...old.data.filter((log: HealthLog) => log.id !== context.optimisticLog.id)]
+              };
+            }
+            if (Array.isArray(old)) {
+              return [data, ...old.filter((log: HealthLog) => log.id !== context.optimisticLog.id)];
+            }
+            return { logs: [data], hasMore: false, total: 1 };
+          }
+        );
+      }
       toast.success('💧 Hydration logged successfully!');
     },
     onSettled: () => {
