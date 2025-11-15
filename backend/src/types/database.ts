@@ -34,6 +34,7 @@ export interface User {
   stripe_customer_id: string | null;
   is_student: boolean;
   student_verification_status: StudentVerificationStatus;
+  email_verified: boolean;
   badge_points: number;
   total_badges: number;
   badge_tier: string;

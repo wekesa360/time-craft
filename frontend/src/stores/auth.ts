@@ -39,7 +39,9 @@ import i18n from '../i18n';
 interface AuthStore extends AuthState {
   // Actions
   login: (credentials: LoginForm) => Promise<void>;
-  register: (data: RegisterForm) => Promise<void>;
+  register: (data: RegisterForm) => Promise<{ requiresVerification: boolean; email?: string; otpId?: string; expiresAt?: number } | void>;
+  verifyEmail: (email: string, otpCode: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<{ otpId: string; expiresAt: number }>;
   loginWithOTP: (email: string, otpCode: string) => Promise<void>;
   sendOTP: (email: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -151,16 +153,69 @@ export const useAuthStore = create<AuthStore>()(
           set({ isLoading: true });
           const response = await apiClient.register(data);
 
-          set({
-            user: response.user,
-            tokens: response.tokens,
-            isAuthenticated: true,
-            isLoading: false,
-          });
+          // If verification is required, return the verification info
+          if (response.requiresVerification) {
+            set({ isLoading: false });
+            return {
+              requiresVerification: true,
+              email: data.email,
+              otpId: response.otpId,
+              expiresAt: response.expiresAt
+            };
+          }
 
-          apiClient.setTokens(response.tokens);
-          // Connect to SSE after successful registration
-          apiClient.connectSSE();
+          // Otherwise, complete registration with tokens
+          if (response.user && response.tokens) {
+            set({
+              user: response.user,
+              tokens: response.tokens,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+
+            apiClient.setTokens(response.tokens);
+            // Connect to SSE after successful registration
+            apiClient.connectSSE();
+          } else {
+            set({ isLoading: false });
+          }
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      verifyEmail: async (email, otpCode) => {
+        try {
+          set({ isLoading: true });
+          const response = await apiClient.verifyEmail(email, otpCode);
+
+          if (response.user && response.tokens) {
+            set({
+              user: response.user,
+              tokens: response.tokens,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+
+            apiClient.setTokens(response.tokens);
+            // Connect to SSE after successful verification
+            apiClient.connectSSE();
+          } else {
+            set({ isLoading: false });
+          }
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      resendVerification: async (email) => {
+        try {
+          set({ isLoading: true });
+          const response = await apiClient.resendVerification(email);
+          set({ isLoading: false });
+          return response;
         } catch (error) {
           set({ isLoading: false });
           throw error;

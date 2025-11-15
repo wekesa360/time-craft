@@ -49,7 +49,20 @@ export default function LoginPage() {
       // when isAuthenticated becomes true
     } catch (error) {
       console.error('Login failed:', error);
-      // Extract error message from API response
+      
+      // Check if error is due to unverified email
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as any;
+        if (apiError.response?.data?.requiresVerification && apiError.response?.data?.email) {
+          // Redirect to verification page instead of showing toast
+          navigate('/auth/verify-email', {
+            state: { email: apiError.response.data.email }
+          });
+          return;
+        }
+      }
+
+      // Extract error message from API response for other errors
       let errorMessage = 'Login failed. Please check your credentials.';
 
       if (error && typeof error === 'object' && 'response' in error) {

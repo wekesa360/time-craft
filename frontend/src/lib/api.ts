@@ -252,6 +252,10 @@ class ApiClient {
         break;
         
       case 403:
+        // Skip toast for email verification errors - handled by redirect in LoginPage
+        if (errorData?.requiresVerification) {
+          break;
+        }
         toast.error('You do not have permission to perform this action');
         break;
         
@@ -1056,6 +1060,21 @@ class ApiClient {
       headers: {
         'x-timezone': timezone
       }
+    });
+    return response.data;
+  }
+
+  async verifyEmail(email: string, otpCode: string): Promise<AuthResponse> {
+    const response = await this.client.post<AuthResponse>('/auth/verify-email', {
+      email,
+      otpCode
+    });
+    return response.data;
+  }
+
+  async resendVerification(email: string): Promise<{ message: string; otpId: string; expiresAt: number }> {
+    const response = await this.client.post<{ message: string; otpId: string; expiresAt: number }>('/auth/resend-verification', {
+      email
     });
     return response.data;
   }

@@ -27,9 +27,13 @@ export interface AuthTokens {
 }
 
 export interface AuthResponse {
-  user: User;
-  tokens: AuthTokens;
-  message: string;
+  user?: User;
+  tokens?: AuthTokens;
+  message?: string;
+  requiresVerification?: boolean;
+  otpId?: string;
+  expiresAt?: number;
+  email?: string;
 }
 
 export interface Task {

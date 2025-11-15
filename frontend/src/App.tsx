@@ -37,6 +37,7 @@ import {
   LazyRegisterPage,
   LazyForgotPasswordPage,
   LazyResetPasswordPage,
+  LazyEmailVerificationPage,
   LazyTermsOfServicePage,
   LazyPrivacyPolicyPage,
   LazyDashboard,
@@ -213,6 +214,14 @@ function App() {
               element={
                 <PublicRoute>
                   <LazyForgotPasswordPage />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/auth/verify-email"
+              element={
+                <PublicRoute>
+                  <LazyEmailVerificationPage />
                 </PublicRoute>
               }
             />

@@ -73,9 +73,24 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterForm) => {
     try {
-      await registerUser(data);
-      toast.success('Account created successfully! Welcome!');
-      navigate('/dashboard');
+      const result = await registerUser(data);
+      
+      // Check if verification is required
+      if (result && typeof result === 'object' && 'requiresVerification' in result && result.requiresVerification) {
+        // Redirect to verification page
+        navigate('/auth/verify-email', {
+          state: { 
+            email: result.email || data.email,
+            otpId: result.otpId,
+            expiresAt: result.expiresAt
+          }
+        });
+        toast.success('Account created! Please verify your email.');
+      } else {
+        // Registration completed (shouldn't happen with new flow, but handle it)
+        toast.success('Account created successfully! Welcome!');
+        navigate('/dashboard');
+      }
     } catch (error) {
       // Error is handled by the API client and toast is shown there
       console.error('Registration failed:', error);

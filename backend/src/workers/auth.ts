@@ -30,6 +30,15 @@ const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required')
 });
 
+const verifyEmailSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  otpCode: z.string().length(6, 'OTP must be 6 digits')
+});
+
+const resendVerificationSchema = z.object({
+  email: z.string().email('Invalid email format')
+});
+
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email format')
 });
@@ -134,7 +143,7 @@ auth.post('/register', zValidator('json', registerSchema), async (c) => {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with email_verified = false
     const newUser = await userRepo.createUser({
       email,
       password_hash: passwordHash,
@@ -146,11 +155,37 @@ auth.post('/register', zValidator('json', registerSchema), async (c) => {
       subscription_expires_at: null,
       stripe_customer_id: null,
       is_student: isStudent,
-      student_verification_status: 'none'
+      student_verification_status: 'none',
+      email_verified: false
     });
 
-    // Generate tokens
-    const tokens = await generateTokens(newUser, c.env);
+    // Generate OTP for email verification
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpId = crypto.randomUUID();
+    const expiresAt = Date.now() + (15 * 60 * 1000); // 15 minutes
+
+    // Store OTP in database
+    await c.env.DB.prepare(`
+      INSERT INTO email_otps (id, user_id, email, otp_code, expires_at, attempts, verified, type, created_at)
+      VALUES (?, ?, ?, ?, ?, 0, false, 'email_verification', ?)
+    `).bind(otpId, newUser.id, email, otpCode, expiresAt, Date.now()).run();
+
+    // Send verification email
+    try {
+      const { createEmailService } = await import('../lib/email');
+      const emailService = createEmailService(c.env);
+      const emailResult = await emailService.sendVerificationOTP(email, otpCode, preferredLanguage || 'en');
+      
+      if (!emailResult.success) {
+        console.error('Failed to send verification email:', emailResult.error);
+        // Continue even if email fails - user can request resend
+      } else {
+        console.log('Verification email sent successfully to:', email);
+      }
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Continue even if email fails - user can request resend
+    }
 
     // Log registration event
     c.env.ANALYTICS?.writeDataPoint({
@@ -159,10 +194,12 @@ auth.post('/register', zValidator('json', registerSchema), async (c) => {
       indexes: ['user_events']
     });
 
+    // Return success but NO tokens - user must verify email first
     return c.json({
-      message: 'Registration successful',
-      user: sanitizeUser(newUser),
-      tokens
+      message: 'Registration successful. Please check your email to verify your account.',
+      requiresVerification: true,
+      otpId, // For frontend to use in verification step
+      expiresAt
     }, 201);
 
   } catch (error) {
@@ -188,6 +225,15 @@ auth.post('/login', zValidator('json', loginSchema), async (c) => {
     const passwordValid = await bcrypt.compare(password, user.password_hash);
     if (!passwordValid) {
       return c.json({ error: 'Invalid email or password' }, 401);
+    }
+
+    // Check if email is verified
+    if (!user.email_verified) {
+      return c.json({ 
+        error: 'Email not verified. Please check your email and verify your account before logging in.',
+        requiresVerification: true,
+        email: user.email
+      }, 403);
     }
 
     // Generate tokens
@@ -441,6 +487,154 @@ auth.get('/validate', async (c) => {
       valid: false,
       error: 'Invalid or expired token'
     }, 401);
+  }
+});
+
+// POST /auth/verify-email - Verify email with OTP code
+auth.post('/verify-email', zValidator('json', verifyEmailSchema), async (c) => {
+  try {
+    const { email, otpCode } = c.req.valid('json');
+    const now = Date.now();
+
+    const userRepo = new UserRepository(c.env);
+    const user = await userRepo.findByEmail(email);
+    
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    if (user.email_verified) {
+      return c.json({ 
+        message: 'Email already verified',
+        user: sanitizeUser(user)
+      });
+    }
+
+    // Find valid OTP for email verification
+    const otpResult = await c.env.DB.prepare(`
+      SELECT id, otp_code, expires_at, attempts, verified
+      FROM email_otps 
+      WHERE email = ? AND user_id = ? AND type = 'email_verification' 
+        AND verified = false AND expires_at > ?
+      ORDER BY created_at DESC
+      LIMIT 1
+    `).bind(email, user.id, now).first();
+
+    if (!otpResult) {
+      return c.json({
+        error: 'Invalid or expired verification code. Please request a new one.'
+      }, 400);
+    }
+
+    // Check attempts
+    if (otpResult.attempts >= 3) {
+      return c.json({
+        error: 'Too many failed attempts. Please request a new verification code.'
+      }, 400);
+    }
+
+    // Verify OTP code
+    if (otpResult.otp_code !== otpCode) {
+      // Increment attempts
+      await c.env.DB.prepare(`
+        UPDATE email_otps 
+        SET attempts = attempts + 1 
+        WHERE id = ?
+      `).bind(otpResult.id).run();
+
+      return c.json({
+        error: 'Invalid verification code. Please try again.'
+      }, 400);
+    }
+
+    // Mark OTP as verified
+    await c.env.DB.prepare(`
+      UPDATE email_otps 
+      SET verified = true 
+      WHERE id = ?
+    `).bind(otpResult.id).run();
+
+    // Update user email_verified status
+    await userRepo.updateUser(user.id, { email_verified: true });
+
+    // Get updated user
+    const updatedUser = await userRepo.findByEmail(email);
+    if (!updatedUser) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // Generate tokens now that email is verified
+    const tokens = await generateTokens(updatedUser, c.env);
+
+    return c.json({
+      message: 'Email verified successfully!',
+      user: sanitizeUser(updatedUser),
+      tokens
+    });
+
+  } catch (error) {
+    console.error('Email verification error:', error);
+    return c.json({ error: 'Failed to verify email' }, 500);
+  }
+});
+
+// POST /auth/resend-verification - Resend verification email
+auth.post('/resend-verification', zValidator('json', resendVerificationSchema), async (c) => {
+  try {
+    const { email } = c.req.valid('json');
+
+    const userRepo = new UserRepository(c.env);
+    const user = await userRepo.findByEmail(email);
+    
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    if (user.email_verified) {
+      return c.json({ 
+        message: 'Email already verified',
+        email_verified: true
+      });
+    }
+
+    // Generate new OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpId = crypto.randomUUID();
+    const expiresAt = Date.now() + (15 * 60 * 1000); // 15 minutes
+
+    // Store OTP in database
+    await c.env.DB.prepare(`
+      INSERT INTO email_otps (id, user_id, email, otp_code, expires_at, attempts, verified, type, created_at)
+      VALUES (?, ?, ?, ?, ?, 0, false, 'email_verification', ?)
+    `).bind(otpId, user.id, email, otpCode, expiresAt, Date.now()).run();
+
+    // Send verification email
+    try {
+      const { createEmailService } = await import('../lib/email');
+      const emailService = createEmailService(c.env);
+      const emailResult = await emailService.sendVerificationOTP(email, otpCode, user.preferred_language || 'en');
+      
+      if (!emailResult.success) {
+        console.error('Failed to send verification email:', emailResult.error);
+        return c.json({ error: `Failed to send verification email: ${emailResult.error}` }, 500);
+      }
+      
+      console.log('Verification email sent successfully to:', email);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      const errorMessage = emailError instanceof Error ? emailError.message : 'Unknown error';
+      return c.json({ error: `Failed to send verification email: ${errorMessage}` }, 500);
+    }
+
+    return c.json({
+      message: 'Verification email sent successfully',
+      otpId,
+      expiresAt
+    });
+
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    return c.json({ error: 'Failed to resend verification email' }, 500);
   }
 });
 
