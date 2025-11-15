@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Switch, Linking, Platform } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Switch, Linking, Platform, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../stores/auth';
@@ -34,6 +34,17 @@ interface UserStats {
   healthLogsCount: number;
 }
 
+// Import the User type from the types file
+import type { User } from '../../types';
+
+// Local type for community stats
+interface CommunityStats {
+  challengesActive: number;
+  badgesCount: number;
+  friendsCount: number;
+  leaderboardRank?: number;
+}
+
 export default function ProfileScreen() {
   const { user, logout, biometricEnabled, setBiometricEnabled } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -61,6 +72,47 @@ export default function ProfileScreen() {
     Linking.openURL(url).catch(() => Alert.alert(t('error'), t('unable_to_open_link')));
   };
 
+  // Fetch user profile
+  const { 
+    data: userProfile, 
+    isLoading: isLoadingProfile, 
+    refetch: refetchProfile,
+    isRefetching: isRefreshingProfile 
+  } = useQuery({
+    queryKey: ['user-profile'],
+    queryFn: async () => {
+      try {
+        return await apiClient.getProfile();
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+        showToast.error('Failed to load profile');
+        throw error;
+      }
+    },
+  });
+
+  // Update profile mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updates: Partial<User>) => {
+      return await apiClient.updateProfile(updates);
+    },
+    onSuccess: (updatedUser: User) => {
+      // Update auth store with new user data
+      useAuthStore.getState().setUser(updatedUser);
+      showToast.success('Profile updated successfully');
+      refetchProfile();
+    },
+    onError: (error: any) => {
+      console.error('Update profile error:', error);
+      showToast.error(error.message || 'Failed to update profile');
+    },
+  });
+
+  // Handle pull to refresh
+  const onRefresh = useCallback(() => {
+    refetchProfile();
+  }, [refetchProfile]);
+
   // Fetch user stats (compose from existing endpoints)
   const { data: stats } = useQuery({
     queryKey: ['user-stats'],
@@ -78,27 +130,13 @@ export default function ProfileScreen() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Safe community summary fallbacks for profile cards
-  const community = {
+  // Community summary for the profile
+  const community: CommunityStats = {
     challengesActive: 0,
     badgesCount: Number(stats?.totalAchievements ?? 0) || 0,
     friendsCount: 0,
-    leaderboardRank: undefined as number | undefined,
+    leaderboardRank: undefined,
   };
-
-  // Update profile mutation
-  const updateProfileMutation = useMutation({
-    mutationFn: async (updates: any) => {
-      return apiClient.updateProfile(updates);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-      Alert.alert('Success', 'Profile updated successfully');
-    },
-    onError: (error) => {
-      Alert.alert(t('error'), 'Failed to update profile');
-    },
-  });
 
   const handleLogout = async () => {
     setLogoutDialogVisible(true);
@@ -187,17 +225,39 @@ export default function ProfileScreen() {
         </View>
 
         {/* User Info Card */}
-        <View className="px-6 mb-8">
-          <View className="rounded-3xl p-6 shadow-sm" style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii['3xl'], padding: theme.spacing.xl }}>
-            <View className="flex-row items-center mb-6">
-              <View className="w-20 h-20 rounded-full items-center justify-center mr-4" style={{ backgroundColor: theme.colors.primaryLight }}>
+        <View style={{ paddingHorizontal: theme.spacing.xl, marginBottom: theme.spacing.xl }}>
+          <View style={{
+            backgroundColor: theme.colors.card,
+            borderWidth: 1,
+            borderColor: theme.colors.border,
+            borderRadius: theme.radii['3xl'],
+            padding: theme.spacing.xl
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xl }}>
+              <View style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: theme.spacing.md,
+                backgroundColor: theme.colors.primaryLight
+              }}>
                 <UserIcon size={40} color={theme.colors.primary} />
               </View>
-              <View className="flex-1">
-                <Text className="text-2xl font-bold" style={{ color: theme.colors.foreground }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{
+                  fontSize: 24, // 2xl equivalent
+                  fontWeight: '700',
+                  color: theme.colors.foreground,
+                  marginBottom: theme.spacing.xs
+                }}>
                   {user?.firstName} {user?.lastName}
                 </Text>
-                <Text className="text-lg" style={{ color: theme.colors.muted }}>
+                <Text style={{
+                  fontSize: 18, // lg equivalent
+                  color: theme.colors.muted
+                }}>
                   {user?.email}
                 </Text>
                 {user?.isStudent && (

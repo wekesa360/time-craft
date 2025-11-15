@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm } from 'react-hook-form';
@@ -21,17 +21,57 @@ type FormValues = z.infer<typeof schema>;
 export default function EditProfileScreen() {
   const theme = useAppTheme();
   const { user } = useAuthStore();
-  const { control, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  // Initialize form with current user data
+  const { control, handleSubmit, setValue, watch, formState: { errors, isSubmitting, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { firstName: '', lastName: '', email: '', bio: '' },
+    defaultValues: { 
+      firstName: user?.firstName || '', 
+      lastName: user?.lastName || '', 
+      email: user?.email || '', 
+      bio: (user as any)?.bio || '' 
+    },
   });
+  
+  // Track which fields have been modified
+  const [modifiedFields, setModifiedFields] = useState<Partial<Record<keyof FormValues, boolean>>>({});
+  
+  // Update modified fields when values change
+  const handleChange = (field: keyof FormValues, value: string) => {
+    setValue(field, value, { shouldValidate: true });
+    setModifiedFields(prev => ({ ...prev, [field]: true }));
+  };
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await apiClient.updateProfile(values);
-      Alert.alert('Success', 'Profile updated');
-      router.back();
+      // Only include modified fields in the update
+      const updates: Partial<FormValues> = {};
+      
+      // Check each field to see if it was modified
+      (Object.keys(values) as Array<keyof FormValues>).forEach(key => {
+        if (modifiedFields[key] || isDirty) {
+          updates[key] = values[key];
+        }
+      });
+      
+      // Only make the API call if there are actual changes
+      if (Object.keys(updates).length > 0) {
+        const updatedUser = await apiClient.updateProfile(updates);
+        
+        // Update the auth store with the updated user data
+        useAuthStore.getState().setUser({
+          ...useAuthStore.getState().user,
+          ...updates
+        });
+        
+        // Show success message and navigate back
+        Alert.alert('Success', 'Profile updated successfully');
+        router.replace('/(tabs)/profile');
+      } else {
+        Alert.alert('No changes', 'No changes were made to your profile');
+        router.back();
+      }
     } catch (e: any) {
+      console.error('Update profile error:', e);
       Alert.alert('Error', e?.response?.data?.error || 'Failed to update profile');
     }
   };
@@ -56,7 +96,7 @@ export default function EditProfileScreen() {
           <Text style={{ color: theme.colors.muted, marginBottom: 6 }}>First Name</Text>
           <TextInput
             value={watch('firstName')}
-            onChangeText={(t) => setValue('firstName', t, { shouldValidate: true })}
+            onChangeText={(t) => handleChange('firstName', t)}
             placeholder={user?.firstName || 'First name'}
             placeholderTextColor={theme.colors.muted}
             style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl, paddingHorizontal: 14, paddingVertical: 12, color: theme.colors.foreground }}
@@ -67,7 +107,7 @@ export default function EditProfileScreen() {
           <Text style={{ color: theme.colors.muted, marginBottom: 6 }}>Last Name</Text>
           <TextInput
             value={watch('lastName')}
-            onChangeText={(t) => setValue('lastName', t, { shouldValidate: true })}
+            onChangeText={(t) => handleChange('lastName', t)}
             placeholder={user?.lastName || 'Last name'}
             placeholderTextColor={theme.colors.muted}
             style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl, paddingHorizontal: 14, paddingVertical: 12, color: theme.colors.foreground }}
@@ -78,7 +118,7 @@ export default function EditProfileScreen() {
           <Text style={{ color: theme.colors.muted, marginBottom: 6 }}>Email</Text>
           <TextInput
             value={watch('email')}
-            onChangeText={(t) => setValue('email', t, { shouldValidate: true })}
+            onChangeText={(t) => handleChange('email', t)}
             placeholder={user?.email || 'Email'}
             keyboardType="email-address"
             autoCapitalize="none"
@@ -91,7 +131,7 @@ export default function EditProfileScreen() {
           <Text style={{ color: theme.colors.muted, marginBottom: 6 }}>Bio</Text>
           <TextInput
             value={watch('bio')}
-            onChangeText={(t) => setValue('bio', t, { shouldValidate: true })}
+            onChangeText={(t) => handleChange('bio', t)}
             placeholder={(user as any)?.bio || 'Tell us about yourself'}
             placeholderTextColor={theme.colors.muted}
             multiline
