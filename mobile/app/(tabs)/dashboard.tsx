@@ -109,6 +109,15 @@ export default function DashboardScreen() {
 
   const quickActions = [
     {
+      id: 'focus',
+      title: 'Focus',
+      description: 'Start a focus session',
+      icon: BoltIcon,
+      backgroundColor: '#fff3e0',
+      iconColor: '#ff9800',
+      onPress: () => router.push('/(tabs)/focus'),
+    },
+    {
       id: 'add-task',
       title: 'Add Tasks',
       description: 'Create a new task',
@@ -315,13 +324,39 @@ export default function DashboardScreen() {
           </Text>
           
           {(() => {
-            const actions = quickActions.filter(a => ['add-task','log-health','view-calendar'].includes(a.id));
-            const firstRow = actions.filter(a => a.id === 'add-task' || a.id === 'log-health');
+            const actions = quickActions.filter(a => ['focus','add-task','log-health','view-calendar'].includes(a.id));
+            const focus = actions.find(a => a.id === 'focus');
+            const secondRow = actions.filter(a => a.id === 'add-task' || a.id === 'log-health');
             const calendar = actions.find(a => a.id === 'view-calendar');
             return (
               <>
+                {focus && (
+                  <View className="-mx-2 mb-3">
+                    <TouchableOpacity
+                      className="w-full flex-row items-center justify-center"
+                      style={{
+                        backgroundColor: theme.colors.primaryLight,
+                        borderWidth: 1,
+                        borderColor: theme.colors.primary,
+                        borderRadius: theme.radii['3xl'],
+                        paddingVertical: theme.spacing.xl,
+                        paddingHorizontal: theme.spacing.xl,
+                      }}
+                      onPress={focus.onPress}
+                    >
+                      <View className="flex-row items-center">
+                        <View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: theme.colors.primary + '20' }}>
+                          <focus.icon size={24} color={theme.colors.primary} />
+                        </View>
+                        <Text className="font-semibold" style={{ color: theme.colors.primary, fontSize: 18 }}>
+                          {focus.title}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
                 <View className="flex-row -mx-2 mb-3">
-                  {firstRow.map((action) => (
+                  {secondRow.map((action) => (
                     <View key={action.id} className="w-1/2 px-2">
                       <TouchableOpacity
                         className="w-full flex-row items-center justify-center"

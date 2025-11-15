@@ -112,9 +112,99 @@ app.post('/sessions', validateRequest({ json: StartSessionSchema }), async (c) =
     const focusService = c.get('focusService') as FocusSessionService;
     const jwtPayload = c.get('jwtPayload') as any;
     const userId = jwtPayload?.userId;
-    const sessionData = c.req.valid('json');
     
-    const session = await focusService.startSession(userId, sessionData);
+    // Get validated data - fallback to raw body if validation fails
+    let sessionData: any;
+    try {
+      sessionData = c.req.valid('json');
+      if (!sessionData) {
+        // Try to get raw body as fallback
+        sessionData = await c.req.json();
+        console.log('Using raw body as sessionData:', sessionData);
+      }
+    } catch (e) {
+      // If validation fails, try to get raw body
+      try {
+        sessionData = await c.req.json();
+        console.log('Validation failed, using raw body:', sessionData);
+      } catch (parseError) {
+        console.error('Failed to parse request body:', parseError);
+        return c.json({
+          success: false,
+          error: 'Invalid request body',
+          details: parseError instanceof Error ? parseError.message : 'Unknown error'
+        }, 400);
+      }
+    }
+    
+    console.log('Session data received:', JSON.stringify(sessionData, null, 2));
+    console.log('User ID:', userId);
+    
+    // Transform camelCase to snake_case if needed (handle both formats)
+    const normalizedData: any = {};
+    if (sessionData.session_type) {
+      normalizedData.session_type = sessionData.session_type;
+    } else if (sessionData.sessionType) {
+      normalizedData.session_type = sessionData.sessionType;
+    }
+    
+    if (sessionData.planned_duration !== undefined) {
+      normalizedData.planned_duration = Number(sessionData.planned_duration);
+    } else if (sessionData.plannedDuration !== undefined) {
+      normalizedData.planned_duration = Number(sessionData.plannedDuration);
+    }
+    
+    if (sessionData.task_id) {
+      normalizedData.task_id = sessionData.task_id;
+    } else if (sessionData.taskId) {
+      normalizedData.task_id = sessionData.taskId;
+    }
+    
+    if (sessionData.session_name) {
+      normalizedData.session_name = sessionData.session_name;
+    } else if (sessionData.sessionName) {
+      normalizedData.session_name = sessionData.sessionName;
+    }
+    
+    // Copy other optional fields
+    if (sessionData.planned_task_count !== undefined) {
+      normalizedData.planned_task_count = sessionData.planned_task_count;
+    }
+    if (sessionData.environment_data) {
+      normalizedData.environment_data = sessionData.environment_data;
+    }
+    if (sessionData.mood_before !== undefined) {
+      normalizedData.mood_before = sessionData.mood_before;
+    }
+    if (sessionData.energy_before !== undefined) {
+      normalizedData.energy_before = sessionData.energy_before;
+    }
+    if (sessionData.session_tags) {
+      normalizedData.session_tags = sessionData.session_tags;
+    }
+    
+    // Remove template_id if present (not used in schema but might be sent)
+    // (already handled by not copying it)
+    
+    console.log('Normalized session data:', JSON.stringify(normalizedData, null, 2));
+    
+    if (!normalizedData.session_type) {
+      return c.json({
+        success: false,
+        error: 'Missing required field: session_type or sessionType',
+        received: sessionData
+      }, 400);
+    }
+    
+    if (!normalizedData.planned_duration) {
+      return c.json({
+        success: false,
+        error: 'Missing required field: planned_duration or plannedDuration',
+        received: sessionData
+      }, 400);
+    }
+    
+    const session = await focusService.startSession(userId, normalizedData);
     
     return c.json({
       success: true,
@@ -373,7 +463,7 @@ app.get('/dashboard', async (c) => {
     const sessionStats = await db.query(`
       SELECT 
         COUNT(*) as total_sessions,
-        COUNT(CASE WHEN is_successful = 1 THEN 1 END) as successful_sessions,
+        COUNT(CASE WHEN COALESCE(is_successful, 1) = 1 THEN 1 END) as successful_sessions,
         SUM(actual_duration) as total_focus_minutes
       FROM focus_sessions 
       WHERE user_id = ?
@@ -534,8 +624,8 @@ app.get('/stats/weekly', async (c) => {
       SELECT 
         DATE(datetime(started_at/1000, 'unixepoch')) as date,
         COUNT(*) as sessions,
-        SUM(actual_duration) as total_minutes,
-        COUNT(CASE WHEN is_successful = 1 THEN 1 END) as successful_sessions
+        SUM(COALESCE(actual_duration, 0)) as total_minutes,
+        COUNT(CASE WHEN COALESCE(is_successful, 1) = 1 THEN 1 END) as successful_sessions
       FROM focus_sessions 
       WHERE user_id = ? AND started_at >= ?
       GROUP BY DATE(datetime(started_at/1000, 'unixepoch'))

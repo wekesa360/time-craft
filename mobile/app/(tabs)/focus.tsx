@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, BackHandler } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, BackHandler, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -62,6 +62,8 @@ export default function FocusScreen() {
   const queryClient = useQueryClient();
   const [backDialogVisible, setBackDialogVisible] = useState(false);
   const [completeDialogVisible, setCompleteDialogVisible] = useState(false);
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const [progressBarWidth, setProgressBarWidth] = useState(0);
 
   // Fetch focus templates
   const { data: templates = [] } = useQuery({
@@ -142,6 +144,19 @@ export default function FocusScreen() {
 
     return () => clearInterval(interval);
   }, [isRunning, isPaused, timeRemaining]);
+
+  // Update progress animation
+  useEffect(() => {
+    if (activeSession && activeSession.plannedDuration && progressBarWidth > 0) {
+      const totalSeconds = activeSession.plannedDuration * 60;
+      const progress = totalSeconds > 0 ? (totalSeconds - timeRemaining) / totalSeconds : 0;
+      Animated.timing(progressAnim, {
+        toValue: progress,
+        duration: 1000,
+        useNativeDriver: false, // width animation doesn't support native driver
+      }).start();
+    }
+  }, [timeRemaining, activeSession, progressAnim, progressBarWidth]);
 
   const startSession = (template: FocusTemplate) => {
     createSessionMutation.mutate({
@@ -326,13 +341,23 @@ export default function FocusScreen() {
                 </View>
 
                 {/* Progress Bar */}
-                <View className="w-full mt-8">
-                  <View className="rounded-full h-2" style={{ backgroundColor: theme.colors.border }}>
-                    <View 
-                      className="rounded-full h-2 transition-all duration-1000"
+                <View className="w-full mt-8" style={{ paddingHorizontal: 24 }}>
+                  <View 
+                    className="rounded-full h-2" 
+                    style={{ backgroundColor: theme.colors.border }}
+                    onLayout={(e) => {
+                      const { width } = e.nativeEvent.layout;
+                      setProgressBarWidth(width);
+                    }}
+                  >
+                    <Animated.View 
+                      className="rounded-full h-2"
                       style={{ 
                         backgroundColor: theme.colors.primary,
-                        width: `${((activeSession.plannedDuration * 60 - timeRemaining) / (activeSession.plannedDuration * 60)) * 100}%` 
+                        width: progressAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, progressBarWidth || 0],
+                        }),
                       }}
                     />
                   </View>

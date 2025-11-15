@@ -1067,7 +1067,13 @@ class ApiClient {
     plannedDuration: number;
     templateId?: string;
   }) {
-    const response = await this.post('/api/focus/sessions', session);
+    // Transform to backend format
+    const payload = {
+      session_type: session.sessionType,
+      planned_duration: Number(session.plannedDuration),
+      template_id: session.templateId,
+    };
+    const response = await this.post('/api/focus/sessions', payload);
     return response.data;
   }
 

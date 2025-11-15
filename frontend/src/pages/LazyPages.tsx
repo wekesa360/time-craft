@@ -63,10 +63,6 @@ export const LazyCalendarPage = createLazyComponent(
   () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.calendar}</div>
 );
 
-export const LazyFocusPage = createLazyComponent(
-  () => import('./FocusPage'),
-  () => <div className="flex items-center justify-center min-h-[200px]">{routeLoadingMessages.focus}</div>
-);
 
 export const LazyBadgesPage = createLazyComponent(
   () => import('./BadgesPage'),
@@ -126,7 +122,6 @@ export const preloadRoutes = {
   tasks: () => import('./TasksPage'),
   health: () => import('./HealthPage'),
   calendar: () => import('./CalendarPage'),
-  focus: () => import('./FocusPage'),
   badges: () => import('./BadgesPage'),
   social: () => import('./SocialPage'),
   voice: () => import('./VoicePage'),

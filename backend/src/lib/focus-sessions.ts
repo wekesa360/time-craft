@@ -210,49 +210,56 @@ export class FocusSessionService {
     session_tags?: string[];
   }): Promise<FocusSession> {
     try {
+      // Validate sessionData
+      if (!sessionData) {
+        throw new Error('sessionData is required');
+      }
+      if (!sessionData.session_type) {
+        throw new Error('session_type is required');
+      }
+      if (!sessionData.planned_duration) {
+        throw new Error('planned_duration is required');
+      }
+      
       // First, cancel any existing active sessions for this user
       await this.cancelAllActiveSessions(userId);
       
       const sessionId = generateId('session');
       const now = Date.now();
 
+      // Create session object matching actual database schema
       const session: FocusSession = {
         id: sessionId,
         user_id: userId,
         session_type: sessionData.session_type,
-        session_name: sessionData.session_name,
         planned_duration: sessionData.planned_duration,
-        task_id: sessionData.task_id,
-        planned_task_count: sessionData.planned_task_count || 1,
+        task_id: sessionData.task_id || undefined,
+        planned_task_count: 1, // Default value
         completed_task_count: 0,
         break_duration: 0,
         interruptions: 0,
         distraction_count: 0,
-        environment_data: sessionData.environment_data,
-        mood_before: sessionData.mood_before,
-        energy_before: sessionData.energy_before,
-        session_tags: sessionData.session_tags,
         is_successful: true,
         started_at: now,
         created_at: now,
         updated_at: now
       };
 
+      // Insert only columns that exist in the actual schema
+      // Column order must match table schema: id, user_id, session_type, planned_duration, 
+      // actual_duration, task_id, interruptions, productivity_rating, notes, started_at, 
+      // completed_at, created_at, is_successful
+      // Note: actual_duration has CHECK constraint > 0, so we omit it (will be NULL)
       await this.db.execute(`
         INSERT INTO focus_sessions (
-          id, user_id, session_type, session_name, planned_duration, task_id,
-          planned_task_count, completed_task_count, break_duration, interruptions,
-          distraction_count, environment_data, mood_before, energy_before,
-          session_tags, is_successful, started_at, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          id, user_id, session_type, planned_duration, task_id,
+          interruptions, productivity_rating, notes, started_at, 
+          completed_at, created_at, is_successful
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        sessionId, userId, sessionData.session_type, sessionData.session_name || null,
+        sessionId, userId, sessionData.session_type,
         sessionData.planned_duration, sessionData.task_id || null,
-        sessionData.planned_task_count || 1, 0, 0, 0, 0,
-        JSON.stringify(sessionData.environment_data || {}),
-        sessionData.mood_before || null, sessionData.energy_before || null,
-        JSON.stringify(sessionData.session_tags || []),
-        1, now, now, now
+        0, null, null, now, null, now, 1
       ]);
 
       // Schedule break reminder if it's a pomodoro session
@@ -263,8 +270,11 @@ export class FocusSessionService {
       logger.info(`Focus session started: ${sessionId} for user ${userId}`);
       return session;
     } catch (error) {
-      logger.error('Failed to start focus session:', error);
-      throw new Error('Failed to start focus session');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : 'No stack trace';
+      logger.error('Failed to start focus session:', { error: errorMessage, stack: errorStack, userId, sessionData });
+      console.error('Focus session start error details:', error);
+      throw new Error(`Failed to start focus session: ${errorMessage}`);
     }
   }
 
@@ -321,24 +331,12 @@ export class FocusSessionService {
       await this.db.execute(`
         UPDATE focus_sessions SET
           actual_duration = ?,
-          completed_task_count = ?,
-          break_duration = ?,
-          mood_after = ?,
-          energy_after = ?,
-          focus_quality = ?,
           is_successful = ?,
-          completed_at = ?,
-          updated_at = ?
+          completed_at = ?
         WHERE id = ? AND user_id = ?
       `, [
         completionData.actual_duration,
-        completionData.completed_task_count || 0,
-        completionData.break_duration || 0,
-        completionData.mood_after || null,
-        completionData.energy_after || null,
-        completionData.focus_quality || null,
         completionData.is_successful !== false ? 1 : 0,
-        now,
         now,
         sessionId,
         userId
@@ -378,11 +376,7 @@ export class FocusSessionService {
 
       // For now, we'll just update the session to mark it as paused
       // In a real implementation, you might want to track pause/resume times
-      await this.db.execute(`
-        UPDATE focus_sessions SET
-          updated_at = ?
-        WHERE id = ? AND user_id = ? AND completed_at IS NULL
-      `, [now, sessionId, userId]);
+      // No database update needed for pause - just return the session
 
       // Get the updated session
       const session = await this.getSession(userId, sessionId);
@@ -404,11 +398,7 @@ export class FocusSessionService {
 
       // For now, we'll just update the session timestamp
       // In a real implementation, you might want to track pause/resume times
-      await this.db.execute(`
-        UPDATE focus_sessions SET
-          updated_at = ?
-        WHERE id = ? AND user_id = ? AND completed_at IS NULL
-      `, [now, sessionId, userId]);
+      // No database update needed for resume - just return the session
 
       // Get the updated session
       const session = await this.getSession(userId, sessionId);
@@ -439,19 +429,20 @@ export class FocusSessionService {
         logger.warn(`Found ${activeSessions.length} active sessions for user ${userId}, cancelling all but the most recent`);
       }
 
+      // Only update columns that exist in the schema
       await this.db.execute(`
         UPDATE focus_sessions SET
           is_successful = 0,
-          cancellation_reason = 'Replaced by new session',
-          completed_at = ?,
-          updated_at = ?
+          completed_at = ?
         WHERE user_id = ? AND completed_at IS NULL
-      `, [now, now, userId]);
+      `, [now, userId]);
 
       logger.info(`Cancelled all active sessions for user ${userId}`);
     } catch (error) {
       logger.error('Failed to cancel active sessions:', error);
-      throw new Error('Failed to cancel active sessions');
+      // Don't throw - just log the error and continue
+      // This allows new sessions to be created even if canceling old ones fails
+      logger.warn('Continuing with session creation despite cancel error');
     }
   }
 
@@ -462,10 +453,9 @@ export class FocusSessionService {
       await this.db.execute(`
         UPDATE focus_sessions SET
           is_successful = 0,
-          completed_at = ?,
-          updated_at = ?
+          completed_at = ?
         WHERE id = ? AND user_id = ?
-      `, [now, now, sessionId, userId]);
+      `, [now, sessionId, userId]);
 
       logger.info(`Focus session cancelled: ${sessionId} for user ${userId}, reason: ${reason}`);
     } catch (error) {
@@ -591,13 +581,13 @@ export class FocusSessionService {
         distraction.notes, now
       ]);
 
-      // Update session distraction count
-      await this.db.execute(`
-        UPDATE focus_sessions SET 
-          distraction_count = distraction_count + 1,
-          updated_at = ?
-        WHERE id = ? AND user_id = ?
-      `, [now, sessionId, userId]);
+      // Update session distraction count (if column exists)
+      // Note: distraction_count column doesn't exist in current schema, so skip update
+      // await this.db.execute(`
+      //   UPDATE focus_sessions SET 
+      //     distraction_count = distraction_count + 1
+      //   WHERE id = ? AND user_id = ?
+      // `, [sessionId, userId]);
 
       logger.info(`Distraction recorded: ${distractionId} for session ${sessionId}`);
       return distractionRecord;

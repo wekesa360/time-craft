@@ -44,7 +44,6 @@ import {
   LazyTasksPage,
   LazyHealthPage,
   LazyCalendarPage,
-  LazyFocusPage,
   LazyBadgesPage,
   LazySocialPage,
   LazyVoicePage,
@@ -299,16 +298,6 @@ function App() {
                 <ProtectedRoute>
                   <AppLayout>
                     <LazyCalendarPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/focus"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <LazyFocusPage />
                   </AppLayout>
                 </ProtectedRoute>
               }

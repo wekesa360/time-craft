@@ -34,11 +34,6 @@ const getNavigationItems = (t: any) => [
     key: "calendar",
   },
   { 
-    name: t("navigation.focus") || "Focus", 
-    href: "/focus", 
-    key: "focus" 
-  },
-  { 
     name: t("navigation.badges") || "Badges", 
     href: "/badges", 
     key: "badges" 
