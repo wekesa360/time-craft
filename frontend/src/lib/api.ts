@@ -1675,8 +1675,8 @@ class ApiClient {
     start?: number;
     end?: number;
     type?: string;
-  }): Promise<PaginatedResponse<CalendarEvent[]>> {
-    const response = await this.client.get<PaginatedResponse<CalendarEvent[]>>('/api/calendar/events', { params });
+  }): Promise<{ events: CalendarEvent[]; pagination?: any; timeframe?: any }> {
+    const response = await this.client.get<{ events: CalendarEvent[]; pagination?: any; timeframe?: any }>('/api/calendar/events', { params });
     return response.data;
   }
 

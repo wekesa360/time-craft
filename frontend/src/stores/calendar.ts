@@ -41,7 +41,8 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const response = await apiClient.getEvents(params);
-      set({ events: response.data || [], isLoading: false });
+      // Backend returns { events: [...], pagination: {...}, timeframe: {...} }
+      set({ events: response.events || [], isLoading: false });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to fetch events',

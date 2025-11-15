@@ -213,9 +213,9 @@ health.post('/manual-entry', zValidator('json', manualEntrySchema), async (c) =>
 
     // Build response based on type
     const responseData: any = {
-      id: healthLog.id,
-      type: healthLog.type,
-      recordedAt: healthLog.recorded_at
+        id: healthLog.id,
+        type: healthLog.type,
+        recordedAt: healthLog.recorded_at
     };
 
     // For sleep, include structured fields

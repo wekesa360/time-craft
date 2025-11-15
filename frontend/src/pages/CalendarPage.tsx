@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Calendar, Clock, MapPin } from 'lucide-react';
 import MeetingScheduler from '../components/features/calendar/MeetingScheduler';
@@ -19,42 +19,40 @@ export default function CalendarPage() {
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [activeView, setActiveView] = useState<ViewMode>('calendar');
 
-  // Get today's events
-  const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-  const todayEnd = todayStart + 24 * 60 * 60 * 1000;
+  // Memoize today's date range to prevent recalculation on every render
+  const todayDateRange = useMemo(() => {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const todayEnd = todayStart + 24 * 60 * 60 * 1000;
+    return { start: todayStart, end: todayEnd };
+  }, []); // Only calculate once on mount
   
-  const { data: todayEventsData } = useCalendarEventsQuery({
-    start: todayStart,
-    end: todayEnd
-  });
+  const { data: todayEventsData } = useCalendarEventsQuery(todayDateRange);
 
-  // Get upcoming events for this week
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay());
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 7);
+  // Memoize week date range to prevent recalculation on every render
+  const weekDateRange = useMemo(() => {
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 7);
+    return { start: weekStart.getTime(), end: weekEnd.getTime() };
+  }, []); // Only calculate once on mount
 
-  const { data: weekEventsData } = useCalendarEventsQuery({
-    start: weekStart.getTime(),
-    end: weekEnd.getTime()
-  });
+  const { data: weekEventsData } = useCalendarEventsQuery(weekDateRange);
 
-  const todayEvents = todayEventsData?.data || [];
-  const upcomingEvents = weekEventsData?.data?.filter(event => {
-    const eventDate = new Date(event.startTime);
-    return eventDate > today;
-  }).slice(0, 6) || [];
+  // Memoize filtered events to prevent recalculation
+  const todayEvents = useMemo(() => {
+    return todayEventsData?.events || [];
+  }, [todayEventsData?.events]);
 
-  // Debug logging for calendar data
-  React.useEffect(() => {
-    console.log('CalendarPage loaded data:', {
-      todayEventsCount: todayEvents.length,
-      upcomingEventsCount: upcomingEvents.length,
-      todayEvents,
-      upcomingEvents
-    });
-  }, [todayEvents, upcomingEvents]);
+  const upcomingEvents = useMemo(() => {
+    const today = new Date();
+    return (weekEventsData?.events || []).filter(event => {
+      const eventDate = new Date(event.startTime);
+      return eventDate > today;
+    }).slice(0, 6);
+  }, [weekEventsData?.events]);
 
   const getEventColor = (eventType: string) => {
     const colors = {

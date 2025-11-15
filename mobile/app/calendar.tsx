@@ -59,8 +59,8 @@ export default function CalendarScreen() {
         end: endOfDay.getTime(),
       });
       
-      // Backend returns { data: CalendarEvent[] } or { events: CalendarEvent[] }
-      const eventsData = response.data || response.events || [];
+      // Backend returns { events: CalendarEvent[], pagination: {...}, timeframe: {...} }
+      const eventsData = response.events || [];
       setEvents(Array.isArray(eventsData) ? eventsData : []);
     } catch (error) {
       console.error('Failed to load events:', error);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCalendarEventsQuery, useDeleteEventMutation, useUpdateEventMutation } from '../../../hooks/queries/useCalendarQueries';
 import type { CalendarEvent } from '../../../types';
 import { Sheet } from '../../ui/Sheet';
@@ -19,8 +19,8 @@ const CalendarView: React.FC = () => {
     endTime: ''
   });
 
-  // Calculate date range for API query
-  const getDateRange = () => {
+  // Memoize date range calculation to prevent recalculation on every render
+  const dateRange = useMemo(() => {
     const start = new Date(currentDate);
     const end = new Date(currentDate);
 
@@ -43,22 +43,22 @@ const CalendarView: React.FC = () => {
       start: start.getTime(),
       end: end.getTime(),
     };
-  };
+  }, [currentDate, viewMode]); // Only recalculate when date or view mode changes
 
-  const { data: eventsData, isLoading } = useCalendarEventsQuery(getDateRange());
+  const { data: eventsData, isLoading } = useCalendarEventsQuery(dateRange);
   const deleteEventMutation = useDeleteEventMutation();
   const updateEventMutation = useUpdateEventMutation();
 
-  // Debug logging for calendar events
+  // Debug logging for calendar events (only log when data actually changes)
   React.useEffect(() => {
     console.log('CalendarView loaded events:', {
       viewMode,
       currentDate: currentDate.toISOString(),
-      dateRange: getDateRange(),
-      eventsCount: eventsData?.data?.length || 0,
-      events: eventsData?.data
+      dateRange: dateRange,
+      eventsCount: eventsData?.events?.length || 0,
+      events: eventsData?.events
     });
-  }, [eventsData, viewMode, currentDate]);
+  }, [eventsData, viewMode, currentDate, dateRange]);
 
   // Helper functions for event management
   const handleEditEvent = (event: CalendarEvent) => {
@@ -203,10 +203,10 @@ const CalendarView: React.FC = () => {
     const current = new Date(startDate);
 
     for (let i = 0; i < 42; i++) {
-      const dayEvents = eventsData?.data?.filter(event => {
+      const dayEvents = (eventsData?.events || []).filter(event => {
         const eventDate = new Date(event.startTime);
         return eventDate.toDateString() === current.toDateString();
-      }) || [];
+      });
 
       days.push(
         <div
@@ -273,7 +273,7 @@ const CalendarView: React.FC = () => {
       const day = new Date(weekStart);
       day.setDate(day.getDate() + i);
       
-      const dayEvents = eventsData?.data?.filter(event => {
+      const dayEvents = (eventsData?.events || []).filter(event => {
         const eventDate = new Date(event.startTime);
         return eventDate.toDateString() === day.toDateString();
       }) || [];
@@ -327,10 +327,10 @@ const CalendarView: React.FC = () => {
   };
 
   const renderDayView = () => {
-    const dayEvents = eventsData?.data?.filter(event => {
+    const dayEvents = (eventsData?.events || []).filter(event => {
       const eventDate = new Date(event.startTime);
       return eventDate.toDateString() === currentDate.toDateString();
-    }) || [];
+    });
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 

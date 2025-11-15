@@ -790,8 +790,8 @@ calendar.get('/events', async (c) => {
       startTime: event.start,
       endTime: event.end,
       location: event.location,
-      eventType: event.eventType || 'appointment',
-      isAllDay: event.is_all_day,
+      eventType: event.eventType || 'appointment', // Use eventType from DB
+      isAllDay: Boolean(event.is_all_day), // Convert 0/1 to boolean
       status: event.status,
       source: event.source,
       externalId: event.external_id
@@ -867,16 +867,31 @@ calendar.post('/events', zValidator('json', createEventSchema), async (c) => {
 
     const eventId = `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
+    // Convert undefined values to null for D1 compatibility
+    const description = eventData.description || null;
+    const location = eventData.location || null;
+    const eventType = eventData.eventType || 'appointment';
+    const isAllDay = eventData.isAllDay ?? false;
+    
     await db.query(`
       INSERT INTO calendar_events (
         id, user_id, title, description, "start", "end", location, 
-        event_type, is_all_day, status, source, created_at, updated_at
+        eventType, is_all_day, status, source, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      eventId, auth.userId, eventData.title, eventData.description,
-      eventData.startTime, eventData.endTime, eventData.location,
-      eventData.eventType, eventData.isAllDay, 'confirmed', 'local',
-      Date.now(), Date.now()
+      eventId, 
+      auth.userId, 
+      eventData.title, 
+      description,
+      eventData.startTime, 
+      eventData.endTime, 
+      location,
+      eventType, 
+      isAllDay ? 1 : 0, // Convert boolean to integer for SQLite
+      'confirmed', 
+      'local',
+      Date.now(), 
+      Date.now()
     ]);
 
     // Add attendees if provided
@@ -932,7 +947,8 @@ const updateEventSchema = z.object({
   endTime: z.number().int().positive().optional(),
   location: z.string().max(500).optional(),
   eventType: z.enum(['meeting', 'appointment', 'task', 'reminder', 'personal', 'work']).optional(),
-  isAllDay: z.boolean().optional(),
+  // Accept both number (0/1 from DB) and boolean, coerce to boolean
+  isAllDay: z.union([z.boolean(), z.number().int().min(0).max(1)]).transform(val => Boolean(val)).optional(),
   attendees: z.array(z.string().email()).optional(),
   reminders: z.array(z.number().int().min(0)).optional()
 });
@@ -988,12 +1004,13 @@ calendar.put('/events/:id', zValidator('json', updateEventSchema), async (c) => 
       updateValues.push(updates.location);
     }
     if (updates.eventType !== undefined) {
-      updateFields.push('event_type = ?');
+      updateFields.push('eventType = ?');
       updateValues.push(updates.eventType);
     }
     if (updates.isAllDay !== undefined) {
       updateFields.push('is_all_day = ?');
-      updateValues.push(updates.isAllDay);
+      // Convert boolean to integer for SQLite (0 or 1)
+      updateValues.push(updates.isAllDay ? 1 : 0);
     }
 
     updateFields.push('updated_at = ?');
@@ -1022,8 +1039,8 @@ calendar.put('/events/:id', zValidator('json', updateEventSchema), async (c) => 
           startTime: event.start,
           endTime: event.end,
           location: event.location,
-          eventType: event.event_type,
-          isAllDay: event.is_all_day,
+          eventType: event.eventType,
+          isAllDay: Boolean(event.is_all_day), // Convert 0/1 to boolean
           status: event.status
         }
       });
@@ -1056,9 +1073,21 @@ calendar.delete('/events/:id', async (c) => {
       return c.json({ error: 'Event not found' }, 404);
     }
 
-    // Delete related data first
-    await db.query('DELETE FROM event_attendees WHERE event_id = ?', [eventId]);
-    await db.query('DELETE FROM event_reminders WHERE event_id = ?', [eventId]);
+    // Delete related data first (if tables exist)
+    // Use try-catch to handle cases where tables might not exist yet
+    try {
+      await db.query('DELETE FROM event_attendees WHERE event_id = ?', [eventId]);
+    } catch (error) {
+      // Table might not exist, continue with event deletion
+      console.warn('event_attendees table not found, skipping attendee deletion');
+    }
+    
+    try {
+      await db.query('DELETE FROM event_reminders WHERE event_id = ?', [eventId]);
+    } catch (error) {
+      // Table might not exist, continue with event deletion
+      console.warn('event_reminders table not found, skipping reminder deletion');
+    }
     
     // Delete the event
     await db.query(`
@@ -1501,7 +1530,7 @@ calendar.get('/reminders', async (c) => {
     const next24Hours = now + (24 * 60 * 60 * 1000);
 
     const reminders = await db.query(`
-      SELECT r.*, e.title, e.start, e.location, e.event_type
+      SELECT r.*, e.title, e.start, e.location, e.eventType
       FROM event_reminders r
       JOIN calendar_events e ON r.event_id = e.id
       WHERE r.user_id = ? AND e.start >= ? AND e.start <= ?
@@ -1515,7 +1544,7 @@ calendar.get('/reminders', async (c) => {
       eventTitle: reminder.title,
       eventStart: reminder.start,
       location: reminder.location,
-      eventType: reminder.event_type,
+      eventType: reminder.eventType,
       reminderTime: reminder.start - (reminder.minutes_before * 60000),
       minutesBefore: reminder.minutes_before
     }));
@@ -1597,7 +1626,7 @@ calendar.get('/analytics/time-usage', async (c) => {
     const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
 
     const events = await db.query(`
-      SELECT event_type, "start", "end", title
+      SELECT eventType, "start", "end", title
       FROM calendar_events 
       WHERE user_id = ? AND "start" >= ? AND status != 'cancelled'
     `, [auth.userId, thirtyDaysAgo]);
@@ -1607,7 +1636,7 @@ calendar.get('/analytics/time-usage', async (c) => {
 
     (events.results || []).forEach((event: any) => {
       const duration = event.end - event.start;
-      const type = event.event_type || 'other';
+      const type = event.eventType || 'other';
       
       if (!timeUsage[type]) {
         timeUsage[type] = { duration: 0, count: 0 };
@@ -1654,7 +1683,7 @@ calendar.get('/analytics/productivity', async (c) => {
     const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
 
     const events = await db.query(`
-      SELECT "start", "end", event_type
+      SELECT "start", "end", eventType
       FROM calendar_events 
       WHERE user_id = ? AND "start" >= ? AND status != 'cancelled'
     `, [auth.userId, thirtyDaysAgo]);

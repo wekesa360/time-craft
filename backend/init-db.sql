@@ -45,11 +45,18 @@ CREATE TABLE IF NOT EXISTS calendar_events (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id),
   title TEXT NOT NULL,
-  start INTEGER NOT NULL,
+  description TEXT,
+  "start" INTEGER NOT NULL,
   "end" INTEGER NOT NULL,
-  source TEXT CHECK(source IN ('manual','auto','google','outlook','icloud')) DEFAULT 'manual',
+  location TEXT,
+  event_type TEXT CHECK(event_type IN ('meeting','appointment','task','reminder','personal','work')) DEFAULT 'appointment',
+  is_all_day BOOLEAN DEFAULT 0,
+  status TEXT CHECK(status IN ('confirmed','tentative','cancelled')) DEFAULT 'confirmed',
+  source TEXT CHECK(source IN ('local','manual','auto','google','outlook','icloud','apple')) DEFAULT 'local',
+  external_id TEXT,
   ai_generated BOOLEAN DEFAULT 0,
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
 );
 
 -- Habits table

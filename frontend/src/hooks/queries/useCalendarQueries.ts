@@ -24,7 +24,11 @@ export const useCalendarEventsQuery = (params?: {
   return useQuery({
     queryKey: calendarKeys.eventsList(params || {}),
     queryFn: () => apiClient.getEvents(params),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - increased to reduce refetching
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch on every mount if data is fresh
+    refetchOnReconnect: true, // Only refetch on reconnect
   });
 };
 

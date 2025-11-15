@@ -1106,6 +1106,8 @@ class ApiClient {
   // Calendar Methods
   async getEvents(params?: { start?: number; end?: number; type?: string }) {
     const response = await this.get('/api/calendar/events', { params });
+    // Backend returns { events: [...], pagination: {...}, timeframe: {...} }
+    // Return the full response so callers can access events, pagination, etc.
     return response.data;
   }
 
