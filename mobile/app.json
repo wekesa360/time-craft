@@ -26,26 +26,34 @@
         "backgroundColor": "#3b82f6"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.timecraft.mobile"
+      "package": "com.timecraft.mobile",
+      "minSdkVersion": 26
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": [
-      "expo-router",
-      "expo-secure-store",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": true
-          }
-        }
-      ]
-    ],
+   "plugins": [
+  "expo-router",
+  "expo-secure-store",
+  [
+    "expo-build-properties",
+    {
+      "android": {
+        "usesCleartextTraffic": true,
+        "minSdkVersion": 26
+      }
+    }
+  ]
+],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8ffe5b37-49cd-4252-85cb-e3bbc73f28ec"
+      }
     }
   }
 }

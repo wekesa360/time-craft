@@ -369,6 +369,19 @@ class ApiClient {
     return response.data.user;
   }
 
+  // User Preferences
+  async getUserPreferences(): Promise<any> {
+    const response = await this.get('/api/user/preferences');
+    // backend returns { success: true, preferences }
+    return (response.data && (response.data.preferences || response.data)) as any;
+  }
+
+  async updateUserPreferences(partial: any): Promise<any> {
+    const response = await this.put('/api/user/preferences', partial);
+    // backend returns { success: true, message, preferences }
+    return (response.data && (response.data.preferences || response.data)) as any;
+  }
+
   // Dashboard Methods
   async getDashboardStats() {
     const response = await this.get('/api/dashboard');

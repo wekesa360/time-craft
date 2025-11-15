@@ -28,6 +28,8 @@ import { useAppTheme } from '../../constants/dynamicTheme';
 import { usePreferencesStore } from '../../stores/preferences';
 import { GlobeAltIcon, SwatchIcon, SunIcon } from 'react-native-heroicons/outline';
 import { useI18n } from '../../lib/i18n';
+import { apiClient } from '../../lib/api';
+import { showToast } from '../../lib/toast';
 
 export default function SettingsModal() {
   const theme = useAppTheme();
@@ -70,6 +72,25 @@ export default function SettingsModal() {
     };
     initSettings();
   }, [initializeBiometric, biometricEnabled, notificationSettings]);
+
+  // Fetch user preferences from backend and hydrate local store
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const prefs = await apiClient.getUserPreferences();
+        if (!mounted || !prefs) return;
+        if (prefs?.theme?.mode) setThemeMode(prefs.theme.mode);
+        if (prefs?.theme?.colorTheme) setColorTheme(prefs.theme.colorTheme);
+        if (prefs?.general?.language) setLanguage(prefs.general.language);
+      } catch (e) {
+        // silent fail; keep local defaults
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [setThemeMode, setColorTheme, setLanguage]);
 
   const handleBiometricToggle = async (value: boolean) => {
     setIsToggling(true);
@@ -459,7 +480,16 @@ export default function SettingsModal() {
               ] as const).map((opt) => (
                 <TouchableOpacity
                   key={opt.key}
-                  onPress={() => { setThemeMode(opt.key); setThemeDialogVisible(false); }}
+                  onPress={async () => {
+                    setThemeMode(opt.key);
+                    setThemeDialogVisible(false);
+                    try {
+                      await apiClient.updateUserPreferences({ theme: { mode: opt.key } });
+                      showToast.success(t('success'));
+                    } catch (e) {
+                      showToast.error(t('error'));
+                    }
+                  }}
                   style={{ paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4, backgroundColor: themeMode === opt.key ? theme.colors.surface : 'transparent', borderRadius: theme.radii.md }}
                 >
                   <Text style={{ color: theme.colors.foreground }}>{opt.label}</Text>
@@ -488,7 +518,16 @@ export default function SettingsModal() {
               ] as const).map((opt) => (
                 <TouchableOpacity
                   key={opt.key}
-                  onPress={() => { setLanguage(opt.key); setLanguageDialogVisible(false); }}
+                  onPress={async () => {
+                    setLanguage(opt.key);
+                    setLanguageDialogVisible(false);
+                    try {
+                      await apiClient.updateUserPreferences({ general: { language: opt.key } });
+                      showToast.success(t('success'));
+                    } catch (e) {
+                      showToast.error(t('error'));
+                    }
+                  }}
                   style={{ paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4, backgroundColor: language === opt.key ? theme.colors.surface : 'transparent', borderRadius: theme.radii.md }}
                 >
                   <Text style={{ color: theme.colors.foreground }}>{opt.label}</Text>
@@ -519,7 +558,16 @@ export default function SettingsModal() {
               ] as const).map((opt) => (
                 <TouchableOpacity
                   key={opt.key}
-                  onPress={() => { setColorTheme(opt.key); setColorThemeDialogVisible(false); }}
+                  onPress={async () => {
+                    setColorTheme(opt.key);
+                    setColorThemeDialogVisible(false);
+                    try {
+                      await apiClient.updateUserPreferences({ theme: { colorTheme: opt.key } });
+                      showToast.success(t('success'));
+                    } catch (e) {
+                      showToast.error(t('error'));
+                    }
+                  }}
                   style={{ paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4, backgroundColor: colorTheme === opt.key ? theme.colors.surface : 'transparent', borderRadius: theme.radii.md }}
                 >
                   <Text style={{ color: theme.colors.foreground }}>{opt.label}</Text>
