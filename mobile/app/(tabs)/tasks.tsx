@@ -351,8 +351,8 @@ export default function TasksScreen() {
                       <CheckCircleSolid size={24} color={theme.colors.success} />
                     ) : (
                       <View className="w-6 h-6 rounded-full border-2" style={{ borderColor: theme.colors.border }} />
-                  )}
-                </TouchableOpacity>
+                    )}
+                  </TouchableOpacity>
 
                   {/* Task Content */}
                   <View className="flex-1">
@@ -516,3 +516,4 @@ export default function TasksScreen() {
       />
     </SafeAreaView>
   );
+}

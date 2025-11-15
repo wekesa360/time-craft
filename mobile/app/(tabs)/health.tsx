@@ -417,15 +417,3 @@ export default function HealthScreen() {
     </SafeAreaView>
   );
 }
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Bottom Padding for Tab Bar */}
-        <View className="h-20" />
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
