@@ -333,7 +333,7 @@ export default function TasksScreen() {
           </View>
         ) : (
           <View>
-            {filteredTasks.map((task, index) => (
+            {filteredTasks && Array.isArray(filteredTasks) && filteredTasks.map((task, index) => (
               <View key={task.id}>
                 <TouchableOpacity
                   className={`px-6 py-4`}

@@ -373,7 +373,7 @@ export default function HealthScreen() {
           </View>
           
           <View className="rounded-2xl" style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl }}>
-            {healthLogs && healthLogs.length > 0 ? (
+            {healthLogs && Array.isArray(healthLogs) && healthLogs.length > 0 ? (
               healthLogs.slice(0, 8).map((log, index) => (
                 <View key={log.id}>
                   <View className="p-4 flex-row items-center">
