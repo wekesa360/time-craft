@@ -5,9 +5,8 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  displayName: string;
   timezone: string;
-  preferredLanguage: 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ru' | 'ja' | 'ko' | 'zh';
+  preferredLanguage: 'en' | 'de'; // Backend only supports 'en' and 'de'
   subscriptionType: 'free' | 'premium' | 'enterprise';
   subscriptionExpiresAt: number | null;
   isStudent: boolean;

@@ -307,10 +307,16 @@ export const useAuthStore = create<AuthStore>()(
 
       updateProfile: async (data) => {
         try {
+          console.log('[Auth Store] updateProfile called with data:', data);
           set({ isLoading: true });
+          console.log('[Auth Store] Calling apiClient.updateProfile...');
           const updatedUser = await apiClient.updateProfile(data);
+          console.log('[Auth Store] Profile updated successfully, new user:', updatedUser);
           set({ user: updatedUser, isLoading: false });
+          console.log('[Auth Store] State updated with new user');
+          return updatedUser;
         } catch (error) {
+          console.error('[Auth Store] updateProfile error:', error);
           set({ isLoading: false });
           throw error;
         }

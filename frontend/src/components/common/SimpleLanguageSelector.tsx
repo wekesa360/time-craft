@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { localStorageCoordinator } from '../../lib/localStorageCoordinator';
+import { useAuthStore } from '../../stores/auth';
 
 interface SimpleLanguageSelectorProps {
   variant?: 'dropdown' | 'compact';
@@ -12,6 +13,7 @@ export const SimpleLanguageSelector: React.FC<SimpleLanguageSelectorProps> = ({
   className = ''
 }) => {
   const { i18n } = useTranslation();
+  const { updateLanguage } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
 
@@ -29,11 +31,8 @@ export const SimpleLanguageSelector: React.FC<SimpleLanguageSelectorProps> = ({
     setIsChanging(true);
     
     try {
-      // Use coordinator to safely write to localStorage
-      await localStorageCoordinator.safeWrite('i18nextLng', languageCode);
-      
-      // Change language immediately without waiting for API calls
-      await i18n.changeLanguage(languageCode);
+      // Update language in auth store (this will update profile, localStorage, and i18n)
+      await updateLanguage(languageCode);
       setIsOpen(false);
       
       // Update document language attribute
@@ -43,6 +42,8 @@ export const SimpleLanguageSelector: React.FC<SimpleLanguageSelectorProps> = ({
       // Even if there's an error, try to update localStorage and close dropdown
       try {
         await localStorageCoordinator.safeWrite('i18nextLng', languageCode);
+        await i18n.changeLanguage(languageCode);
+        document.documentElement.lang = languageCode;
       } catch (coordinatorError) {
         console.error('Failed to update language in localStorage:', coordinatorError);
       }

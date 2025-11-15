@@ -9,10 +9,11 @@ import { LanguagePreferencesSectionWithSuspense as LanguagePreferencesSection } 
 import { GermanTextOptimizer, GermanTitle } from '../components/common/GermanTextOptimizer';
 import TabSwitcher from '../components/ui/TabSwitcher';
 import type { TabItem } from '../components/ui/TabSwitcher';
+import { TimezonePicker } from '../components/ui/TimezonePicker';
 import { 
   User, Bell, Shield, Globe, Palette, Database, 
   Camera, CreditCard, Key, Trash2, Download, 
-  Upload, Lock, Eye, EyeOff, CheckCircle,
+  Upload, Lock, Eye, EyeOff,
   AlertTriangle, Settings, Mail, Phone,
   Calendar, Clock, Moon, Sun
 } from 'lucide-react';
@@ -31,9 +32,7 @@ import type { User as UserType, NotificationPreferences } from '../types';
 interface ProfileForm {
   firstName: string;
   lastName: string;
-  displayName: string;
   timezone: string;
-  preferredLanguage: string;
 }
 
 interface SecurityForm {
@@ -50,6 +49,9 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Reduced logging to prevent console noise
+  // console.log('[SettingsPage] Component render - user:', user);
+  
   // State management
   const [activeSection, setActiveSection] = useState<SettingsTab>('profile');
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -57,57 +59,122 @@ export default function SettingsPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   
+  // Auto-detect timezone on mount
+  const getBrowserTimezone = () => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      return 'UTC';
+    }
+  };
+
   // Forms
   const profileForm = useForm<ProfileForm>({
     defaultValues: {
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
-      displayName: user?.displayName || '',
-      timezone: user?.timezone || 'UTC',
-      preferredLanguage: user?.preferredLanguage || 'en'
+      timezone: user?.timezone || getBrowserTimezone()
     }
   });
   
   const securityForm = useForm<SecurityForm>();
   
-  // Data queries
+  // Update form when user data changes (only on initial load, not after saves)
+  const hasInitialized = useRef(false);
+  useEffect(() => {
+    // Only initialize once on mount, not when user changes
+    if (user && !hasInitialized.current) {
+      console.log('[SettingsPage] Initializing form with user data');
+      profileForm.reset({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        timezone: user.timezone || getBrowserTimezone()
+      }, { keepDefaultValues: true });
+      hasInitialized.current = true;
+      console.log('[SettingsPage] Form initialized');
+    }
+    // Only run once on mount - don't depend on user to avoid re-runs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  
+  // Data queries - use user from auth store as source of truth, query as fallback
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['user-profile'],
     queryFn: () => apiClient.getProfile(),
-    initialData: user
+    initialData: user,
+    enabled: false, // Disable automatic fetching - we'll update via setQueryData
+    staleTime: Infinity, // Don't refetch automatically
+    gcTime: Infinity // Keep in cache
   });
+  
+  // Use user from auth store as primary source (always up-to-date), profile query as fallback
+  const displayProfile = user || profile;
+  
+  // Debug: Log when displayProfile changes (commented out to reduce re-renders)
+  // Uncomment if needed for debugging
+  // useEffect(() => {
+  //   console.log('[SettingsPage] displayProfile changed:', {
+  //     displayProfileFirstName: displayProfile?.firstName,
+  //     userFirstName: user?.firstName,
+  //     profileFirstName: profile?.firstName
+  //   });
+  // }, [displayProfile?.firstName, displayProfile?.lastName, user?.firstName, user?.lastName]);
   
   const { data: notificationPrefs, isLoading: notificationLoading } = useQuery({
     queryKey: ['notification-preferences'],
     queryFn: () => apiClient.getNotificationPreferences()
   });
   
+  // Only fetch subscription when on subscription tab and user has a paid subscription
   const { data: subscription, isLoading: subscriptionLoading } = useQuery({
     queryKey: ['user-subscription'],
     queryFn: () => apiClient.getUserSubscription(),
-    enabled: user?.subscriptionType !== 'free'
+    enabled: activeSection === 'subscription' && user?.subscriptionType !== 'free',
+    staleTime: 5 * 60 * 1000, // 5 minutes - don't refetch unnecessarily
   });
   
-  // Debug logging for settings data
-  useEffect(() => {
-    console.log('SettingsPage loaded data:', {
-      profile,
-      notificationPrefs,
-      subscription,
-      user
-    });
-  }, [profile, notificationPrefs, subscription, user]);
+  // Debug logging for settings data (removed to prevent unnecessary re-renders)
+  // useEffect(() => {
+  //   console.log('SettingsPage loaded data:', {
+  //     profile,
+  //     notificationPrefs,
+  //     subscription,
+  //     user
+  //   });
+  // }, [profile, notificationPrefs, subscription, user]);
   
   // Mutations
   const updateProfileMutation = useMutation({
-    mutationFn: (data: Partial<UserType>) => apiClient.updateProfile(data),
-    onSuccess: (updatedUser) => {
-      // Update user in auth store
-      // Note: This should be handled by the auth store
-      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-      toast.success(t('settings.profileUpdated', 'Profile updated successfully'));
+    mutationFn: async (data: Partial<UserType>) => {
+      console.log('[Profile Save] Starting mutation with data:', data);
+      try {
+        const result = await updateProfile(data);
+        console.log('[Profile Save] Mutation successful, result:', result);
+        return result;
+      } catch (error) {
+        console.error('[Profile Save] Mutation error:', error);
+        throw error;
+      }
     },
-    onError: () => {
+    onSuccess: (updatedUser) => {
+      console.log('[Profile Save] onSuccess called with user:', updatedUser);
+      // Silently update the query cache without refetching
+      queryClient.setQueryData(['user-profile'], updatedUser);
+      console.log('[Profile Save] Query cache updated');
+      // Don't reset the form - it already has the correct values and resetting causes re-render/blink
+      // The form values are already correct since we just submitted them
+      // The UI will update automatically via displayProfile which uses the updated user from auth store
+      console.log('[Profile Save] Skipping form reset to prevent re-render');
+      // Show success toast
+      toast.success(t('settings.profileUpdated', 'Profile updated successfully'));
+      console.log('[Profile Save] Success toast shown');
+    },
+    onError: (error) => {
+      console.error('[Profile Save] onError called with error:', error);
+      console.error('[Profile Save] Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       toast.error(t('settings.profileUpdateError', 'Failed to update profile'));
     }
   });
@@ -141,19 +208,27 @@ export default function SettingsPage() {
     mutationFn: (file: File) => apiClient.uploadAvatar(file),
     onSuccess: (updatedUser) => {
       // Update user in auth store
-      // Note: This should be handled by the auth store
+      updateProfile({ avatar: updatedUser.avatar });
       setAvatarPreview(null);
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       toast.success(t('settings.avatarUpdated', 'Avatar updated successfully'));
+    },
+    onError: () => {
+      toast.error(t('settings.avatarUpdateError', 'Failed to update avatar'));
     }
   });
   
   // Event handlers
   const handleProfileSubmit = useCallback((data: ProfileForm) => {
+    console.log('[Profile Save] Form submitted with data:', data);
+    console.log('[Profile Save] Current user before update:', user);
     updateProfileMutation.mutate({
-      ...data,
-      preferredLanguage: data.preferredLanguage as "en" | "es" | "fr" | "de" | "it" | "pt" | "ru" | "ja" | "ko" | "zh"
+      firstName: data.firstName,
+      lastName: data.lastName,
+      timezone: data.timezone
     });
-  }, [updateProfileMutation]);
+    // Form submission is handled by react-hook-form's handleSubmit which prevents default
+  }, [updateProfileMutation, user]);
   
   const handleSecuritySubmit = useCallback((data: SecurityForm) => {
     if (data.newPassword !== data.confirmPassword) {
@@ -275,9 +350,9 @@ export default function SettingsPage() {
             <div className="flex items-center space-x-6 mb-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-950 flex items-center justify-center overflow-hidden">
-                      {avatarPreview || profile?.avatar ? (
+                      {avatarPreview || displayProfile?.avatar ? (
                         <img 
-                          src={avatarPreview || profile?.avatar} 
+                          src={avatarPreview || displayProfile?.avatar} 
                           alt={t('settings.avatar', 'Profile Avatar')} 
                           className="w-full h-full object-cover"
                         />
@@ -302,24 +377,24 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-foreground">
-                      {profile?.displayName || `${profile?.firstName} ${profile?.lastName}`}
+                      {`${displayProfile?.firstName || ''} ${displayProfile?.lastName || ''}`.trim() || 'User'}
                     </h3>
-                    <p className="text-foreground-secondary">{profile?.email}</p>
+                    <p className="text-foreground-secondary">{displayProfile?.email}</p>
                     <p className="text-sm text-foreground-tertiary">
-                      {t('settings.memberSince', 'Member since')} {profile?.createdAt ? formatDistanceToNow(new Date(profile.createdAt), { addSuffix: true, locale: i18n.language === 'de' ? de : undefined }) : ''}
+                      {t('settings.memberSince', 'Member since')} {displayProfile?.createdAt ? formatDistanceToNow(new Date(displayProfile.createdAt), { addSuffix: true, locale: i18n.language === 'de' ? de : undefined }) : ''}
                     </p>
                   </div>
                   <div className="text-right">
                     <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      profile?.subscriptionType === 'premium' 
+                      displayProfile?.subscriptionType === 'premium' 
                         ? 'bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-300'
-                        : profile?.subscriptionType === 'enterprise'
+                        : displayProfile?.subscriptionType === 'enterprise'
                         ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
                         : 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground'
                     }`}>
-                      {profile?.subscriptionType?.toUpperCase()}
+                      {displayProfile?.subscriptionType?.toUpperCase()}
                     </div>
-                    {profile?.isStudent && (
+                    {displayProfile?.isStudent && (
                       <div className="mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-info-light text-info dark:bg-info dark:text-info-light">
                         {t('settings.studentAccount', 'Student')}
                       </div>
@@ -352,21 +427,11 @@ export default function SettingsPage() {
                   
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      {t('settings.displayName', 'Display Name')}
-                    </label>
-                    <input
-                      {...profileForm.register('displayName')}
-                      className="input w-full"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
                       {t('settings.profileForm.email', 'Email Address')}
                     </label>
                     <input
                       type="email"
-                      value={profile?.email || ''}
+                      value={displayProfile?.email || ''}
                       className="input w-full bg-muted"
                       disabled
                       aria-describedby="email-help"
@@ -376,39 +441,14 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        {t('settings.profileForm.timezone', 'Timezone')}
-                      </label>
-                      <select
-                        {...profileForm.register('timezone')}
-                        className="input w-full"
-                      >
-                        <option value="UTC">UTC</option>
-                        <option value="America/New_York">Eastern Time</option>
-                        <option value="America/Chicago">Central Time</option>
-                        <option value="America/Denver">Mountain Time</option>
-                        <option value="America/Los_Angeles">Pacific Time</option>
-                        <option value="Europe/London">London</option>
-                        <option value="Europe/Berlin">Berlin</option>
-                        <option value="Europe/Paris">Paris</option>
-                        <option value="Asia/Tokyo">Tokyo</option>
-                        <option value="Asia/Shanghai">Shanghai</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        {t('settings.profileForm.language', 'Preferred Language')}
-                      </label>
-                      <select
-                        {...profileForm.register('preferredLanguage')}
-                        className="input w-full"
-                      >
-                        <option value="en">English</option>
-                        <option value="de">Deutsch</option>
-                      </select>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      {t('settings.profileForm.timezone', 'Timezone')}
+                    </label>
+                    <TimezonePicker
+                      value={profileForm.watch('timezone')}
+                      onChange={(tz) => profileForm.setValue('timezone', tz)}
+                    />
                   </div>
                   
                   <div className="flex justify-end space-x-3 pt-4 border-t border-border">
@@ -432,10 +472,7 @@ export default function SettingsPage() {
                           {t('common.saving', 'Saving...')}
                         </>
                       ) : (
-                        <>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          {t('common.save', 'Save Changes')}
-                        </>
+                        t('common.save', 'Save Changes')
                       )}
                     </button>
                   </div>

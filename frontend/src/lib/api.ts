@@ -1127,8 +1127,28 @@ class ApiClient {
   }
 
   async updateProfile(data: Partial<User>): Promise<User> {
-    const response = await this.client.put<{ user: User }>('/api/user/profile', data);
-    return response.data.user;
+    console.log('[API] updateProfile called with data:', data);
+    try {
+      const response = await this.client.put<{ user: User; message?: string }>('/api/user/profile', data);
+      console.log('[API] updateProfile full response:', response);
+      console.log('[API] updateProfile response.data:', response.data);
+      console.log('[API] updateProfile response.data.user:', response.data.user);
+      
+      if (!response.data.user) {
+        console.error('[API] updateProfile: No user in response!', response.data);
+        throw new Error('Invalid response: user data missing');
+      }
+      
+      const user = response.data.user;
+      console.log('[API] Returning user:', user);
+      console.log('[API] User firstName:', user.firstName, 'lastName:', user.lastName);
+      return user;
+    } catch (error: any) {
+      console.error('[API] updateProfile error:', error);
+      console.error('[API] Error response:', error.response);
+      console.error('[API] Error response data:', error.response?.data);
+      throw error;
+    }
   }
 
   // User preferences endpoints

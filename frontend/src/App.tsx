@@ -114,11 +114,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Public Route wrapper (redirects to dashboard if authenticated)
-function PublicRoute({ children }: { children: React.ReactNode }) {
+// Public Route wrapper (redirects to dashboard if authenticated, except for verify-email)
+function PublicRoute({ children, allowWhenAuthenticated = false }: { children: React.ReactNode; allowWhenAuthenticated?: boolean }) {
   const { isAuthenticated } = useAuthStore();
+  const location = window.location.pathname;
 
-  if (isAuthenticated) {
+  // Allow verify-email route even when authenticated (user might be verifying after login)
+  const isVerifyEmailRoute = location.includes('/auth/verify-email');
+
+  if (isAuthenticated && !isVerifyEmailRoute && !allowWhenAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 

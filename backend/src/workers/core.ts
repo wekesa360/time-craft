@@ -173,8 +173,25 @@ core.get('/user/profile', async (c) => {
       return c.json({ error: 'User not found' }, 404);
     }
 
-    // Exclude sensitive data
-    const { password_hash, ...userProfile } = user;
+    // Transform snake_case to camelCase for frontend
+    const userProfile = {
+      id: user.id,
+      email: user.email,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      timezone: user.timezone,
+      preferredLanguage: user.preferred_language,
+      subscriptionType: user.subscription_type,
+      subscriptionExpiresAt: user.subscription_expires_at,
+      isStudent: user.is_student,
+      studentVerificationStatus: user.student_verification_status,
+      emailVerified: user.email_verified,
+      badgePoints: user.badge_points,
+      totalBadges: user.total_badges,
+      badgeTier: user.badge_tier,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at
+    };
     
     return c.json({ user: userProfile });
   } catch (error) {
@@ -220,7 +237,25 @@ core.put('/user/profile', async (c) => {
       return c.json({ error: 'User not found' }, 404);
     }
 
-    const { password_hash, ...userProfile } = updatedUser;
+    // Transform snake_case to camelCase for frontend
+    const userProfile = {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstName: updatedUser.first_name,
+      lastName: updatedUser.last_name,
+      timezone: updatedUser.timezone,
+      preferredLanguage: updatedUser.preferred_language,
+      subscriptionType: updatedUser.subscription_type,
+      subscriptionExpiresAt: updatedUser.subscription_expires_at,
+      isStudent: updatedUser.is_student,
+      studentVerificationStatus: updatedUser.student_verification_status,
+      emailVerified: updatedUser.email_verified,
+      badgePoints: updatedUser.badge_points,
+      totalBadges: updatedUser.total_badges,
+      badgeTier: updatedUser.badge_tier,
+      createdAt: updatedUser.created_at,
+      updatedAt: updatedUser.updated_at
+    };
     
     return c.json({ 
       message: 'Profile updated successfully',
