@@ -22,13 +22,20 @@ import { showToast } from '../../lib/toast';
 
 interface FocusSession {
   id: string;
-  sessionType: string;
-  plannedDuration: number;
+  sessionType?: string;
+  session_type?: string;
+  plannedDuration?: number;
+  planned_duration?: number;
   actualDuration?: number;
-  startedAt: string;
+  actual_duration?: number;
+  startedAt?: string;
+  started_at?: string;
   completedAt?: string;
-  isSuccessful: boolean;
+  completed_at?: string;
+  isSuccessful?: boolean;
+  is_successful?: boolean;
   productivityRating?: number;
+  productivity_rating?: number;
   notes?: string;
 }
 
@@ -101,9 +108,15 @@ export default function FocusScreen() {
       return apiClient.createFocusSession(session);
     },
     onSuccess: (data) => {
-      const session = data.session || data;
+      // Backend returns { success: true, data: session }
+      const session = data.data || data.session || data;
+      if (!session || !session.id) {
+        console.error('Invalid session data received:', data);
+        showToast.error('Failed to start session: invalid response', 'Error');
+        return;
+      }
       setActiveSession(session);
-      setTimeRemaining(session.plannedDuration * 60); // Convert to seconds
+      setTimeRemaining((session.plannedDuration || session.planned_duration || 0) * 60); // Convert to seconds
       setIsRunning(true);
       setIsPaused(false);
       queryClient.invalidateQueries({ queryKey: ['focus-sessions'] });
@@ -147,14 +160,17 @@ export default function FocusScreen() {
 
   // Update progress animation
   useEffect(() => {
-    if (activeSession && activeSession.plannedDuration && progressBarWidth > 0) {
-      const totalSeconds = activeSession.plannedDuration * 60;
-      const progress = totalSeconds > 0 ? (totalSeconds - timeRemaining) / totalSeconds : 0;
-      Animated.timing(progressAnim, {
-        toValue: progress,
-        duration: 1000,
-        useNativeDriver: false, // width animation doesn't support native driver
-      }).start();
+    if (activeSession && progressBarWidth > 0) {
+      const plannedDuration = activeSession.plannedDuration || activeSession.planned_duration || 0;
+      if (plannedDuration > 0) {
+        const totalSeconds = plannedDuration * 60;
+        const progress = totalSeconds > 0 ? (totalSeconds - timeRemaining) / totalSeconds : 0;
+        Animated.timing(progressAnim, {
+          toValue: progress,
+          duration: 1000,
+          useNativeDriver: false, // width animation doesn't support native driver
+        }).start();
+      }
     }
   }, [timeRemaining, activeSession, progressAnim, progressBarWidth]);
 
@@ -177,35 +193,48 @@ export default function FocusScreen() {
   };
 
   const stopSession = () => {
-    if (activeSession) {
-      const actualDuration = Math.ceil((activeSession.plannedDuration * 60 - timeRemaining) / 60);
-      
-      updateSessionMutation.mutate({
-        sessionId: activeSession.id,
-        updates: {
-          actualDuration,
-          completedAt: new Date().toISOString(),
-          isSuccessful: false, // Stopped early
-        }
-      });
+    if (!activeSession || !activeSession.id) {
+      console.error('Cannot stop session: activeSession or id is missing', activeSession);
+      showToast.error('No active session to stop', 'Error');
+      resetSession();
+      return;
     }
+    
+    const totalSeconds = (activeSession.plannedDuration || activeSession.planned_duration || 0) * 60;
+    const elapsedSeconds = totalSeconds - timeRemaining;
+    const actualDuration = Math.max(1, Math.ceil(elapsedSeconds / 60)); // Ensure at least 1 minute
+    
+    // Use completeFocusSession API method which calls the /complete endpoint
+    updateSessionMutation.mutate({
+      sessionId: activeSession.id,
+      updates: {
+        actualDuration,
+        completedAt: new Date().toISOString(),
+        isSuccessful: false, // Stopped early
+      }
+    });
     
     resetSession();
   };
 
   const handleSessionComplete = () => {
-    if (activeSession) {
-      updateSessionMutation.mutate({
-        sessionId: activeSession.id,
-        updates: {
-          actualDuration: activeSession.plannedDuration,
-          completedAt: new Date().toISOString(),
-          isSuccessful: true,
-        }
-      });
-      setCompleteDialogVisible(true);
+    if (!activeSession || !activeSession.id) {
+      console.error('Cannot complete session: activeSession or id is missing', activeSession);
+      resetSession();
+      return;
     }
     
+    const plannedDuration = activeSession.plannedDuration || activeSession.planned_duration || 0;
+    // Use completeFocusSession API method which calls the /complete endpoint
+    updateSessionMutation.mutate({
+      sessionId: activeSession.id,
+      updates: {
+        actualDuration: plannedDuration,
+        completedAt: new Date().toISOString(),
+        isSuccessful: true,
+      }
+    });
+    setCompleteDialogVisible(true);
     resetSession();
   };
 
@@ -305,18 +334,24 @@ export default function FocusScreen() {
             {activeSession ? (
               <View className="items-center">
                 {/* Session Info */}
-                <View className="px-4 py-2 rounded-full border mb-6" style={{ backgroundColor: getSessionTypeTheme(activeSession.sessionType).bg, borderColor: getSessionTypeTheme(activeSession.sessionType).border }}>
-                  <Text className="font-medium capitalize" style={{ color: getSessionTypeTheme(activeSession.sessionType).text }}>
-                    {getSessionTypeIcon(activeSession.sessionType)} {activeSession.sessionType}
-                  </Text>
-                </View>
+                {(() => {
+                  const sessionType = activeSession.sessionType || activeSession.session_type || 'pomodoro';
+                  const themeData = getSessionTypeTheme(sessionType);
+                  return (
+                    <View className="px-4 py-2 rounded-full border mb-6" style={{ backgroundColor: themeData.bg, borderColor: themeData.border }}>
+                      <Text className="font-medium capitalize" style={{ color: themeData.text }}>
+                        {getSessionTypeIcon(sessionType)} {sessionType}
+                      </Text>
+                    </View>
+                  );
+                })()}
 
                 {/* Timer Display */}
                 <Text className="text-6xl font-bold mb-2" style={{ color: theme.colors.foreground }}>
                   {formatTime(timeRemaining)}
                 </Text>
                 <Text style={{ color: theme.colors.muted }} className="mb-8">
-                  {activeSession.plannedDuration} minute session
+                  {(activeSession.plannedDuration || activeSession.planned_duration || 0)} minute session
                 </Text>
 
                 {/* Controls */}
@@ -543,29 +578,35 @@ export default function FocusScreen() {
           
           <Card style={{ padding: 0 }}>
             {recentSessions && recentSessions.length > 0 ? (
-              recentSessions.slice(0, 5).map((session, index) => (
+              recentSessions.slice(0, 5).map((session, index) => {
+                const sessionType = session.sessionType || session.session_type || 'pomodoro';
+                const actualDuration = session.actualDuration || session.actual_duration;
+                const plannedDuration = session.plannedDuration || session.planned_duration || 0;
+                const isSuccessful = session.isSuccessful ?? session.is_successful ?? false;
+                const startedAt = session.startedAt || session.started_at;
+                return (
                 <View key={session.id}>
                   <View className="p-4 flex-row items-center">
                     <View className="w-10 h-10 rounded-full items-center justify-center mr-4" style={{ backgroundColor: theme.colors.primaryLight }}>
                       <Text className="text-lg">
-                        {getSessionTypeIcon(session.sessionType)}
+                        {getSessionTypeIcon(sessionType)}
                       </Text>
                     </View>
                     <View className="flex-1">
                       <Text className="font-semibold capitalize" style={{ color: theme.colors.foreground }}>
-                        {session.sessionType}
+                        {sessionType}
                       </Text>
                       <Text className="text-sm" style={{ color: theme.colors.muted }}>
-                        {session.actualDuration || session.plannedDuration} minutes
-                        {session.isSuccessful ? ' • Completed' : ' • Stopped early'}
+                        {actualDuration || plannedDuration} minutes
+                        {isSuccessful ? ' • Completed' : ' • Stopped early'}
                       </Text>
                       <Text className="text-xs mt-1" style={{ color: theme.colors.mutedAlt }}>
-                        {new Date(session.startedAt).toLocaleDateString('en-US', {
+                        {startedAt ? new Date(startedAt).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           hour: 'numeric',
                           minute: '2-digit',
-                        })}
+                        }) : 'Unknown date'}
                       </Text>
                     </View>
                     {session.productivityRating && (
@@ -580,7 +621,8 @@ export default function FocusScreen() {
                     <View className="h-px mx-4" style={{ backgroundColor: theme.colors.border }} />
                   )}
                 </View>
-              ))
+                );
+              })
             ) : (
               <View className="p-8 items-center">
                 <ClockIcon size={theme.iconSizes.lg} color={theme.colors.mutedAlt} />

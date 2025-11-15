@@ -1078,7 +1078,28 @@ class ApiClient {
   }
 
   async updateFocusSession(sessionId: string, updates: any) {
+    // Use the complete endpoint if stopping/completing a session
+    if (updates.completedAt || updates.isSuccessful !== undefined) {
+      const completionData = {
+        actual_duration: updates.actualDuration,
+        is_successful: updates.isSuccessful !== false,
+        notes: updates.notes,
+      };
+      const response = await this.patch(`/api/focus/sessions/${sessionId}/complete`, completionData);
+      return response.data;
+    }
+    // For other updates, use the generic endpoint (if it exists)
     const response = await this.patch(`/api/focus/sessions/${sessionId}`, updates);
+    return response.data;
+  }
+
+  async completeFocusSession(sessionId: string, data: { actualDuration: number; wasProductive: boolean; notes?: string }) {
+    const payload = {
+      actual_duration: Number(data.actualDuration),
+      is_successful: data.wasProductive,
+      notes: data.notes,
+    };
+    const response = await this.patch(`/api/focus/sessions/${sessionId}/complete`, payload);
     return response.data;
   }
 
