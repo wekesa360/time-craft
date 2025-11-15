@@ -74,13 +74,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-card border-r border-border overflow-y-auto">
           {/* Logo */}
-          <div className="flex items-center gap-2 px-6 py-6">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-primary-foreground" />
+          <div className="flex items-center gap-3 px-6 py-6">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden">
+              <img 
+                src="/favicon_io/android-chrome-192x192.png" 
+                alt="Ploracs Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">TimeCraft</h1>
-              <p className="text-xs text-muted-foreground">Your AI Companion</p>
+              <h1 className="text-xl font-bold text-foreground">Ploracs</h1>
+              <p className="text-xs text-muted-foreground">Time & Wellness</p>
             </div>
           </div>
 

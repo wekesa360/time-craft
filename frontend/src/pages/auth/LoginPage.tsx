@@ -149,11 +149,15 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
-            <span className="text-2xl font-bold text-primary-foreground">TC</span>
+          <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+            <img 
+              src="/favicon_io/android-chrome-192x192.png" 
+              alt="Ploracs Logo" 
+              className="w-full h-full object-contain rounded-2xl shadow-sm"
+            />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground">Sign in to your TimeCraft account</p>
+          <p className="text-muted-foreground">Sign in to your Ploracs account</p>
         </div>
 
         {/* Login Form */}

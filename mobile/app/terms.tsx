@@ -36,7 +36,7 @@ export default function TermsOfServiceScreen() {
                   By accessing and using our wellness and productivity platform, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
                 </Text>
                 <Text style={{ color: theme.colors.foreground }}>
-                  These Terms of Service are governed by Gowriters, a company registered in Germany, and are subject to German law and the jurisdiction of German courts.
+                  These Terms of Service are governed by Ploracs, a company registered in Germany, and are subject to German law and the jurisdiction of German courts.
                 </Text>
               </View>
             </View>
@@ -48,7 +48,7 @@ export default function TermsOfServiceScreen() {
               </Text>
               
               <Text className="mb-4" style={{ color: theme.colors.foreground }}>
-                Gowriters provides a comprehensive wellness and productivity platform that combines time management, health tracking, and personal development tools to help users achieve their goals and maintain a balanced lifestyle.
+                Ploracs provides a comprehensive wellness and productivity platform that combines time management, health tracking, and personal development tools to help users achieve their goals and maintain a balanced lifestyle.
               </Text>
               
               <View className="space-y-4">
@@ -153,18 +153,18 @@ export default function TermsOfServiceScreen() {
               
               <View className="rounded-lg p-4" style={{ borderWidth: 1, borderColor: theme.colors.border }}>
                 <Text className="mb-3" style={{ color: theme.colors.foreground }}>
-                  If you have any questions about these Terms of Service, please contact Gowriters using the information below:
+                  If you have any questions about these Terms of Service, please contact Ploracs using the information below:
                 </Text>
                 <View className="space-y-2">
                   <Text style={{ color: theme.colors.foreground }}>
-                    <Text className="font-semibold">Email:</Text> legal@gowriters.de
+                    <Text className="font-semibold">Email:</Text> legal@ploracs.de
                   </Text>
                   <Text style={{ color: theme.colors.foreground }}>
-                    <Text className="font-semibold">Support:</Text> support@gowriters.de
+                    <Text className="font-semibold">Support:</Text> support@ploracs.de
                   </Text>
                   <Text style={{ color: theme.colors.foreground }}>
                     <Text className="font-semibold">Address:</Text>{'\n'}
-                    Gowriters{'\n'}
+                    Ploracs{'\n'}
                     Musterstraße 123{'\n'}
                     10115 Berlin, Germany
                   </Text>

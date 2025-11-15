@@ -44,7 +44,7 @@ const translations = {
     unable_to_open_link: 'Unable to open link',
     // Auth/Login
     welcome_back: 'Welcome Back',
-    sign_in_to_account: 'Sign in to your TimeCraft account',
+    sign_in_to_account: 'Sign in to your Ploracs account',
     continue_with_google: 'Continue with Google',
     or: 'or',
     continue_with_email: 'Continue with Email',
@@ -193,7 +193,7 @@ const translations = {
     unable_to_open_link: 'Link kann nicht geöffnet werden',
     // Auth/Login
     welcome_back: 'Willkommen zurück',
-    sign_in_to_account: 'Melde dich bei deinem TimeCraft-Konto an',
+    sign_in_to_account: 'Melde dich bei deinem Ploracs-Konto an',
     continue_with_google: 'Weiter mit Google',
     or: 'oder',
     continue_with_email: 'Weiter mit E-Mail',

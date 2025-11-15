@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "TimeCraft Mobile",
-    "slug": "timecraft-mobile",
+    "name": "Ploracs",
+    "slug": "ploracs",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "scheme": "timecraft",
+    "scheme": "ploracs",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -18,7 +18,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.timecraft.mobile"
+      "bundleIdentifier": "com.ploracs.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +26,7 @@
         "backgroundColor": "#3b82f6"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.timecraft.mobile",
+      "package": "com.ploracs.app",
       "minSdkVersion": 26
     },
     "web": {

@@ -1165,8 +1165,8 @@
       "backToSignIn": "Zurück zur Anmeldung",
       "overview": {
         "title": "Überblick",
-        "content": "TimeCraft verpflichtet sich, Ihre Privatsphäre zu schützen und Transparenz über unsere Datenverarbeitungspraktiken zu gewährleisten. Diese Datenschutzrichtlinie erklärt, wie wir Ihre Informationen sammeln, verwenden, offenlegen und schützen, wenn Sie unsere Zeit- und Wellness-Anwendung nutzen.",
-        "agreement": "Durch die Nutzung von TimeCraft stimmen Sie der Sammlung und Verwendung von Informationen gemäß dieser Richtlinie zu."
+        "content": "Ploracs verpflichtet sich, Ihre Privatsphäre zu schützen und Transparenz über unsere Datenverarbeitungspraktiken zu gewährleisten. Diese Datenschutzrichtlinie erklärt, wie wir Ihre Informationen sammeln, verwenden, offenlegen und schützen, wenn Sie unsere Zeit- und Wellness-Anwendung nutzen.",
+        "agreement": "Durch die Nutzung von Ploracs stimmen Sie der Sammlung und Verwendung von Informationen gemäß dieser Richtlinie zu."
       },
       "informationWeCollect": {
         "title": "Informationen, die wir sammeln",
@@ -1203,7 +1203,7 @@
         "serviceProvision": {
           "title": "Servicebereitstellung",
           "items": [
-            "Bereitstellung und Wartung des TimeCraft-Dienstes",
+            "Bereitstellung und Wartung des Ploracs-Dienstes",
             "Verarbeitung Ihrer Aufgaben- und Produktivitätsdaten",
             "Generierung von Erkenntnissen und Empfehlungen",
             "Synchronisation von Daten auf Ihren Geräten"
@@ -1285,7 +1285,7 @@
         "content": "Falls Sie Fragen zu dieser Datenschutzrichtlinie oder unseren Datenverarbeitungspraktiken haben, kontaktieren Sie uns bitte:",
         "email": "E-Mail",
         "address": "Adresse",
-        "addressDetails": "TimeCraft Datenschutz-Team\n123 Productivity Lane\nSan Francisco, CA 94102",
+        "addressDetails": "Ploracs Datenschutz-Team\nMusterstraße 123\n10115 Berlin, Deutschland",
         "responseTime": "Antwortzeit",
         "responseTimeDetails": "Wir streben an, auf Datenschutzanfragen innerhalb von 30 Tagen zu antworten.",
         "dataProtectionOfficer": "Datenschutzbeauftragte(r)",
@@ -1298,17 +1298,17 @@
     },
     "termsOfService": {
       "title": "Nutzungsbedingungen",
-      "subtitle": "Bitte lesen Sie diese Bedingungen sorgfältig durch, bevor Sie TimeCraft verwenden. Durch die Nutzung unseres Dienstes stimmen Sie diesen Bedingungen zu.",
+      "subtitle": "Bitte lesen Sie diese Bedingungen sorgfältig durch, bevor Sie Ploracs verwenden. Durch die Nutzung unseres Dienstes stimmen Sie diesen Bedingungen zu.",
       "lastUpdated": "Zuletzt aktualisiert",
       "backToSignIn": "Zurück zur Anmeldung",
       "acceptance": {
         "title": "Annahme der Bedingungen",
-        "content": "Durch den Zugriff auf und die Nutzung von TimeCraft akzeptieren und stimmen Sie zu, an die Bestimmungen und Bedingungen dieser Vereinbarung gebunden zu sein. Wenn Sie nicht bereit sind, die oben genannten Punkte einzuhalten, verwenden Sie diesen Service bitte nicht.",
-        "governance": "Diese Nutzungsbedingungen (\"Bedingungen\") regeln Ihre Nutzung von TimeCraft, betrieben von TimeCraft Inc. (\"wir\", \"uns\" oder \"unser\")."
+        "content": "Durch den Zugriff auf und die Nutzung von Ploracs akzeptieren und stimmen Sie zu, an die Bestimmungen und Bedingungen dieser Vereinbarung gebunden zu sein. Wenn Sie nicht bereit sind, die oben genannten Punkte einzuhalten, verwenden Sie diesen Service bitte nicht.",
+        "governance": "Diese Nutzungsbedingungen (\"Bedingungen\") regeln Ihre Nutzung von Ploracs, betrieben von Ploracs GmbH (\"wir\", \"uns\" oder \"unser\")."
       },
       "serviceDescription": {
         "title": "Service-Beschreibung",
-        "intro": "TimeCraft ist eine umfassende Zeit- und Wellness-Management-Anwendung, die Benutzern hilft:",
+        "intro": "Ploracs ist eine umfassende Zeit- und Wellness-Management-Anwendung, die Benutzern hilft:",
         "productivity": {
           "title": "Produktivitäts-Features",
           "items": [

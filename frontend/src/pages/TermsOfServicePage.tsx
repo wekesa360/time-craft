@@ -33,7 +33,7 @@ export default function TermsOfServicePage() {
               By accessing and using our wellness and productivity platform, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
             </p>
             <p className="text-foreground">
-              These Terms of Service are governed by Gowriters, a company registered in Germany, and are subject to German law and the jurisdiction of German courts.
+              These Terms of Service are governed by Ploracs, a company registered in Germany, and are subject to German law and the jurisdiction of German courts.
             </p>
           </div>
         </section>
@@ -46,7 +46,7 @@ export default function TermsOfServicePage() {
           
           <div className="space-y-6">
             <p className="text-foreground">
-              Gowriters provides a comprehensive wellness and productivity platform that combines time management, health tracking, and personal development tools to help users achieve their goals and maintain a balanced lifestyle.
+              Ploracs provides a comprehensive wellness and productivity platform that combines time management, health tracking, and personal development tools to help users achieve their goals and maintain a balanced lifestyle.
             </p>
             
             <div className="grid md:grid-cols-2 gap-6">
@@ -314,21 +314,21 @@ export default function TermsOfServicePage() {
           
           <div className="rounded-lg p-6 border">
             <p className="text-foreground mb-4">
-              If you have any questions about these Terms of Service, please contact Gowriters using the information below:
+              If you have any questions about these Terms of Service, please contact Ploracs using the information below:
             </p>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <p className="text-foreground">
-                  <strong>Email:</strong> legal@gowriters.de
+                  <strong>Email:</strong> legal@ploracs.de
                 </p>
                 <p className="text-foreground">
-                  <strong>Support:</strong> support@gowriters.de
+                  <strong>Support:</strong> support@ploracs.de
                 </p>
               </div>
               <div>
                 <p className="text-foreground">
                   <strong>Address:</strong><br />
-                  Gowriters<br />
+                  Ploracs<br />
                   Musterstraße 123<br />
                   10115 Berlin, Germany
                 </p>

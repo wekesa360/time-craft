@@ -33,7 +33,7 @@ export default function PrivacyPolicyScreen() {
               </Text>
               <View className="p-4" style={{ borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.card }}>
                 <Text className="mb-3" style={{ color: theme.colors.foreground }}>
-                  Gowriters ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our wellness and productivity platform.
+                  Ploracs ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our wellness and productivity platform.
                 </Text>
                 <Text style={{ color: theme.colors.foreground }}>
                   By using our service, you agree to the collection and use of information in accordance with this Privacy Policy. This policy complies with the General Data Protection Regulation (GDPR) and German data protection laws.
@@ -246,11 +246,11 @@ export default function PrivacyPolicyScreen() {
                 </Text>
                 <View className="space-y-2">
                   <Text style={{ color: theme.colors.foreground }}>
-                    <Text className="font-semibold">Email:</Text> privacy@gowriters.de
+                    <Text className="font-semibold">Email:</Text> privacy@ploracs.de
                   </Text>
                   <Text style={{ color: theme.colors.foreground }}>
                     <Text className="font-semibold">Address:</Text>{'\n'}
-                    Gowriters{'\n'}
+                    Ploracs{'\n'}
                     Musterstraße 123{'\n'}
                     10115 Berlin, Germany
                   </Text>
@@ -258,7 +258,7 @@ export default function PrivacyPolicyScreen() {
                     <Text className="font-semibold">Response Time:</Text> We will respond to your privacy requests within 30 days
                   </Text>
                   <Text style={{ color: theme.colors.foreground }}>
-                    <Text className="font-semibold">Data Protection Officer:</Text> dpo@gowriters.de
+                    <Text className="font-semibold">Data Protection Officer:</Text> dpo@ploracs.de
                   </Text>
                 </View>
               </View>
