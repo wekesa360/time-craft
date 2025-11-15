@@ -55,6 +55,14 @@ const googleAuthSchema = z.object({
 
 // JWT token generation
 const generateTokens = async (user: User, env: Env) => {
+  // Validate JWT secrets are configured
+  if (!env.JWT_SECRET || typeof env.JWT_SECRET !== 'string' || env.JWT_SECRET.trim() === '') {
+    throw new Error('JWT_SECRET is not configured or is invalid');
+  }
+  if (!env.REFRESH_SECRET || typeof env.REFRESH_SECRET !== 'string' || env.REFRESH_SECRET.trim() === '') {
+    throw new Error('REFRESH_SECRET is not configured or is invalid');
+  }
+
   const payload = {
     userId: user.id,
     email: user.email,

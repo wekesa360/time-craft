@@ -1,0 +1,45 @@
+name = "wellness-backend"
+main = "src/workers/api-gateway.ts"
+compatibility_date = "2024-12-01"
+
+# Environment variables for local development
+# Copy this file to wrangler.toml and fill in your actual values
+# For production, use: wrangler secret put <SECRET_NAME>
+[vars]
+ENVIRONMENT = "local"
+JWT_SECRET = "your-jwt-secret-key-here"
+REFRESH_SECRET = "your-refresh-secret-key-here"
+ENCRYPTION_KEY = "your-encryption-key-here-32chars"
+OPENAI_API_KEY = "sk-your-openai-api-key"
+DEEPGRAM_API_KEY = "your-deepgram-api-key"
+STRIPE_SECRET_KEY = "sk_test_your_stripe_secret_key"
+STRIPE_WEBHOOK_SECRET = "whsec_your_webhook_secret"
+RESEND_API_KEY = "re_your_resend_api_key"
+FROM_EMAIL = "noreply@yourdomain.com"
+ONESIGNAL_APP_ID = "your-onesignal-app-id"
+ONESIGNAL_API_KEY = "your-onesignal-api-key"
+GOOGLE_CLIENT_ID = "your-google-client-id"
+GOOGLE_CLIENT_SECRET = "your-google-client-secret"
+GOOGLE_REDIRECT_URI = "http://localhost:5173/auth/google/callback"
+APP_BASE_URL = "http://localhost:5173"
+OUTLOOK_CLIENT_ID = "your-outlook-client-id"
+OUTLOOK_CLIENT_SECRET = "your-outlook-client-secret"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "wellness_kv_preview"
+preview_id = "wellness_kv_preview"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wellness_local"
+database_id = "your-database-id-here"
+
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "wellness-r2-local"
+
+[[queues.producers]]
+binding = "TASK_QUEUE"
+queue = "wellness-task-queue-local"
+
