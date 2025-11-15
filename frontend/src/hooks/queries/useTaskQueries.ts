@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api';
 import { useTaskStore } from '../../stores/tasks';
-import type { Task, TaskForm, EisenhowerMatrix, MatrixStats } from '../../types';
+import type { Task, TaskForm, EisenhowerMatrix, MatrixStats, TasksResponse } from '../../types';
 import { toast } from 'react-hot-toast';
 
 // Query keys
@@ -42,7 +42,7 @@ export const useTasksQuery = (params?: {
         // Call API and get TasksResponse format: { tasks, hasMore, nextCursor, total }
         const response = await apiClient.getTasks(params);
         
-        // Extract tasks array from response
+        // Return full response for pagination info, but extract tasks for compatibility
         const tasksData: Task[] = response.tasks || [];
         
         console.log('Fetched tasks from backend:', {
@@ -52,7 +52,13 @@ export const useTasksQuery = (params?: {
           tasks: tasksData
         });
         
-        return tasksData;
+        // Return full response with pagination info
+        return {
+          tasks: tasksData,
+          hasMore: response.hasMore || false,
+          nextCursor: response.nextCursor || null,
+          total: response.total || tasksData.length
+        } as TasksResponse;
       } catch (error) {
         console.error('Failed to fetch tasks:', error);
         throw error;

@@ -47,8 +47,10 @@ export default function TasksScreen() {
     queryKey: ['tasks'],
     queryFn: async (): Promise<Task[]> => {
       const response = await apiClient.getTasks();
-      const raw = response.tasks || response.data?.tasks || [];
+      // Backend now returns { tasks: [...], hasMore, nextCursor, total }
+      const raw = response.tasks || response.data?.tasks || (Array.isArray(response) ? response : []);
       // Normalize backend fields (snake_case, numeric timestamps) to local Task shape
+      // Backend now returns both snake_case and camelCase, so we can use either
       const mapped: Task[] = raw.map((t: any) => ({
         id: t.id,
         title: t.title,
@@ -115,12 +117,31 @@ export default function TasksScreen() {
     router.push('/modals/add-task');
   };
 
+  // Complete task mutation
+  const completeTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => apiClient.completeTask(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
+      showToast.success('Task completed!');
+    },
+    onError: () => {
+      showToast.error('Failed to complete task');
+    },
+  });
+
   const toggleTaskStatus = async (task: Task) => {
-    const newStatus = task.status === 'done' ? 'pending' : 'done';
-    updateTaskMutation.mutate({
-      taskId: task.id,
-      updates: { status: newStatus }
-    });
+    if (task.status === 'done') {
+      // If already done, undo by updating status back to pending
+      updateTaskMutation.mutate({
+        taskId: task.id,
+        updates: { status: 'pending' }
+      });
+    } else {
+      // Use completeTask endpoint for completion
+      completeTaskMutation.mutate(task.id);
+    }
   };
 
   const confirmAndDeleteTask = (task: Task) => {

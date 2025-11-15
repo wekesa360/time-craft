@@ -12,7 +12,8 @@ import {
   LocalizationRepository,
   DatabaseService,
   insert,
-  update
+  update,
+  remove
 } from '../lib/db';
 import type { 
   User, 
@@ -24,6 +25,52 @@ import { queueNotification } from '../lib/notifications';
 import { triggerBadgeCheck } from '../lib/badges';
 
 const core = new Hono<{ Bindings: Env }>();
+
+// Helper function to transform task from snake_case to camelCase
+const transformTaskToCamelCase = (task: any) => {
+  if (!task) return null;
+  return {
+    id: task.id,
+    user_id: task.user_id,
+    title: task.title,
+    description: task.description,
+    priority: task.priority,
+    status: task.status,
+    due_date: task.due_date,
+    estimated_duration: task.estimated_duration,
+    ai_priority_score: task.ai_priority_score,
+    ai_planning_session_id: task.ai_planning_session_id,
+    energy_level_required: task.energy_level_required,
+    context_type: task.context_type,
+    urgency: task.urgency,
+    importance: task.importance,
+    eisenhower_quadrant: task.eisenhower_quadrant,
+    matrix_notes: task.matrix_notes,
+    ai_matrix_confidence: task.ai_matrix_confidence,
+    matrix_last_reviewed: task.matrix_last_reviewed,
+    is_delegated: task.is_delegated,
+    delegated_to: task.delegated_to,
+    delegation_notes: task.delegation_notes,
+    created_at: task.created_at,
+    updated_at: task.updated_at,
+    // Also include camelCase versions for frontend compatibility
+    dueDate: task.due_date,
+    estimatedDuration: task.estimated_duration,
+    energyLevelRequired: task.energy_level_required,
+    contextType: task.context_type,
+    eisenhowerQuadrant: task.eisenhower_quadrant,
+    matrixNotes: task.matrix_notes,
+    aiMatrixConfidence: task.ai_matrix_confidence,
+    matrixLastReviewed: task.matrix_last_reviewed,
+    isDelegated: task.is_delegated,
+    delegatedTo: task.delegated_to,
+    delegationNotes: task.delegation_notes,
+    createdAt: task.created_at,
+    updatedAt: task.updated_at,
+    aiPriorityScore: task.ai_priority_score,
+    aiPlanningSessionId: task.ai_planning_session_id,
+  };
+};
 
 // Add rate limiting middleware (more restrictive for testing)
 core.use('*', (c, next) => {
@@ -436,8 +483,11 @@ core.get('/tasks', zValidator('query', taskFiltersSchema), async (c) => {
     
     const result = await taskRepo.getTasks(auth.userId, filters);
     
+    // Transform tasks from snake_case to camelCase for frontend
+    const transformedTasks = result.data.map(transformTaskToCamelCase);
+    
     return c.json({
-      tasks: result.data,
+      tasks: transformedTasks,
       hasMore: result.hasMore,
       nextCursor: result.nextCursor,
       total: result.total
@@ -502,7 +552,7 @@ core.post('/tasks', async (c) => {
 
     return c.json({ 
       message: 'Task created successfully',
-      task: newTask 
+      task: transformTaskToCamelCase(newTask)
     }, 201);
   } catch (error) {
     console.error('Create task error:', error);
@@ -545,11 +595,12 @@ core.get('/tasks/matrix', async (c) => {
     const delegateTasks = tasks.data.filter((task: any) => (task.urgency || 2) >= 3 && (task.importance || 2) < 3);
     const deleteTasks = tasks.data.filter((task: any) => (task.urgency || 2) < 3 && (task.importance || 2) < 3);
 
+    // Transform tasks to camelCase
     const matrix = {
-      do: doTasks,
-      decide: decideTasks,
-      delegate: delegateTasks,
-      delete: deleteTasks,
+      do: doTasks.map(transformTaskToCamelCase),
+      decide: decideTasks.map(transformTaskToCamelCase),
+      delegate: delegateTasks.map(transformTaskToCamelCase),
+      delete: deleteTasks.map(transformTaskToCamelCase),
       stats: {
         do: doTasks.length,
         decide: decideTasks.length,
@@ -582,7 +633,7 @@ core.get('/tasks/:id', async (c) => {
       return c.json({ error: 'Task not found' }, 404);
     }
 
-    return c.json({ task: tasks[0] });
+    return c.json({ task: transformTaskToCamelCase(tasks[0]) });
   } catch (error) {
     console.error('Get task error:', error);
     return c.json({ error: 'Internal server error' }, 500);
@@ -653,7 +704,7 @@ core.put('/tasks/:id', async (c) => {
 
     return c.json({ 
       message: 'Task updated successfully',
-      task: updatedTask 
+      task: transformTaskToCamelCase(updatedTask)
     });
   } catch (error) {
     console.error('Update task error:', error);
@@ -678,7 +729,8 @@ core.delete('/tasks/:id', async (c) => {
       return c.json({ error: 'Task not found' }, 404);
     }
     
-    await db.softDelete('tasks', taskId, auth.userId);
+    // Hard delete - remove the task from database
+    await remove(c.env, 'tasks', 'id = ? AND user_id = ?', [taskId, auth.userId]);
     
     return c.json({ message: 'Task deleted successfully' });
   } catch (error) {
@@ -972,20 +1024,23 @@ core.patch('/tasks/:id/matrix', async (c) => {
     }
 
     const taskRepo = new TaskRepository(c.env);
+    const db = new DatabaseService(c.env);
     
     // Verify task belongs to user
-    const existingTask = await taskRepo.getTask(taskId, auth.userId);
-    if (!existingTask.data) {
+    const existingTask = await db.getOne('tasks', { id: taskId, user_id: auth.userId });
+    if (!existingTask) {
       return c.json({ error: 'Task not found' }, 404);
     }
 
     // Update task matrix position
-    const updatedTask = await taskRepo.updateTask(taskId, auth.userId, {
+    await taskRepo.updateTask(taskId, auth.userId, {
       urgency,
       importance,
-      matrix_last_reviewed: Date.now(),
-      updated_at: Date.now()
+      matrix_last_reviewed: Date.now()
     });
+
+    // Get updated task
+    const updatedTask = await db.getOne('tasks', { id: taskId, user_id: auth.userId });
 
     // Determine quadrant
     const quadrant = urgency >= 3 && importance >= 3 ? 'do' :
@@ -993,8 +1048,8 @@ core.patch('/tasks/:id/matrix', async (c) => {
                     urgency >= 3 && importance < 3 ? 'delegate' : 'delete';
 
     return c.json({
-      success: true,
-      task: updatedTask.data,
+      message: 'Task matrix updated successfully',
+      task: transformTaskToCamelCase(updatedTask),
       quadrant,
       matrix: {
         urgency,

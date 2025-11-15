@@ -1,39 +1,36 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, Clock, Flag, CalendarIcon, Sparkles, X, Filter, MoreHorizontal } from "lucide-react";
+import { Plus, Clock, Flag, CalendarIcon, X, MoreHorizontal } from "lucide-react";
 import { TaskCard } from '../components/features/tasks/TaskCard';
 import TaskForm from '../components/features/tasks/TaskForm';
-import { TaskFilters } from '../components/features/tasks/TaskFilters';
 import { TaskListSkeleton } from '../components/skeletons/TaskListSkeleton';
-import { useTasksQuery, useCreateTaskMutation, useUpdateTaskMutation, useDeleteTaskMutation } from '../hooks/queries/useTaskQueries';
+import { useTasksQuery, useCreateTaskMutation, useUpdateTaskMutation, useDeleteTaskMutation, useCompleteTaskMutation, useTaskStatsQuery, useEisenhowerMatrixQuery } from '../hooks/queries/useTaskQueries';
 import { useTaskStore } from '../stores/tasks';
-import type { Task, TaskForm as TaskFormType } from '../types';
+import type { Task, TaskForm as TaskFormType, TasksResponse } from '../types';
 
 export default function TasksPage() {
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("all");
   const [showAddTask, setShowAddTask] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [viewingTask, setViewingTask] = useState<Task | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     high: false,
     medium: false,
     low: false
   });
-  
-  const { filters, setFilters } = useTaskStore();
 
-  // Fetch tasks with current filters
-  const { data: tasks = [], isLoading, error } = useTasksQuery({
-    status: filters.status,
-    priority: filters.priority,
-    contextType: filters.contextType,
-    search: searchQuery,
-    ...filters
+  // Fetch tasks
+  const { data: tasksData, isLoading, error } = useTasksQuery({
+    limit: 50,
+    offset: 0
   });
+  
+  // Extract tasks array and pagination info
+  const tasksResponse = tasksData as TasksResponse | undefined;
+  const tasks = tasksResponse?.tasks || [];
+  const hasMore = tasksResponse?.hasMore || false;
+  const totalTasks = tasksResponse?.total || tasks.length;
 
   // Log fetched tasks
   useEffect(() => {
@@ -52,6 +49,11 @@ export default function TasksPage() {
   const createTaskMutation = useCreateTaskMutation();
   const updateTaskMutation = useUpdateTaskMutation();
   const deleteTaskMutation = useDeleteTaskMutation();
+  const completeTaskMutation = useCompleteTaskMutation();
+  
+  // Stats and Matrix queries
+  const { data: taskStats } = useTaskStatsQuery();
+  const { data: eisenhowerMatrix } = useEisenhowerMatrixQuery();
 
   // Group tasks by priority
   const groupedTasks = useMemo(() => {
@@ -84,17 +86,6 @@ export default function TasksPage() {
     return grouped;
   }, [tasks]);
 
-  // Filter tasks based on selected filter
-  const filteredTasks = useMemo(() => {
-    if (selectedFilter === "all") {
-      return groupedTasks;
-    }
-    
-    return {
-      ...groupedTasks,
-      [selectedFilter]: groupedTasks[selectedFilter as keyof typeof groupedTasks] || []
-    };
-  }, [groupedTasks, selectedFilter]);
 
   const handleCreateTask = async (data: TaskFormType) => {
     try {
@@ -133,10 +124,7 @@ export default function TasksPage() {
   const handleCompleteTask = async (id: string) => {
     try {
       console.log('✓ Completing task:', id);
-      await updateTaskMutation.mutateAsync({ 
-        id, 
-        data: { status: 'done' } 
-      });
+      await completeTaskMutation.mutateAsync(id);
       console.log('✅ Task completed successfully');
     } catch (error) {
       console.error('❌ Failed to complete task:', error);
@@ -193,13 +181,6 @@ export default function TasksPage() {
         </div>
         <div className="flex gap-3">
           <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-3 bg-card border border-border rounded-xl font-medium hover:bg-card/80 transition-colors"
-          >
-            <Filter className="w-4 h-4" />
-            Filters
-          </button>
-          <button
             onClick={() => setShowAddTask(true)}
             className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors shadow-md"
           >
@@ -209,59 +190,25 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* AI Suggestion Banner */}
-      <div className="bg-primary/10 rounded-2xl p-6 border border-primary/20">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-6 h-6 text-primary-foreground" />
+      {/* Task Stats */}
+      {taskStats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <div className="text-sm text-muted-foreground">Total Tasks</div>
+            <div className="text-2xl font-bold text-foreground mt-1">{taskStats.total}</div>
           </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-foreground mb-1">AI Recommendation</h3>
-            <p className="text-sm text-foreground leading-relaxed">
-              Based on your deadlines and energy patterns, I recommend starting with high-priority tasks during your peak focus hours. 
-              Consider breaking larger tasks into smaller, manageable chunks for better completion rates.
-            </p>
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <div className="text-sm text-muted-foreground">Completed</div>
+            <div className="text-2xl font-bold text-success mt-1">{taskStats.completed}</div>
           </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search tasks..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
-          />
-        </div>
-        <div className="flex gap-2">
-          {["all", "high", "medium", "low"].map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setSelectedFilter(filter)}
-              className={`px-4 py-3 rounded-xl font-medium transition-colors ${
-                selectedFilter === filter
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card border border-border text-foreground hover:bg-card/80"
-              }`}
-            >
-              {filter.charAt(0).toUpperCase() + filter.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Advanced Filters */}
-      {showFilters && (
-        <div className="bg-card rounded-2xl p-6 border border-border">
-          <TaskFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            onClose={() => setShowFilters(false)}
-          />
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <div className="text-sm text-muted-foreground">Pending</div>
+            <div className="text-2xl font-bold text-warning mt-1">{taskStats.pending}</div>
+          </div>
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <div className="text-sm text-muted-foreground">Overdue</div>
+            <div className="text-2xl font-bold text-error-light0 mt-1">{taskStats.overdue}</div>
+          </div>
         </div>
       )}
 
@@ -272,35 +219,35 @@ export default function TasksPage() {
       {!isLoading && (
         <div className="grid lg:grid-cols-3 gap-6">
           {/* High Priority */}
-          {(selectedFilter === "all" || selectedFilter === "high") && (
+          {(
             <div className="bg-card rounded-2xl p-6 border border-border h-fit">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-foreground">
                   High Priority
                 </h2>
-                <span className="text-sm text-muted-foreground">{filteredTasks.high.length} tasks</span>
+                <span className="text-sm text-muted-foreground">{groupedTasks.high.length} tasks</span>
               </div>
 
               <div className="space-y-2 min-h-[300px]">
-                {filteredTasks.high.length === 0 ? (
+                {groupedTasks.high.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No high priority tasks
                   </div>
                 ) : (
                   <>
-                    {(expandedSections.high ? filteredTasks.high : filteredTasks.high.slice(0, 4)).map((task) => (
+                    {(expandedSections.high ? groupedTasks.high : groupedTasks.high.slice(0, 4)).map((task) => (
                       <TaskCard
                         key={task.id}
                         task={task}
                         onView={handleViewTask}
                       />
                     ))}
-                    {filteredTasks.high.length > 4 && (
+                    {groupedTasks.high.length > 4 && (
                       <button
                         onClick={() => setExpandedSections(prev => ({ ...prev, high: !prev.high }))}
                         className="w-full py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
                       >
-                        {expandedSections.high ? 'View Less' : `View More (${filteredTasks.high.length - 4} more)`}
+                        {expandedSections.high ? 'View Less' : `View More (${groupedTasks.high.length - 4} more)`}
                       </button>
                     )}
                   </>
@@ -310,35 +257,35 @@ export default function TasksPage() {
           )}
 
           {/* Medium Priority */}
-          {(selectedFilter === "all" || selectedFilter === "medium") && (
+          {(
             <div className="bg-card rounded-2xl p-6 border border-border h-fit">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-foreground">
                   Medium Priority
                 </h2>
-                <span className="text-sm text-muted-foreground">{filteredTasks.medium.length} tasks</span>
+                <span className="text-sm text-muted-foreground">{groupedTasks.medium.length} tasks</span>
               </div>
 
               <div className="space-y-2 min-h-[300px]">
-                {filteredTasks.medium.length === 0 ? (
+                {groupedTasks.medium.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No medium priority tasks
                   </div>
                 ) : (
                   <>
-                    {(expandedSections.medium ? filteredTasks.medium : filteredTasks.medium.slice(0, 4)).map((task) => (
+                    {(expandedSections.medium ? groupedTasks.medium : groupedTasks.medium.slice(0, 4)).map((task) => (
                       <TaskCard
                         key={task.id}
                         task={task}
                         onView={handleViewTask}
                       />
                     ))}
-                    {filteredTasks.medium.length > 4 && (
+                    {groupedTasks.medium.length > 4 && (
                       <button
                         onClick={() => setExpandedSections(prev => ({ ...prev, medium: !prev.medium }))}
                         className="w-full py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
                       >
-                        {expandedSections.medium ? 'View Less' : `View More (${filteredTasks.medium.length - 4} more)`}
+                        {expandedSections.medium ? 'View Less' : `View More (${groupedTasks.medium.length - 4} more)`}
                       </button>
                     )}
                   </>
@@ -348,35 +295,35 @@ export default function TasksPage() {
           )}
 
           {/* Low Priority */}
-          {(selectedFilter === "all" || selectedFilter === "low") && (
+          {(
             <div className="bg-card rounded-2xl p-6 border border-border h-fit">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-foreground">
                   Low Priority
                 </h2>
-                <span className="text-sm text-muted-foreground">{filteredTasks.low.length} tasks</span>
+                <span className="text-sm text-muted-foreground">{groupedTasks.low.length} tasks</span>
               </div>
 
               <div className="space-y-2 min-h-[300px]">
-                {filteredTasks.low.length === 0 ? (
+                {groupedTasks.low.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No low priority tasks
                   </div>
                 ) : (
                   <>
-                    {(expandedSections.low ? filteredTasks.low : filteredTasks.low.slice(0, 4)).map((task) => (
+                    {(expandedSections.low ? groupedTasks.low : groupedTasks.low.slice(0, 4)).map((task) => (
                       <TaskCard
                         key={task.id}
                         task={task}
                         onView={handleViewTask}
                       />
                     ))}
-                    {filteredTasks.low.length > 4 && (
+                    {groupedTasks.low.length > 4 && (
                       <button
                         onClick={() => setExpandedSections(prev => ({ ...prev, low: !prev.low }))}
                         className="w-full py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
                       >
-                        {expandedSections.low ? 'View Less' : `View More (${filteredTasks.low.length - 4} more)`}
+                        {expandedSections.low ? 'View Less' : `View More (${groupedTasks.low.length - 4} more)`}
                       </button>
                     )}
                   </>
@@ -386,15 +333,15 @@ export default function TasksPage() {
           )}
 
       {/* Completed Tasks */}
-      {filteredTasks.completed.length > 0 && (
+      {groupedTasks.completed.length > 0 && (
         <div className="bg-card rounded-2xl p-6 border border-border col-span-full">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-foreground">Completed Today</h2>
-            <span className="text-sm text-primary font-medium">{filteredTasks.completed.length} tasks</span>
+            <span className="text-sm text-primary font-medium">{groupedTasks.completed.length} tasks</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {filteredTasks.completed.map((task) => (
+            {groupedTasks.completed.map((task) => (
               <div key={task.id} className="flex items-center gap-3 p-2 rounded-lg bg-primary/10">
                 <div className="w-4 h-4 rounded bg-primary flex items-center justify-center flex-shrink-0">
                   <svg className="w-2.5 h-2.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
