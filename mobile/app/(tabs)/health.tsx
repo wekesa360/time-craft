@@ -58,8 +58,20 @@ export default function HealthScreen() {
   const { data: stats } = useQuery({
     queryKey: ['health-stats', selectedPeriod],
     queryFn: async (): Promise<HealthStats> => {
-      const response = await apiClient.getHealthStats({ period: selectedPeriod });
-      return response.stats || response;
+      // Convert period to days for backend
+      const periodDays = selectedPeriod === 'day' ? '1' : selectedPeriod === 'week' ? '7' : '30';
+      const response = await apiClient.getHealthStats({ period: periodDays });
+      
+      // Map backend response to mobile format
+      const backendStats = response.stats || {};
+      return {
+        weeklyExercise: backendStats.exercise?.totalSessions || 0,
+        averageMood: backendStats.mood?.averageMoodScore || 0,
+        averageSleep: 0, // Sleep tracking not implemented in backend yet
+        waterIntake: backendStats.hydration?.totalWaterMl ? (backendStats.hydration.totalWaterMl / 1000) : 0, // Convert ml to L
+        caloriesBurned: backendStats.exercise?.totalDuration ? Math.round(backendStats.exercise.totalDuration * 5) : 0, // Rough estimate: 5 cal/min
+        currentWeight: undefined, // Weight tracking not in stats endpoint
+      };
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
