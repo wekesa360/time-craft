@@ -3,6 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { useAuthStore } from '../stores/auth';
 import type {
   LoginForm,
   RegisterForm,
@@ -102,9 +103,12 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor to add auth token
+    // Request interceptor to add auth token and proactively refresh if needed
     this.client.interceptors.request.use(
       async (config) => {
+        // Check if token is expired or about to expire, and refresh proactively
+        await this.ensureValidToken();
+        
         const token = await this.getStoredToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -128,10 +132,15 @@ class ApiClient {
           if (refreshToken) {
             try {
               const tokens = await this.refreshTokens(refreshToken);
+              
+              // Update both the auth store (Zustand) and API client
+              // This ensures the token is persisted and available for subsequent requests
+              useAuthStore.getState().setTokens(tokens);
               await this.setTokens(tokens);
               
               // Retry original request with new token
               originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
+              console.log('✅ Token refreshed, retrying request with new token');
               return this.client.request(originalRequest);
             } catch (refreshError) {
               await this.clearTokens();
@@ -241,6 +250,16 @@ class ApiClient {
       await SecureStore.setItemAsync('refresh_token', tokens.refreshToken);
       await SecureStore.setItemAsync('accessToken', tokens.accessToken);
       await SecureStore.setItemAsync('refreshToken', tokens.refreshToken);
+      
+      // Store token expiration time for proactive refresh
+      try {
+        const payload = JSON.parse(atob(tokens.accessToken.split('.')[1]));
+        if (payload.exp) {
+          await SecureStore.setItemAsync('token_expiry', payload.exp.toString());
+        }
+      } catch (error) {
+        console.warn('Could not parse token expiration:', error);
+      }
     } catch (error) {
       console.error('Failed to save tokens to storage:', error);
     }
@@ -255,6 +274,7 @@ class ApiClient {
       await SecureStore.deleteItemAsync('refresh_token');
       await SecureStore.deleteItemAsync('accessToken');
       await SecureStore.deleteItemAsync('refreshToken');
+      await SecureStore.deleteItemAsync('token_expiry');
       await SecureStore.deleteItemAsync('user');
     } catch (error) {
       console.error('Failed to clear tokens from storage:', error);
@@ -275,6 +295,68 @@ class ApiClient {
       refreshToken,
     });
     return response.data.tokens;
+  }
+
+  /**
+   * Check if token is expired or will expire soon
+   * @param bufferMinutes Minutes before expiration to consider token as "expired" (default: 5)
+   */
+  private async isTokenExpired(bufferMinutes: number = 5): Promise<boolean> {
+    try {
+      const expiryStr = await SecureStore.getItemAsync('token_expiry');
+      if (!expiryStr) {
+        // No expiry stored, assume expired to be safe
+        return true;
+      }
+
+      const expiryTime = parseInt(expiryStr) * 1000; // Convert to milliseconds
+      const now = Date.now();
+      const bufferMs = bufferMinutes * 60 * 1000;
+
+      // Consider expired if expires within buffer time
+      return now >= (expiryTime - bufferMs);
+    } catch (error) {
+      console.warn('Error checking token expiration:', error);
+      // On error, assume expired to be safe
+      return true;
+    }
+  }
+
+  /**
+   * Ensure token is valid by proactively refreshing if needed
+   * This is called before each request to keep the user logged in
+   */
+  async ensureValidToken(): Promise<void> {
+    try {
+      const refreshToken = await this.getStoredRefreshToken();
+      if (!refreshToken) {
+        // No refresh token, can't refresh
+        return;
+      }
+
+      // Check if token is expired or about to expire
+      const isExpired = await this.isTokenExpired(5); // Refresh 5 minutes before expiration
+      
+      if (isExpired) {
+        console.log('🔄 Token expired or expiring soon, refreshing proactively...');
+        try {
+          const tokens = await this.refreshTokens(refreshToken);
+          
+          // Update both the auth store (Zustand) and API client
+          useAuthStore.getState().setTokens(tokens);
+          await this.setTokens(tokens);
+          
+          console.log('✅ Token refreshed proactively');
+        } catch (refreshError) {
+          console.error('❌ Proactive token refresh failed:', refreshError);
+          // Don't clear tokens here - let the 401 handler deal with it
+          // This prevents race conditions
+        }
+      }
+    } catch (error) {
+      console.warn('Error ensuring valid token:', error);
+      // Don't throw - allow request to proceed
+    }
   }
 
   // HTTP Methods

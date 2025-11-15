@@ -14,7 +14,6 @@ import { router } from 'expo-router';
 import { useAuthStore } from '../../stores/auth';
 import { useNotificationStore } from '../../stores/notifications';
 import {
-  ShieldCheckIcon,
   CheckCircleIcon,
   BellIcon,
   HeartIcon,
@@ -35,11 +34,6 @@ export default function SettingsModal() {
   const theme = useAppTheme();
   const { t } = useI18n();
   const {
-    biometricCapabilities,
-    biometricEnabled,
-    biometricAvailable,
-    setBiometricEnabled,
-    initializeBiometric,
     isLoading,
   } = useAuthStore();
 
@@ -50,7 +44,6 @@ export default function SettingsModal() {
     pushToken,
   } = useNotificationStore();
 
-  const [localBiometricEnabled, setLocalBiometricEnabled] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [localNotificationSettings, setLocalNotificationSettings] = useState(notificationSettings);
   const [themeDialogVisible, setThemeDialogVisible] = useState(false);
@@ -65,13 +58,8 @@ export default function SettingsModal() {
   const setColorTheme = usePreferencesStore((s) => s.setColorTheme);
 
   useEffect(() => {
-    const initSettings = async () => {
-      await initializeBiometric();
-      setLocalBiometricEnabled(biometricEnabled);
-      setLocalNotificationSettings(notificationSettings);
-    };
-    initSettings();
-  }, [initializeBiometric, biometricEnabled, notificationSettings]);
+    setLocalNotificationSettings(notificationSettings);
+  }, [notificationSettings]);
 
   // Fetch user preferences from backend and hydrate local store
   useEffect(() => {
@@ -91,37 +79,6 @@ export default function SettingsModal() {
       mounted = false;
     };
   }, [setThemeMode, setColorTheme, setLanguage]);
-
-  const handleBiometricToggle = async (value: boolean) => {
-    setIsToggling(true);
-    
-    try {
-      await setBiometricEnabled(value);
-      setLocalBiometricEnabled(value);
-      
-      if (value) {
-        Alert.alert(
-          'Success',
-          `${getBiometricText()} authentication has been enabled for quick sign-in.`
-        );
-      } else {
-        Alert.alert(
-          'Disabled',
-          `${getBiometricText()} authentication has been disabled.`
-        );
-      }
-    } catch (error) {
-      setLocalBiometricEnabled(!value);
-      Alert.alert(
-        'Error',
-        value 
-          ? `Failed to enable ${getBiometricText()} authentication. Please try again.`
-          : `Failed to disable ${getBiometricText()} authentication.`
-      );
-    } finally {
-      setIsToggling(false);
-    }
-  };
 
   const handleNotificationToggle = async (setting: keyof typeof notificationSettings, value: boolean) => {
     setIsToggling(true);
@@ -148,20 +105,6 @@ export default function SettingsModal() {
     }
   };
 
-  const getBiometricText = () => {
-    if (!biometricCapabilities?.supportedTypes.length) return 'Biometric';
-    
-    const types = biometricCapabilities.supportedTypes;
-    if (types.includes(2)) return 'Face ID';
-    if (types.includes(1)) return 'Touch ID';
-    if (types.includes(3)) return 'Iris';
-    return 'Biometric';
-  };
-
-  const getBiometricDescription = () => {
-    const text = getBiometricText();
-    return `Use ${text} to quickly sign in to your account`;
-  };
 
   const handleBack = () => {
     router.back();
@@ -179,62 +122,6 @@ export default function SettingsModal() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: theme.spacing.xl, paddingTop: theme.spacing.xl, paddingBottom: theme.spacing.xl }}>
-          {/* Security Section */}
-          <View style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl, marginBottom: theme.spacing.lg }}>
-            <View style={{ paddingHorizontal: theme.spacing.xl, paddingVertical: theme.spacing.lg, borderBottomWidth: 1, borderColor: theme.colors.border }}>
-              <Text style={{ color: theme.colors.foreground, fontWeight: '700', fontSize: 16 }}>{t('security')}</Text>
-            </View>
-
-            {/* Biometric Authentication */}
-            <View style={{ paddingHorizontal: theme.spacing.xl, paddingVertical: theme.spacing.lg }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{ flex: 1, marginRight: theme.spacing.lg }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                    <ShieldCheckIcon size={22} color={theme.colors.muted} />
-                    <Text style={{ marginLeft: 10, color: theme.colors.foreground, fontWeight: '600' }}>{getBiometricText()} Login</Text>
-                  </View>
-                  <Text style={{ color: theme.colors.muted, fontSize: 13 }}>
-                    {getBiometricDescription()}
-                  </Text>
-                  {!biometricAvailable && (
-                    <Text style={{ color: theme.colors.danger, fontSize: 12, marginTop: 4 }}>
-                      {!biometricCapabilities?.hasHardware 
-                        ? t('not_supported_on_device')
-                        : !biometricCapabilities?.isEnrolled
-                        ? `${getBiometricText()} not set up in device settings`
-                        : t('not_available')}
-                    </Text>
-                  )}
-                </View>
-                {isToggling ? (
-                  <ActivityIndicator size="small" color={theme.colors.primary} />
-                ) : (
-                  <Switch
-                    value={localBiometricEnabled}
-                    onValueChange={handleBiometricToggle}
-                    disabled={!biometricAvailable || isLoading}
-                    trackColor={{ false: '#d1d5db', true: theme.colors.primaryLight }}
-                    thumbColor={localBiometricEnabled ? theme.colors.primary : '#9ca3af'}
-                  />
-                )}
-              </View>
-            </View>
-
-            {/* Setup Instructions */}
-            {biometricCapabilities?.hasHardware && !biometricCapabilities?.isEnrolled && (
-              <View style={{ paddingHorizontal: theme.spacing.xl, paddingVertical: theme.spacing.lg, backgroundColor: '#FFF7ED', borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.radii.xl }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ color: '#EA580C', marginRight: 8 }}>⚠️</Text>
-                  <View>
-                    <Text style={{ color: theme.colors.foreground, fontWeight: '600' }}>{t('setup_required')}</Text>
-                    <Text style={{ color: theme.colors.muted, fontSize: 13 }}>
-                      To use {getBiometricText()}, please set it up in your device settings first.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
-          </View>
 
           {/* Notifications Section */}
           <View style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl, marginBottom: theme.spacing.lg }}>

@@ -7,6 +7,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '../lib/toast';
+import { biometricAuth } from '../lib/biometric-auth';
+import { Alert } from 'react-native';
 
 import '../global.css';
 import { queryClient } from '../lib/query-client';
@@ -19,11 +21,13 @@ import { usePreferencesStore } from '../stores/preferences';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { isAuthenticated, isLoading, initialize } = useAuthStore();
+  const { isAuthenticated, isLoading, initialize, loginWithBiometric, logout } = useAuthStore();
   const { initialize: initializeNotifications } = useNotificationStore();
   const effectiveTheme = usePreferencesStore((s) => s.effectiveTheme);
   const segments = useSegments();
   const hasNavigatedRef = useRef(false);
+  const biometricAttemptsRef = useRef(0);
+  const hasCheckedBiometricRef = useRef(false);
   const [loaded, error] = useFonts({
     // Add custom fonts here if needed
   });
@@ -43,6 +47,91 @@ export default function RootLayout() {
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // Handle automatic biometric authentication when app opens
+  useEffect(() => {
+    if (loaded && !isLoading && isAuthenticated && !hasCheckedBiometricRef.current) {
+      hasCheckedBiometricRef.current = true;
+      
+      const checkAndPromptBiometric = async () => {
+        try {
+          const capabilities = await biometricAuth.getCapabilities();
+          
+          // Only prompt if biometric is available
+          if (capabilities.isAvailable) {
+            const result = await biometricAuth.authenticate({
+              promptMessage: 'Authenticate to access the app',
+              cancelLabel: 'Cancel',
+              fallbackLabel: 'Use Passcode',
+              disableDeviceFallback: false, // Allow PIN fallback
+            });
+
+            if (result.success) {
+              // Success - reset attempts and continue
+              biometricAttemptsRef.current = 0;
+              await biometricAuth.setLastBiometricAuth();
+            } else {
+              // Failed - increment attempts
+              biometricAttemptsRef.current += 1;
+              
+              if (biometricAttemptsRef.current >= 3) {
+                // Force sign out after 3 failed attempts
+                Alert.alert(
+                  'Authentication Failed',
+                  'Too many failed authentication attempts. Please sign in again.',
+                  [
+                    {
+                      text: 'Sign In',
+                      onPress: async () => {
+                        await logout();
+                        router.replace('/auth/login');
+                      },
+                    },
+                  ],
+                  { cancelable: false }
+                );
+              } else {
+                // Show remaining attempts
+                const remaining = 3 - biometricAttemptsRef.current;
+                Alert.alert(
+                  'Authentication Failed',
+                  `Authentication failed. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`,
+                  [
+                    {
+                      text: 'Try Again',
+                      onPress: () => {
+                        hasCheckedBiometricRef.current = false;
+                        checkAndPromptBiometric();
+                      },
+                    },
+                    {
+                      text: 'Sign In',
+                      style: 'cancel',
+                      onPress: async () => {
+                        await logout();
+                        router.replace('/auth/login');
+                      },
+                    },
+                  ]
+                );
+              }
+            }
+          } else {
+            // Biometric not available - allow access without prompt
+            // User can still use the app, just without biometric protection
+          }
+        } catch (error) {
+          console.error('Biometric check error:', error);
+          // On error, allow access (don't block the user)
+        }
+      };
+
+      // Small delay to ensure app is fully loaded
+      setTimeout(() => {
+        checkAndPromptBiometric();
+      }, 500);
+    }
+  }, [loaded, isAuthenticated, isLoading, logout]);
 
   // Handle authentication-based routing and initialize notifications
   useEffect(() => {

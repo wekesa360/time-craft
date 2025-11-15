@@ -23,12 +23,10 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginScreen() {
   const theme = useAppTheme();
   const { t } = useI18n();
-  const { login, loginWithGoogle, loginWithBiometric, isLoading, biometricEnabled, biometricAvailable, biometricCapabilities, initializeBiometric, testConnection } = useAuthStore();
-  const [showBiometric, setShowBiometric] = useState(false);
+  const { login, loginWithGoogle, isLoading, testConnection } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<'google' | 'password' | 'otp'>('google');
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [biometricLoading, setBiometricLoading] = useState(false);
   
   const {
     control,
@@ -42,13 +40,6 @@ export default function LoginScreen() {
     },
   });
 
-  useEffect(() => {
-    const checkBiometric = async () => {
-      await initializeBiometric();
-      setShowBiometric(biometricEnabled && biometricAvailable);
-    };
-    checkBiometric();
-  }, [initializeBiometric, biometricEnabled, biometricAvailable]);
 
   const onSubmit = async (data: LoginForm) => {
     try {
@@ -86,20 +77,6 @@ export default function LoginScreen() {
     }
   };
 
-  const handleBiometricLogin = async () => {
-    try {
-      setBiometricLoading(true);
-      await loginWithBiometric();
-      showToast.success('Welcome back!', 'Biometric Login Successful');
-      router.replace('/(tabs)/dashboard');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Please try again or use your password.';
-      showToast.error(errorMessage, 'Biometric Login Failed');
-    } finally {
-      setBiometricLoading(false);
-    }
-  };
-
   const handleOTPSuccess = async (user: any, tokens: any) => {
     try {
       // Update auth store directly with the tokens from OTP
@@ -114,25 +91,6 @@ export default function LoginScreen() {
     }
   };
 
-  const getBiometricIcon = () => {
-    if (!biometricCapabilities?.supportedTypes.length) return '🔒';
-    
-    const types = biometricCapabilities.supportedTypes;
-    if (types.includes(2)) return '👤'; // Face ID
-    if (types.includes(1)) return '👆'; // Touch ID/Fingerprint
-    if (types.includes(3)) return '👁️'; // Iris
-    return '🔒';
-  };
-
-  const getBiometricText = () => {
-    if (!biometricCapabilities?.supportedTypes.length) return 'Biometric';
-    
-    const types = biometricCapabilities.supportedTypes;
-    if (types.includes(2)) return 'Face ID';
-    if (types.includes(1)) return 'Touch ID';
-    if (types.includes(3)) return 'Iris';
-    return 'Biometric';
-  };
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.colors.card }}>
@@ -200,29 +158,6 @@ export default function LoginScreen() {
                 <Text className="text-white font-medium text-center">{t('continue_with_email')}</Text>
               </TouchableOpacity>
 
-              {/* Biometric Login Option */}
-              {showBiometric && (
-                <TouchableOpacity
-                  className="w-full py-4 px-6 flex-row items-center justify-center bg-white"
-                  style={{ borderRadius: 20, borderWidth: 2, borderColor: theme.colors.primaryLight, backgroundColor: theme.colors.card, opacity: (isLoading || biometricLoading) ? 0.7 : 1 }}
-                  onPress={handleBiometricLogin}
-                  disabled={isLoading || biometricLoading}
-                >
-                  {biometricLoading ? (
-                    <View className="flex-row items-center">
-                      <ActivityIndicator size="small" color={theme.colors.primary} />
-                      <Text className="ml-2 font-medium" style={{ color: theme.colors.primary }}>{t('signing_in')}</Text>
-                    </View>
-                  ) : (
-                    <>
-                      <Text className="text-2xl mr-3">{getBiometricIcon()}</Text>
-                      <Text className="font-medium" style={{ color: theme.colors.primary }}>
-                        {t('sign_in')} {t('with') || ''} {getBiometricText()}
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              )}
 
               {/* Password Alternative */}
               <View className="items-center mt-4">

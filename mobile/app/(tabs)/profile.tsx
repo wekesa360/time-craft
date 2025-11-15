@@ -8,7 +8,6 @@ import {
   UserIcon, 
   CogIcon, 
   BellIcon,
-  ShieldCheckIcon,
   ChartBarIcon,
   QuestionMarkCircleIcon,
   ArrowRightOnRectangleIcon,
@@ -46,7 +45,7 @@ interface CommunityStats {
 }
 
 export default function ProfileScreen() {
-  const { user, logout, biometricEnabled, setBiometricEnabled } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const queryClient = useQueryClient();
   const theme = useAppTheme();
@@ -142,13 +141,6 @@ export default function ProfileScreen() {
     setLogoutDialogVisible(true);
   };
 
-  const handleBiometricToggle = async (enabled: boolean) => {
-    try {
-      await setBiometricEnabled(enabled);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update biometric settings');
-    }
-  };
 
   const menuSections = [
     {
@@ -350,32 +342,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Biometric Setting */}
-        <View className="px-6 mb-8">
-          <View className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radii.xl, padding: theme.spacing.xl }}>
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center flex-1">
-                <View className="w-10 h-10 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: theme.colors.primaryLight }}>
-                  <ShieldCheckIcon size={24} color={theme.colors.primary} />
-                </View>
-                <View className="flex-1">
-                  <Text className="font-semibold" style={{ color: theme.colors.foreground }}>
-                    Biometric Authentication
-                  </Text>
-                  <Text className="text-sm" style={{ color: theme.colors.muted }}>
-                    Use Face ID or Touch ID to sign in
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={biometricEnabled}
-                onValueChange={handleBiometricToggle}
-                trackColor={{ false: '#E5E7EB', true: theme.colors.primary }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
-          </View>
-        </View>
 
         {/* Menu Sections */}
         {menuSections.map((section) => (

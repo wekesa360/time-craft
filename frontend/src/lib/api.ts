@@ -3,6 +3,7 @@ import axios from 'axios';
 import type { AxiosInstance, AxiosError } from 'axios';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from './queryClient';
+import { useAuthStore } from '../stores/auth';
 import type {
   AuthResponse,
   LoginForm,
@@ -162,11 +163,18 @@ class ApiClient {
             try {
               console.log('🔄 Refreshing expired token...');
               const tokens = await this.refreshTokens(refreshToken);
-              this.setTokens(tokens);
+              
+              // Update the auth store (Zustand) - this will:
+              // 1. Update the Zustand store state
+              // 2. Persist to localStorage via the persist middleware
+              // 3. Call apiClient.setTokens() internally to update tokenExpiry
+              // This ensures the token is available for subsequent requests via getStoredToken()
+              useAuthStore.getState().setTokens(tokens);
               
               // Retry original request with new token
               originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
-              console.log('✅ Token refreshed, retrying request');
+              console.log('✅ Token refreshed, retrying request with new token');
+              console.log('✅ Token stored in auth store and localStorage');
               return this.client.request(originalRequest);
             } catch (refreshError) {
               console.error('❌ Token refresh failed:', refreshError);

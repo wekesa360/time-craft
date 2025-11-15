@@ -6,6 +6,9 @@ import { apiClient } from '../lib/api';
 import { biometricAuth, type BiometricCapabilities } from '../lib/biometric-auth';
 import type { User, AuthTokens, LoginForm, RegisterForm, AuthState } from '../types';
 
+// Store interval ID for periodic token refresh
+let tokenRefreshInterval: NodeJS.Timeout | null = null;
+
 // API Configuration
 const API_BASE_URL = __DEV__ 
   ? 'http://192.168.13.106:8787' // Local development - use your computer's IP
@@ -219,6 +222,12 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error) {
           console.error('Logout error:', error);
         } finally {
+          // Clear periodic token refresh interval
+          if (tokenRefreshInterval) {
+            clearInterval(tokenRefreshInterval);
+            tokenRefreshInterval = null;
+          }
+          
           set({
             user: null,
             tokens: null,
@@ -427,9 +436,37 @@ export const useAuthStore = create<AuthStore>()(
           
           if (tokens?.accessToken) {
             try {
+              // Ensure token is valid by proactively refreshing if needed
+              await apiClient.ensureValidToken();
+              
               // Try to get fresh user data to validate the token
               const user = await apiClient.getProfile();
               set({ user, isAuthenticated: true });
+              
+              // Set up periodic token refresh (every 10 minutes) to keep user logged in
+              // This ensures tokens are refreshed even when user is idle
+              // Clear any existing interval first
+              if (tokenRefreshInterval) {
+                clearInterval(tokenRefreshInterval);
+              }
+              
+              tokenRefreshInterval = setInterval(async () => {
+                const currentState = get();
+                if (currentState.isAuthenticated && currentState.tokens?.refreshToken) {
+                  try {
+                    await apiClient.ensureValidToken();
+                    console.log('✅ Periodic token refresh check completed');
+                  } catch (error) {
+                    console.warn('Periodic token refresh check failed:', error);
+                  }
+                } else {
+                  // User logged out, clear interval
+                  if (tokenRefreshInterval) {
+                    clearInterval(tokenRefreshInterval);
+                    tokenRefreshInterval = null;
+                  }
+                }
+              }, 10 * 60 * 1000); // Every 10 minutes
             } catch (error) {
               // Token is invalid, clear auth state
               console.log('Token validation failed, clearing auth state');
