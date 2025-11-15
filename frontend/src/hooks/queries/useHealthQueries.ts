@@ -513,3 +513,4 @@ export const useHealthQueries = () => {
     useUpdateHealthGoalMutation,
     useDeleteHealthGoalMutation,
   };
+};

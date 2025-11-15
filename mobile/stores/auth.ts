@@ -186,15 +186,15 @@ export const useAuthStore = create<AuthStore>()(
           const response = await apiClient.verifyEmail(email, otpCode);
           
           if (response.user && response.tokens) {
-            set({
-              user: response.user,
-              tokens: response.tokens,
-              isAuthenticated: true,
-              isLoading: false,
-              isMutating: false,
-            });
-            
-            await apiClient.setTokens(response.tokens);
+          set({
+            user: response.user,
+            tokens: response.tokens,
+            isAuthenticated: true,
+            isLoading: false,
+            isMutating: false,
+          });
+          
+          await apiClient.setTokens(response.tokens);
           } else {
             set({ isLoading: false, isMutating: false });
           }
@@ -425,6 +425,14 @@ export const useAuthStore = create<AuthStore>()(
           apiClient.setAuthInvalidHandler(() => {
             try {
               get().logout();
+            } catch (_) {
+              // noop
+            }
+          });
+          // Wire API client token updates to store (avoids circular dependency)
+          apiClient.setTokensUpdateHandler((tokens) => {
+            try {
+              get().setTokens(tokens);
             } catch (_) {
               // noop
             }

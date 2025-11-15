@@ -88,8 +88,8 @@ export default function RegisterPage() {
         toast.success('Account created! Please verify your email.');
       } else {
         // Registration completed (shouldn't happen with new flow, but handle it)
-        toast.success('Account created successfully! Welcome!');
-        navigate('/dashboard');
+      toast.success('Account created successfully! Welcome!');
+      navigate('/dashboard');
       }
     } catch (error) {
       // Error is handled by the API client and toast is shown there

@@ -178,30 +178,63 @@ health.post('/manual-entry', zValidator('json', manualEntrySchema), async (c) =>
     const data = c.req.valid('json');
     const healthRepo = new HealthRepository(c.env);
 
-    // Create health log entry
-    const healthLog = await healthRepo.logHealthData({
-      user_id: auth.userId,
-      type: data.type as HealthLogType,
+    // Create health log entry - store all data in payload JSON field
+    let payload: any = {
       value: data.value,
       unit: data.unit || '',
       notes: data.notes || '',
       category: data.category || '',
+    };
+
+    // For sleep type, extract and store structured sleep data
+    if (data.type === 'sleep' && (data as any).sleep_data) {
+      const sleepData = (data as any).sleep_data;
+      payload = {
+        ...payload,
+        duration_hours: sleepData.duration_hours,
+        duration_minutes: sleepData.duration_minutes,
+        quality: sleepData.quality,
+      };
+    }
+
+    const healthLog = await healthRepo.logHealthData({
+      user_id: auth.userId,
+      type: data.type as HealthLogType,
+      payload: payload,
       recorded_at: data.recordedAt || Date.now(),
       source: 'manual' as HealthLogSource,
-      metadata: {}
+      device_type: null
     });
+
+    // Parse payload for response
+    const payloadData = typeof healthLog.payload === 'string' 
+      ? JSON.parse(healthLog.payload) 
+      : healthLog.payload;
+
+    // Build response based on type
+    const responseData: any = {
+      id: healthLog.id,
+      type: healthLog.type,
+      recordedAt: healthLog.recorded_at
+    };
+
+    // For sleep, include structured fields
+    if (data.type === 'sleep' && payloadData.duration_hours !== undefined) {
+      responseData.duration_hours = payloadData.duration_hours;
+      responseData.duration_minutes = payloadData.duration_minutes;
+      responseData.quality = payloadData.quality;
+      responseData.notes = payloadData.notes;
+    } else {
+      // For other types, use generic structure
+      responseData.value = payloadData.value;
+      responseData.unit = payloadData.unit;
+      responseData.notes = payloadData.notes;
+      responseData.category = payloadData.category;
+    }
 
     return c.json({
       message: `${data.type} logged successfully`,
-      healthLog: {
-        id: healthLog.id,
-        type: healthLog.type,
-        value: healthLog.value,
-        unit: healthLog.unit,
-        notes: healthLog.notes,
-        category: healthLog.category,
-        recordedAt: healthLog.recorded_at
-      }
+      healthLog: responseData
     }, 201);
 
   } catch (error) {
@@ -280,8 +313,7 @@ health.post('/exercise', async (c) => {
       user_id: userId,
       type: 'exercise',
       payload: exercisePayload,
-      value: exercisePayload.duration_minutes, // Add value field for test compatibility
-      recorded_at: Date.now(),
+      recorded_at: body.recordedAt || Date.now(), // Use provided timestamp or current time
       source: 'manual' as HealthLogSource,
       device_type: null
     });
@@ -332,7 +364,8 @@ health.post('/nutrition', async (c) => {
         total_calories: validatedData.calories,
         protein: validatedData.protein,
         carbs: validatedData.carbs,
-        fat: validatedData.fat
+        fat: validatedData.fat,
+        notes: validatedData.voice_input || validatedData.description // Store notes in payload
       };
       notes = validatedData.voice_input || validatedData.description;
     } else {
@@ -342,17 +375,22 @@ health.post('/nutrition', async (c) => {
         meal_type: validatedData.mealType,
         foods: validatedData.foods,
         total_calories: validatedData.totalCalories,
-        water_ml: validatedData.waterMl
+        water_ml: validatedData.waterMl,
+        notes: validatedData.notes // Store notes in payload
       };
       notes = validatedData.notes;
+    }
+
+    // Store notes in payload, not as separate column
+    if (notes) {
+      nutritionPayload.notes = notes;
     }
 
     const healthLog = await healthRepo.logHealthData({
       user_id: userId,
       type: 'nutrition',
       payload: nutritionPayload,
-      notes: notes,
-      recorded_at: Date.now(),
+      recorded_at: body.recordedAt || Date.now(), // Use provided timestamp or current time
       source: 'manual' as HealthLogSource,
       device_type: null
     });
@@ -474,9 +512,7 @@ health.post('/hydration', async (c) => {
       user_id: userId,
       type: 'hydration',
       payload: hydrationPayload,
-      value: amountMl, // Add value field for test compatibility
-      unit: unit, // Add unit field for test compatibility
-      recorded_at: Date.now(),
+      recorded_at: body.recordedAt || Date.now(), // Use provided timestamp or current time
       source: 'manual' as HealthLogSource,
       device_type: null
     });
@@ -520,11 +556,29 @@ health.get('/logs', zValidator('query', healthFiltersSchema), async (c) => {
     
     const result = await healthRepo.getHealthLogs(auth.userId, dbFilters);
     
-    // Transform logs to include createdAt timestamp
-    const transformedLogs = result.data.map(log => ({
-      ...log,
-      createdAt: log.created_at || log.recorded_at
-    }));
+    // Transform logs to match mobile app expectations
+    const transformedLogs = result.data.map(log => {
+      // Parse payload if it's a string
+      let payload = log.payload;
+      if (typeof payload === 'string') {
+        try {
+          payload = JSON.parse(payload);
+        } catch {
+          payload = {};
+        }
+      }
+      
+      return {
+        id: log.id,
+        userId: log.user_id,
+        type: log.type,
+        payload: payload,
+        recordedAt: log.recorded_at, // Convert recorded_at to recordedAt (keep as number for now)
+        createdAt: log.created_at || log.recorded_at, // Also include createdAt
+        source: log.source,
+        deviceType: log.device_type,
+      };
+    });
     
     return c.json({
       logs: transformedLogs,
@@ -1314,3 +1368,5 @@ health.get('/analytics/correlations', async (c) => {
     return c.json({ error: 'Internal server error' }, 500);
   }
 });
+
+export default health;

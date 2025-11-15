@@ -2534,8 +2534,7 @@ class ApiClient {
 
 // Create singleton instance
 export const apiClient = new ApiClient();
-export default apiClient;
-    const response = await this.client.post(url, data, config);
+export default apiClient;    const response = await this.client.post(url, data, config);
     return response;
   }
 

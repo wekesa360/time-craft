@@ -67,7 +67,7 @@ export default function SettingsPage() {
       return 'UTC';
     }
   };
-
+  
   // Forms
   const profileForm = useForm<ProfileForm>({
     defaultValues: {
@@ -441,10 +441,10 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      {t('settings.profileForm.timezone', 'Timezone')}
-                    </label>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        {t('settings.profileForm.timezone', 'Timezone')}
+                      </label>
                     <TimezonePicker
                       value={profileForm.watch('timezone')}
                       onChange={(tz) => profileForm.setValue('timezone', tz)}

@@ -32,6 +32,8 @@ interface HealthStore {
   logNutrition: (data: any) => Promise<void>;
   logMood: (data: any) => Promise<void>;
   logHydration: (data: any) => Promise<void>;
+  logSleep: (data: any) => Promise<void>;
+  logWeight: (data: any) => Promise<void>;
   fetchHealthSummary: () => Promise<void>;
   fetchHealthSummaryDebounced: () => void;
   setLoading: (loading: boolean) => void;
@@ -80,10 +82,11 @@ export const useHealthStore = create<HealthStore>()(
       logExercise: async (data) => {
         try {
           set({ isMutating: true });
-          const normIntensity: 'low' | 'moderate' | 'high' =
-            typeof data?.intensity === 'number'
-              ? (data.intensity <= 3 ? 'low' : data.intensity <= 7 ? 'moderate' : 'high')
-              : 'moderate';
+          
+          // Ensure intensity is a number (1-10) as expected by backend
+          const intensityNumber: number = typeof data?.intensity === 'number'
+            ? Math.max(1, Math.min(10, data.intensity)) // Clamp between 1-10
+            : 5; // Default to moderate (5)
 
           const activity: string = data?.activity || '';
           const lower = activity.toLowerCase();
@@ -98,16 +101,32 @@ export const useHealthStore = create<HealthStore>()(
               ? 'sports'
               : 'cardio';
 
+          // Ensure durationMinutes is provided and is a valid number
+          const durationMinutes = data?.durationMinutes 
+            ? Math.max(1, Math.min(600, Number(data.durationMinutes))) // Clamp between 1-600
+            : 30; // Default to 30 minutes if not provided
+
           const payload: ExercisePayload = {
             type: inferredType,
             activity,
-            duration: data?.durationMinutes ?? 0,
-            intensity: normIntensity,
+            duration: durationMinutes, // Keep for type compatibility, but we'll send durationMinutes to API
+            intensity: intensityNumber as any, // Type assertion needed, but we'll send number to API
             caloriesBurned: data?.caloriesBurned,
             notes: data?.notes,
           };
 
-          const newLog = await apiClient.logExercise(payload as any);
+          // Send properly formatted data to API with real-time timestamp
+          const apiPayload = {
+            activity: payload.activity,
+            durationMinutes: durationMinutes, // Backend expects durationMinutes
+            intensity: intensityNumber, // Backend expects number 1-10
+            caloriesBurned: payload.caloriesBurned,
+            notes: payload.notes,
+            type: inferredType, // Include type for reference
+            recordedAt: Date.now(), // Set real-time timestamp
+          };
+
+          const newLog = await apiClient.logExercise(apiPayload as any);
           const currentLogs = get().logs;
           set({ 
             logs: [newLog, ...currentLogs],
@@ -128,15 +147,25 @@ export const useHealthStore = create<HealthStore>()(
       logNutrition: async (data) => {
         try {
           set({ isMutating: true });
-          const payload: NutritionPayload = {
-            meal: data?.mealType ?? 'lunch',
-            calories: data?.calories,
-            protein: data?.protein,
-            carbs: data?.carbs,
-            fat: data?.fat,
-            notes: data?.description,
+          
+          // Convert mobile format to backend format
+          // Mobile sends: { mealType, description, calories, protein, carbs, fat }
+          // Backend expects: { meal_type, description, calories, protein, carbs, fat, recordedAt }
+          const mealType = data?.mealType ?? 'lunch';
+          const description = data?.description || 'Meal';
+          
+          // Format for backend simple nutrition schema
+          const apiPayload = {
+            meal_type: mealType, // Backend expects meal_type (snake_case)
+            description: description,
+            calories: data?.calories ? Number(data.calories) : undefined,
+            protein: data?.protein ? Number(data.protein) : undefined,
+            carbs: data?.carbs ? Number(data.carbs) : undefined,
+            fat: data?.fat ? Number(data.fat) : undefined,
+            recordedAt: Date.now(), // Set real-time timestamp
           };
-          const newLog = await apiClient.logNutrition(payload as any);
+
+          const newLog = await apiClient.logNutrition(apiPayload as any);
           const currentLogs = get().logs;
           set({ 
             logs: [newLog, ...currentLogs],
@@ -184,13 +213,28 @@ export const useHealthStore = create<HealthStore>()(
       logHydration: async (data) => {
         try {
           set({ isMutating: true });
-          const ml: number = data?.amount ?? 0;
-          const payload: HydrationPayload = {
-            glasses: Math.max(1, Math.round((ml || 0) / 250)),
-            totalMl: ml,
-            notes: data?.temperature ? `Temp: ${data.temperature}${data?.drinkType ? `, Type: ${data.drinkType}` : ''}` : undefined,
+          const ml: number = data?.amount ?? 250; // Default to 250ml if not provided
+          
+          // Ensure ml is valid (1-5000)
+          const amountMl = Math.max(1, Math.min(5000, ml));
+          
+          // Map drink type from form data
+          const drinkType = data?.drinkType || 'water';
+          
+          // Build notes from temperature and drink type
+          const notes = data?.temperature 
+            ? `Temp: ${data.temperature}${data?.drinkType ? `, Type: ${data.drinkType}` : ''}` 
+            : undefined;
+
+          // Send properly formatted data to API with real-time timestamp
+          const apiPayload = {
+            amountMl: amountMl, // Backend expects amountMl (required)
+            type: drinkType, // Backend expects type
+            notes: notes,
+            recordedAt: Date.now(), // Set real-time timestamp
           };
-          const newLog = await apiClient.logHydration(payload as any);
+
+          const newLog = await apiClient.logHydration(apiPayload as any);
           const currentLogs = get().logs;
           set({ 
             logs: [newLog, ...currentLogs],
@@ -204,6 +248,87 @@ export const useHealthStore = create<HealthStore>()(
           set({ isMutating: false });
           console.error('Failed to log hydration:', error);
           notify.error('Failed to log hydration');
+          throw error;
+        }
+      },
+
+      logSleep: async (data) => {
+        try {
+          set({ isMutating: true });
+          
+          // Get duration in minutes
+          const durationMinutes = data?.durationMinutes ?? 420; // Default to 7 hours (420 minutes)
+          const durationHours = durationMinutes / 60;
+          
+          // Quality from form is 1-5, but we'll store it as 1-10 for consistency
+          // Map 1-5 scale to 1-10 scale: 1->2, 2->4, 3->6, 4->8, 5->10
+          const qualityRaw = data?.quality ?? 3; // Default to 3 (middle)
+          const quality = Math.max(1, Math.min(5, Number(qualityRaw))) * 2; // Convert 1-5 to 2-10
+
+          // Send properly formatted sleep data with real-time timestamp
+          const apiPayload = {
+            type: 'sleep',
+            duration_hours: durationHours,
+            duration_minutes: durationMinutes,
+            quality: quality, // Store quality separately (1-10)
+            notes: data?.notes || undefined, // Only include notes if provided
+            recordedAt: Date.now(), // Set real-time timestamp
+          };
+
+          const newLog = await apiClient.logSleep(apiPayload as any);
+          const currentLogs = get().logs;
+          set({ 
+            logs: [newLog, ...currentLogs],
+            isMutating: false 
+          });
+          
+          // Update summary (debounced)
+          get().fetchHealthSummaryDebounced();
+          notify.success('Sleep logged successfully');
+        } catch (error) {
+          set({ isMutating: false });
+          console.error('Failed to log sleep:', error);
+          notify.error('Failed to log sleep');
+          throw error;
+        }
+      },
+
+      logWeight: async (data) => {
+        try {
+          set({ isMutating: true });
+          
+          // Convert weight to kg if needed
+          const weightKg = data?.unit === 'lb' && data?.weight
+            ? Number(data.weight) * 0.453592 // Convert lbs to kg
+            : Number(data?.weight) || 0;
+          
+          // Ensure weight is valid (10-500 kg)
+          const validWeight = Math.max(10, Math.min(500, weightKg));
+
+          // Send properly formatted weight data with real-time timestamp
+          const apiPayload = {
+            type: 'weight',
+            value: validWeight, // Backend expects value in kg
+            unit: 'kg',
+            notes: data?.notes || undefined,
+            category: 'weight',
+            recordedAt: Date.now(), // Set real-time timestamp
+          };
+
+          const newLog = await apiClient.logWeight(apiPayload as any);
+          const currentLogs = get().logs;
+          set({ 
+            logs: [newLog, ...currentLogs],
+            isMutating: false 
+          });
+          
+          // Update summary (debounced)
+          get().fetchHealthSummaryDebounced();
+          notify.success('Weight logged successfully');
+        } catch (error) {
+          set({ isMutating: false });
+          console.error('Failed to log weight:', error);
+          notify.error('Failed to log weight');
           throw error;
         }
       },

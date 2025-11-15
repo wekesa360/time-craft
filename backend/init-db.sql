@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 CREATE TABLE IF NOT EXISTS health_logs (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id),
-  type TEXT CHECK(type IN ('exercise','nutrition','mood','hydration')) NOT NULL,
+  type TEXT CHECK(type IN ('exercise','nutrition','mood','hydration','sleep','weight')) NOT NULL,
   payload TEXT NOT NULL, -- JSON stored as TEXT
   recorded_at INTEGER NOT NULL
 );

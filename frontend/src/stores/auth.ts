@@ -166,16 +166,16 @@ export const useAuthStore = create<AuthStore>()(
 
           // Otherwise, complete registration with tokens
           if (response.user && response.tokens) {
-            set({
-              user: response.user,
-              tokens: response.tokens,
-              isAuthenticated: true,
-              isLoading: false,
-            });
+          set({
+            user: response.user,
+            tokens: response.tokens,
+            isAuthenticated: true,
+            isLoading: false,
+          });
 
-            apiClient.setTokens(response.tokens);
-            // Connect to SSE after successful registration
-            apiClient.connectSSE();
+          apiClient.setTokens(response.tokens);
+          // Connect to SSE after successful registration
+          apiClient.connectSSE();
           } else {
             set({ isLoading: false });
           }

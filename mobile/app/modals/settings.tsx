@@ -58,7 +58,7 @@ export default function SettingsModal() {
   const setColorTheme = usePreferencesStore((s) => s.setColorTheme);
 
   useEffect(() => {
-    setLocalNotificationSettings(notificationSettings);
+      setLocalNotificationSettings(notificationSettings);
   }, [notificationSettings]);
 
   // Fetch user preferences from backend and hydrate local store

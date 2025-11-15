@@ -88,8 +88,8 @@ export default function RegisterScreen() {
         showToast.success('Account created! Please verify your email.', 'Success');
       } else {
         // Registration completed (shouldn't happen with new flow, but handle it)
-        showToast.success('Account created successfully! Welcome!', 'Success');
-        router.replace('/(tabs)/dashboard');
+      showToast.success('Account created successfully! Welcome!', 'Success');
+      router.replace('/(tabs)/dashboard');
       }
     } catch (error) {
       console.error('Registration failed:', error);

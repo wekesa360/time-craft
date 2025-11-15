@@ -479,3 +479,4 @@ export const useTaskQueries = () => {
     useCompleteTaskMutation,
     useUpdateTaskMatrixMutation,
   };
+};

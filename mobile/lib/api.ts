@@ -3,7 +3,6 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
-import { useAuthStore } from '../stores/auth';
 import type {
   LoginForm,
   RegisterForm,
@@ -85,6 +84,7 @@ class ApiClient {
   private refreshToken: string | null = null;
   private baseURL: string;
   private onAuthInvalid?: () => void;
+  private onTokensUpdated?: (tokens: AuthTokens) => void;
 
   constructor() {
     this.baseURL = API_BASE_URL;
@@ -133,10 +133,13 @@ class ApiClient {
             try {
               const tokens = await this.refreshTokens(refreshToken);
               
-              // Update both the auth store (Zustand) and API client
-              // This ensures the token is persisted and available for subsequent requests
-              useAuthStore.getState().setTokens(tokens);
+              // Update API client tokens
               await this.setTokens(tokens);
+              
+              // Notify auth store if handler is set (avoids circular dependency)
+              if (this.onTokensUpdated) {
+                this.onTokensUpdated(tokens);
+              }
               
               // Retry original request with new token
               originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
@@ -188,16 +191,61 @@ class ApiClient {
       const snippet = typeof responseData === 'string'
         ? responseData.slice(0, 300)
         : JSON.stringify(responseData)?.slice(0, 300);
-      console.error('[API ERROR]', { method, url, status, response: snippet });
-      if (error.response.status !== 401) {
+      console.error('[API ERROR]', { 
+        method, 
+        url, 
+        status, 
+        response: snippet,
+        fullUrl: url,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Provide more specific error messages based on status code
+      if (error.response.status === 401) {
+        // Don't show error for 401 - handled by interceptor
+        return;
+      } else if (error.response.status === 403) {
+        notify.error('Access denied. Please check your permissions.');
+      } else if (error.response.status === 404) {
+        notify.error('Resource not found.');
+      } else if (error.response.status === 422) {
+        notify.error(message || 'Validation error. Please check your input.');
+      } else if (error.response.status >= 500) {
+        notify.error('Server error. Please try again later.');
+      } else {
         notify.error(message);
       }
     } else if (error.request) {
-      console.error('[API ERROR - NETWORK]', { method, url });
-      notify.error('Network error. Please check your connection.');
+      // Network error - provide more context
+      const errorDetails = {
+        method,
+        url,
+        fullUrl: url,
+        code: (error as any).code,
+        message: error.message,
+        timestamp: new Date().toISOString()
+      };
+      console.error('[API ERROR - NETWORK]', errorDetails);
+      
+      // Check if it's a timeout
+      if ((error as any).code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        notify.error('Request timed out. Please check your connection and try again.');
+      } else if ((error as any).code === 'ECONNREFUSED' || (error as any).code === 'ENOTFOUND') {
+        notify.error('Cannot connect to server. Please check your internet connection.');
+      } else {
+        notify.error('Network error. Please check your connection.');
+      }
     } else {
-      console.error('[API ERROR - UNEXPECTED]', { method, url, error: error.message });
-      notify.error('An unexpected error occurred.');
+      // Unexpected error
+      console.error('[API ERROR - UNEXPECTED]', { 
+        method, 
+        url, 
+        error: error.message,
+        fullUrl: url,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      notify.error('An unexpected error occurred. Please try again.');
     }
   }
 
@@ -217,6 +265,11 @@ class ApiClient {
   // Allow external stores to subscribe to auth invalidation events
   setAuthInvalidHandler(handler: () => void) {
     this.onAuthInvalid = handler;
+  }
+
+  // Allow external stores to subscribe to token update events
+  setTokensUpdateHandler(handler: (tokens: AuthTokens) => void) {
+    this.onTokensUpdated = handler;
   }
 
   // Token management using SecureStore
@@ -342,9 +395,13 @@ class ApiClient {
         try {
           const tokens = await this.refreshTokens(refreshToken);
           
-          // Update both the auth store (Zustand) and API client
-          useAuthStore.getState().setTokens(tokens);
+          // Update API client tokens
           await this.setTokens(tokens);
+          
+          // Notify auth store if handler is set (avoids circular dependency)
+          if (this.onTokensUpdated) {
+            this.onTokensUpdated(tokens);
+          }
           
           console.log('✅ Token refreshed proactively');
         } catch (refreshError) {
@@ -383,13 +440,13 @@ class ApiClient {
   // Auth Methods
   async login(email: string, password: string) {
     try {
-      const response = await this.post('/auth/login', { email, password });
-      const { user, tokens } = response.data;
-      
+    const response = await this.post('/auth/login', { email, password });
+    const { user, tokens } = response.data;
+    
       if (tokens) {
-        await this.setTokens(tokens);
+    await this.setTokens(tokens);
       }
-      return { user, tokens };
+    return { user, tokens };
     } catch (error: any) {
       // Check if error is due to unverified email
       let responseData = error.response?.data;
@@ -451,7 +508,7 @@ class ApiClient {
     const { user, tokens } = response.data;
     
     if (tokens) {
-      await this.setTokens(tokens);
+    await this.setTokens(tokens);
     }
     return { user, tokens };
   }
@@ -667,7 +724,25 @@ class ApiClient {
     if (coerced?.startDate !== undefined) coerced.startDate = Number(coerced.startDate);
     if (coerced?.endDate !== undefined) coerced.endDate = Number(coerced.endDate);
     const response = await this.get('/api/health/logs', { params: coerced });
-    return response.data;
+    
+    // Transform logs to ensure proper format
+    const logs = response.data?.logs || [];
+    const transformedLogs = logs.map((log: any) => ({
+      ...log,
+      // Ensure recordedAt is a number (timestamp)
+      recordedAt: typeof log.recordedAt === 'string' 
+        ? (log.recordedAt.includes('T') ? Date.parse(log.recordedAt) : parseInt(log.recordedAt, 10))
+        : log.recordedAt || log.recorded_at || Date.now(),
+      // Ensure createdAt is also a number
+      createdAt: typeof log.createdAt === 'string'
+        ? (log.createdAt.includes('T') ? Date.parse(log.createdAt) : parseInt(log.createdAt, 10))
+        : log.createdAt || log.created_at || log.recordedAt || Date.now(),
+    }));
+    
+    return {
+      ...response.data,
+      logs: transformedLogs,
+    };
   }
 
   async getHealthStats(params?: { period?: string }) {
@@ -719,35 +794,99 @@ class ApiClient {
 
   async logExercise(data: ExerciseData): Promise<HealthLog> {
     const d: any = { ...data };
-    if (d.durationMinutes !== undefined) d.durationMinutes = Number(d.durationMinutes);
-    if (d.intensity !== undefined && typeof d.intensity !== 'number') {
-      // allow string labels to pass through; backend supports simple format too
-      if (['low', 'moderate', 'high'].includes(String(d.intensity))) {
-        // leave as-is
+    
+    // Handle durationMinutes (required by backend)
+    if (d.durationMinutes !== undefined) {
+      d.durationMinutes = Number(d.durationMinutes);
+    } else if (d.duration !== undefined) {
+      // Fallback: if duration is provided instead of durationMinutes, use it
+      d.durationMinutes = Number(d.duration);
+      delete d.duration;
+    } else {
+      // Default to 30 minutes if not provided
+      d.durationMinutes = 30;
+    }
+    
+    // Ensure durationMinutes is valid (1-600)
+    if (d.durationMinutes < 1 || d.durationMinutes > 600) {
+      d.durationMinutes = Math.max(1, Math.min(600, d.durationMinutes));
+    }
+    
+    // Handle intensity - backend expects number (1-10)
+    if (d.intensity !== undefined) {
+      if (typeof d.intensity === 'string') {
+        // Convert string labels to numbers
+        const intensityMap: Record<string, number> = {
+          'low': 3,
+          'moderate': 5,
+          'high': 8,
+        };
+        d.intensity = intensityMap[d.intensity.toLowerCase()] || 5;
       } else {
         d.intensity = Number(d.intensity);
       }
+      // Clamp intensity to valid range (1-10)
+      d.intensity = Math.max(1, Math.min(10, d.intensity));
+    } else {
+      // Default to moderate (5) if not provided
+      d.intensity = 5;
     }
+    
+    // Convert other optional fields to numbers
     if (d.caloriesBurned !== undefined) d.caloriesBurned = Number(d.caloriesBurned);
     if (d.distance !== undefined) d.distance = Number(d.distance);
     if (d.heartRateAvg !== undefined) d.heartRateAvg = Number(d.heartRateAvg);
     if (d.heartRateMax !== undefined) d.heartRateMax = Number(d.heartRateMax);
-    if (d.recordedAt !== undefined) d.recordedAt = Number(d.recordedAt);
+    
+    // Ensure recordedAt is set to current time if not provided
+    if (d.recordedAt !== undefined) {
+      d.recordedAt = Number(d.recordedAt);
+    } else {
+      d.recordedAt = Date.now(); // Set real-time timestamp
+    }
+    
     const response = await this.post('/api/health/exercise', d);
     return response.data.log;
   }
 
   async logNutrition(data: NutritionData): Promise<HealthLog> {
     const d: any = { ...data };
+    
+    // Handle meal_type (backend expects snake_case)
+    if (d.meal_type === undefined && d.mealType !== undefined) {
+      d.meal_type = d.mealType;
+      delete d.mealType;
+    }
+    
+    // Ensure description is provided (required by backend)
+    if (!d.description && !d.voice_input) {
+      d.description = 'Meal';
+    }
+    
+    // Convert numeric fields
+    if (d.calories !== undefined) d.calories = Number(d.calories);
+    if (d.protein !== undefined) d.protein = Number(d.protein);
+    if (d.carbs !== undefined) d.carbs = Number(d.carbs);
+    if (d.fat !== undefined) d.fat = Number(d.fat);
+    
+    // Handle foods array if present (detailed format)
     if (Array.isArray(d.foods)) {
       d.foods = d.foods.map((f: any) => ({
         ...f,
         calories: f?.calories !== undefined ? Number(f.calories) : f?.calories,
       }));
     }
+    
     if (d.totalCalories !== undefined) d.totalCalories = Number(d.totalCalories);
     if (d.waterMl !== undefined) d.waterMl = Number(d.waterMl);
-    if (d.recordedAt !== undefined) d.recordedAt = Number(d.recordedAt);
+    
+    // Ensure recordedAt is set to current time if not provided
+    if (d.recordedAt !== undefined) {
+      d.recordedAt = Number(d.recordedAt);
+    } else {
+      d.recordedAt = Date.now(); // Set real-time timestamp
+    }
+    
     const response = await this.post('/api/health/nutrition', d);
     return response.data.log;
   }
@@ -762,10 +901,142 @@ class ApiClient {
     return response.data.log;
   }
 
+  async logSleep(data: { type?: string; duration_hours?: number; duration_minutes?: number; quality?: number; notes?: string; recordedAt?: number }): Promise<HealthLog> {
+    const d: any = { ...data };
+    
+    // Ensure type is 'sleep'
+    d.type = 'sleep';
+    
+    // Handle duration_hours
+    if (d.duration_hours !== undefined) {
+      d.duration_hours = Number(d.duration_hours);
+    } else if (d.duration_minutes !== undefined) {
+      // Calculate hours from minutes if hours not provided
+      d.duration_hours = Number(d.duration_minutes) / 60;
+    } else {
+      // Default to 7 hours if not provided
+      d.duration_hours = 7;
+      d.duration_minutes = 420;
+    }
+    
+    // Ensure duration_hours is valid (0-24 hours)
+    if (d.duration_hours < 0 || d.duration_hours > 24) {
+      d.duration_hours = Math.max(0, Math.min(24, d.duration_hours));
+      d.duration_minutes = Math.round(d.duration_hours * 60);
+    }
+    
+    // Handle duration_minutes
+    if (d.duration_minutes !== undefined) {
+      d.duration_minutes = Number(d.duration_minutes);
+    } else {
+      d.duration_minutes = Math.round(d.duration_hours * 60);
+    }
+    
+    // Ensure quality is valid (1-10)
+    if (d.quality !== undefined) {
+      d.quality = Math.max(1, Math.min(10, Number(d.quality)));
+    } else {
+      d.quality = 5; // Default to 5 if not provided
+    }
+    
+    // Ensure recordedAt is set to current time if not provided
+    if (d.recordedAt !== undefined) {
+      d.recordedAt = Number(d.recordedAt);
+    } else {
+      d.recordedAt = Date.now(); // Set real-time timestamp
+    }
+    
+    // Use manual-entry endpoint for sleep, but with structured payload
+    const response = await this.post('/api/health/manual-entry', {
+      type: 'sleep',
+      value: d.duration_hours, // Keep for backward compatibility
+      unit: 'hours',
+      notes: d.notes,
+      category: 'sleep',
+      recordedAt: d.recordedAt, // Include real-time timestamp
+      // Add structured sleep data in a way the backend can extract
+      sleep_data: {
+        duration_hours: d.duration_hours,
+        duration_minutes: d.duration_minutes,
+        quality: d.quality,
+      }
+    });
+    return response.data.healthLog || response.data;
+  }
+
+  async logWeight(data: { type?: string; value?: number; unit?: string; notes?: string; category?: string; recordedAt?: number }): Promise<HealthLog> {
+    const d: any = { ...data };
+    
+    // Ensure type is 'weight'
+    d.type = 'weight';
+    
+    // Ensure value is a number
+    if (d.value !== undefined) {
+      d.value = Number(d.value);
+    } else {
+      // Default to 70 kg if not provided
+      d.value = 70;
+    }
+    
+    // Ensure value is valid (10-500 kg)
+    if (d.value < 10 || d.value > 500) {
+      d.value = Math.max(10, Math.min(500, d.value));
+    }
+    
+    // Ensure unit is 'kg'
+    d.unit = d.unit || 'kg';
+    
+    // Ensure category is 'weight'
+    d.category = 'weight';
+    
+    // Ensure recordedAt is set to current time if not provided
+    if (d.recordedAt !== undefined) {
+      d.recordedAt = Number(d.recordedAt);
+    } else {
+      d.recordedAt = Date.now(); // Set real-time timestamp
+    }
+    
+    // Use manual-entry endpoint for weight
+    const response = await this.post('/api/health/manual-entry', d);
+    return response.data.healthLog || response.data;
+  }
+
   async logHydration(data: HydrationData): Promise<HealthLog> {
     const d: any = { ...data };
-    if (d.amountMl !== undefined) d.amountMl = Number(d.amountMl);
-    if (d.recordedAt !== undefined) d.recordedAt = Number(d.recordedAt);
+    
+    // Handle amountMl (required by backend)
+    if (d.amountMl !== undefined) {
+      d.amountMl = Number(d.amountMl);
+    } else if (d.totalMl !== undefined) {
+      // Fallback: if totalMl is provided instead of amountMl, use it
+      d.amountMl = Number(d.totalMl);
+      delete d.totalMl;
+    } else {
+      // Default to 250ml if not provided
+      d.amountMl = 250;
+    }
+    
+    // Ensure amountMl is valid (1-5000)
+    if (d.amountMl < 1 || d.amountMl > 5000) {
+      d.amountMl = Math.max(1, Math.min(5000, d.amountMl));
+    }
+    
+    // Ensure type is provided (default to 'water')
+    if (!d.type) {
+      d.type = 'water';
+    }
+    
+    // Remove fields that don't belong in the request
+    delete d.glasses;
+    delete d.totalMl;
+    
+    // Ensure recordedAt is set to current time if not provided
+    if (d.recordedAt !== undefined) {
+      d.recordedAt = Number(d.recordedAt);
+    } else {
+      d.recordedAt = Date.now(); // Set real-time timestamp
+    }
+    
     const response = await this.post('/api/health/hydration', d);
     return response.data.log;
   }

@@ -165,14 +165,27 @@ export default function HealthScreen() {
     { key: 'month', label: 'This Month' },
   ];
 
-  const formatHealthLogTime = (timestamp: string) => {
-    const date = new Date(timestamp);
+  const formatHealthLogTime = (timestamp: string | number | undefined) => {
+    if (!timestamp) return 'Unknown time';
+    
+    // Handle both string and number timestamps
+    const timestampNum = typeof timestamp === 'string' 
+      ? (timestamp.includes('T') ? Date.parse(timestamp) : parseInt(timestamp, 10))
+      : timestamp;
+    
+    if (isNaN(timestampNum) || timestampNum === 0) return 'Invalid date';
+    
+    const date = new Date(timestampNum);
+    if (isNaN(date.getTime())) return 'Invalid date';
+    
     const now = new Date();
     const diffTime = now.getTime() - date.getTime();
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
 
-    if (diffHours < 1) return 'Just now';
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
@@ -203,9 +216,35 @@ export default function HealthScreen() {
       case 'mood':
         return `Mood: ${payload?.score || 0}/10`;
       case 'sleep':
-        return `${payload?.hours || 0}h ${payload?.minutes || 0}m sleep`;
+        // Handle both old format (hours/minutes) and new format (duration_hours/duration_minutes)
+        // Prefer duration_minutes if available (most accurate)
+        let totalMinutes = payload?.duration_minutes ?? payload?.minutes ?? 0;
+        
+        // If we only have hours, convert to minutes
+        if (totalMinutes === 0 && (payload?.duration_hours || payload?.hours || (payload?.value && payload?.unit === 'hours'))) {
+          const hours = payload?.duration_hours ?? payload?.hours ?? payload?.value ?? 0;
+          totalMinutes = Math.round(hours * 60);
+        }
+        
+        // Calculate hours and remaining minutes
+        const totalHours = Math.floor(totalMinutes / 60);
+        const remainingMinutes = totalMinutes % 60;
+        
+        // Format display
+        if (totalHours > 0 && remainingMinutes > 0) {
+          return `${totalHours}h ${remainingMinutes}m sleep`;
+        } else if (totalHours > 0) {
+          return `${totalHours}h sleep`;
+        } else if (remainingMinutes > 0) {
+          return `${remainingMinutes}m sleep`;
+        } else {
+          return 'Sleep logged';
+        }
       case 'weight':
-        return `${payload?.weight || 0}kg`;
+        // Handle both old format (weight) and new format (value with unit)
+        const weight = payload?.weight ?? payload?.value ?? 0;
+        const unit = payload?.unit || 'kg';
+        return `${weight}${unit}`;
       case 'hydration':
         const ml = payload?.total_ml || payload?.totalMl || payload?.amount_ml || payload?.amountMl || 0;
         const glasses = payload?.glasses || Math.round(ml / 250);
@@ -388,7 +427,7 @@ export default function HealthScreen() {
                         {getHealthLogDescription(log)}
                       </Text>
                       <Text className="text-xs mt-1" style={{ color: theme.colors.mutedAlt }}>
-                        {formatHealthLogTime(log.recordedAt)}
+                        {formatHealthLogTime(log.recordedAt || (log as any).recorded_at || log.createdAt || (log as any).created_at)}
                       </Text>
                     </View>
                   </View>

@@ -149,7 +149,7 @@ export default function RootLayout() {
     if (loaded && !isLoading && !hasNavigatedRef.current) {
       // Use requestAnimationFrame to ensure the Root Layout is fully mounted
       requestAnimationFrame(() => {
-        setTimeout(() => {
+      setTimeout(() => {
           try {
             // Get current route path (read fresh each time)
             const currentPath = segments.length > 0 ? segments.join('/') : '';
@@ -159,10 +159,10 @@ export default function RootLayout() {
             const isAllowedAuthRoute = allowedAuthRoutes.some(route => currentPath.includes(route));
             const isAuthRoute = currentPath.startsWith('auth');
             
-            if (isAuthenticated) {
+        if (isAuthenticated) {
               // If authenticated and on an auth route (except verify-email), redirect to dashboard
               if (isAuthRoute && !currentPath.includes('verify-email')) {
-                router.replace('/(tabs)/dashboard');
+          router.replace('/(tabs)/dashboard');
               }
               hasNavigatedRef.current = true;
             } else {
@@ -175,9 +175,9 @@ export default function RootLayout() {
                 // If no current path (initial load), redirect to login
                 router.replace('/auth/login');
                 hasNavigatedRef.current = true;
-              } else {
+        } else {
                 // On a protected route without auth, redirect to login
-                router.replace('/auth/login');
+          router.replace('/auth/login');
                 hasNavigatedRef.current = true;
               }
             }
@@ -185,7 +185,7 @@ export default function RootLayout() {
             // Navigation might fail if already on the correct route
             console.log('Navigation skipped:', error);
             hasNavigatedRef.current = true;
-          }
+        }
         }, 200);
       });
     }
