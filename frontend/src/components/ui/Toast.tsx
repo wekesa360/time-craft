@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, CheckCircle2, XCircle, AlertCircle, Info } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -17,11 +17,42 @@ interface ToastProps {
   className?: string;
 }
 
+const toastIcons = {
+  success: CheckCircle2,
+  error: XCircle,
+  warning: AlertCircle,
+  info: Info,
+};
+
 const toastStyles = {
-  success: 'bg-success-light border-green-200 text-success dark:bg-success/20 dark:border-green-800 dark:text-success-light',
-  error: 'bg-error-light border-red-200 text-error dark:bg-error/20 dark:border-red-800 dark:text-error-light',
-  warning: 'bg-warning-light border-yellow-200 text-warning dark:bg-warning/20 dark:border-yellow-800 dark:text-warning-light',
-  info: 'bg-info-light border-blue-200 text-info dark:bg-info/20 dark:border-blue-800 dark:text-info-light',
+  success: {
+    container: 'bg-background border-border',
+    icon: 'text-success',
+    title: 'text-foreground',
+    message: 'text-muted-foreground',
+    progress: 'bg-success',
+  },
+  error: {
+    container: 'bg-background border-border',
+    icon: 'text-destructive',
+    title: 'text-foreground',
+    message: 'text-muted-foreground',
+    progress: 'bg-destructive',
+  },
+  warning: {
+    container: 'bg-background border-border',
+    icon: 'text-warning',
+    title: 'text-foreground',
+    message: 'text-muted-foreground',
+    progress: 'bg-warning',
+  },
+  info: {
+    container: 'bg-background border-border',
+    icon: 'text-info',
+    title: 'text-foreground',
+    message: 'text-muted-foreground',
+    progress: 'bg-info',
+  },
 };
 
 export const Toast: React.FC<ToastProps> = ({
@@ -35,14 +66,29 @@ export const Toast: React.FC<ToastProps> = ({
   className = '',
 }) => {
   const [isVisible, setIsVisible] = React.useState(true);
+  const [progress, setProgress] = React.useState(100);
+  const Icon = toastIcons[type];
+  const styles = toastStyles[type];
 
   React.useEffect(() => {
+    // Progress bar animation
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        const decrement = (100 / duration) * 50; // Update every 50ms
+        const newProgress = prev - decrement;
+        return newProgress <= 0 ? 0 : newProgress;
+      });
+    }, 50);
+
     const timer = setTimeout(() => {
       setIsVisible(false);
       setTimeout(() => onClose(id), 300); // Allow fade out animation
     }, duration);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, [id, duration, onClose]);
 
   const handleClose = () => {
@@ -55,41 +101,59 @@ export const Toast: React.FC<ToastProps> = ({
   return (
     <div
       className={`
-        relative flex items-start p-4 border rounded-lg shadow-lg
-        transition-all duration-300 ease-in-out
-        ${toastStyles[type]}
-        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+        group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all
+        max-w-[420px] w-full
+        ${isVisible ? 'opacity-100 translate-y-0 animate-in' : 'opacity-0 translate-y-2 animate-out'}
+        ${styles.container}
         ${className}
       `}
       role="alert"
       aria-live="polite"
+      aria-atomic="true"
     >
-      <div className="flex-1">
-        <h3 className="text-sm font-medium">{title}</h3>
-        {message && (
-          <p className="mt-1 text-sm opacity-90">{message}</p>
-        )}
-        
-        {action && (
-          <div className="mt-3">
-            <button
-              onClick={action.onClick}
-              className="text-sm font-medium underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current"
-            >
-              {action.label}
-            </button>
+      <div className="grid gap-1">
+        <div className="flex items-start gap-3">
+          <Icon className={`h-5 w-5 ${styles.icon} flex-shrink-0 mt-0.5`} />
+          <div className="grid gap-1">
+            <div className={`text-sm font-semibold ${styles.title}`}>
+              {title}
+            </div>
+            {message && (
+              <div className={`text-sm opacity-90 ${styles.message}`}>
+                {message}
+              </div>
+            )}
+            {action && (
+              <div className="mt-2">
+                <button
+                  onClick={action.onClick}
+                  className="text-sm font-medium text-primary hover:text-primary/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm underline-offset-4 hover:underline"
+                >
+                  {action.label}
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
       
-      <div className="ml-4 flex-shrink-0">
-        <button
-          onClick={handleClose}
-          className="inline-flex text-current opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current rounded"
-          aria-label="Close notification"
-        >
-          <X className="w-4 h-4" />
-        </button>
+      <button
+        onClick={handleClose}
+        className="absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600"
+        aria-label="Close"
+      >
+        <X className="h-4 w-4" />
+      </button>
+      
+      {/* Progress bar */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-1 bg-border"
+        aria-hidden="true"
+      >
+        <div
+          className={`h-full ${styles.progress} transition-all duration-50 ease-linear`}
+          style={{ width: `${progress}%` }}
+        />
       </div>
     </div>
   );
@@ -119,18 +183,18 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({
   className = '',
 }) => {
   const positionStyles = {
-    'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4',
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
-    'top-center': 'top-4 left-1/2 transform -translate-x-1/2',
-    'bottom-center': 'bottom-4 left-1/2 transform -translate-x-1/2',
+    'top-right': 'top-0 right-0',
+    'top-left': 'top-0 left-0',
+    'bottom-right': 'bottom-0 right-0',
+    'bottom-left': 'bottom-0 left-0',
+    'top-center': 'top-0 left-1/2 -translate-x-1/2',
+    'bottom-center': 'bottom-0 left-1/2 -translate-x-1/2',
   };
 
   return (
     <div
       className={`
-        fixed z-50 flex flex-col space-y-2 max-w-sm w-full
+        fixed z-[100] flex flex-col gap-2 p-4 pointer-events-none
         ${positionStyles[position]}
         ${className}
       `}

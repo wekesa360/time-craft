@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { ShadcnToaster } from './components/ui/ShadcnToast';
 import { useTranslation } from 'react-i18next';
 
 // Stores
@@ -185,7 +185,7 @@ function App() {
                 enableHighContrastMode={true}
                 enableScreenReaderSupport={true}
               >
-              <Toaster position="top-right" />
+              <ShadcnToaster />
               <SSENotificationHandler />
               <OfflineQueueHandler />
               <Router>
@@ -462,33 +462,7 @@ function App() {
             />
           </Routes>
 
-          {/* Global Toast Notifications */}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: 'var(--color-surface-elevated)',
-                color: 'var(--color-text-primary)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
-              },
-              success: {
-                style: {
-                  background: 'var(--color-success-light)',
-                  color: 'var(--color-success)',
-                  border: '1px solid var(--color-success)',
-                },
-              },
-              error: {
-                style: {
-                  background: 'var(--color-error-light)',
-                  color: 'var(--color-error)',
-                  border: '1px solid var(--color-error)',
-                },
-              },
-            }}
-          />
+          {/* Global Toast Notifications - Using ShadcnToaster component above */}
           </div>
         </Router>
             </GermanAccessibilityProvider>
