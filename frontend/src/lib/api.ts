@@ -2535,3 +2535,40 @@ class ApiClient {
 // Create singleton instance
 export const apiClient = new ApiClient();
 export default apiClient;
+    const response = await this.client.post(url, data, config);
+    return response;
+  }
+
+  async put(url: string, data?: any, config?: any) {
+    const response = await this.client.put(url, data, config);
+    return response;
+  }
+
+  async delete(url: string, config?: any) {
+    const response = await this.client.delete(url, config);
+    return response;
+  }
+
+  // Circuit breaker management
+  resetCircuitBreaker() {
+    this.circuitBreakerOpen = false;
+    this.circuitBreakerResetTime = 0;
+    console.log('Circuit breaker reset');
+  }
+
+  isCircuitBreakerOpen(): boolean {
+    if (this.circuitBreakerOpen) {
+      const now = Date.now();
+      if (now >= this.circuitBreakerResetTime) {
+        this.resetCircuitBreaker();
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }
+}
+
+// Create singleton instance
+export const apiClient = new ApiClient();
+export default apiClient;

@@ -189,21 +189,6 @@ const HydrationForm: React.FC<HydrationFormProps> = ({ onSuccess, onCancel }) =>
             </View>
           )}
 
-          {/* Daily Progress Indicator */}
-          <View className="rounded-xl p-4 mb-6" style={{ backgroundColor: theme.colors.infoBg, borderWidth: 1, borderColor: theme.colors.infoBg, borderRadius: theme.radii.xl }}>
-            <Text className="font-semibold mb-2" style={{ color: theme.colors.info }}>
-              💧 Daily Hydration Goal
-            </Text>
-            <Text className="text-sm mb-3" style={{ color: theme.colors.info }}>
-              Recommended: 2000ml (8 glasses) per day
-            </Text>
-            
-            {/* Progress bar would go here - simplified for now */}
-            <View className="rounded-full h-3 overflow-hidden" style={{ backgroundColor: theme.colors.info + '55' }}>
-              <View className="h-full rounded-full" style={{ width: '45%', backgroundColor: theme.colors.info }} />
-            </View>
-            <Text className="text-xs mt-2" style={{ color: theme.colors.info }}>900ml / 2000ml today (45%)</Text>
-          </View>
 
           {/* Action Buttons */}
           <View className="flex-row gap-3">

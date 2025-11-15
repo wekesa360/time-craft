@@ -1314,5 +1314,3 @@ health.get('/analytics/correlations', async (c) => {
     return c.json({ error: 'Internal server error' }, 500);
   }
 });
-
-export default health;

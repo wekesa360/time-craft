@@ -194,19 +194,25 @@ export default function HealthScreen() {
   };
 
   const getHealthLogDescription = (log: HealthLog) => {
+    // Parse payload if it's a string
+    const payload = typeof log.payload === 'string' ? JSON.parse(log.payload) : log.payload;
+    
     switch (log.type) {
       case 'exercise':
-        return `${log.payload.activity || 'Exercise'} - ${log.payload.duration || 0}min`;
+        return `${payload?.activity || payload?.activity_type || 'Exercise'} - ${payload?.duration || payload?.duration_minutes || 0}min`;
       case 'mood':
-        return `Mood: ${log.payload.score || 0}/10`;
+        return `Mood: ${payload?.score || 0}/10`;
       case 'sleep':
-        return `${log.payload.hours || 0}h ${log.payload.minutes || 0}m sleep`;
+        return `${payload?.hours || 0}h ${payload?.minutes || 0}m sleep`;
       case 'weight':
-        return `${log.payload.weight || 0}kg`;
+        return `${payload?.weight || 0}kg`;
       case 'hydration':
-        return `${log.payload.glasses || 0} glasses (${log.payload.total_ml || 0}ml)`;
+        const ml = payload?.total_ml || payload?.totalMl || payload?.amount_ml || payload?.amountMl || 0;
+        const glasses = payload?.glasses || Math.round(ml / 250);
+        return `${glasses} glasses (${ml}ml)`;
       case 'nutrition':
-        return `${log.payload.calories || 0} calories`;
+        const calories = payload?.calories || payload?.total_calories || payload?.totalCalories || 0;
+        return `${calories} calories`;
       default:
         return 'Health data logged';
     }
@@ -399,6 +405,18 @@ export default function HealthScreen() {
                 </Text>
                 <Text className="text-sm text-center mt-1" style={{ color: theme.colors.mutedAlt }}>
                   Start logging your health data to track your wellness!
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Bottom Padding for Tab Bar */}
+        <View className="h-20" />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
                 </Text>
               </View>
             )}
