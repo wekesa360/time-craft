@@ -193,10 +193,40 @@ export const useCreateTaskMutation = () => {
       toast.error('Failed to create task');
     },
     onSuccess: (data, variables, context) => {
-      // Replace optimistic task with real data
+      // Replace optimistic task with real data in query cache
       if (context?.optimisticTask) {
-        const { updateTask } = useTaskStore.getState();
-        updateTask(context.optimisticTask.id, data);
+        // Update query cache: replace optimistic task with real task
+        queryClient.setQueriesData(
+          { queryKey: taskKeys.lists() },
+          (old: any) => {
+            // Handle both array format (new) and object format (legacy)
+            if (Array.isArray(old)) {
+              // Remove optimistic task and add real task at the beginning
+              return [data, ...old.filter((task: Task) => task.id !== context.optimisticTask.id)];
+            }
+            if (old?.tasks && Array.isArray(old.tasks)) {
+              return {
+                ...old,
+                tasks: [data, ...old.tasks.filter((task: Task) => task.id !== context.optimisticTask.id)]
+              };
+            }
+            if (old?.data && Array.isArray(old.data)) {
+              return {
+                ...old,
+                data: [data, ...old.data.filter((task: Task) => task.id !== context.optimisticTask.id)]
+              };
+            }
+            return old;
+          }
+        );
+        
+        // Update store: remove optimistic task and add real task directly
+        const { deleteTask, tasks } = useTaskStore.getState();
+        deleteTask(context.optimisticTask.id);
+        // Add real task to store directly (without API call)
+        useTaskStore.setState({
+          tasks: [data, ...tasks.filter(t => t.id !== context.optimisticTask.id)]
+        });
       }
       toast.success('Task created successfully');
     },
