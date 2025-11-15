@@ -7,6 +7,8 @@ import type {
   NutritionData, 
   MoodData, 
   HydrationData,
+  SleepData,
+  WeightData,
   HealthInsights,
   HealthGoal
 } from '../../types';
@@ -498,6 +500,180 @@ export const useDeleteHealthGoalMutation = () => {
   });
 };
 
+// Log sleep mutation
+export const useLogSleepMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: SleepData) => apiClient.logSleep(data),
+    onMutate: async (newSleep) => {
+      await queryClient.cancelQueries({ queryKey: healthKeys.logs() });
+
+      const previousLogs = queryClient.getQueryData(healthKeys.logs());
+
+      const optimisticLog: HealthLog = {
+        id: `temp-${Date.now()}`,
+        userId: 'current-user',
+        type: 'sleep',
+        payload: newSleep,
+        recordedAt: Date.now(),
+        source: 'manual',
+        createdAt: Date.now(),
+      };
+
+      queryClient.setQueriesData(
+        { queryKey: healthKeys.logs() },
+        (old: any) => {
+          if (old?.logs && Array.isArray(old.logs)) {
+            return {
+              ...old,
+              logs: [optimisticLog, ...old.logs],
+              total: (old.total || old.logs.length) + 1
+            };
+          }
+          if (old?.data && Array.isArray(old.data)) {
+            return {
+              ...old,
+              data: [optimisticLog, ...old.data],
+            };
+          }
+          if (Array.isArray(old)) {
+            return [optimisticLog, ...old];
+          }
+          return { logs: [optimisticLog], hasMore: false, total: 1 };
+        }
+      );
+
+      return { previousLogs, optimisticLog };
+    },
+    onError: (err, newSleep, context) => {
+      if (context?.previousLogs) {
+        queryClient.setQueriesData({ queryKey: healthKeys.logs() }, context.previousLogs);
+      }
+      toast.error('Failed to log sleep');
+    },
+    onSuccess: (data, variables, context) => {
+      if (context?.optimisticLog) {
+        queryClient.setQueriesData(
+          { queryKey: healthKeys.logs() },
+          (old: any) => {
+            if (old?.logs && Array.isArray(old.logs)) {
+              return {
+                ...old,
+                logs: [data, ...old.logs.filter((log: HealthLog) => log.id !== context.optimisticLog.id)],
+                total: old.total || old.logs.length
+              };
+            }
+            if (old?.data && Array.isArray(old.data)) {
+              return {
+                ...old,
+                data: [data, ...old.data.filter((log: HealthLog) => log.id !== context.optimisticLog.id)]
+              };
+            }
+            if (Array.isArray(old)) {
+              return [data, ...old.filter((log: HealthLog) => log.id !== context.optimisticLog.id)];
+            }
+            return { logs: [data], hasMore: false, total: 1 };
+          }
+        );
+      }
+      toast.success('😴 Sleep logged successfully!');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: healthKeys.logs() });
+      queryClient.invalidateQueries({ queryKey: healthKeys.summary() });
+      queryClient.invalidateQueries({ queryKey: healthKeys.insights() });
+    },
+  });
+};
+
+// Log weight mutation
+export const useLogWeightMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: WeightData) => apiClient.logWeight(data),
+    onMutate: async (newWeight) => {
+      await queryClient.cancelQueries({ queryKey: healthKeys.logs() });
+
+      const previousLogs = queryClient.getQueryData(healthKeys.logs());
+
+      const optimisticLog: HealthLog = {
+        id: `temp-${Date.now()}`,
+        userId: 'current-user',
+        type: 'weight',
+        payload: newWeight,
+        recordedAt: Date.now(),
+        source: 'manual',
+        createdAt: Date.now(),
+      };
+
+      queryClient.setQueriesData(
+        { queryKey: healthKeys.logs() },
+        (old: any) => {
+          if (old?.logs && Array.isArray(old.logs)) {
+            return {
+              ...old,
+              logs: [optimisticLog, ...old.logs],
+              total: (old.total || old.logs.length) + 1
+            };
+          }
+          if (old?.data && Array.isArray(old.data)) {
+            return {
+              ...old,
+              data: [optimisticLog, ...old.data],
+            };
+          }
+          if (Array.isArray(old)) {
+            return [optimisticLog, ...old];
+          }
+          return { logs: [optimisticLog], hasMore: false, total: 1 };
+        }
+      );
+
+      return { previousLogs, optimisticLog };
+    },
+    onError: (err, newWeight, context) => {
+      if (context?.previousLogs) {
+        queryClient.setQueriesData({ queryKey: healthKeys.logs() }, context.previousLogs);
+      }
+      toast.error('Failed to log weight');
+    },
+    onSuccess: (data, variables, context) => {
+      if (context?.optimisticLog) {
+        queryClient.setQueriesData(
+          { queryKey: healthKeys.logs() },
+          (old: any) => {
+            if (old?.logs && Array.isArray(old.logs)) {
+              return {
+                ...old,
+                logs: [data, ...old.logs.filter((log: HealthLog) => log.id !== context.optimisticLog.id)],
+                total: old.total || old.logs.length
+              };
+            }
+            if (old?.data && Array.isArray(old.data)) {
+              return {
+                ...old,
+                data: [data, ...old.data.filter((log: HealthLog) => log.id !== context.optimisticLog.id)]
+              };
+            }
+            if (Array.isArray(old)) {
+              return [data, ...old.filter((log: HealthLog) => log.id !== context.optimisticLog.id)];
+            }
+            return { logs: [data], hasMore: false, total: 1 };
+          }
+        );
+      }
+      toast.success('⚖️ Weight logged successfully!');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: healthKeys.logs() });
+      queryClient.invalidateQueries({ queryKey: healthKeys.summary() });
+      queryClient.invalidateQueries({ queryKey: healthKeys.insights() });
+    },
+  });
+};
+
 // Export all hooks as a single object for easier importing
 export const useHealthQueries = () => {
   return {
@@ -509,6 +685,8 @@ export const useHealthQueries = () => {
     useLogNutritionMutation,
     useLogMoodMutation,
     useLogHydrationMutation,
+    useLogSleepMutation,
+    useLogWeightMutation,
     useCreateHealthGoalMutation,
     useUpdateHealthGoalMutation,
     useDeleteHealthGoalMutation,

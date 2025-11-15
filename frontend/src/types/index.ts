@@ -66,12 +66,12 @@ export interface Task {
 export interface HealthLog {
   id: string;
   userId: string;
-  type: 'exercise' | 'nutrition' | 'mood' | 'hydration';
-  payload: ExerciseData | NutritionData | MoodData | HydrationData; // JSON data specific to the health type
-  recordedAt: number;
+  type: 'exercise' | 'nutrition' | 'mood' | 'hydration' | 'sleep' | 'weight';
+  payload: ExerciseData | NutritionData | MoodData | HydrationData | SleepData | WeightData; // JSON data specific to the health type
+  recordedAt: number | string; // Can be number (timestamp) or string (ISO date)
   source: 'auto' | 'manual' | 'device';
   deviceType?: string;
-  createdAt: number;
+  createdAt: number | string; // Can be number (timestamp) or string (ISO date)
 }
 
 export interface ExerciseData {
@@ -86,7 +86,8 @@ export interface ExerciseData {
 }
 
 export interface NutritionData {
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack'; // Frontend uses mealType
+  meal_type?: 'breakfast' | 'lunch' | 'dinner' | 'snack'; // Backend expects meal_type
   description: string;
   calories?: number;
   protein?: number; // in grams
@@ -109,6 +110,18 @@ export interface HydrationData {
   amount: number; // in ml
   drinkType: 'water' | 'coffee' | 'tea' | 'juice' | 'sports_drink' | 'other';
   temperature?: 'hot' | 'warm' | 'room_temp' | 'cold' | 'ice_cold';
+}
+
+export interface SleepData {
+  durationMinutes: number;
+  quality: number; // 1-5 scale (will be converted to 1-10 on backend)
+  notes?: string;
+}
+
+export interface WeightData {
+  weight: number;
+  unit: 'kg' | 'lb';
+  notes?: string;
 }
 
 export interface Badge {

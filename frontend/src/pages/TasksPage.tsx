@@ -39,12 +39,12 @@ export default function TasksPage() {
   // Log fetched tasks
   useEffect(() => {
     if (tasks.length > 0) {
-      console.log('📋 TasksPage: Loaded', tasks.length, 'tasks from backend');
+      const activeTasks = tasks.filter(t => t.status !== 'done');
+      console.log('📋 TasksPage: Loaded', activeTasks.length, 'active tasks from backend');
       console.log('Tasks breakdown:', {
-        high: tasks.filter(t => t.priority === 4).length,
-        medium: tasks.filter(t => t.priority === 3).length,
-        low: tasks.filter(t => t.priority <= 2).length,
-        completed: tasks.filter(t => t.status === 'done').length,
+        high: activeTasks.filter(t => t.priority === 4).length,
+        medium: activeTasks.filter(t => t.priority === 3).length,
+        low: activeTasks.filter(t => t.priority <= 2).length,
       });
     }
   }, [tasks]);
@@ -59,26 +59,26 @@ export default function TasksPage() {
     const grouped = {
       high: [] as Task[],
       medium: [] as Task[],
-      low: [] as Task[],
-      completed: [] as Task[]
+      low: [] as Task[]
     };
 
     tasks.forEach(task => {
+      // Skip completed tasks
       if (task.status === 'done') {
-        grouped.completed.push(task);
-      } else {
-        switch (task.priority) {
-          case 4:
-            grouped.high.push(task);
-            break;
-          case 3:
-            grouped.medium.push(task);
-            break;
-          case 2:
-          case 1:
-            grouped.low.push(task);
-            break;
-        }
+        return;
+      }
+      
+      switch (task.priority) {
+        case 4:
+          grouped.high.push(task);
+          break;
+        case 3:
+          grouped.medium.push(task);
+          break;
+        case 2:
+        case 1:
+          grouped.low.push(task);
+          break;
       }
     });
 
@@ -385,36 +385,6 @@ export default function TasksPage() {
               </div>
             </div>
           )}
-
-      {/* Completed Tasks */}
-      {filteredTasks.completed.length > 0 && (
-        <div className="bg-card rounded-2xl p-6 border border-border col-span-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-foreground">Completed Today</h2>
-            <span className="text-sm text-primary font-medium">{filteredTasks.completed.length} tasks</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {filteredTasks.completed.map((task) => (
-              <div key={task.id} className="flex items-center gap-3 p-2 rounded-lg bg-primary/10">
-                <div className="w-4 h-4 rounded bg-primary flex items-center justify-center flex-shrink-0">
-                  <svg className="w-2.5 h-2.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground line-through opacity-70 truncate">{task.title}</p>
-                  {task.completed_at && (
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(task.completed_at).toLocaleTimeString()}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
         </div>
       )}
 

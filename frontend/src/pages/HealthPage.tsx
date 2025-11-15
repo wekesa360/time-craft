@@ -22,6 +22,8 @@ import ExerciseLogger from '../components/features/health/ExerciseLogger';
 import { NutritionTracker } from '../components/features/health/NutritionTracker';
 import MoodTracker from '../components/features/health/MoodTracker';
 import { HydrationLogger } from '../components/features/health/HydrationLogger';
+import { SleepLogger } from '../components/features/health/SleepLogger';
+import { WeightLogger } from '../components/features/health/WeightLogger';
 import { GoalCreationSheet } from '../components/features/health/GoalCreationSheet';
 import HealthInsights from '../components/features/health/HealthInsights';
 
@@ -34,12 +36,14 @@ import {
   useLogExerciseMutation,
   useLogNutritionMutation,
   useLogMoodMutation,
-  useLogHydrationMutation
+  useLogHydrationMutation,
+  useLogSleepMutation,
+  useLogWeightMutation
 } from '../hooks/queries/useHealthQueries';
-import type { ExerciseData, NutritionData, MoodData, HydrationData } from '../types';
+import type { ExerciseData, NutritionData, MoodData, HydrationData, SleepData, WeightData } from '../types';
 
 type ViewMode = 'dashboard' | 'insights' | 'logs' | 'goals';
-type LoggerType = 'exercise' | 'nutrition' | 'mood' | 'hydration' | 'goal' | null;
+type LoggerType = 'exercise' | 'nutrition' | 'mood' | 'hydration' | 'sleep' | 'weight' | 'goal' | null;
 
 export default function HealthPage() {
   const { t } = useTranslation();
@@ -61,6 +65,8 @@ export default function HealthPage() {
   const logNutritionMutation = useLogNutritionMutation();
   const logMoodMutation = useLogMoodMutation();
   const logHydrationMutation = useLogHydrationMutation();
+  const logSleepMutation = useLogSleepMutation();
+  const logWeightMutation = useLogWeightMutation();
 
   // Debug logging for health data
   React.useEffect(() => {
@@ -110,6 +116,26 @@ export default function HealthPage() {
       setActiveLogger(null);
     } catch (error) {
       toast.error('Failed to log hydration');
+    }
+  };
+
+  const handleLogSleep = async (data: SleepData) => {
+    try {
+      await logSleepMutation.mutateAsync(data);
+      toast.success('Sleep logged successfully!');
+      setActiveLogger(null);
+    } catch (error) {
+      toast.error('Failed to log sleep');
+    }
+  };
+
+  const handleLogWeight = async (data: WeightData) => {
+    try {
+      await logWeightMutation.mutateAsync(data);
+      toast.success('Weight logged successfully!');
+      setActiveLogger(null);
+    } catch (error) {
+      toast.error('Failed to log weight');
     }
   };
 
@@ -172,7 +198,7 @@ export default function HealthPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
           {
             icon: Activity,
@@ -193,6 +219,16 @@ export default function HealthPage() {
             icon: Smile, 
             label: "Log Mood", 
             action: () => setActiveLogger('mood') 
+          },
+          {
+            icon: Calendar,
+            label: "Log Sleep",
+            action: () => setActiveLogger('sleep'),
+          },
+          {
+            icon: Target,
+            label: "Log Weight",
+            action: () => setActiveLogger('weight'),
           },
         ].map((action, i) => (
           <button
@@ -592,6 +628,18 @@ export default function HealthPage() {
         isOpen={activeLogger === 'hydration'}
         onClose={() => setActiveLogger(null)}
         onSave={handleLogHydration}
+      />
+
+      <SleepLogger
+        isOpen={activeLogger === 'sleep'}
+        onClose={() => setActiveLogger(null)}
+        onSave={handleLogSleep}
+      />
+
+      <WeightLogger
+        isOpen={activeLogger === 'weight'}
+        onClose={() => setActiveLogger(null)}
+        onSave={handleLogWeight}
       />
 
       <GoalCreationSheet

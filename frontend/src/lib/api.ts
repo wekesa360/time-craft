@@ -16,6 +16,8 @@ import type {
   NutritionData,
   MoodData,
   HydrationData,
+  SleepData,
+  WeightData,
   Badge,
   CalendarEvent,
   FocusSession,
@@ -1341,14 +1343,42 @@ class ApiClient {
     source?: string;
   }): Promise<{ logs: HealthLog[]; hasMore: boolean; nextCursor?: string | null; total?: number }> {
     const response = await this.client.get<{ logs: HealthLog[]; hasMore: boolean; nextCursor?: string | null; total?: number }>('/api/health/logs', { params });
-    return response.data;
+    
+    // Transform logs to ensure proper format
+    const logs = response.data.logs || [];
+    const transformedLogs = logs.map((log: any) => ({
+      ...log,
+      // Ensure recordedAt is a number (timestamp)
+      recordedAt: typeof log.recordedAt === 'string' 
+        ? (log.recordedAt.includes('T') ? Date.parse(log.recordedAt) : parseInt(log.recordedAt, 10))
+        : log.recordedAt || log.recorded_at || Date.now(),
+      // Ensure createdAt is also a number
+      createdAt: typeof log.createdAt === 'string'
+        ? (log.createdAt.includes('T') ? Date.parse(log.createdAt) : parseInt(log.createdAt, 10))
+        : log.createdAt || log.created_at || log.recordedAt || Date.now(),
+      // Parse payload if it's a string
+      payload: typeof log.payload === 'string' ? JSON.parse(log.payload) : log.payload,
+    }));
+    
+    return {
+      ...response.data,
+      logs: transformedLogs,
+    };
   }
 
   async logExercise(data: ExerciseData): Promise<HealthLog> {
     console.log('🚀 Sending exercise log to backend:', data);
     
     try {
-      const response = await this.client.post<{ log: HealthLog }>('/api/health/exercise', data);
+      // Ensure durationMinutes is provided and is a number
+      const payload = {
+        ...data,
+        durationMinutes: data.durationMinutes || data.duration || 30,
+        intensity: typeof data.intensity === 'number' ? data.intensity : 5,
+        recordedAt: Date.now(),
+      };
+      
+      const response = await this.client.post<{ log: HealthLog }>('/api/health/exercise', payload);
       console.log('✅ Exercise log response received:', response.data);
       return response.data.log;
     } catch (error: any) {
@@ -1363,7 +1393,18 @@ class ApiClient {
   }
 
   async logNutrition(data: NutritionData): Promise<HealthLog> {
-    const response = await this.client.post<{ log: HealthLog }>('/api/health/nutrition', data);
+    // Convert frontend format to backend format
+    const backendData = {
+      meal_type: data.meal_type || data.mealType || 'lunch', // Backend expects meal_type
+      description: data.description || 'Meal',
+      calories: data.calories,
+      protein: data.protein,
+      carbs: data.carbs,
+      fat: data.fat,
+      recordedAt: Date.now(),
+    };
+    
+    const response = await this.client.post<{ log: HealthLog }>('/api/health/nutrition', backendData);
     return response.data.log;
   }
 
@@ -1384,6 +1425,48 @@ class ApiClient {
     
     const response = await this.client.post<{ log: HealthLog }>('/api/health/hydration', backendData);
     return response.data.log;
+  }
+
+  async logSleep(data: SleepData): Promise<HealthLog> {
+    // Transform frontend data to match backend schema
+    const durationMinutes = data.durationMinutes || 420; // Default to 7 hours
+    const durationHours = durationMinutes / 60;
+    
+    // Quality from frontend is 1-5, backend expects 1-10
+    const quality = Math.max(1, Math.min(5, data.quality || 3)) * 2;
+    
+    const backendData = {
+      type: 'sleep',
+      sleep_data: {
+        duration_hours: durationHours,
+        duration_minutes: durationMinutes,
+        quality: quality,
+      },
+      notes: data.notes,
+      recordedAt: Date.now(),
+    };
+    
+    const response = await this.client.post<{ healthLog: HealthLog }>('/api/health/manual-entry', backendData);
+    return response.data.healthLog || response.data;
+  }
+
+  async logWeight(data: WeightData): Promise<HealthLog> {
+    // Convert weight to kg if needed
+    const weightKg = data.unit === 'lb' 
+      ? data.weight * 0.453592 
+      : data.weight;
+    
+    const backendData = {
+      type: 'weight',
+      value: weightKg,
+      unit: 'kg',
+      notes: data.notes,
+      category: 'weight',
+      recordedAt: Date.now(),
+    };
+    
+    const response = await this.client.post<{ healthLog: HealthLog }>('/api/health/manual-entry', backendData);
+    return response.data.healthLog || response.data;
   }
 
   async getHealthSummary(days?: number): Promise<{
@@ -2499,42 +2582,6 @@ class ApiClient {
 
   async post(url: string, data?: any, config?: any) {
     const response = await this.client.post(url, data, config);
-    return response;
-  }
-
-  async put(url: string, data?: any, config?: any) {
-    const response = await this.client.put(url, data, config);
-    return response;
-  }
-
-  async delete(url: string, config?: any) {
-    const response = await this.client.delete(url, config);
-    return response;
-  }
-
-  // Circuit breaker management
-  resetCircuitBreaker() {
-    this.circuitBreakerOpen = false;
-    this.circuitBreakerResetTime = 0;
-    console.log('Circuit breaker reset');
-  }
-
-  isCircuitBreakerOpen(): boolean {
-    if (this.circuitBreakerOpen) {
-      const now = Date.now();
-      if (now >= this.circuitBreakerResetTime) {
-        this.resetCircuitBreaker();
-        return false;
-      }
-      return true;
-    }
-    return false;
-  }
-}
-
-// Create singleton instance
-export const apiClient = new ApiClient();
-export default apiClient;    const response = await this.client.post(url, data, config);
     return response;
   }
 
