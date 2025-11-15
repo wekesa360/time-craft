@@ -72,7 +72,6 @@ CREATE TABLE IF NOT EXISTS focus_sessions (
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_focus_sessions_user_date ON focus_sessions(user_id, started_at DESC);
 CREATE INDEX IF NOT EXISTS idx_focus_sessions_type ON focus_sessions(session_type);
-CREATE INDEX IF NOT EXISTS idx_focus_sessions_successful ON focus_sessions(is_successful, productivity_rating);
 CREATE INDEX IF NOT EXISTS idx_focus_sessions_task ON focus_sessions(task_id);
 
 -- Add unique constraint to prevent multiple active sessions per user
@@ -80,6 +79,4 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_focus_sessions_one_active_per_user
 ON focus_sessions (user_id) 
 WHERE completed_at IS NULL;
 
--- Insert migration record
-INSERT OR IGNORE INTO migrations (id, name, applied_at) 
-VALUES ('020_fix_focus_sessions_schema', 'Fix focus_sessions table schema to match code expectations', strftime('%s', 'now') * 1000);
+-- Note: Migration tracking is handled automatically by wrangler

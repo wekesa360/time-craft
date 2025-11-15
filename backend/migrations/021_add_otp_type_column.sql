@@ -7,4 +7,4 @@ ALTER TABLE email_otps ADD COLUMN type TEXT DEFAULT 'verification';
 UPDATE email_otps SET type = 'verification' WHERE type IS NULL;
 
 -- Add a comment for the migration
-INSERT INTO migrations (id, name, applied_at) VALUES ('021_add_otp_type_column', 'Add type column to email_otps table', UNIXEPOCH());
+-- Note: Migration tracking is handled automatically by wrangler

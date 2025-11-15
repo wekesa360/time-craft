@@ -1,7 +1,8 @@
 -- Fix missing columns that are causing API errors
 
 -- Add badge_points column to users table if it doesn't exist
-ALTER TABLE users ADD COLUMN badge_points INTEGER DEFAULT 0;
+-- Note: This column is already added in migration 026_add_badge_columns_to_users.sql
+-- ALTER TABLE users ADD COLUMN badge_points INTEGER DEFAULT 0;
 
 -- Create task_matrix_view if it doesn't exist
 CREATE VIEW IF NOT EXISTS task_matrix_view AS
